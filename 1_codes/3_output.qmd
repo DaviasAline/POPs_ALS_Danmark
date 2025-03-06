@@ -1,0 +1,457 @@
+---
+title: "Aline's work"
+format: html
+editor: visual
+toc: true
+toc_depth: 3
+theme:
+  light: flatly
+  dark: darkly
+toc-location: left
+---
+
+```{r}
+#| message: false
+#| warning: false
+#| include: false
+source("~/Documents/POP_ALS_2025_02_03/1_codes/0_functions.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/2_analyses.R")
+library(see)
+library(kableExtra)
+library(knitr)
+```
+
+# Comparison finnish/danish data
+
+## Metadata
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+bdd_tot %>%
+  select("study", "sex", "marital_status", "smoking", "alcohol", "education", 
+         "bmi", "cholesterol", "blod_sys", "blod_dias", "baseline_age", "diagnosis_age") %>%
+  tbl_summary(by = "study") %>%
+  bold_labels() %>%
+  add_p()
+```
+
+## POPs exposures
+
+```{r, fig.width=10, fig.height=10}
+#| echo: false
+#| message: false
+#| warning: false
+
+bdd_tot_long %>% 
+  ggplot() +
+  aes(x = POPS, y = values, fill = study) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1) +
+  scale_y_continuous(trans = "log", 
+                     labels = number_format(accuracy = 1)) +
+  labs(x = "POPs", y = "Values (log transformed)", fill = "Study") +
+  coord_flip() +
+  theme_lucid()
+```
+
+```{r, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+bdd_tot_long %>% 
+  filter(POPS %in% c("HCB", "PCB_4", "PCB_DL", "PCB_NDL", "PeCB", "β_HCH", "Σchlordane", "ΣDDT", "ΣHCH")) %>%
+  ggplot() +
+  aes(x = POPS, y = values, fill = study) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1) +
+  scale_y_continuous(trans = "log", 
+                     labels = number_format(accuracy = 1)) +
+  labs(x = "POPs", y = "Values (log transformed)", fill = "Study") +
+  coord_flip() +
+  theme_lucid()
+```
+
+# Danish data description
+
+## Metadata
+
+Not imputed for missing data
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+descrip_covar
+```
+
+## POPs exposures
+
+### All
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+table_1 <- descrip_num(data = bdd_danish, vars = POPs)
+table_1 <- left_join(table_1, bdd_loq, by = "variable") 
+table_1 %>% kable("html")
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+bdd_danish |>
+  select(als, all_of(POPs), all_of(POPs_group), "ΣHCH") |>
+    mutate(
+    als = as.character(als), 
+    als = fct_recode(als, "Controls" = "0", "Cases" = "1"), 
+    als = fct_relevel(als, "Cases", "Controls")) |>
+  select(als, 
+         "PCB_4",  "PCB_DL", "PCB_118", "PCB_156", 
+         "PCB_NDL", "PCB_28", "PCB_52", "PCB_74", "PCB_99", "PCB_101", 
+         "PCB_138", "PCB_153", "PCB_170", "PCB_180", "PCB_183", "PCB_187", 
+         "HCB",  
+         "ΣDDT", "pp_DDT",  "pp_DDE",  
+         "ΣHCH", "α_HCH", "β_HCH", "γ_HCH", 
+         "Σchlordane", "Oxychlordane", "Transnonachlor", 
+         "PeCB",   
+         "ΣPBDE", "BDE_47", "BDE_99", "BDE_153") |>
+  tbl_summary(by = als, 
+              digits = all_continuous() ~1) |>
+  bold_labels() |>
+  add_overall() |>
+  add_p() 
+```
+
+```{r, fig.width=10, fig.height=8}
+#| echo: false
+#| message: false
+#| warning: false
+heatmap_cor(cormat = bdd_danish[POPs], decimal = 1)
+```
+
+```{r, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+descrip_expo
+```
+
+### POPs summed by group
+
+```{r, , fig.width=10, fig.height=5}
+#| echo: false
+#| message: false
+#| warning: false
+descrip_expo_group
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+densityplot(data = bdd_danish, vars = POPs_group)
+boxplot(data = bdd_danish, vars = POPs_group)
+heatmap_cor(cormat = bdd_danish[POPs_group], decimal = 1)
+```
+
+### PCBs
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+densityplot(data = bdd_danish, vars = PCBs[1:9])
+```
+
+```{r, fig.height=3.33}
+#| echo: false
+#| message: false
+#| warning: false
+densityplot(data = bdd_danish, vars = PCBs[10:13])
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+boxplot(data = bdd_danish, vars = PCBs[1:10])
+```
+
+```{r, fig.height=2}
+#| echo: false
+#| message: false
+#| warning: false
+boxplot(data = bdd_danish, vars = PCBs[11:13])
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+heatmap_cor(cormat = bdd_danish[PCBs], decimal = 1)
+```
+
+### OCPs
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+densityplot(data = bdd_danish, vars = OCPs)
+boxplot(data = bdd_danish, vars = OCPs)
+heatmap_cor(cormat = bdd_danish[OCPs], decimal = 1)
+```
+
+### PBDEs
+
+```{r,  fig.width=7, fig.height=3}
+#| echo: false
+#| message: false
+#| warning: false
+
+densityplot(data = bdd_danish, vars = PBDEs)
+boxplot(data = bdd_danish, vars = PBDEs)
+```
+
+```{r,  fig.width=7, fig.height=4}
+#| echo: false
+#| message: false
+#| warning: false
+
+heatmap_cor(cormat = bdd_danish[PBDEs], decimal = 1)
+```
+
+# Danish data statistics
+
+## Effects of covariates on ALS diagnosis
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+covar
+```
+
+## Effects of POPs on ALS occurence
+### Spline transformation
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+results_spline |> 
+  rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
+         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted',
+         ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant') |>
+  kable("html", escape = FALSE, align = "c") |>
+  add_header_above(c(" " = 1, " " = 1, "Base model" = 3, "Adjusted model" = 3, "Copollutant model" = 3)) |>
+  column_spec(1:2, bold = TRUE, background = "#f0f0f0")  |>
+  scroll_box(width = "100%", height = "800px", extra_css = "scrollable-table") |>
+  kable_styling(fixed_thead = TRUE)
+```
+
+### Quartile transformation
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+results_quart |> 
+    rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
+         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted',
+         ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant') |>
+  kable("html", escape = FALSE, align = "c") |>
+  add_header_above(c(" " = 1, " " = 1, "Base model" = 3, "Adjusted model" = 3, "Copollutant model" = 3)) |>
+  column_spec(1:2, bold = TRUE, background = "#f0f0f0")  |>
+  scroll_box(width = "100%", height = "800px", extra_css = "scrollable-table") |>
+  kable_styling(fixed_thead = TRUE)
+```
+
+### Quadratic transformation
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+results_quadratic |>
+    rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
+         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted',
+         ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant') |>
+  kable("html", escape = FALSE, align = "c") |>
+  add_header_above(c(" " = 1, " " = 1, "Base model" = 3, "Adjusted model" = 3, "Copollutant model" = 3)) |>
+  column_spec(1:2, bold = TRUE, background = "#f0f0f0")  |>
+  scroll_box(width = "100%", height = "800px", extra_css = "scrollable-table")|>
+  kable_styling(fixed_thead = TRUE)
+```
+
+### Cubic transformation
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+results_cubic |>
+    rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
+         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted',
+         ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant') |>
+  kable("html", escape = FALSE, align = "c") |>
+  add_header_above(c(" " = 1, " " = 1, "Base model" = 3, "Adjusted model" = 3, "Copollutant model" = 3)) |>
+  column_spec(1:2, bold = TRUE, background = "#f0f0f0")  |>
+  scroll_box(width = "100%", height = "800px", extra_css = "scrollable-table")|>
+  kable_styling(fixed_thead = TRUE)
+```
+
+
+## Vizualization
+
+### model comparison
+#### dioxin like PCBs 
+```{r, fig.width=15, fig.height=3}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+grid.arrange(grobs = list(plot_adjusted_spline$PCB_DL, 
+                       #plot_adjusted_spline_95$PCB_DL, 
+                       plot_adjusted_spline_outlier$PCB_DL, 
+                       plot_adjusted_quadratic$PCB_DL, 
+                       #plot_adjusted_quadratic_95$PCB_DL, 
+                       plot_adjusted_quadratic_outlier$PCB_DL, 
+                       plot_adjusted_cubic$PCB_DL, 
+                       #plot_adjusted_cubic_95$PCB_DL, 
+                       plot_adjusted_cubic_outlier$PCB_DL), ncol = 6)
+```
+
+#### non dioxin like PCBs
+```{r, fig.width=15, fig.height=3}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+grid.arrange(grobs = list(plot_adjusted_spline$PCB_NDL, 
+                       #plot_adjusted_spline_95$PCB_NDL, 
+                       plot_adjusted_spline_outlier$PCB_NDL, 
+                       plot_adjusted_quadratic$PCB_NDL,
+                       #plot_adjusted_quadratic_95$PCB_NDL, 
+                       plot_adjusted_quadratic_outlier$PCB_NDL, 
+                       plot_adjusted_cubic$PCB_NDL,
+                       #plot_adjusted_cubic_95$PCB_NDL, 
+                       plot_adjusted_cubic_outlier$PCB_NDL), ncol = 6)
+```
+
+#### 4 most commun PCBs
+```{r, fig.width=15, fig.height=3}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+grid.arrange(grobs = list(plot_adjusted_spline$PCB_4, 
+                       #plot_adjusted_spline_95$PCB_4, 
+                       plot_adjusted_spline_outlier$PCB_4,
+                       plot_adjusted_quadratic$PCB_4, 
+                       #plot_adjusted_quadratic_95$PCB_4,
+                       plot_adjusted_quadratic_outlier$PCB_4, 
+                       plot_adjusted_cubic$PCB_4, 
+                       #plot_adjusted_cubic_95$PCB_4,
+                       plot_adjusted_cubic_outlier$PCB_4), ncol = 6)
+```
+
+#### HCB
+```{r, fig.width=15, fig.height=3}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+grid.arrange(grobs = list(plot_adjusted_spline$HCB, 
+                       #plot_adjusted_spline_95$HCB, 
+                       plot_adjusted_spline_outlier$HCB,
+                       plot_adjusted_quadratic$HCB, 
+                       #plot_adjusted_quadratic_95$HCB,
+                       plot_adjusted_quadratic_outlier$HCB, 
+                       plot_adjusted_cubic$HCB, 
+                       #plot_adjusted_cubic_95$HCB,
+                       plot_adjusted_cubic_outlier$HCB), ncol = 6)
+```
+
+#### ΣDDT
+```{r, fig.width=15, fig.height=3}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+grid.arrange(grobs = list(plot_adjusted_spline$ΣDDT, 
+                       #plot_adjusted_spline_95$ΣDDT, 
+                       plot_adjusted_spline_outlier$ΣDDT,
+                       plot_adjusted_quadratic$ΣDDT, 
+                       #plot_adjusted_quadratic_95$ΣDDT, 
+                       plot_adjusted_quadratic_outlier$ΣDDT, 
+                       plot_adjusted_cubic$ΣDDT, 
+                       #plot_adjusted_cubic_95$ΣDDT, 
+                       plot_adjusted_cubic_outlier$ΣDDT), ncol = 6)
+```
+
+#### β_HCH
+```{r, fig.width=15, fig.height=3}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+grid.arrange(grobs = list(plot_adjusted_spline$β_HCH, 
+                       #plot_adjusted_spline_95$β_HCH, 
+                       plot_adjusted_spline_outlier$β_HCH,
+                       plot_adjusted_quadratic$β_HCH, 
+                       #plot_adjusted_quadratic_95$β_HCH, 
+                       plot_adjusted_quadratic_outlier$β_HCH, 
+                       plot_adjusted_cubic$β_HCH, 
+                       #plot_adjusted_cubic_95$β_HCH, 
+                       plot_adjusted_cubic_outlier$β_HCH), ncol = 6)
+```
+
+#### Σchlordane
+```{r, fig.width=15, fig.height=3}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+grid.arrange(grobs = list(plot_adjusted_spline$Σchlordane, 
+                       #plot_adjusted_spline_95$Σchlordane, 
+                       plot_adjusted_spline_outlier$Σchlordane,
+                       plot_adjusted_quadratic$Σchlordane, 
+                       #plot_adjusted_quadratic_95$Σchlordane, 
+                       plot_adjusted_quadratic_outlier$Σchlordane, 
+                       plot_adjusted_cubic$Σchlordane, 
+                       #plot_adjusted_cubic_95$Σchlordane, 
+                       plot_adjusted_cubic_outlier$Σchlordane), ncol = 6)
+```
+
+#### ΣPBDE
+```{r, fig.width=15, fig.height=3}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+grid.arrange(grobs = list(plot_adjusted_spline$ΣPBDE, 
+                       #plot_adjusted_spline_95$ΣPBDE, 
+                       plot_adjusted_spline_outlier$ΣPBDE,
+                       plot_adjusted_quadratic$ΣPBDE, 
+                       #plot_adjusted_quadratic_95$ΣPBDE, 
+                       plot_adjusted_quadratic_outlier$ΣPBDE, 
+                       plot_adjusted_cubic$ΣPBDE, 
+                       #plot_adjusted_cubic_95$ΣPBDE, 
+                       plot_adjusted_cubic_outlier$ΣPBDE), ncol = 6)
+```
+
+### forest plot quartiles 
+```{r fig.height=9, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+plot_quart
+```
