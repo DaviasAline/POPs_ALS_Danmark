@@ -3,7 +3,7 @@ title: "Aline's work"
 format: html
 editor: visual
 toc: true
-toc_depth: 3
+toc_depth: 4
 theme:
   light: flatly
   dark: darkly
@@ -98,6 +98,13 @@ descrip_covar
 table_1 <- descrip_num(data = bdd_danish, vars = POPs)
 table_1 <- left_join(table_1, bdd_loq, by = "variable") 
 table_1 %>% kable("html")
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+descrip_num(data = bdd_danish, vars = c(POPs_group_outlier, POPs_group_outlier)) %>% kable("html")
 ```
 
 ```{r}
@@ -238,8 +245,9 @@ covar
 ```
 
 ## Effects of POPs on ALS occurence
-### Spline transformation
 
+### Spline transformation
+#### main analysis
 ```{r}
 #| echo: false
 #| message: false
@@ -256,8 +264,30 @@ results_spline |>
   kable_styling(fixed_thead = TRUE)
 ```
 
-### Quartile transformation
+#### sensitivity analysis without outliers 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+results_spline_outliers |> 
+  rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
+         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted'
+         # ,
+         # ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant'
+         ) |>
+  kable("html", escape = FALSE, align = "c") |>
+  add_header_above(c(" " = 1, " " = 1, "Base model" = 3, "Adjusted model" = 3
+                     # , 
+                     # "Copollutant model" = 3
+                     )) |>
+  column_spec(1:2, bold = TRUE, background = "#f0f0f0")  |>
+  scroll_box(width = "100%", height = "800px", extra_css = "scrollable-table") |>
+  kable_styling(fixed_thead = TRUE)
+```
 
+### Quartile transformation
+#### main analysis
 ```{r}
 #| echo: false
 #| message: false
@@ -274,7 +304,9 @@ results_quart |>
   kable_styling(fixed_thead = TRUE)
 ```
 
+
 ### Quadratic transformation
+#### main analysis
 ```{r}
 #| echo: false
 #| message: false
@@ -282,8 +314,9 @@ results_quart |>
 #| column: screen-inset-right
 results_quadratic |>
     rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
-         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted',
-         ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant') |>
+         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted', 
+         ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant'
+         ) |>
   kable("html", escape = FALSE, align = "c") |>
   add_header_above(c(" " = 1, " " = 1, "Base model" = 3, "Adjusted model" = 3, "Copollutant model" = 3)) |>
   column_spec(1:2, bold = TRUE, background = "#f0f0f0")  |>
@@ -291,7 +324,29 @@ results_quadratic |>
   kable_styling(fixed_thead = TRUE)
 ```
 
+#### sensitivity analysis without outliers
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+results_quadratic_outliers |>
+    rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
+         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted'
+         # ,
+         # ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant'
+         ) |>
+  kable("html", escape = FALSE, align = "c") |>
+  add_header_above(c(" " = 1, " " = 1, "Base model" = 3, "Adjusted model" = 3
+                     # , "Copollutant model" = 3
+                     )) |>
+  column_spec(1:2, bold = TRUE, background = "#f0f0f0")  |>
+  scroll_box(width = "100%", height = "800px", extra_css = "scrollable-table")|>
+  kable_styling(fixed_thead = TRUE)
+```
+
 ### Cubic transformation
+#### main analysis
 ```{r}
 #| echo: false
 #| message: false
@@ -308,11 +363,33 @@ results_cubic |>
   kable_styling(fixed_thead = TRUE)
 ```
 
+#### sensitivity analysis without outliers
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+results_cubic_outliers |>
+    rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
+         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted'
+         # ,
+         # ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant'
+         ) |>
+  kable("html", escape = FALSE, align = "c") |>
+  add_header_above(c(" " = 1, " " = 1, "Base model" = 3, "Adjusted model" = 3
+                     # , "Copollutant model" = 3
+                     )) |>
+  column_spec(1:2, bold = TRUE, background = "#f0f0f0")  |>
+  scroll_box(width = "100%", height = "800px", extra_css = "scrollable-table")|>
+  kable_styling(fixed_thead = TRUE)
+```
 
 ## Vizualization
 
-### model comparison
-#### dioxin like PCBs 
+### model comparison splines, linear quadratic and cubic
+
+#### dioxin like PCBs
+
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -330,6 +407,7 @@ grid.arrange(grobs = list(plot_adjusted_spline$PCB_DL,
 ```
 
 #### non dioxin like PCBs
+
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -347,6 +425,7 @@ grid.arrange(grobs = list(plot_adjusted_spline$PCB_NDL,
 ```
 
 #### 4 most commun PCBs
+
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -364,6 +443,7 @@ grid.arrange(grobs = list(plot_adjusted_spline$PCB_4,
 ```
 
 #### HCB
+
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -381,6 +461,7 @@ grid.arrange(grobs = list(plot_adjusted_spline$HCB,
 ```
 
 #### ΣDDT
+
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -398,6 +479,7 @@ grid.arrange(grobs = list(plot_adjusted_spline$ΣDDT,
 ```
 
 #### β_HCH
+
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -415,6 +497,7 @@ grid.arrange(grobs = list(plot_adjusted_spline$β_HCH,
 ```
 
 #### Σchlordane
+
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -432,6 +515,7 @@ grid.arrange(grobs = list(plot_adjusted_spline$Σchlordane,
 ```
 
 #### ΣPBDE
+
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -448,10 +532,31 @@ grid.arrange(grobs = list(plot_adjusted_spline$ΣPBDE,
                        plot_adjusted_cubic_outlier$ΣPBDE), ncol = 6)
 ```
 
-### forest plot quartiles 
+### forest plot quartiles
+
 ```{r fig.height=9, fig.width=9}
 #| echo: false
 #| message: false
 #| warning: false
 plot_quart
 ```
+
+
+### gaam models 
+```{r, fig.width=9, fig.height=9}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+grid.arrange(grobs = plot_adjusted_gam)
+```
+
+### gam models without outliers 
+```{r, fig.width=9, fig.height=9}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+grid.arrange(grobs = plot_adjusted_gam_outliers)
+```
+

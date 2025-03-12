@@ -185,6 +185,7 @@ replace_with_median <- function(data, var, quartile_var) {
 
 
 bdd_danish <- bdd_danish %>%
+  replace_with_median(HCB, HCB_quart) %>%
   replace_with_median(PCB_DL, PCB_DL_quart) %>%
   replace_with_median(PCB_NDL, PCB_NDL_quart) %>%
   replace_with_median(PCB_4, PCB_4_quart) %>%
@@ -192,7 +193,8 @@ bdd_danish <- bdd_danish %>%
   replace_with_median(ΣDDT, ΣDDT_quart) %>%
   replace_with_median(ΣHCH, ΣHCH_quart) %>%
   replace_with_median(Σchlordane, Σchlordane_quart) %>%
-  replace_with_median(PeCB, PeCB_quart)
+  replace_with_median(PeCB, PeCB_quart) %>%
+  replace_with_median(β_HCH, β_HCH_quart)
 rm(replace_with_median)
 
 POPs_group_quart_med <- bdd_danish %>% select(contains("quart_med")) %>% colnames()

@@ -11,6 +11,10 @@ library("scales")
 library('plotly')
 library('gridExtra')  
 library('ggeffects')
+library('mgcv')
+library('purrr')
+library('tidyr')
+library('ggstance')
 
 # descriptif ----
 ## covariates table ----
@@ -501,6 +505,19 @@ model2_cubic <- model2_cubic %>%
     model = "adjusted_cubic") %>%
   select(variable, model, everything())
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
+
+#### gaam ----
+model2_gam <- list()
+
+for (var in POPs_group) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model_summary <- summary(model)
+  model2_gam[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
 
 ### models 3 ----
 #### spline transformation ----
@@ -1080,7 +1097,7 @@ results_quart <-
     names_from = model,  
     values_from = c(OR, `95%CI`, p.value)) |>
   select(variable, 
-         df,
+         quartiles = df,
          contains("base_quart"), 
          contains("adjusted_quart"), 
          contains("copollutant_quart")) 
@@ -1094,7 +1111,7 @@ results_quadratic <-
     names_from = model,  
     values_from = c(OR, `95%CI`, p.value)) |>
   select(variable, 
-         df,
+         degree = df,
          contains("base_quadra"), 
          contains("adjusted_quadra"), 
          contains("copollutant_quadra")) 
@@ -1108,7 +1125,7 @@ results_cubic <-
     names_from = model,  
     values_from = c(OR, `95%CI`, p.value)) |>
   select(variable, 
-         df,
+         degree = df,
          contains("base_cubic"), 
          contains("adjusted_cubic"), 
          contains("copollutant_cubic")) 
@@ -1374,7 +1391,6 @@ model2_cubic_95 <- model2_cubic_95 %>%
   select(variable, model, everything())
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
 
-
 ## sensitivity analyses without outliers ----
 ### model 1  ----
 # adjusted for sex and age
@@ -1622,13 +1638,26 @@ model2_cubic_outlier <- model2_cubic_outlier %>%
   select(variable, model, everything())
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
 
+#### gaam ----
+model2_gam_outliers <- list()
+
+for (var in POPs_group_outlier) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model_summary <- summary(model)
+  model2_gam_outliers[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
+
 ### merging the sensitivity results ----
-sensitivity_results <- bind_rows(model1_spline_95, model1_spline_outlier,
-                                 model1_quadratic_95, model1_quadratic_outlier,
-                                 model1_cubic_95, model1_cubic_outlier, 
-                                 model2_spline_95, model2_spline_outlier,
-                                 model2_quadratic_95, model2_quadratic_outlier,
-                                 model2_cubic_95, model2_cubic_outlier) %>% 
+sensitivity_results <- bind_rows(model1_spline_outlier,
+                                  model1_quadratic_outlier,
+                                 model1_cubic_outlier, 
+                                 model2_spline_outlier,
+                                model2_quadratic_outlier,
+                                 model2_cubic_outlier) %>% 
   arrange(variable) %>%
   mutate(
     "95%CI" = paste(lower_CI, ", ", upper_CI)) %>%
@@ -1639,6 +1668,45 @@ sensitivity_results <- bind_rows(model1_spline_95, model1_spline_outlier,
          starts_with("OR"), 
          starts_with("95%"), 
          starts_with("p.value")) 
+
+results_spline_outliers <- 
+  sensitivity_results |>
+  filter(model %in% c('base_spline', 'adjusted_spline', 'copollutant_spline')) |>
+  pivot_wider(
+    names_from = model,  
+    values_from = c(OR, `95%CI`, p.value)) |>
+  select(variable, 
+         df,
+         contains("base_spline"), 
+         contains("adjusted_spline"), 
+         contains("copollutant_spline")) 
+colnames(results_spline_outliers) <- gsub('_spline', '', colnames(results_spline_outliers))
+
+results_quadratic_outliers <- 
+  sensitivity_results |>
+  filter(model %in% c('base_quadra', 'adjusted_quadra', 'copollutant_quadra')) |>
+  pivot_wider(
+    names_from = model,  
+    values_from = c(OR, `95%CI`, p.value)) |>
+  select(variable, 
+         df,
+         contains("base_quadra"), 
+         contains("adjusted_quadra"), 
+         contains("copollutant_quadra")) 
+colnames(results_quadratic_outliers) <- gsub('_quadra', '', colnames(results_quadratic_outliers))
+
+results_cubic_outliers <- 
+  sensitivity_results |>
+  filter(model %in% c('base_cubic', 'adjusted_cubic', 'copollutant_cubic')) |>
+  pivot_wider(
+    names_from = model,  
+    values_from = c(OR, `95%CI`, p.value)) |>
+  select(variable, 
+         df,
+         contains("base_cubic"), 
+         contains("adjusted_cubic"), 
+         contains("copollutant_cubic")) 
+colnames(results_cubic_outliers) <- gsub('_cubic', '', colnames(results_cubic_outliers))
 
 rm(model1_spline_95, model1_spline_outlier,
    model1_quadratic_95, model1_quadratic_outlier,
@@ -1698,7 +1766,7 @@ for (var in POPs_group) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) + 
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  # Add CI ribbon
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = "spline") +
     theme_minimal()
   
   plot_base_spline[[var]] <- plot
@@ -1743,7 +1811,7 @@ for (var in POPs_group_95) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = 'spline without outliers') +
     theme_minimal()
   
   plot_base_spline_95[[var]] <- plot
@@ -1789,7 +1857,7 @@ for (var in POPs_group_outlier) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = 'spline without outliers') +
     theme_minimal()
   
   plot_base_spline_outlier[[var]] <- plot
@@ -1835,7 +1903,7 @@ for (var in POPs_group) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = 'linear quadratic') +
     theme_minimal()
   
   plot_base_quadratic[[var]] <- plot
@@ -1883,7 +1951,7 @@ for (var in POPs_group_95) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = 'linear quadratic without outliers') +
     theme_minimal()
   
   plot_base_quadratic_95[[var]] <- plot
@@ -1930,7 +1998,7 @@ for (var in POPs_group_outlier) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = 'linear quadratic without outliers') +
     theme_minimal()
   
   plot_base_quadratic_outlier[[var]] <- plot
@@ -1976,7 +2044,7 @@ for (var in POPs_group) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = 'cubic') +
     theme_minimal()
   
   plot_base_cubic[[var]] <- plot
@@ -2023,7 +2091,7 @@ for (var in POPs_group_95) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = 'cubic without outliers') +
     theme_minimal()
   
   plot_base_cubic_95[[var]] <- plot
@@ -2070,7 +2138,7 @@ for (var in POPs_group_outlier) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = 'cubic without outliers') +
     theme_minimal()
   
   plot_base_cubic_outlier[[var]] <- plot
@@ -2119,7 +2187,7 @@ for (var in POPs_group) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  # Plot the estimated probability
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  # Add CI ribbon
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = "spline") +
     theme_minimal()
   
   plot_adjusted_spline[[var]] <- plot
@@ -2166,7 +2234,7 @@ for (var in POPs_group_95) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  # Plot the estimated probability
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  # Add CI ribbon
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = 'spline without outliers') +
     theme_minimal()
   
   plot_adjusted_spline_95[[var]] <- plot
@@ -2212,7 +2280,7 @@ for (var in POPs_group_outlier) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  # Plot the estimated probability
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  # Add CI ribbon
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = 'spline without outliers') +
     theme_minimal()
   
   plot_adjusted_spline_outlier[[var]] <- plot
@@ -2259,7 +2327,7 @@ for (var in POPs_group) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  # Plot the estimated probability
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  # Add CI ribbon
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = 'linear quadratic') +
     theme_minimal()
   
   plot_adjusted_quadratic[[var]] <- plot
@@ -2305,7 +2373,7 @@ for (var in POPs_group_95) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  # Plot the estimated probability
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  # Add CI ribbon
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = 'linear quadratic without outliers') +
     theme_minimal()
   
   plot_adjusted_quadratic_95[[var]] <- plot
@@ -2351,7 +2419,7 @@ for (var in POPs_group_outlier) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  # Plot the estimated probability
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  # Add CI ribbon
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = 'linear quadratic without outliers') +
     theme_minimal()
   
   plot_adjusted_quadratic_outlier[[var]] <- plot
@@ -2397,7 +2465,7 @@ for (var in POPs_group) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) + 
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = 'cubic') +
     theme_minimal()
   
   plot_adjusted_cubic[[var]] <- plot
@@ -2444,7 +2512,7 @@ for (var in POPs_group_95) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) + 
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = 'cubic without outliers') +
     theme_minimal()
   
   plot_adjusted_cubic_95[[var]] <- plot
@@ -2491,7 +2559,7 @@ for (var in POPs_group_outlier) {
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) +  
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) + 
-    labs(x = var, y = "Predicted probability of ALS") +
+    labs(x = var, y = "Predicted probability of ALS", title = 'cubic without outliers') +
     theme_minimal()
   
   plot_adjusted_cubic_outlier[[var]] <- plot
@@ -2500,17 +2568,72 @@ for (var in POPs_group_outlier) {
 rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
 
 
-# export ----
-# spline_results <- main_results %>% filter(model %in% c("base_spline", "adjusted_spline", "copollutant_spline"))
-# quart_results <- main_results %>% filter(model %in% c("base_quart", "adjusted_quart", "copollutant_quart"))
 
-# write_xlsx(list(Sheet1 = spline_results, Sheet2 = quart_results), 
-#            "~/Documents/POP_ALS_2025_02_03/2_output/results.xlsx")
+### gaam ----
 
-# visualization of significant results ----
-# spline_results %>%
-#    filter(p.value_1<0.05 | p.value_2 <0.05 | p.value_3<0.05 | p.value_4<0.05) %>%
-#    View()
-# quart_results %>%
-#    filter(p.value_1<0.05 | p.value_2 <0.05 | p.value_3<0.05 | p.value_4<0.05) %>%
-#    View()
+covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", 
+                "cholesterol_i", "marital_status_2cat_i", "education_i")
+
+plot_adjusted_gam <- map(POPs_group, function(var) {
+  
+  formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates, collapse = ' + ')}"))
+  
+  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
+  
+  bdd_pred <- bdd_danish %>%                                                    # création bdd avec expo + covariables ramenées à leur moyenne
+    mutate(across(all_of(covariates), 
+                  ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.))), 
+                  .names = "adj_{.col}")) %>%
+    select(all_of(var), starts_with("adj_")) %>%
+    rename_with(~ gsub("adj_", "", .x)) 
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred %>%
+    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
+           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
+  
+  ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "blue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
+    geom_rug(sides = 'b') +
+    labs(x = var, y = "Predicted probability of ALS") +
+    theme_minimal()
+}) %>% 
+  set_names(POPs_group)
+
+
+### gaam outliers ----
+
+covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", 
+                "cholesterol_i", "marital_status_2cat_i", "education_i")
+plot_adjusted_gam_outliers <- map(POPs_group_outlier, function(var) {
+  
+  formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates, collapse = ' + ')}"))
+  
+  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
+  
+  bdd_pred <- bdd_danish %>%
+    mutate(across(all_of(covariates), 
+                  ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.))), 
+                  .names = "adj_{.col}")) %>%
+    select(all_of(var), starts_with("adj_")) %>%
+    rename_with(~ gsub("adj_", "", .x))  
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred %>%
+    mutate(prob = plogis(pred$fit),
+           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
+  
+  ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "blue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
+    geom_rug(sides = "b") +
+    labs(x = var, y = "Predicted probability of ALS") +
+    theme_minimal()
+}) %>% set_names(POPs_group)
+
+
