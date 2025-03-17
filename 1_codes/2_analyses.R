@@ -15,6 +15,8 @@ library('mgcv')
 library('purrr')
 library('tidyr')
 library('ggstance')
+library('gratia')
+library('glue')
 
 # descriptif ----
 ## covariates table ----
@@ -355,6 +357,18 @@ model1_cubic <- model1_cubic %>%
   select(variable, model, everything())
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
 
+#### gamm ----
+model1_gamm <- list()
+
+for (var in POPs_group) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
+  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model_summary <- summary(model)
+  model1_gamm[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
 
 ### model 2 ----
 # matched on sex and age, adjusted on for smoking_2cat_i, BMI, serum total cholesterol_i, marital status and education
@@ -506,15 +520,15 @@ model2_cubic <- model2_cubic %>%
   select(variable, model, everything())
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
 
-#### gaam ----
-model2_gam <- list()
+#### gamm ----
+model2_gamm <- list()
 
 for (var in POPs_group) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
   model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
-  model2_gam[[var]] <- model_summary
+  model2_gamm[[var]] <- model_summary
 }
 
 rm(var, formula, model, model_summary)
@@ -1638,15 +1652,16 @@ model2_cubic_outlier <- model2_cubic_outlier %>%
   select(variable, model, everything())
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
 
-#### gaam ----
-model2_gam_outliers <- list()
+#### gamm ----
+model2_gamm_outliers <- list()
 
 for (var in POPs_group_outlier) {
   
-  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + 
+                              smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
   model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
-  model2_gam_outliers[[var]] <- model_summary
+  model2_gamm_outliers[[var]] <- model_summary
 }
 
 rm(var, formula, model, model_summary)
@@ -1726,11 +1741,16 @@ plot_quart <- main_results %>%
                             "Base model" = "base_quart",
                             "Copollutant model" = "copollutant_quart"),
          model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
-         df = fct_relevel(df, "Quartile 4", "Quartile 3", "Quartile 2" )) %>%
+         df = fct_relevel(df, "Quartile 4", "Quartile 3", "Quartile 2" ), 
+         variable = fct_recode(variable, 
+                               "Most prevalent\nPCBs" = "PCB_4",
+                               "Dioxin-like\nPCBs" = "PCB_DL",
+                               "Non-dioxin-like\nPCBs" = "PCB_NDL",
+                               "β-HCH" = "β_HCH")) %>%
   ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(rows = dplyr::vars(variable), cols = dplyr::vars(model), scales = "free_x", switch = "y") +  
+  facet_grid(rows = dplyr::vars(variable), cols = dplyr::vars(model), switch = "y") +  
   scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
   labs(x = "POPs", y = "Odds Ratio (OR)", color = "p-value") +
   theme_lucid() +
@@ -2145,6 +2165,134 @@ for (var in POPs_group_outlier) {
 }
 
 rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
+
+
+
+### gamm ----
+pollutant_labels <- set_names(
+  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  POPs_group)
+
+covariates <- c("sex", "baseline_age")
+
+plot_base_gamm <- map(POPs_group, function(var) {
+  
+  formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates, collapse = ' + ')}"))
+  
+  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
+  
+  bdd_pred <- bdd_danish %>%                                                    # création bdd avec expo + covariables ramenées à leur moyenne
+    mutate(across(all_of(covariates), 
+                  ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.))), 
+                  .names = "adj_{.col}")) %>%
+    select(all_of(var), starts_with("adj_")) %>%
+    rename_with(~ gsub("adj_", "", .x)) 
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred %>%
+    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
+           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01", round(p_value, 2))
+  x_max <- max(bdd_danish[[var]], na.rm = TRUE)
+  x_label <- pollutant_labels[var] 
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "blue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
+    labs(x = var, y = "Predicted probability of ALS") +
+    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 1, vjust = 1.2, size = 4, color = "black") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(color = 'white'),
+          axis.title.x = element_blank(),
+          axis.line.x = element_blank(),
+          axis.ticks.x = element_blank()) 
+  
+  p2 <- ggplot(bdd_pred) +
+    aes(x = "", y = .data[[var]]) +
+    geom_boxplot(fill = "blue") +
+    coord_flip() +
+    ylab(x_label) + 
+    xlab("") + 
+    theme_minimal()
+  
+  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
+                           guides = 'collect') + 
+    theme_minimal()
+  p
+}) %>% 
+  set_names(POPs_group)
+rm(pollutant_labels, covariates)
+
+### gamm outliers ----
+pollutant_labels <- set_names(
+  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  POPs_group_outlier)
+
+covariates <- c("sex", "baseline_age")
+
+plot_base_gamm_outliers <- map(POPs_group_outlier, function(var) {
+  
+  formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates, collapse = ' + ')}"))
+  
+  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
+  
+  bdd_pred <- bdd_danish %>%                                                    # création bdd avec expo + covariables ramenées à leur moyenne
+    mutate(across(all_of(covariates), 
+                  ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.))), 
+                  .names = "adj_{.col}")) %>%
+    select(all_of(var), starts_with("adj_")) %>%
+    rename_with(~ gsub("adj_", "", .x)) 
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred %>%
+    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
+           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01", round(p_value, 2))
+  x_max <- max(bdd_danish[[var]], na.rm = TRUE)
+  x_label <- pollutant_labels[var] 
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "blue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
+    labs(x = var, y = "Predicted probability of ALS") +
+    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 1, vjust = 1.2, size = 4, color = "black") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(color = 'white'),
+          axis.title.x = element_blank(),
+          axis.line.x = element_blank(),
+          axis.ticks.x = element_blank()) 
+  
+  p2 <- ggplot(bdd_pred) +
+    aes(x = "", y = .data[[var]]) +
+    geom_boxplot(fill = "blue") +
+    coord_flip() +
+    ylab(x_label) + 
+    xlab("") + 
+    theme_minimal()
+  
+  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
+                           guides = 'collect') + 
+    theme_minimal()
+  p
+}) %>% 
+  set_names(POPs_group)
+rm(pollutant_labels, covariates)
+
+
 
 ## model 2 ----
 ### spline ----
@@ -2569,12 +2717,15 @@ rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
 
 
 
-### gaam ----
+### gamm ----
+pollutant_labels <- set_names(
+  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  POPs_group)
 
 covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", 
                 "cholesterol_i", "marital_status_2cat_i", "education_i")
 
-plot_adjusted_gam <- map(POPs_group, function(var) {
+plot_adjusted_gamm <- map(POPs_group, function(var) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates, collapse = ' + ')}"))
   
@@ -2594,46 +2745,246 @@ plot_adjusted_gam <- map(POPs_group, function(var) {
            prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
            prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
   
-  ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01", round(p_value, 2))
+  x_max <- max(bdd_danish[[var]], na.rm = TRUE)
+  x_label <- pollutant_labels[var] 
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
     geom_line(color = "blue", size = 1) +
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    geom_rug(sides = 'b') +
     labs(x = var, y = "Predicted probability of ALS") +
+    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 1, vjust = 1.2, size = 4, color = "black") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(color = 'white'),
+          axis.title.x = element_blank(),
+          axis.line.x = element_blank(),
+          axis.ticks.x = element_blank()) 
+  
+  p2 <- ggplot(bdd_pred) +
+    aes(x = "", y = .data[[var]]) +
+    geom_boxplot(fill = "blue") +
+    coord_flip() +
+    ylab(x_label) + 
+    xlab("") + 
     theme_minimal()
+  
+  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
+                           guides = 'collect') + 
+    theme_minimal()
+  p
 }) %>% 
   set_names(POPs_group)
+rm(pollutant_labels, covariates)
 
-
-### gaam outliers ----
+### gamm outliers ----
+pollutant_labels <- set_names(
+  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  POPs_group_outlier)
 
 covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", 
                 "cholesterol_i", "marital_status_2cat_i", "education_i")
-plot_adjusted_gam_outliers <- map(POPs_group_outlier, function(var) {
+
+plot_adjusted_gamm_outliers <- map(POPs_group_outlier, function(var) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates, collapse = ' + ')}"))
   
   model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
   
-  bdd_pred <- bdd_danish %>%
+  bdd_pred <- bdd_danish %>%                                                    # création bdd avec expo + covariables ramenées à leur moyenne
     mutate(across(all_of(covariates), 
                   ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.))), 
                   .names = "adj_{.col}")) %>%
     select(all_of(var), starts_with("adj_")) %>%
-    rename_with(~ gsub("adj_", "", .x))  
+    rename_with(~ gsub("adj_", "", .x)) 
   
   pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
   
   bdd_pred <- bdd_pred %>%
-    mutate(prob = plogis(pred$fit),
+    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
            prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
            prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
   
-  ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01", round(p_value, 2))
+  x_max <- max(bdd_danish[[var]], na.rm = TRUE)
+  x_label <- pollutant_labels[var] 
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
     geom_line(color = "blue", size = 1) +
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    geom_rug(sides = "b") +
     labs(x = var, y = "Predicted probability of ALS") +
+    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 1, vjust = 1.2, size = 4, color = "black") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(color = 'white'),
+          axis.title.x = element_blank(),
+          axis.line.x = element_blank(),
+          axis.ticks.x = element_blank()) 
+  
+  p2 <- ggplot(bdd_pred) +
+    aes(x = "", y = .data[[var]]) +
+    geom_boxplot(fill = "blue") +
+    coord_flip() +
+    ylab(x_label) + 
+    xlab("") + 
     theme_minimal()
-}) %>% set_names(POPs_group)
+  
+  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
+                           guides = 'collect') + 
+    theme_minimal()
+  p
+}) %>% 
+  set_names(POPs_group)
+rm(pollutant_labels, covariates)
+
+## model 3 ----
+### gamm ----
+POPs_group_bis <- setdiff(POPs_group, "PCB_4")
+pollutant_labels_bis <- set_names(
+  c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
+    "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
+  POPs_group_bis)
+covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", 
+                "cholesterol_i", "marital_status_2cat_i", "education_i")
+
+model <- gam(als ~ s(PCB_DL) + s(PCB_NDL) + s(HCB) + s(ΣDDT) + 
+               s(β_HCH) + s(Σchlordane) + s(ΣPBDE) + 
+               sex + baseline_age + 
+               smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+             family = binomial, 
+             method = "REML", 
+             data = bdd_danish)
+
+
+plot_copollutant_gamm <- map(POPs_group_bis, function(var) {
+  
+  bdd_pred <- bdd_danish %>%
+    mutate(across(all_of(covariates), 
+                  ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.))))) %>%
+    mutate(across(setdiff(POPs_group_bis, var), 
+                  ~ mean(., na.rm = TRUE))) %>%                                 # Fixe les autres POPs à leur moyenne
+    select(all_of(var), all_of(covariates), all_of(setdiff(POPs_group_bis, var)))  
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred %>%
+    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
+           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[rownames(model_summary$s.table) == paste0("s(", var, ")"), "edf"], nsmall = 1, digits = 1) 
+  p_value <- model_summary$s.table[rownames(model_summary$s.table) == paste0("s(", var, ")"), "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "p-value < 0.01", sprintf("p-value = %.2f", p_value))
+  x_max <- max(bdd_danish[[var]], na.rm = TRUE)
+  x_label <- pollutant_labels_bis[var]
+  
+  
+  # edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  # p_value <- model_summary$s.table[1, "p-value"]
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "blue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
+    labs(x = var, y = "Predicted probability of ALS") +
+    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 1, vjust = 1.2, size = 4, color = "black") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(color = 'white'),
+          axis.title.x = element_blank(),
+          axis.line.x = element_blank(),
+          axis.ticks.x = element_blank()) 
+  
+  p2 <- ggplot(bdd_pred) +
+    aes(x = "", y = .data[[var]]) +
+    geom_boxplot(fill = "blue") +
+    coord_flip() +
+    ylab(x_label) + 
+    xlab("") + 
+    theme_minimal()
+  
+  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
+                           guides = 'collect')
+  p
+}) %>% set_names(POPs_group_bis)
+rm(POPs_group_bis, pollutant_labels_bis)
+
+
+### gamm outliers ----
+POPs_group_outlier_bis <- setdiff(POPs_group_outlier, "PCB_4_outlier")
+pollutant_labels_bis <- set_names(
+  c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
+    "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
+  POPs_group_outlier_bis)
+covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", 
+                "cholesterol_i", "marital_status_2cat_i", "education_i")
+
+model <- gam(als ~ s(PCB_DL_outlier) + s(PCB_NDL_outlier) + s(HCB_outlier) + s(ΣDDT_outlier) + 
+               s(β_HCH_outlier) + s(Σchlordane_outlier) + s(ΣPBDE_outlier) + 
+               sex + baseline_age + 
+               smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+             family = binomial, 
+             method = "REML", 
+             data = bdd_danish)
+
+
+plot_copollutant_gamm_outlier <- map(POPs_group_outlier_bis, function(var) {
+  
+  bdd_pred <- bdd_danish %>%
+    mutate(across(all_of(covariates), 
+                  ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.))))) %>%
+    mutate(across(setdiff(POPs_group_outlier_bis, var), 
+                  ~ mean(., na.rm = TRUE))) %>%                                 # Fixe les autres POPs à leur moyenne
+    select(all_of(var), all_of(covariates), all_of(setdiff(POPs_group_outlier_bis, var)))  
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred %>%
+    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
+           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[rownames(model_summary$s.table) == paste0("s(", var, ")"), "edf"], nsmall = 1, digits = 1) 
+  p_value <- model_summary$s.table[rownames(model_summary$s.table) == paste0("s(", var, ")"), "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "p-value < 0.01", sprintf("p-value = %.2f", p_value))
+  x_max <- max(bdd_danish[[var]], na.rm = TRUE)
+  x_label <- pollutant_labels_bis[var]
+  
+  
+  # edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  # p_value <- model_summary$s.table[1, "p-value"]
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "blue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
+    labs(x = var, y = "Predicted probability of ALS") +
+    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 1, vjust = 1.2, size = 4, color = "black") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(color = 'white'),
+          axis.title.x = element_blank(),
+          axis.line.x = element_blank(),
+          axis.ticks.x = element_blank()) 
+  
+  p2 <- ggplot(bdd_pred) +
+    aes(x = "", y = .data[[var]]) +
+    geom_boxplot(fill = "blue") +
+    coord_flip() +
+    ylab(x_label) + 
+    xlab("") + 
+    theme_minimal()
+  
+  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
+                           guides = 'collect')
+  p
+}) %>% set_names(POPs_group_outlier_bis)
+rm(POPs_group_outlier_bis, pollutant_labels_bis)
 
 

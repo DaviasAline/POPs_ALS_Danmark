@@ -104,7 +104,7 @@ table_1 %>% kable("html")
 #| echo: false
 #| message: false
 #| warning: false
-descrip_num(data = bdd_danish, vars = c(POPs_group_outlier, POPs_group_outlier)) %>% kable("html")
+descrip_num(data = bdd_danish, vars = c(POPs_group, POPs_group_outlier)) %>% kable("html")
 ```
 
 ```{r}
@@ -542,21 +542,49 @@ plot_quart
 ```
 
 
-### gaam models 
-```{r, fig.width=9, fig.height=9}
+### gamm models 
+#### Base models 
+Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex and age. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf>2: more complex than quadratic).
+```{r, fig.height=6, fig.width=15}
 #| echo: false
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-grid.arrange(grobs = plot_adjusted_gam)
+wrap_plots(wrap_plots(plot_adjusted_gamm[1:4], nrow = 1), 
+           wrap_plots(plot_adjusted_gamm_outliers[1:4], nrow = 1), 
+           nrow = 2)
+wrap_plots(wrap_plots(plot_adjusted_gamm[5:8], nrow = 1), 
+           wrap_plots(plot_adjusted_gamm_outliers[5:8], nrow = 1), 
+           nrow = 2)
 ```
 
-### gam models without outliers 
-```{r, fig.width=9, fig.height=9}
+#### Adjusted models 
+Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age,  serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf>2: more complex than quadratic).
+```{r, fig.height=6, fig.width=15}
 #| echo: false
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-grid.arrange(grobs = plot_adjusted_gam_outliers)
+wrap_plots(wrap_plots(plot_adjusted_gamm[1:4], nrow = 1), 
+           wrap_plots(plot_adjusted_gamm_outliers[1:4], nrow = 1), 
+           nrow = 2)
+wrap_plots(wrap_plots(plot_adjusted_gamm[5:8], nrow = 1), 
+           wrap_plots(plot_adjusted_gamm_outliers[5:8], nrow = 1), 
+           nrow = 2)
+```
+
+#### Copollutant model
+Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates and all other co-pollutants are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status, education and for the other co-pollutants. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf>2: more complex than quadratic).
+```{r, fig.height=6, fig.width=15}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+wrap_plots(wrap_plots(plot_copollutant_gamm[1:4], nrow = 1), 
+           wrap_plots(plot_copollutant_gamm_outlier[1:4], nrow = 1), 
+           nrow = 2)
+wrap_plots(wrap_plots(plot_copollutant_gamm[5:7], nrow = 1), 
+           wrap_plots(plot_copollutant_gamm_outlier[5:7], nrow = 1), 
+           nrow = 2)
 ```
 
