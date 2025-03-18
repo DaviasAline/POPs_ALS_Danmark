@@ -14,12 +14,7 @@ toc-location: left
 #| message: false
 #| warning: false
 #| include: false
-source("~/Documents/POP_ALS_2025_02_03/1_codes/0_functions.R")
-source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2_analyses.R")
-library(see)
-library(kableExtra)
-library(knitr)
 ```
 
 # Comparison finnish/danish data
@@ -586,5 +581,47 @@ wrap_plots(wrap_plots(plot_copollutant_gamm[1:4], nrow = 1),
 wrap_plots(wrap_plots(plot_copollutant_gamm[5:7], nrow = 1), 
            wrap_plots(plot_copollutant_gamm_outlier[5:7], nrow = 1), 
            nrow = 2)
+```
+
+## Figure for article 
+```{r, fig.height=24, fig.width=11.25}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+#| 
+wrap_plots(plot_base_gamm$PCB_DL + ggtitle('Base model'), 
+           plot_adjusted_gamm$PCB_DL + ggtitle('Adjusted model'), 
+           plot_copollutant_gamm$PCB_DL + ggtitle('Copollutant model'), 
+           
+           plot_base_gamm$PCB_NDL, 
+           plot_adjusted_gamm$PCB_NDL, 
+           plot_copollutant_gamm$PCB_NDL, 
+           
+           plot_base_gamm$PCB_4, 
+           plot_adjusted_gamm$PCB_4, 
+           wrap_elements(grid::nullGrob()),
+           
+           plot_base_gamm$HCB, 
+           plot_adjusted_gamm$HCB, 
+           plot_copollutant_gamm$HCB, 
+           
+           plot_base_gamm$ΣDDT, 
+           plot_adjusted_gamm$ΣDDT, 
+           plot_copollutant_gamm$ΣDDT, 
+           
+           plot_base_gamm$β_HCH, 
+           plot_adjusted_gamm$β_HCH, 
+           plot_copollutant_gamm$β_HCH, 
+           
+           plot_base_gamm$Σchlordane, 
+           plot_adjusted_gamm$Σchlordane, 
+           plot_copollutant_gamm$Σchlordane, 
+           
+           plot_base_gamm$ΣPBDE, 
+           plot_adjusted_gamm$ΣPBDE, 
+           plot_copollutant_gamm$ΣPBDE, 
+           ncol = 3)
+           
 ```
 

@@ -1,8 +1,6 @@
 # Aline Davias
 # 03/02/2025
 
-
-
 # data loading - package loading ----
 source("~/Documents/POP_ALS_2025_02_03/1_codes/0_functions.R")
 source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
@@ -17,6 +15,11 @@ library('tidyr')
 library('ggstance')
 library('gratia')
 library('glue')
+library('see')
+library('kableExtra')
+library('knitr')
+library('officer')
+library(flextable)
 
 # descriptif ----
 ## covariates table ----
@@ -36,7 +39,7 @@ descrip_covar <- bdd_danish %>%
 bdd_danish_long <- bdd_danish %>% 
   select(sample, all_of(POPs)) %>%
   pivot_longer(cols = -sample, names_to = "POPs", values_to = "Values") %>%
-  filter(!POPs %in% c("PeCB", "α_HCH")) %>%
+  filter(!POPs %in% c("PeCB", "α_HCH", "γ_HCH")) %>%
   mutate(POPs =  gsub("_", "-", POPs), 
          POPs = fct_recode(POPs, 
              "Trans-nonachlor" = "Transnonachlor",
@@ -44,30 +47,28 @@ bdd_danish_long <- bdd_danish %>%
              "p,p'-DDT" = "pp-DDT", 
              "PBDE-153" = "BDE-153",
              "PBDE-47" = "BDE-47",
-             "PBDE-99" = "BDE-99",), 
+             "PBDE-99" = "BDE-99"), 
          POPs_group =  fct_recode(POPs, 
              "ΣPBDE" = "PBDE-153",
              "ΣPBDE" = "PBDE-47",
              "ΣPBDE" = "PBDE-99",
              "Σchlordane" = "Oxychlordane",
-             "PCB_NDL" = "PCB-101",
-             "PCB_DL" = "PCB-118",
-             "PCB_NDL" = "PCB-138",
-             "PCB_NDL" = "PCB-153",
-             "PCB_DL" = "PCB-156",
-             "PCB_NDL" = "PCB-170",
-             "PCB_NDL" = "PCB-180",
-             "PCB_NDL" = "PCB-183",
-             "PCB_NDL" = "PCB-187",
-             "PCB_NDL" = "PCB-28",
-             "PCB_NDL" = "PCB-52",
-             "PCB_NDL" = "PCB-74",
-             "PCB_NDL" = "PCB-99",
+             "Non-dioxin-like PCBs" = "PCB-101",
+             "Dioxin-like PCBs" = "PCB-118",
+             "Non-dioxin-like PCBs" = "PCB-138",
+             "Non-dioxin-like PCBs" = "PCB-153",
+             "Dioxin-like PCBs" = "PCB-156",
+             "Non-dioxin-like PCBs" = "PCB-170",
+             "Non-dioxin-like PCBs" = "PCB-180",
+             "Non-dioxin-like PCBs" = "PCB-183",
+             "Non-dioxin-like PCBs" = "PCB-187",
+             "Non-dioxin-like PCBs" = "PCB-28",
+             "Non-dioxin-like PCBs" = "PCB-52",
+             "Non-dioxin-like PCBs" = "PCB-74",
+             "Non-dioxin-like PCBs" = "PCB-99",
              "ΣDDT" = "p,p'-DDE",
              "ΣDDT" = "p,p'-DDT",
-             "Σchlordane" = "Trans-nonachlor",
-             "ΣHCH" = "β-HCH",
-             "ΣHCH" = "γ-HCH"
+             "Σchlordane" = "Trans-nonachlor"
            ), 
          POPs_group_2 =  fct_recode(POPs, 
                                     "PCBs" = "PCB-101",
@@ -91,7 +92,7 @@ bdd_danish_long <- bdd_danish %>%
                                     "OCPs" = "HCB",
                                     #"OCPs" = "α-HCH", 
                                     "OCPs" = "β-HCH",
-                                    "OCPs" = "γ-HCH",
+                                    #"OCPs" = "γ-HCH",
                                     "OCPs" = "p,p'-DDE",
                                     "OCPs" = "p,p'-DDT",
                                     "OCPs" = "Oxychlordane",
@@ -126,6 +127,7 @@ bdd_danish_long <- bdd_danish %>%
                             "Oxychlordane", 
                             "Trans-nonachlor", 
                             "HCB"))
+
 descrip_expo <- bdd_danish_long %>%
   mutate(
     POPs = fct_relevel(POPs, 
@@ -134,7 +136,7 @@ descrip_expo <- bdd_danish_long %>%
                        "PCB-187", "PBDE-47", "PBDE-99", "PBDE-153", "p,p'-DDT", "p,p'-DDE",
                        "β-HCH", "γ-HCH", "Oxychlordane", "Trans-nonachlor", "HCB"), 
     POPs_group = fct_relevel(POPs_group, 
-                             "PCB_DL", "PCB_NDL", "ΣPBDE", "ΣDDT", "ΣHCH", "Σchlordane", "HCB"), 
+                             "ΣPBDE", "Σchlordane",  "β-HCH", "ΣDDT", "HCB", "PCB_4", "Non-dioxin-like PCBs", "Dioxin-like PCBs"),
     POPs = factor(POPs, levels = rev(levels(POPs)))) %>%
   arrange(desc(POPs_group)) %>%
   ggplot() +
@@ -150,48 +152,41 @@ descrip_expo <- bdd_danish_long %>%
 
 descrip_expo_group <- bdd_danish_long %>%
   mutate(
-    POPs = fct_relevel(POPs, 
-                       "PCB-118", "PCB-156", "PCB-28", "PCB-52", "PCB-74", "PCB-99",
-                       "PCB-101", "PCB-138", "PCB-153", "PCB-170", "PCB-180", "PCB-183",
-                       "PCB-187", "PBDE-47", "PBDE-99", "PBDE-153", "p,p'-DDT", "p,p'-DDE",
-                       "β-HCH", "γ-HCH", "Oxychlordane", "Trans-nonachlor", "HCB"), 
     POPs_group = fct_relevel(POPs_group, 
-                             "PCB_DL", "PCB_NDL", "ΣPBDE", "ΣDDT", "ΣHCH", "Σchlordane", "HCB"), 
-    POPs = factor(POPs, levels = rev(levels(POPs)))) %>%
-  arrange(desc(POPs_group)) %>%
+                             "ΣPBDE", "Σchlordane",  "β-HCH", "ΣDDT", "HCB", "PCB_4", "Non-dioxin-like PCBs", "Dioxin-like PCBs")) %>%
   ggplot() +
-  aes(x = POPs_group, y = Values, fill = POPs_group) +
+  aes(x = POPs_group, y = Values) +
   geom_boxplot() +
   scale_y_continuous(trans = "log", 
                      labels = number_format(accuracy = 1)) +
-  labs(x = "POPs", y = "Values (pg/ml, log transformed)", fill = "POP groups") +
+  labs(x = "POPs", y = "Values (pg/ml, log transformed)") +
   coord_flip() +
   theme_lucid() +
   scale_fill_brewer(palette = "Set2", direction = 1) 
 
-descrip_expo_group <- ggplot(bdd_danish_long) +
-  aes(x = POPs_group, y = Values, fill = POPs_group) +
-  geom_boxplot() +
-  scale_fill_hue(direction = 1) +
-  scale_y_continuous(trans = "log", 
-                     labels = number_format(accuracy = 1)) +
-  coord_flip() +
-  theme_lucid() +
-  labs(x = "", y = "POP group concentrations (ng/ml)", fill = "POP groups")
-
-# ggsave("~/Documents/POP_ALS_2025_02_03/2_output/descrip_expo (Figure 1).tiff", 
-#        descrip_expo)
 
 # statistics ----
 ## effects of the covariates on ALS ----
-covar <- 
-  clogit(als ~ strata(match) + 
+covar <- tbl_merge(
+  tbls = list(
+    tbl_1 = bdd_danish |>
+  select(als, all_of(covariates)) |>
+  tbl_uvregression(
+    y = als,
+    method = glm,
+    method.args = list(family = binomial), 
+    exponentiate = TRUE, 
+    estimate_fun = label_number(accuracy = 0.01, decimal.mark = "."),
+    pvalue_fun = custom_pvalue_fun)|>
+  bold_labels(), 
+  tbl_2 = clogit(als ~ sex + baseline_age +
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tbl_regression(exponentiate = TRUE, 
                  estimate_fun = label_number(accuracy = .01, decimal.mark = "."),
                  pvalue_fun = custom_pvalue_fun) |>
-  bold_labels()
+  bold_labels()), 
+  tab_spanner = c("**Univariate**", "**Adjusted**"))
 
 ## main analysis ----
 ### model 1 ----
@@ -226,8 +221,6 @@ for (var in POPs_group) {
                                                    "p-value" = p_value))
 }
 
-options(scipen = 999)
-model1_spline[] <- lapply(model1_spline, function(x) if(is.numeric(x)) round(x, 2) else x)
 model1_spline <- model1_spline %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -266,7 +259,6 @@ for (var in POPs_group_quart) {
                                                  "p-value" = p_value))
 }
 
-model1_quart[] <- lapply(model1_quart, function(x) if(is.numeric(x)) round(x, 2) else x)
 model1_quart <- model1_quart %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -306,8 +298,6 @@ for (var in POPs_group) {
                                                          "p-value" = p_value))
 }
 
-options(scipen = 999)
-model1_quadratic[] <- lapply(model1_quadratic, function(x) if(is.numeric(x)) round(x, 2) else x)
 model1_quadratic <- model1_quadratic %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -348,8 +338,6 @@ for (var in POPs_group) {
                                                  "p-value" = p_value))
 }
 
-options(scipen = 999)
-model1_cubic[] <- lapply(model1_cubic, function(x) if(is.numeric(x)) round(x, 2) else x)
 model1_cubic <- model1_cubic %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -400,8 +388,6 @@ for (var in POPs_group) {
                                                    "p-value" = p_value))
 }
 
-options(scipen = 999)
-model2_spline[] <- lapply(model2_spline, function(x) if(is.numeric(x)) round(x, 2) else x)
 model2_spline <- model2_spline %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -436,7 +422,6 @@ for (var in POPs_group_quart) {
                                                  "p-value" = p_value))
 }
 
-model2_quart[] <- lapply(model2_quart, function(x) if(is.numeric(x)) round(x, 2) else x)
 model2_quart <- model2_quart %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -473,8 +458,6 @@ for (var in POPs_group) {
                                        "p-value" = p_value))
 }
 
-options(scipen = 999)
-model2_quadratic[] <- lapply(model2_quadratic, function(x) if(is.numeric(x)) round(x, 2) else x)
 model2_quadratic <- model2_quadratic %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -511,8 +494,6 @@ for (var in POPs_group) {
                                    "p-value" = p_value))
 }
 
-options(scipen = 999)
-model2_cubic[] <- lapply(model2_cubic, function(x) if(is.numeric(x)) round(x, 2) else x)
 model2_cubic <- model2_cubic %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -626,7 +607,6 @@ model3_spline <- bind_rows(
     lower_CI = exp(estimate - 1.96 * std.error), 
     upper_CI = exp(estimate + 1.96 * std.error)) |> 
   select(variable, model, df, OR, lower_CI, upper_CI, p.value)
-model3_spline[] <- lapply(model3_spline, function(x) if(is.numeric(x)) round(x, 2) else x)
 
 rm(model3_spline_HCB, model3_spline_PCB_DL, model3_spline_PCB_NDL, model3_spline_ΣPBDE, model3_spline_ΣDDT, model3_spline_β_HCH, model3_spline_Σchlordane)
 
@@ -720,7 +700,6 @@ model3_quart <- bind_rows(
     lower_CI = exp(estimate - 1.96 * std.error), 
     upper_CI = exp(estimate + 1.96 * std.error)) |> 
   select(variable, model, df, OR, lower_CI, upper_CI, p.value)
-model3_quart[] <- lapply(model3_quart, function(x) if(is.numeric(x)) round(x, 2) else x)
 
 rm(model3_quart_HCB, model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_ΣPBDE, model3_quart_ΣDDT, model3_quart_β_HCH, model3_quart_Σchlordane)
 
@@ -814,7 +793,6 @@ model3_quadratic <- bind_rows(
     lower_CI = exp(estimate - 1.96 * std.error), 
     upper_CI = exp(estimate + 1.96 * std.error)) |> 
   select(variable, model, df, OR, lower_CI, upper_CI, p.value)
-model3_quadratic[] <- lapply(model3_quadratic, function(x) if(is.numeric(x)) round(x, 2) else x)
 
 rm(model3_quadra_HCB, model3_quadra_PCB_DL, model3_quadra_PCB_NDL, model3_quadra_ΣPBDE, model3_quadra_ΣDDT, model3_quadra_β_HCH, model3_quadra_Σchlordane)
 
@@ -909,7 +887,6 @@ model3_cubic <- bind_rows(
     lower_CI = exp(estimate - 1.96 * std.error), 
     upper_CI = exp(estimate + 1.96 * std.error)) |> 
   select(variable, model, df, OR, lower_CI, upper_CI, p.value)
-model3_cubic[] <- lapply(model3_cubic, function(x) if(is.numeric(x)) round(x, 2) else x)
 
 rm(model3_cubic_HCB, model3_cubic_PCB_DL, model3_cubic_PCB_NDL, model3_cubic_ΣPBDE, model3_cubic_ΣDDT, model3_cubic_β_HCH, model3_cubic_Σchlordane)
 
@@ -1074,9 +1051,13 @@ main_results <- bind_rows(model1_spline,
                           model3_quart, 
                           model3_quadratic, 
                           model3_cubic) %>% 
-  mutate(variable = gsub("_quart", "", variable)) %>%
+  mutate(variable = gsub("_quart", "", variable), 
+         OR = number(OR, accuracy = 0.1, decimal.mark = "."),  
+         lower_CI = number(lower_CI, accuracy = 0.1, decimal.mark = "."),
+         upper_CI = number(upper_CI, accuracy = 0.1, decimal.mark = "."),
+         p.value = ifelse(p.value < 0.01, "<0.01", number(p.value, accuracy = 0.01, decimal.mark = ".")), 
+         "95%CI" = paste(lower_CI, ", ", upper_CI)) %>%
   arrange(variable) %>%
-  mutate("95%CI" = paste(lower_CI, ", ", upper_CI)) %>%
   select(variable, 
          model,
          df,
@@ -1087,7 +1068,10 @@ main_results <- bind_rows(model1_spline,
 
 main_results <- left_join(main_results, heterogeneity_tests, by = c("variable", "model"))
 main_results <- left_join(main_results, trend_tests, by = c("variable", "model"))
-main_results[] <- lapply(main_results, function(x) if(is.numeric(x)) round(x, 2) else x)
+main_results <- main_results |>
+  mutate(
+    p.value_heterogeneity = ifelse(p.value_heterogeneity < 0.01, "<0.01", number(p.value_heterogeneity, accuracy = 0.01, decimal.mark = ".")), 
+    p.value_trend = ifelse(p.value_trend < 0.01, "<0.01", number(p.value_trend, accuracy = 0.01, decimal.mark = ".")))
 
 results_spline <- 
   main_results |>
@@ -1191,8 +1175,6 @@ for (var in POPs_group_95) {
                                                          "p-value" = p_value))
 }
 
-options(scipen = 999)
-model1_spline_95[] <- lapply(model1_spline_95, function(x) if(is.numeric(x)) round(x, 2) else x)
 model1_spline_95 <- model1_spline_95 %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -1234,8 +1216,6 @@ for (var in POPs_group_95) {
                                                                "p-value" = p_value))
 }
 
-options(scipen = 999)
-model1_quadratic_95[] <- lapply(model1_quadratic_95, function(x) if(is.numeric(x)) round(x, 2) else x)
 model1_quadratic_95 <- model1_quadratic_95 %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -1256,13 +1236,9 @@ model1_cubic_95 <- data.frame(
 for (var in POPs_group_95) {
   
   formula <- as.formula(paste("als ~ poly(", var, ", degree=3) + sex + baseline_age"))
-  
   bdd_danish_red <- bdd_danish %>% filter(!is.na(.data[[var]]))
-  
   model <- glm(formula, family = binomial, data = bdd_danish_red)
-  
   model_summary <- tidy(model) %>% filter(grepl("poly\\(", term))
-  
   OR <- exp(model_summary$estimate)
   lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
   upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
@@ -1277,8 +1253,6 @@ for (var in POPs_group_95) {
                                                        "p-value" = p_value))
 }
 
-options(scipen = 999)
-model1_cubic_95[] <- lapply(model1_cubic_95, function(x) if(is.numeric(x)) round(x, 2) else x)
 model1_cubic_95 <- model1_cubic_95 %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -1318,8 +1292,6 @@ for (var in POPs_group_95) {
                                                          "p-value" = p_value))
 }
 
-options(scipen = 999)
-model2_spline_95[] <- lapply(model2_spline_95, function(x) if(is.numeric(x)) round(x, 2) else x)
 model2_spline_95 <- model2_spline_95 %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -1357,8 +1329,6 @@ for (var in POPs_group_95) {
                                            "p-value" = p_value))
 }
 
-options(scipen = 999)
-model2_quadratic_95[] <- lapply(model2_quadratic_95, function(x) if(is.numeric(x)) round(x, 2) else x)
 model2_quadratic_95 <- model2_quadratic_95 %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -1396,8 +1366,6 @@ for (var in POPs_group_95) {
                                       "p-value" = p_value))
 }
 
-options(scipen = 999)
-model2_cubic_95[] <- lapply(model2_cubic_95, function(x) if(is.numeric(x)) round(x, 2) else x)
 model2_cubic_95 <- model2_cubic_95 %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -1442,8 +1410,6 @@ for (var in POPs_group_outlier) {
                                                                    "p-value" = p_value))
 }
 
-options(scipen = 999)
-model1_spline_outlier[] <- lapply(model1_spline_outlier, function(x) if(is.numeric(x)) round(x, 2) else x)
 model1_spline_outlier <- model1_spline_outlier %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -1483,8 +1449,6 @@ for (var in POPs_group_outlier) {
                                                                          "p-value" = p_value))
 }
 
-options(scipen = 999)
-model1_quadratic_outlier[] <- lapply(model1_quadratic_outlier, function(x) if(is.numeric(x)) round(x, 2) else x)
 model1_quadratic_outlier <- model1_quadratic_outlier %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -1524,8 +1488,6 @@ for (var in POPs_group_outlier) {
                                                                  "p-value" = p_value))
 }
 
-options(scipen = 999)
-model1_cubic_outlier[] <- lapply(model1_cubic_outlier, function(x) if(is.numeric(x)) round(x, 2) else x)
 model1_cubic_outlier <- model1_cubic_outlier %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -1565,8 +1527,6 @@ for (var in POPs_group_outlier) {
                                                                    "p-value" = p_value))
 }
 
-options(scipen = 999)
-model2_spline_outlier[] <- lapply(model2_spline_outlier, function(x) if(is.numeric(x)) round(x, 2) else x)
 model2_spline_outlier <- model2_spline_outlier %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -1604,8 +1564,6 @@ for (var in POPs_group_outlier) {
                                                "p-value" = p_value))
 }
 
-options(scipen = 999)
-model2_quadratic_outlier[] <- lapply(model2_quadratic_outlier, function(x) if(is.numeric(x)) round(x, 2) else x)
 model2_quadratic_outlier <- model2_quadratic_outlier %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -1643,8 +1601,6 @@ for (var in POPs_group_outlier) {
                                            "p-value" = p_value))
 }
 
-options(scipen = 999)
-model2_cubic_outlier[] <- lapply(model2_cubic_outlier, function(x) if(is.numeric(x)) round(x, 2) else x)
 model2_cubic_outlier <- model2_cubic_outlier %>% 
   mutate(
     df = str_sub(df, start = -1), 
@@ -1675,6 +1631,10 @@ sensitivity_results <- bind_rows(model1_spline_outlier,
                                  model2_cubic_outlier) %>% 
   arrange(variable) %>%
   mutate(
+    OR = number(OR, accuracy = 0.1, decimal.mark = "."),  
+    lower_CI = number(lower_CI, accuracy = 0.1, decimal.mark = "."),
+    upper_CI = number(upper_CI, accuracy = 0.1, decimal.mark = "."),
+    p.value = ifelse(p.value < 0.01, "<0.01", number(p.value, accuracy = 0.01, decimal.mark = ".")),
     "95%CI" = paste(lower_CI, ", ", upper_CI)) %>%
   select(-starts_with("lower"), -starts_with("upper")) %>%
   select(variable, 
@@ -2237,7 +2197,7 @@ pollutant_labels <- set_names(
 
 covariates <- c("sex", "baseline_age")
 
-plot_base_gamm_outliers <- map(POPs_group_outlier, function(var) {
+plot_base_gamm_outlier <- map(POPs_group_outlier, function(var) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates, collapse = ' + ')}"))
   
@@ -2788,7 +2748,7 @@ pollutant_labels <- set_names(
 covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", 
                 "cholesterol_i", "marital_status_2cat_i", "education_i")
 
-plot_adjusted_gamm_outliers <- map(POPs_group_outlier, function(var) {
+plot_adjusted_gamm_outlier <- map(POPs_group_outlier, function(var) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates, collapse = ' + ')}"))
   
@@ -2896,7 +2856,7 @@ plot_copollutant_gamm <- map(POPs_group_bis, function(var) {
     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
              hjust = 1, vjust = 1.2, size = 4, color = "black") +
     theme_minimal() +
-    theme(axis.text.x = element_text(color = 'white'),
+    theme(axis.text.x = element_blank(),
           axis.title.x = element_blank(),
           axis.line.x = element_blank(),
           axis.ticks.x = element_blank()) 
@@ -2968,7 +2928,7 @@ plot_copollutant_gamm_outlier <- map(POPs_group_outlier_bis, function(var) {
     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
              hjust = 1, vjust = 1.2, size = 4, color = "black") +
     theme_minimal() +
-    theme(axis.text.x = element_text(color = 'white'),
+    theme(axis.text.x = element_blank(),
           axis.title.x = element_blank(),
           axis.line.x = element_blank(),
           axis.ticks.x = element_blank()) 
