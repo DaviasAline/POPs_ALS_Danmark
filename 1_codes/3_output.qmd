@@ -242,7 +242,9 @@ covar
 ## Effects of POPs on ALS occurence
 
 ### Spline transformation
+
 #### main analysis
+
 ```{r}
 #| echo: false
 #| message: false
@@ -259,7 +261,8 @@ results_spline |>
   kable_styling(fixed_thead = TRUE)
 ```
 
-#### sensitivity analysis without outliers 
+#### sensitivity analysis without outliers
+
 ```{r}
 #| echo: false
 #| message: false
@@ -282,7 +285,9 @@ results_spline_outliers |>
 ```
 
 ### Quartile transformation
+
 #### main analysis
+
 ```{r}
 #| echo: false
 #| message: false
@@ -299,9 +304,10 @@ results_quart |>
   kable_styling(fixed_thead = TRUE)
 ```
 
-
 ### Quadratic transformation
+
 #### main analysis
+
 ```{r}
 #| echo: false
 #| message: false
@@ -320,6 +326,7 @@ results_quadratic |>
 ```
 
 #### sensitivity analysis without outliers
+
 ```{r}
 #| echo: false
 #| message: false
@@ -341,7 +348,9 @@ results_quadratic_outliers |>
 ```
 
 ### Cubic transformation
+
 #### main analysis
+
 ```{r}
 #| echo: false
 #| message: false
@@ -359,6 +368,7 @@ results_cubic |>
 ```
 
 #### sensitivity analysis without outliers
+
 ```{r}
 #| echo: false
 #| message: false
@@ -536,10 +546,12 @@ grid.arrange(grobs = list(plot_adjusted_spline$ΣPBDE,
 plot_quart
 ```
 
+### gamm models
 
-### gamm models 
-#### Base models 
-Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex and age. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf>2: more complex than quadratic).
+#### Base models
+
+Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex and age. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
+
 ```{r, fig.height=6, fig.width=15}
 #| echo: false
 #| message: false
@@ -553,8 +565,10 @@ wrap_plots(wrap_plots(plot_adjusted_gamm[5:8], nrow = 1),
            nrow = 2)
 ```
 
-#### Adjusted models 
-Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age,  serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf>2: more complex than quadratic).
+#### Adjusted models
+
+Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
+
 ```{r, fig.height=6, fig.width=15}
 #| echo: false
 #| message: false
@@ -569,7 +583,9 @@ wrap_plots(wrap_plots(plot_adjusted_gamm[5:8], nrow = 1),
 ```
 
 #### Copollutant model
-Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates and all other co-pollutants are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status, education and for the other co-pollutants. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf>2: more complex than quadratic).
+
+Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates and all other co-pollutants are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status, education and for the other co-pollutants. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
+
 ```{r, fig.height=6, fig.width=15}
 #| echo: false
 #| message: false
@@ -583,7 +599,8 @@ wrap_plots(wrap_plots(plot_copollutant_gamm[5:7], nrow = 1),
            nrow = 2)
 ```
 
-## Figure for article 
+## Figure for article
+
 ```{r, fig.height=24, fig.width=11.25}
 #| echo: false
 #| message: false
@@ -624,4 +641,3 @@ wrap_plots(plot_base_gamm$PCB_DL + ggtitle('Base model'),
            ncol = 3)
            
 ```
-

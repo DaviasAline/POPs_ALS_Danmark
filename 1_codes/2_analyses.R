@@ -177,14 +177,14 @@ covar <- tbl_merge(
     method = glm,
     method.args = list(family = binomial), 
     exponentiate = TRUE, 
-    estimate_fun = label_number(accuracy = 0.01, decimal.mark = "."),
+    estimate_fun = label_number(accuracy = 0.1, decimal.mark = "."),
     pvalue_fun = custom_pvalue_fun)|>
   bold_labels(), 
   tbl_2 = clogit(als ~ sex + baseline_age +
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tbl_regression(exponentiate = TRUE, 
-                 estimate_fun = label_number(accuracy = .01, decimal.mark = "."),
+                 estimate_fun = label_number(accuracy = .1, decimal.mark = "."),
                  pvalue_fun = custom_pvalue_fun) |>
   bold_labels()), 
   tab_spanner = c("**Univariate**", "**Adjusted**"))
@@ -1057,7 +1057,7 @@ main_results <- bind_rows(model1_spline,
          lower_CI = number(lower_CI, accuracy = 0.1, decimal.mark = "."),
          upper_CI = number(upper_CI, accuracy = 0.1, decimal.mark = "."),
          p.value = ifelse(p.value < 0.01, "<0.01", number(p.value, accuracy = 0.01, decimal.mark = ".")), 
-         "95%CI" = paste(lower_CI, ", ", upper_CI)) %>%
+         "95%CI" = paste(lower_CI, ", ", upper_CI, sep = '')) %>%
   arrange(variable) %>%
   select(variable, 
          model,
@@ -1403,7 +1403,7 @@ sensitivity_results <- bind_rows(model1_spline_outlier,
     lower_CI = number(lower_CI, accuracy = 0.1, decimal.mark = "."),
     upper_CI = number(upper_CI, accuracy = 0.1, decimal.mark = "."),
     p.value = ifelse(p.value < 0.01, "<0.01", number(p.value, accuracy = 0.01, decimal.mark = ".")),
-    "95%CI" = paste(lower_CI, ", ", upper_CI)) %>%
+    "95%CI" = paste(lower_CI, ", ", upper_CI, sep = '')) %>%
   select(-starts_with("lower"), -starts_with("upper")) %>%
   select(variable, 
          model,
@@ -1524,12 +1524,9 @@ rm(var, formula, model, new_data, pred, plot)
 ### spline outliers ----
 plot_base_spline_outlier <- list()
 
-covariates <- c("sex", "baseline_age")
-
 for (var in POPs_group_outlier) {
   
-  formula <- as.formula(paste0("als ~ ns(", var, ", df = 4) + ", 
-                               paste(covariates, collapse = " + ")))
+  formula <- as.formula(paste0("als ~ ns(", var, ", df = 4) + sex + baseline_age"))
   
   model <- glm(formula, family = binomial, data = bdd_danish)
   
@@ -1540,7 +1537,7 @@ for (var in POPs_group_outlier) {
   
   new_data$match <- bdd_danish$match[1]
   
-  for (cov in covariates) {
+  for (cov in c('sex, "baseline_age')) {
     if (is.numeric(bdd_danish[[cov]])) {
       new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
     } else {
