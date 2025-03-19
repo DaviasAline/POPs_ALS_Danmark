@@ -1451,12 +1451,12 @@ results_cubic_outliers <-
          contains("copollutant_cubic")) 
 colnames(results_cubic_outliers) <- gsub('_cubic', '', colnames(results_cubic_outliers))
 
-rm(model1_spline_95, model1_spline_outlier,
-   model1_quadratic_95, model1_quadratic_outlier,
-   model1_cubic_95, model1_cubic_outlier, 
-   model2_spline_95, model2_spline_outlier,
-   model2_quadratic_95, model2_quadratic_outlier,
-   model2_cubic_95, model2_cubic_outlier)
+rm(model1_spline_outlier,
+   model1_quadratic_outlier,
+   model1_cubic_outlier, 
+   model2_spline_outlier,
+   model2_quadratic_outlier,
+   model2_cubic_outlier)
 
 # figures ----
 ## quartiles ----
@@ -1513,59 +1513,13 @@ for (var in POPs_group) {
   
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
     geom_line(color = "blue", size = 1) + 
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  # Add CI ribbon
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) + 
     labs(x = var, y = "Predicted probability of ALS", title = "spline") +
     theme_minimal()
   
   plot_base_spline[[var]] <- plot
 }
 rm(var, formula, model, new_data, pred, plot)
-
-### spline 95 ----
-plot_base_spline_95 <- list()
-
-covariates <- c("sex", "baseline_age")
-
-for (var in POPs_group_95) {
-  
-  formula <- as.formula(paste0("als ~ ns(", var, ", df = 4) + ", 
-                               paste(covariates, collapse = " + ")))
-  
-  model <- glm(formula, family = binomial, data = bdd_danish)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in covariates) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "link", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS", title = 'spline without outliers') +
-    theme_minimal()
-  
-  plot_base_spline_95[[var]] <- plot
-}
-
-rm(var, formula, model, new_data, pred, plot, cov)
 
 ### spline outliers ----
 plot_base_spline_outlier <- list()
@@ -1616,12 +1570,9 @@ rm(var, formula, model, new_data, pred, plot, cov)
 ### quadratic ----
 plot_base_quadratic <- list()
 
-covariates <- c("sex", "baseline_age")
-
 for (var in POPs_group) {
   
-  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 2) + ", 
-                               paste(covariates, collapse = " + ")))
+  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 2) + sex + baseline_age"))
   
   model <- glm(formula, family = binomial, data = bdd_danish)
   
@@ -1632,7 +1583,7 @@ for (var in POPs_group) {
   
   new_data$match <- bdd_danish$match[1]
   
-  for (cov in covariates) {
+  for (cov in c("sex", "baseline_age")) {
     if (is.numeric(bdd_danish[[cov]])) {
       new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
     } else {
@@ -1659,63 +1610,12 @@ for (var in POPs_group) {
 
 rm(var, formula, model, new_data, pred, plot, cov)
 
-
-### quadratic 95 ----
-plot_base_quadratic_95 <- list()
-
-covariates <- c("sex", "baseline_age")
-
-for (var in POPs_group_95) {
-  
-  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 2) + ", 
-                               paste(covariates, collapse = " + ")))
-  
-  bdd_danish_red <- bdd_danish |> filter(!is.na(.data[[var]]))
-  model <- glm(formula, family = binomial, data = bdd_danish_red)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in covariates) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "link", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS", title = 'linear quadratic without outliers') +
-    theme_minimal()
-  
-  plot_base_quadratic_95[[var]] <- plot
-}
-
-rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
-
 ### quadratic outliers ----
 plot_base_quadratic_outlier <- list()
 
-covariates <- c("sex", "baseline_age")
-
 for (var in POPs_group_outlier) {
   
-  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 2) + ", 
-                               paste(covariates, collapse = " + ")))
+  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 2) + sex + baseline_age"))
   
   bdd_danish_red <- bdd_danish |> filter(!is.na(.data[[var]]))
   model <- glm(formula, family = binomial, data = bdd_danish_red)
@@ -1727,7 +1627,7 @@ for (var in POPs_group_outlier) {
   
   new_data$match <- bdd_danish$match[1]
   
-  for (cov in covariates) {
+  for (cov in c("sex", "baseline_age")) {
     if (is.numeric(bdd_danish[[cov]])) {
       new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
     } else {
@@ -1757,12 +1657,9 @@ rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
 ### cubic ----
 plot_base_cubic <- list()
 
-covariates <- c("sex", "baseline_age")
-
 for (var in POPs_group) {
   
-  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 3) + ", 
-                               paste(covariates, collapse = " + ")))
+  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 3) + sex + baseline_age"))
   
   model <- glm(formula, family = binomial, data = bdd_danish)
   
@@ -1773,7 +1670,7 @@ for (var in POPs_group) {
   
   new_data$match <- bdd_danish$match[1]
   
-  for (cov in covariates) {
+  for (cov in c("sex", "baseline_age")) {
     if (is.numeric(bdd_danish[[cov]])) {
       new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
     } else {
@@ -1800,62 +1697,12 @@ for (var in POPs_group) {
 
 rm(var, formula, model, new_data, pred, plot, cov)
 
-### cubic 95 ----
-plot_base_cubic_95 <- list()
-
-covariates <- c("sex", "baseline_age")
-
-for (var in POPs_group_95) {
-  
-  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 3) + ", 
-                               paste(covariates, collapse = " + ")))
-  
-  bdd_danish_red <- bdd_danish |> filter(!is.na(.data[[var]]))
-  model <- glm(formula, family = binomial, data = bdd_danish_red)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in covariates) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "link", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS", title = 'cubic without outliers') +
-    theme_minimal()
-  
-  plot_base_cubic_95[[var]] <- plot
-}
-
-rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
-
 ### cubic outliers ----
 plot_base_cubic_outlier <- list()
 
-covariates <- c("sex", "baseline_age")
-
 for (var in POPs_group_outlier) {
   
-  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 3) + ", 
-                               paste(covariates, collapse = " + ")))
+  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 3) + sex + baseline_age"))
   
   bdd_danish_red <- bdd_danish |> filter(!is.na(.data[[var]]))
   model <- glm(formula, family = binomial, data = bdd_danish_red)
@@ -1867,7 +1714,7 @@ for (var in POPs_group_outlier) {
   
   new_data$match <- bdd_danish$match[1]
   
-  for (cov in covariates) {
+  for (cov in c("sex", "baseline_age")) {
     if (is.numeric(bdd_danish[[cov]])) {
       new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
     } else {
@@ -1891,26 +1738,21 @@ for (var in POPs_group_outlier) {
   
   plot_base_cubic_outlier[[var]] <- plot
 }
-
 rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
-
-
 
 ### gamm ----
 pollutant_labels <- set_names(
   c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group)
 
-covariates <- c("sex", "baseline_age")
-
 plot_base_gamm <- map(POPs_group, function(var) {
   
-  formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates, collapse = ' + ')}"))
+  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
   
   model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
   
   bdd_pred <- bdd_danish %>%                                                    # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(across(all_of(covariates), 
+    mutate(across(all_of(c("sex", "baseline_age")), 
                   ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.))), 
                   .names = "adj_{.col}")) %>%
     select(all_of(var), starts_with("adj_")) %>%
@@ -1956,23 +1798,21 @@ plot_base_gamm <- map(POPs_group, function(var) {
   p
 }) %>% 
   set_names(POPs_group)
-rm(pollutant_labels, covariates)
+rm(pollutant_labels)
 
 ### gamm outliers ----
 pollutant_labels <- set_names(
   c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group_outlier)
 
-covariates <- c("sex", "baseline_age")
-
 plot_base_gamm_outlier <- map(POPs_group_outlier, function(var) {
   
-  formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates, collapse = ' + ')}"))
+  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
   
   model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
   
   bdd_pred <- bdd_danish %>%                                                    # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(across(all_of(covariates), 
+    mutate(across(all_of(c("sex", "baseline_age")), 
                   ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.))), 
                   .names = "adj_{.col}")) %>%
     select(all_of(var), starts_with("adj_")) %>%
@@ -2018,22 +1858,17 @@ plot_base_gamm_outlier <- map(POPs_group_outlier, function(var) {
   p
 }) %>% 
   set_names(POPs_group)
-rm(pollutant_labels, covariates)
-
-
+rm(pollutant_labels)
 
 ## model 2 ----
 ### spline ----
-
 plot_adjusted_spline <- list()
-
-covariates <- c("smoking_2cat_i", "bmi", "cholesterol_i", "marital_status_2cat_i", "education_i")
 
 for (var in POPs_group) {
   
-  formula <- as.formula(paste0("als ~ ns(", var, ", df = 4) + ", 
-                               paste(covariates, collapse = " + "), 
-                               " + strata(match)"))
+  formula <- as.formula(paste0("als ~ ns(", var, ", df = 4) + 
+                               strata(match) + 
+                               smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
   
   model <- clogit(formula, data = bdd_danish)
   
@@ -2061,8 +1896,8 @@ for (var in POPs_group) {
   new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
   
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  # Plot the estimated probability
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  # Add CI ribbon
+    geom_line(color = "blue", size = 1) +  
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
     labs(x = var, y = "Predicted probability of ALS", title = "spline") +
     theme_minimal()
   
@@ -2071,57 +1906,8 @@ for (var in POPs_group) {
 
 rm(var, formula, model, new_data, pred, plot, cov)
 
-
-### spline 95 ----
-plot_adjusted_spline_95 <- list()
-
-covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", "cholesterol_i", "marital_status_2cat_i", "education_i")
-
-for (var in POPs_group_95) {
-  
-  formula <- as.formula(paste0("als ~ ns(", var, ", df = 4) + ", 
-                               paste(covariates, collapse = " + ")))
-  
-  model <- glm(formula, family = binomial, data = bdd_danish)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in covariates) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "link", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  # Plot the estimated probability
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  # Add CI ribbon
-    labs(x = var, y = "Predicted probability of ALS", title = 'spline without outliers') +
-    theme_minimal()
-  
-  plot_adjusted_spline_95[[var]] <- plot
-}
-
-rm(var, formula, model, new_data, pred, plot, cov)
-
 ### spline outliers ----
 plot_adjusted_spline_outlier <- list()
-
-covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", "cholesterol_i", "marital_status_2cat_i", "education_i")
 
 for (var in POPs_group_outlier) {
   
@@ -2168,8 +1954,6 @@ rm(var, formula, model, new_data, pred, plot, cov)
 ### quadratic  ----
 plot_adjusted_quadratic <- list()
 
-covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", "cholesterol_i", "marital_status_2cat_i", "education_i")
-
 for (var in POPs_group) {
   
   formula <- as.formula(paste0("als ~ poly(", var, ", degree = 2) + ", 
@@ -2211,56 +1995,8 @@ for (var in POPs_group) {
 
 rm(var, formula, model, new_data, pred, plot, cov)
 
-### quadratic 95 ----
-plot_adjusted_quadratic_95 <- list()
-
-covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", "cholesterol_i", "marital_status_2cat_i", "education_i")
-
-for (var in POPs_group_95) {
-  
-  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 2) + ", 
-                               paste(covariates, collapse = " + ")))
-  bdd_danish_red <- bdd_danish |> filter(!is.na(.data[[var]]))
-  model <- glm(formula, family = binomial, data = bdd_danish_red)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in covariates) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "link", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  # Plot the estimated probability
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  # Add CI ribbon
-    labs(x = var, y = "Predicted probability of ALS", title = 'linear quadratic without outliers') +
-    theme_minimal()
-  
-  plot_adjusted_quadratic_95[[var]] <- plot
-}
-
-rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
-
 ### quadratic outliers ----
 plot_adjusted_quadratic_outlier <- list()
-
-covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", "cholesterol_i", "marital_status_2cat_i", "education_i")
 
 for (var in POPs_group_outlier) {
   
@@ -2306,8 +2042,6 @@ rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
 ### cubic ----
 plot_adjusted_cubic <- list()
 
-covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", "cholesterol_i", "marital_status_2cat_i", "education_i")
-
 for (var in POPs_group) {
   
   formula <- as.formula(paste0("als ~ poly(", var, ", degree = 3) + ", 
@@ -2349,57 +2083,8 @@ for (var in POPs_group) {
 
 rm(var, formula, model, new_data, pred, plot, cov)
 
-### cubic 95 ----
-plot_adjusted_cubic_95 <- list()
-
-covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", "cholesterol_i", "marital_status_2cat_i", "education_i")
-
-for (var in POPs_group_95) {
-  
-  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 3) + ", 
-                               paste(covariates, collapse = " + ")))
-  
-  bdd_danish_red <- bdd_danish |> filter(!is.na(.data[[var]]))
-  model <- glm(formula, family = binomial, data = bdd_danish_red)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in covariates) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "link", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) + 
-    labs(x = var, y = "Predicted probability of ALS", title = 'cubic without outliers') +
-    theme_minimal()
-  
-  plot_adjusted_cubic_95[[var]] <- plot
-}
-
-rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
-
 ### cubic outliers -----
 plot_adjusted_cubic_outlier <- list()
-
-covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", "cholesterol_i", "marital_status_2cat_i", "education_i")
 
 for (var in POPs_group_outlier) {
   
@@ -2444,14 +2129,10 @@ for (var in POPs_group_outlier) {
 rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
 
 
-
 ### gamm ----
 pollutant_labels <- set_names(
   c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group)
-
-covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", 
-                "cholesterol_i", "marital_status_2cat_i", "education_i")
 
 plot_adjusted_gamm <- map(POPs_group, function(var) {
   
@@ -2506,15 +2187,12 @@ plot_adjusted_gamm <- map(POPs_group, function(var) {
   p
 }) %>% 
   set_names(POPs_group)
-rm(pollutant_labels, covariates)
+rm(pollutant_labels)
 
 ### gamm outliers ----
 pollutant_labels <- set_names(
   c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group_outlier)
-
-covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", 
-                "cholesterol_i", "marital_status_2cat_i", "education_i")
 
 plot_adjusted_gamm_outlier <- map(POPs_group_outlier, function(var) {
   
@@ -2569,7 +2247,7 @@ plot_adjusted_gamm_outlier <- map(POPs_group_outlier, function(var) {
   p
 }) %>% 
   set_names(POPs_group)
-rm(pollutant_labels, covariates)
+rm(pollutant_labels)
 
 ## model 3 ----
 ### gamm ----
@@ -2578,8 +2256,6 @@ pollutant_labels_bis <- set_names(
   c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
     "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
   POPs_group_bis)
-covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", 
-                "cholesterol_i", "marital_status_2cat_i", "education_i")
 
 model <- gam(als ~ s(PCB_DL) + s(PCB_NDL) + s(HCB) + s(ΣDDT) + 
                s(β_HCH) + s(Σchlordane) + s(ΣPBDE) + 
@@ -2650,8 +2326,6 @@ pollutant_labels_bis <- set_names(
   c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
     "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
   POPs_group_outlier_bis)
-covariates <- c("sex", "baseline_age", "smoking_2cat_i", "bmi", 
-                "cholesterol_i", "marital_status_2cat_i", "education_i")
 
 model <- gam(als ~ s(PCB_DL_outlier) + s(PCB_NDL_outlier) + s(HCB_outlier) + s(ΣDDT_outlier) + 
                s(β_HCH_outlier) + s(Σchlordane_outlier) + s(ΣPBDE_outlier) + 
@@ -2660,7 +2334,6 @@ model <- gam(als ~ s(PCB_DL_outlier) + s(PCB_NDL_outlier) + s(HCB_outlier) + s(�
              family = binomial, 
              method = "REML", 
              data = bdd_danish)
-
 
 plot_copollutant_gamm_outlier <- map(POPs_group_outlier_bis, function(var) {
   

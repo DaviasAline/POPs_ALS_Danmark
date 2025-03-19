@@ -93,26 +93,19 @@ bdd_danish <- bdd_danish %>%
 # vectors creation ----
 POPs <- bdd_POPs %>% select(-c(n, Batch, sample, Comment)) %>% colnames()
 POPs_quart <- paste0(POPs, "_quart")
-POPs_ter <- paste0(POPs, "_ter")
 
 PCBs <- bdd_POPs %>% select(all_of(POPs)) %>% select(starts_with("PCB")) %>% colnames()
 PCBs_quart <- paste0(PCBs, "_quart")
-PCBs_ter <- paste0(PCBs, "_ter")
 
 PBDEs<- bdd_POPs %>% select(all_of(POPs)) %>% select(starts_with("BDE")) %>% colnames()
 PBDEs_quart <- paste0(PBDEs, "_quart")
-PBDEs_ter <- paste0(PBDEs, "_ter")
 
 OCPs <- bdd_POPs %>% select("PeCB", "HCB", "α_HCH", "β_HCH", "γ_HCH", 
-                            "Oxychlordane", "Transnonachlor", "pp_DDT", "pp_DDE") %>% 
-  colnames()
+                            "Oxychlordane", "Transnonachlor", "pp_DDT", "pp_DDE") %>% colnames()
 OCPs_quart <- paste0(OCPs, "_quart")
-OCPs_ter <- paste0(OCPs, "_ter")
 
 POPs_group <- c("PCB_DL", "PCB_NDL", "PCB_4", "HCB", "ΣDDT", "β_HCH", "Σchlordane", "ΣPBDE")
 POPs_group_quart <- paste0(POPs_group, "_quart")
-POPs_group_ter <- paste0(POPs_group, "_ter")
-POPs_group_95 <- paste0(POPs_group, "_95")
 POPs_group_outlier <- paste0(POPs_group, "_outlier")
 
 # 0 values vizualization ----
