@@ -21,6 +21,8 @@ library('knitr')
 library('officer')
 library(flextable)
 
+covariates <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')
+
 # descriptif ----
 ## covariates table ----
 descrip_covar <- bdd_danish %>% 
@@ -123,7 +125,6 @@ bdd_danish_long <- bdd_danish %>%
                             "p,p'-DDT", 
                             "p,p'-DDE",
                             "β-HCH", 
-                            "γ-HCH", 
                             "Oxychlordane", 
                             "Trans-nonachlor", 
                             "HCB"))
@@ -134,9 +135,9 @@ descrip_expo <- bdd_danish_long %>%
                        "PCB-118", "PCB-156", "PCB-28", "PCB-52", "PCB-74", "PCB-99",
                        "PCB-101", "PCB-138", "PCB-153", "PCB-170", "PCB-180", "PCB-183",
                        "PCB-187", "PBDE-47", "PBDE-99", "PBDE-153", "p,p'-DDT", "p,p'-DDE",
-                       "β-HCH", "γ-HCH", "Oxychlordane", "Trans-nonachlor", "HCB"), 
+                       "β-HCH", "Oxychlordane", "Trans-nonachlor", "HCB"), 
     POPs_group = fct_relevel(POPs_group, 
-                             "ΣPBDE", "Σchlordane",  "β-HCH", "ΣDDT", "HCB", "PCB_4", "Non-dioxin-like PCBs", "Dioxin-like PCBs"),
+                             "ΣPBDE", "Σchlordane",  "β-HCH", "ΣDDT", "HCB", "Non-dioxin-like PCBs", "Dioxin-like PCBs"),
     POPs = factor(POPs, levels = rev(levels(POPs)))) %>%
   arrange(desc(POPs_group)) %>%
   ggplot() +
@@ -153,7 +154,7 @@ descrip_expo <- bdd_danish_long %>%
 descrip_expo_group <- bdd_danish_long %>%
   mutate(
     POPs_group = fct_relevel(POPs_group, 
-                             "ΣPBDE", "Σchlordane",  "β-HCH", "ΣDDT", "HCB", "PCB_4", "Non-dioxin-like PCBs", "Dioxin-like PCBs")) %>%
+                             "ΣPBDE", "Σchlordane",  "β-HCH", "ΣDDT", "HCB", "Non-dioxin-like PCBs", "Dioxin-like PCBs")) %>%
   ggplot() +
   aes(x = POPs_group, y = Values) +
   geom_boxplot() +
@@ -1139,239 +1140,6 @@ rm(model1_quart, model1_spline, model1_quadratic, model1_cubic,
    heterogeneity_tests, trend_tests)
 
 
-## sensitivity analyses 95% ----
-### model 1 ----
-# adjusted for sex and age
-
-#### spline transformation ----
-model1_spline_95 <- data.frame(
-  variable = character(),
-  df = integer(),
-  OR = numeric(),
-  lower_CI = numeric(),
-  upper_CI = numeric(),
-  p_value = numeric(),
-  stringsAsFactors = FALSE)
-
-for (var in POPs_group_95) {
-  
-  formula <- as.formula(paste("als ~ ns(", var, ", df=4) + sex + baseline_age"))
-  
-  model <- glm(formula, family = binomial, data = bdd_danish)
-  
-  model_summary <- tidy(model) %>% filter(grepl("ns\\(", term))
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  
-  model1_spline_95 <- rbind(model1_spline_95, data.frame(variable = var,
-                                                         df = df_value, 
-                                                         OR = OR,
-                                                         lower_CI = lower_CI,
-                                                         upper_CI = upper_CI,
-                                                         "p-value" = p_value))
-}
-
-model1_spline_95 <- model1_spline_95 %>% 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "base_spline") %>%
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
-
-#### quadratic transformation ----
-model1_quadratic_95 <- data.frame(
-  variable = character(),
-  df = integer(),
-  OR = numeric(),
-  lower_CI = numeric(),
-  upper_CI = numeric(),
-  p_value = numeric(),
-  stringsAsFactors = FALSE)
-
-for (var in POPs_group_95) {
-  
-  formula <- as.formula(paste("als ~ poly(", var, ", degree=2) + sex + baseline_age"))
-  
-  bdd_danish_red <- bdd_danish %>% filter(!is.na(.data[[var]]))
-  
-  model <- glm(formula, family = binomial, data = bdd_danish_red)
-  
-  model_summary <- tidy(model) %>% filter(grepl("poly\\(", term))
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  
-  model1_quadratic_95 <- rbind(model1_quadratic_95, data.frame(variable = var,
-                                                               df = df_value, 
-                                                               OR = OR,
-                                                               lower_CI = lower_CI,
-                                                               upper_CI = upper_CI,
-                                                               "p-value" = p_value))
-}
-
-model1_quadratic_95 <- model1_quadratic_95 %>% 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "base_quadra") %>%
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
-
-#### cubic transformation ----
-model1_cubic_95 <- data.frame(
-  variable = character(),
-  df = integer(),
-  OR = numeric(),
-  lower_CI = numeric(),
-  upper_CI = numeric(),
-  p_value = numeric(),
-  stringsAsFactors = FALSE)
-
-for (var in POPs_group_95) {
-  
-  formula <- as.formula(paste("als ~ poly(", var, ", degree=3) + sex + baseline_age"))
-  bdd_danish_red <- bdd_danish %>% filter(!is.na(.data[[var]]))
-  model <- glm(formula, family = binomial, data = bdd_danish_red)
-  model_summary <- tidy(model) %>% filter(grepl("poly\\(", term))
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  
-  model1_cubic_95 <- rbind(model1_cubic_95, data.frame(variable = var,
-                                                       df = df_value, 
-                                                       OR = OR,
-                                                       lower_CI = lower_CI,
-                                                       upper_CI = upper_CI,
-                                                       "p-value" = p_value))
-}
-
-model1_cubic_95 <- model1_cubic_95 %>% 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "base_cubic") %>%
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
-
-
-### model 2 ----
-# adjusted for sex, age, smoking_2cat_i, BMI, serum total cholesterol_i, marital status and education
-
-#### spline transformation ----
-model2_spline_95 <- data.frame(
-  variable = character(),
-  df = integer(),
-  OR = numeric(),
-  lower_CI = numeric(),
-  upper_CI = numeric(),
-  p_value = numeric(),
-  stringsAsFactors = FALSE)
-
-for (var in POPs_group_95) {
-  
-  formula <- as.formula(paste("als ~ ns(", var, ", df=4) + sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
-  model <- glm(formula, family = binomial, data = bdd_danish)
-  model_summary <- tidy(model) %>% filter(grepl("ns\\(", term))
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  model2_spline_95 <- rbind(model2_spline_95, data.frame(variable = var,
-                                                         df = df_value, 
-                                                         OR = OR,
-                                                         lower_CI = lower_CI,
-                                                         upper_CI = upper_CI,
-                                                         "p-value" = p_value))
-}
-
-model2_spline_95 <- model2_spline_95 %>% 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "adjusted_spline") %>%
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
-
-#### quadratic transformation ----
-model2_quadratic_95 <- data.frame(
-  variable = character(),
-  df = integer(),
-  OR = numeric(),
-  lower_CI = numeric(),
-  upper_CI = numeric(),
-  p_value = numeric(),
-  stringsAsFactors = FALSE)
-
-for (var in POPs_group_95) {
-  
-  formula <- as.formula(paste("als ~ poly(", var, ", degree=2) + sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
-  bdd_danish_red <- bdd_danish %>% filter(!is.na(.data[[var]]))
-  model <- glm(formula, family = binomial, data = bdd_danish_red)
-  model_summary <- tidy(model) %>% filter(grepl("poly\\(", term))
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  model2_quadratic_95 <- rbind(model2_quadratic_95, 
-                                data.frame(variable = var,
-                                           df = df_value, 
-                                           OR = OR,
-                                           lower_CI = lower_CI,
-                                           upper_CI = upper_CI,
-                                           "p-value" = p_value))
-}
-
-model2_quadratic_95 <- model2_quadratic_95 %>% 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "adjusted_quadra") %>%
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
-
-#### cubic transformation ----
-model2_cubic_95 <- data.frame(
-  variable = character(),
-  df = integer(),
-  OR = numeric(),
-  lower_CI = numeric(),
-  upper_CI = numeric(),
-  p_value = numeric(),
-  stringsAsFactors = FALSE)
-
-for (var in POPs_group_95) {
-  
-  formula <- as.formula(paste("als ~ poly(", var, ", degree=3) + sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
-  bdd_danish_red <- bdd_danish %>% filter(!is.na(.data[[var]]))
-  model <- glm(formula, family = binomial, data = bdd_danish_red)
-  model_summary <- tidy(model) %>% filter(grepl("poly\\(", term))
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  model2_cubic_95 <- rbind(model2_cubic_95, 
-                           data.frame(variable = var,
-                                      df = df_value, 
-                                      OR = OR,
-                                      lower_CI = lower_CI,
-                                      upper_CI = upper_CI,
-                                      "p-value" = p_value))
-}
-
-model2_cubic_95 <- model2_cubic_95 %>% 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "adjusted_cubic") %>%
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
 
 ## sensitivity analyses without outliers ----
 ### model 1  ----
