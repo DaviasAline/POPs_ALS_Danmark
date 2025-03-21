@@ -133,7 +133,7 @@ bdd_danish |>
 #| echo: false
 #| message: false
 #| warning: false
-heatmap_cor(cormat = bdd_danish[POPs], decimal = 1)
+heatmap_POPs
 ```
 
 ```{r, fig.width=10}
@@ -401,13 +401,10 @@ results_cubic_outliers |>
 #| warning: false
 #| column: screen-inset-right
 grid.arrange(grobs = list(plot_adjusted_spline$PCB_DL, 
-                       #plot_adjusted_spline_95$PCB_DL, 
                        plot_adjusted_spline_outlier$PCB_DL, 
                        plot_adjusted_quadratic$PCB_DL, 
-                       #plot_adjusted_quadratic_95$PCB_DL, 
                        plot_adjusted_quadratic_outlier$PCB_DL, 
                        plot_adjusted_cubic$PCB_DL, 
-                       #plot_adjusted_cubic_95$PCB_DL, 
                        plot_adjusted_cubic_outlier$PCB_DL), ncol = 6)
 ```
 
@@ -419,13 +416,10 @@ grid.arrange(grobs = list(plot_adjusted_spline$PCB_DL,
 #| warning: false
 #| column: screen-inset-right
 grid.arrange(grobs = list(plot_adjusted_spline$PCB_NDL, 
-                       #plot_adjusted_spline_95$PCB_NDL, 
                        plot_adjusted_spline_outlier$PCB_NDL, 
                        plot_adjusted_quadratic$PCB_NDL,
-                       #plot_adjusted_quadratic_95$PCB_NDL, 
                        plot_adjusted_quadratic_outlier$PCB_NDL, 
                        plot_adjusted_cubic$PCB_NDL,
-                       #plot_adjusted_cubic_95$PCB_NDL, 
                        plot_adjusted_cubic_outlier$PCB_NDL), ncol = 6)
 ```
 
@@ -437,13 +431,10 @@ grid.arrange(grobs = list(plot_adjusted_spline$PCB_NDL,
 #| warning: false
 #| column: screen-inset-right
 grid.arrange(grobs = list(plot_adjusted_spline$PCB_4, 
-                       #plot_adjusted_spline_95$PCB_4, 
                        plot_adjusted_spline_outlier$PCB_4,
                        plot_adjusted_quadratic$PCB_4, 
-                       #plot_adjusted_quadratic_95$PCB_4,
                        plot_adjusted_quadratic_outlier$PCB_4, 
                        plot_adjusted_cubic$PCB_4, 
-                       #plot_adjusted_cubic_95$PCB_4,
                        plot_adjusted_cubic_outlier$PCB_4), ncol = 6)
 ```
 
@@ -455,13 +446,10 @@ grid.arrange(grobs = list(plot_adjusted_spline$PCB_4,
 #| warning: false
 #| column: screen-inset-right
 grid.arrange(grobs = list(plot_adjusted_spline$HCB, 
-                       #plot_adjusted_spline_95$HCB, 
                        plot_adjusted_spline_outlier$HCB,
                        plot_adjusted_quadratic$HCB, 
-                       #plot_adjusted_quadratic_95$HCB,
                        plot_adjusted_quadratic_outlier$HCB, 
                        plot_adjusted_cubic$HCB, 
-                       #plot_adjusted_cubic_95$HCB,
                        plot_adjusted_cubic_outlier$HCB), ncol = 6)
 ```
 
@@ -473,13 +461,10 @@ grid.arrange(grobs = list(plot_adjusted_spline$HCB,
 #| warning: false
 #| column: screen-inset-right
 grid.arrange(grobs = list(plot_adjusted_spline$ΣDDT, 
-                       #plot_adjusted_spline_95$ΣDDT, 
                        plot_adjusted_spline_outlier$ΣDDT,
                        plot_adjusted_quadratic$ΣDDT, 
-                       #plot_adjusted_quadratic_95$ΣDDT, 
                        plot_adjusted_quadratic_outlier$ΣDDT, 
                        plot_adjusted_cubic$ΣDDT, 
-                       #plot_adjusted_cubic_95$ΣDDT, 
                        plot_adjusted_cubic_outlier$ΣDDT), ncol = 6)
 ```
 
@@ -491,13 +476,10 @@ grid.arrange(grobs = list(plot_adjusted_spline$ΣDDT,
 #| warning: false
 #| column: screen-inset-right
 grid.arrange(grobs = list(plot_adjusted_spline$β_HCH, 
-                       #plot_adjusted_spline_95$β_HCH, 
                        plot_adjusted_spline_outlier$β_HCH,
                        plot_adjusted_quadratic$β_HCH, 
-                       #plot_adjusted_quadratic_95$β_HCH, 
                        plot_adjusted_quadratic_outlier$β_HCH, 
                        plot_adjusted_cubic$β_HCH, 
-                       #plot_adjusted_cubic_95$β_HCH, 
                        plot_adjusted_cubic_outlier$β_HCH), ncol = 6)
 ```
 
@@ -509,13 +491,10 @@ grid.arrange(grobs = list(plot_adjusted_spline$β_HCH,
 #| warning: false
 #| column: screen-inset-right
 grid.arrange(grobs = list(plot_adjusted_spline$Σchlordane, 
-                       #plot_adjusted_spline_95$Σchlordane, 
                        plot_adjusted_spline_outlier$Σchlordane,
                        plot_adjusted_quadratic$Σchlordane, 
-                       #plot_adjusted_quadratic_95$Σchlordane, 
                        plot_adjusted_quadratic_outlier$Σchlordane, 
                        plot_adjusted_cubic$Σchlordane, 
-                       #plot_adjusted_cubic_95$Σchlordane, 
                        plot_adjusted_cubic_outlier$Σchlordane), ncol = 6)
 ```
 
@@ -527,13 +506,10 @@ grid.arrange(grobs = list(plot_adjusted_spline$Σchlordane,
 #| warning: false
 #| column: screen-inset-right
 grid.arrange(grobs = list(plot_adjusted_spline$ΣPBDE, 
-                       #plot_adjusted_spline_95$ΣPBDE, 
                        plot_adjusted_spline_outlier$ΣPBDE,
                        plot_adjusted_quadratic$ΣPBDE, 
-                       #plot_adjusted_quadratic_95$ΣPBDE, 
                        plot_adjusted_quadratic_outlier$ΣPBDE, 
                        plot_adjusted_cubic$ΣPBDE, 
-                       #plot_adjusted_cubic_95$ΣPBDE, 
                        plot_adjusted_cubic_outlier$ΣPBDE), ncol = 6)
 ```
 
@@ -550,7 +526,7 @@ plot_quart
 
 #### Base models
 
-Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex and age. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
+Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex and age. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf>2: more complex than quadratic).
 
 ```{r, fig.height=6, fig.width=15}
 #| echo: false
@@ -558,16 +534,16 @@ Relationship between POPs exposure at baseline time and ALS occurrence estimated
 #| warning: false
 #| column: screen-inset-right
 wrap_plots(wrap_plots(plot_adjusted_gamm[1:4], nrow = 1), 
-           wrap_plots(plot_adjusted_gamm_outliers[1:4], nrow = 1), 
+           wrap_plots(plot_adjusted_gamm_outlier[1:4], nrow = 1), 
            nrow = 2)
 wrap_plots(wrap_plots(plot_adjusted_gamm[5:8], nrow = 1), 
-           wrap_plots(plot_adjusted_gamm_outliers[5:8], nrow = 1), 
+           wrap_plots(plot_adjusted_gamm_outlier[5:8], nrow = 1), 
            nrow = 2)
 ```
 
 #### Adjusted models
 
-Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
+Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf>2: more complex than quadratic).
 
 ```{r, fig.height=6, fig.width=15}
 #| echo: false
@@ -575,16 +551,16 @@ Relationship between POPs exposure at baseline time and ALS occurrence estimated
 #| warning: false
 #| column: screen-inset-right
 wrap_plots(wrap_plots(plot_adjusted_gamm[1:4], nrow = 1), 
-           wrap_plots(plot_adjusted_gamm_outliers[1:4], nrow = 1), 
+           wrap_plots(plot_adjusted_gamm_outlier[1:4], nrow = 1), 
            nrow = 2)
 wrap_plots(wrap_plots(plot_adjusted_gamm[5:8], nrow = 1), 
-           wrap_plots(plot_adjusted_gamm_outliers[5:8], nrow = 1), 
+           wrap_plots(plot_adjusted_gamm_outlier[5:8], nrow = 1), 
            nrow = 2)
 ```
 
 #### Copollutant model
 
-Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates and all other co-pollutants are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status, education and for the other co-pollutants. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
+Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates and all other co-pollutants are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status, education and for the other co-pollutants. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf>2: more complex than quadratic).
 
 ```{r, fig.height=6, fig.width=15}
 #| echo: false

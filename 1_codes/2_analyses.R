@@ -39,8 +39,8 @@ descrip_covar <- bdd_danish %>%
 
 ## exposures ----
 bdd_danish_long <- bdd_danish %>% 
-  select(sample, all_of(POPs)) %>%
-  pivot_longer(cols = -sample, names_to = "POPs", values_to = "Values") %>%
+  select(sample, all_of(POPs), als) %>%
+  pivot_longer(cols = -c('sample', 'als'), names_to = "POPs", values_to = "Values") %>%
   filter(!POPs %in% c("PeCB", "α_HCH", "γ_HCH")) %>%
   mutate(POPs =  gsub("_", "-", POPs), 
          POPs = fct_recode(POPs, 
@@ -129,6 +129,7 @@ bdd_danish_long <- bdd_danish %>%
                             "Trans-nonachlor", 
                             "HCB"))
 
+
 descrip_expo <- bdd_danish_long %>%
   mutate(
     POPs = fct_relevel(POPs, 
@@ -165,6 +166,41 @@ descrip_expo_group <- bdd_danish_long %>%
   theme_lucid() +
   scale_fill_brewer(palette = "Set2", direction = 1) 
 
+descrip_expo_group_by_als <- bdd_danish_long |>
+  mutate(
+    als = as.character(als), 
+    als = fct_recode(als, 
+                     "Controls" = "0",
+                     "Cases" = "1"), 
+    POPs_group = fct_relevel(POPs_group, 
+                             "ΣPBDE", "Σchlordane",  "β-HCH", "ΣDDT", "HCB", "Non-dioxin-like PCBs", "Dioxin-like PCBs")) |>
+  ggplot() +
+  aes(x = Values, y = POPs_group, fill = als) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1) +
+  scale_x_continuous(trans = "log", 
+                     labels = number_format(accuracy = 1)) +
+  labs(fill = "ALS ", x = "Values (pg/ml, log transformed)", y = "POPs") +
+  theme_lucid() + 
+  theme(legend.position = "bottom")
+
+cormat <- bdd_danish |>
+  select(all_of(POPs), all_of(POPs_group)) |>
+  rename(
+    "Dioxin-like PCBs" = PCB_DL,
+    "Non-dioxin-like PCBs" = PCB_NDL, 
+    "p,p’-DDT"  = pp_DDT, 
+    "p,p’-DDE" = pp_DDE) |>
+  rename_with(~ gsub("_", "-", .x)) |>  
+  rename_with(~ gsub("BDE", "PBDE", .x)) |>  
+  select(
+    "Dioxin-like PCBs", "PCB-118", "PCB-156", "Non-dioxin-like PCBs", "PCB-28", "PCB-52",
+    "PCB-74", "PCB-99", "PCB-101", "PCB-138", "PCB-153", "PCB-170",
+    "PCB-180", "PCB-183", "PCB-187", "HCB", "ΣDDT", "p,p’-DDE",
+    "p,p’-DDT",  "β-HCH",  "Σchlordane", "Transnonachlor",
+    "Oxychlordane", "ΣPBDE" = "ΣPPBDE", "PBDE-47", "PBDE-99", "PBDE-153")
+heatmap_POPs <- heatmap_cor(cormat = cormat, decimal = 1)
+rm(cormat)
 
 # statistics ----
 ## effects of the covariates on ALS ----
@@ -1053,9 +1089,10 @@ main_results <- bind_rows(model1_spline,
                           model3_quadratic, 
                           model3_cubic) %>% 
   mutate(variable = gsub("_quart", "", variable), 
-         OR = number(OR, accuracy = 0.1, decimal.mark = "."),  
-         lower_CI = number(lower_CI, accuracy = 0.1, decimal.mark = "."),
-         upper_CI = number(upper_CI, accuracy = 0.1, decimal.mark = "."),
+         OR = as.numeric(sprintf("%.1f", OR)),
+         lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
+         upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
+         p.value_raw = p.value, 
          p.value = ifelse(p.value < 0.01, "<0.01", number(p.value, accuracy = 0.01, decimal.mark = ".")), 
          "95%CI" = paste(lower_CI, ", ", upper_CI, sep = '')) %>%
   arrange(variable) %>%
@@ -1076,7 +1113,7 @@ main_results <- main_results |>
 
 results_spline <- 
   main_results |>
-  select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI) |>
+  select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI, -p.value_raw) |>
   filter(model %in% c('base_spline', 'adjusted_spline', 'copollutant_spline')) |>
   pivot_wider(
     names_from = model,  
@@ -1090,7 +1127,7 @@ colnames(results_spline) <- gsub('_spline', '', colnames(results_spline))
 
 results_quart <- 
   main_results |>
-  select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI) |>
+  select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI, - p.value_raw) |>
   filter(model %in% c('base_quart', 'adjusted_quart', 'copollutant_quart')) |>
   pivot_wider(
     names_from = model,  
@@ -1104,7 +1141,7 @@ colnames(results_quart) <- gsub('_quart', '', colnames(results_quart))
 
 results_quadratic <- 
   main_results |>
-  select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI) |>
+  select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI, -p.value_raw) |>
   filter(model %in% c('base_quadra', 'adjusted_quadra', 'copollutant_quadra')) |>
   pivot_wider(
     names_from = model,  
@@ -1118,7 +1155,7 @@ colnames(results_quadratic) <- gsub('_quadra', '', colnames(results_quadratic))
 
 results_cubic <- 
   main_results |>
-  select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI) |>
+  select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI, -p.value_raw) |>
   filter(model %in% c('base_cubic', 'adjusted_cubic', 'copollutant_cubic')) |>
   pivot_wider(
     names_from = model,  
@@ -1399,9 +1436,9 @@ sensitivity_results <- bind_rows(model1_spline_outlier,
                                  model2_cubic_outlier) %>% 
   arrange(variable) %>%
   mutate(
-    OR = number(OR, accuracy = 0.1, decimal.mark = "."),  
-    lower_CI = number(lower_CI, accuracy = 0.1, decimal.mark = "."),
-    upper_CI = number(upper_CI, accuracy = 0.1, decimal.mark = "."),
+    OR = as.numeric(sprintf("%.1f", OR)), 
+    lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
+    upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
     p.value = ifelse(p.value < 0.01, "<0.01", number(p.value, accuracy = 0.01, decimal.mark = ".")),
     "95%CI" = paste(lower_CI, ", ", upper_CI, sep = '')) %>%
   select(-starts_with("lower"), -starts_with("upper")) %>%
@@ -1463,7 +1500,7 @@ rm(model1_spline_outlier,
 plot_quart <- main_results %>% 
   filter(model %in% c('base_quart', 'adjusted_quart', 'copollutant_quart')) %>%
   mutate(df = fct_recode(df, "Quartile 2" = "2", "Quartile 3" = "3", "Quartile 4" = "4"), 
-         p.value_shape = ifelse(p.value<0.05, "p-value<0.05", "p-value≥0.05"), 
+         p.value_shape = ifelse(p.value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
          model = fct_recode(model, 
                             "Adjusted model" = "adjusted_quart",
                             "Base model" = "base_quart",
@@ -1471,9 +1508,9 @@ plot_quart <- main_results %>%
          model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
          df = fct_relevel(df, "Quartile 4", "Quartile 3", "Quartile 2" ), 
          variable = fct_recode(variable, 
-                               "Most prevalent\nPCBs" = "PCB_4",
+                               "Most\nprevalent\nPCBs" = "PCB_4",
                                "Dioxin-like\nPCBs" = "PCB_DL",
-                               "Non-dioxin-like\nPCBs" = "PCB_NDL",
+                               "Non-dioxin-\nlike PCBs" = "PCB_NDL",
                                "β-HCH" = "β_HCH")) %>%
   ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
   geom_pointrange(size = 0.5) + 
@@ -1526,7 +1563,8 @@ plot_base_spline_outlier <- list()
 
 for (var in POPs_group_outlier) {
   
-  formula <- as.formula(paste0("als ~ ns(", var, ", df = 4) + sex + baseline_age"))
+  formula <- as.formula(paste0("als ~ ns(", var, ", df = 4) + ", 
+                               paste(c('sex', 'baseline_age'), collapse = " + ")))
   
   model <- glm(formula, family = binomial, data = bdd_danish)
   
@@ -1537,7 +1575,7 @@ for (var in POPs_group_outlier) {
   
   new_data$match <- bdd_danish$match[1]
   
-  for (cov in c('sex, "baseline_age')) {
+  for (cov in c('sex', 'baseline_age')) {
     if (is.numeric(bdd_danish[[cov]])) {
       new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
     } else {
@@ -1563,6 +1601,7 @@ for (var in POPs_group_outlier) {
 }
 
 rm(var, formula, model, new_data, pred, plot, cov)
+
 
 ### quadratic ----
 plot_base_quadratic <- list()
@@ -1937,8 +1976,8 @@ for (var in POPs_group_outlier) {
   new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
   
   plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  # Plot the estimated probability
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  # Add CI ribbon
+    geom_line(color = "blue", size = 1) +  
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
     labs(x = var, y = "Predicted probability of ALS", title = 'spline without outliers') +
     theme_minimal()
   
