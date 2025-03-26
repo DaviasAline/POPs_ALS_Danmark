@@ -108,6 +108,9 @@ POPs_group <- c("PCB_DL", "PCB_NDL", "PCB_4", "HCB", "ΣDDT", "β_HCH", "Σchlor
 POPs_group_quart <- paste0(POPs_group, "_quart")
 POPs_group_outlier <- paste0(POPs_group, "_outlier")
 
+POPs_included <- bdd_POPs |> select(all_of(POPs)) |> select(-PeCB, - α_HCH, -γ_HCH) |> colnames()
+POPs_included_quart <- paste0(POPs_included, "_quart")
+
 # 0 values vizualization ----
 # bdd_danish %>% 
 #   select(all_of(POPs)) %>% 

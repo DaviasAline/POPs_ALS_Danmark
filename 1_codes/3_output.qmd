@@ -84,7 +84,7 @@ descrip_covar
 
 ## POPs exposures
 
-### All
+### Distribution tables
 
 ```{r}
 #| echo: false
@@ -101,6 +101,8 @@ table_1 %>% kable("html")
 #| warning: false
 descrip_num(data = bdd_danish, vars = c(POPs_group, POPs_group_outlier)) %>% kable("html")
 ```
+
+### Comparison of distribution cases/controls
 
 ```{r}
 #| echo: false
@@ -129,12 +131,72 @@ bdd_danish |>
   add_p() 
 ```
 
-```{r, fig.width=10, fig.height=8}
+### Heatmap of correlation 
+```{r, fig.width=10, fig.height=10}
 #| echo: false
 #| message: false
 #| warning: false
-heatmap_POPs
+heatmap_POPs <- bdd_danish %>% 
+  select(all_of(POPs), all_of(POPs_group)) |>
+  rename(
+    "Dioxin-like PCBs" = PCB_DL,
+    "Non-dioxin-like PCBs" = PCB_NDL, 
+    "p,p’-DDT"  = pp_DDT, 
+    "p,p’-DDE" = pp_DDE) |>
+  rename_with(~ gsub("_", "-", .x)) |>  
+  rename_with(~ gsub("BDE", "PBDE", .x)) |>  
+  select(
+    "Dioxin-like PCBs", "PCB-118", "PCB-156", "Non-dioxin-like PCBs", "PCB-28", "PCB-52",
+    "PCB-74", "PCB-99", "PCB-101", "PCB-138", "PCB-153", "PCB-170",
+    "PCB-180", "PCB-183", "PCB-187", "HCB", "ΣDDT", "p,p’-DDE",
+    "p,p’-DDT",  "β-HCH",  "Σchlordane", "Transnonachlor",
+    "Oxychlordane", "ΣPBDE" = "ΣPPBDE", "PBDE-47", "PBDE-99", "PBDE-153")
+
+figure_S2 <- cor(heatmap_POPs, 
+                 use = "pairwise.complete.obs", 
+                 method = "pearson")
+
+plot.new
+corrplot(heatmap_POPs, 
+         method = 'color', 
+         type = "lower", 
+         tl.col = 'black', 
+         tl.srt = 45, 
+         addCoef.col = "black",
+         number.cex = 0.8,
+         number.digits = 1,
+         tl.cex = 1,
+         col = rev(COL2(diverging = "RdYlBu")))
+dev.off()
 ```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+test <- bdd_danish |> select(PCB_28, PCB_52, PCB_74, PCB_99, PCB_101, PCB_138, PCB_153, 
+                               PCB_170, PCB_180, PCB_183, PCB_187) 
+heatmap_cor(cormat = test, decimal = 1)
+
+test <- bdd_danish |> select(PCB_118, PCB_156) 
+heatmap_cor(cormat = test, decimal = 1)
+
+test <- bdd_danish |> select(BDE_47,BDE_99, BDE_153) 
+heatmap_cor(cormat = test, decimal = 1)
+
+test <- bdd_danish |> select(pp_DDT, pp_DDE) 
+heatmap_cor(cormat = test, decimal = 1)
+
+test <- bdd_danish |> select(Transnonachlor, Oxychlordane) 
+heatmap_cor(cormat = test, decimal = 1)
+
+test <- bdd_danish |> select(all_of(POPs_group)) |> select(-PCB_4)
+heatmap_cor(cormat = test, decimal = 1)
+rm(test)
+```
+
+
+### Boxplot of distribution 
 
 ```{r, fig.width=10}
 #| echo: false
@@ -143,8 +205,7 @@ heatmap_POPs
 descrip_expo
 ```
 
-### POPs summed by group
-
+### POPs summed 
 ```{r, , fig.width=10, fig.height=5}
 #| echo: false
 #| message: false
@@ -522,11 +583,18 @@ grid.arrange(grobs = list(plot_adjusted_spline$ΣPBDE,
 plot_quart
 ```
 
+```{r fig.height=9, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+plot_quart_bis
+```
+
 ### gamm models
 
 #### Base models
 
-Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex and age. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf>2: more complex than quadratic).
+Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex and age. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
 
 ```{r, fig.height=6, fig.width=15}
 #| echo: false
@@ -543,7 +611,7 @@ wrap_plots(wrap_plots(plot_adjusted_gamm[5:8], nrow = 1),
 
 #### Adjusted models
 
-Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf>2: more complex than quadratic).
+Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
 
 ```{r, fig.height=6, fig.width=15}
 #| echo: false
@@ -560,7 +628,7 @@ wrap_plots(wrap_plots(plot_adjusted_gamm[5:8], nrow = 1),
 
 #### Copollutant model
 
-Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates and all other co-pollutants are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status, education and for the other co-pollutants. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf>2: more complex than quadratic).
+Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates and all other co-pollutants are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status, education and for the other co-pollutants. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
 
 ```{r, fig.height=6, fig.width=15}
 #| echo: false
@@ -573,47 +641,4 @@ wrap_plots(wrap_plots(plot_copollutant_gamm[1:4], nrow = 1),
 wrap_plots(wrap_plots(plot_copollutant_gamm[5:7], nrow = 1), 
            wrap_plots(plot_copollutant_gamm_outlier[5:7], nrow = 1), 
            nrow = 2)
-```
-
-## Figure for article
-
-```{r, fig.height=24, fig.width=11.25}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-#| 
-wrap_plots(plot_base_gamm$PCB_DL + ggtitle('Base model'), 
-           plot_adjusted_gamm$PCB_DL + ggtitle('Adjusted model'), 
-           plot_copollutant_gamm$PCB_DL + ggtitle('Copollutant model'), 
-           
-           plot_base_gamm$PCB_NDL, 
-           plot_adjusted_gamm$PCB_NDL, 
-           plot_copollutant_gamm$PCB_NDL, 
-           
-           plot_base_gamm$PCB_4, 
-           plot_adjusted_gamm$PCB_4, 
-           wrap_elements(grid::nullGrob()),
-           
-           plot_base_gamm$HCB, 
-           plot_adjusted_gamm$HCB, 
-           plot_copollutant_gamm$HCB, 
-           
-           plot_base_gamm$ΣDDT, 
-           plot_adjusted_gamm$ΣDDT, 
-           plot_copollutant_gamm$ΣDDT, 
-           
-           plot_base_gamm$β_HCH, 
-           plot_adjusted_gamm$β_HCH, 
-           plot_copollutant_gamm$β_HCH, 
-           
-           plot_base_gamm$Σchlordane, 
-           plot_adjusted_gamm$Σchlordane, 
-           plot_copollutant_gamm$Σchlordane, 
-           
-           plot_base_gamm$ΣPBDE, 
-           plot_adjusted_gamm$ΣPBDE, 
-           plot_copollutant_gamm$ΣPBDE, 
-           ncol = 3)
-           
 ```
