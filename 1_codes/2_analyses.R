@@ -19,7 +19,8 @@ library('see')
 library('kableExtra')
 library('knitr')
 library('officer')
-library(flextable)
+library('flextable')
+library('corrplot')
 
 covariates <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')
 
@@ -1638,7 +1639,7 @@ rm(var, formula, model, model_summary)
 
 model2_gamm_not_summed <- list()
 
-for (var in POPSs_included) {
+for (var in POPs_included) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + 
                               smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))

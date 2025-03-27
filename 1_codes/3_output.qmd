@@ -132,7 +132,7 @@ bdd_danish |>
 ```
 
 ### Heatmap of correlation 
-```{r, fig.width=10, fig.height=10}
+```{r fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
 #| warning: false
@@ -152,11 +152,10 @@ heatmap_POPs <- bdd_danish %>%
     "p,p’-DDT",  "β-HCH",  "Σchlordane", "Transnonachlor",
     "Oxychlordane", "ΣPBDE" = "ΣPPBDE", "PBDE-47", "PBDE-99", "PBDE-153")
 
-figure_S2 <- cor(heatmap_POPs, 
+heatmap_POPs <- cor(heatmap_POPs, 
                  use = "pairwise.complete.obs", 
                  method = "pearson")
 
-plot.new
 corrplot(heatmap_POPs, 
          method = 'color', 
          type = "lower", 
@@ -167,7 +166,7 @@ corrplot(heatmap_POPs,
          number.digits = 1,
          tl.cex = 1,
          col = rev(COL2(diverging = "RdYlBu")))
-dev.off()
+
 ```
 
 ```{r}
@@ -645,11 +644,22 @@ wrap_plots(wrap_plots(plot_copollutant_gamm[5:7], nrow = 1),
 
 
 ## Sensitivity analysis pollutants not summed
-```{r}
+### GAMMs 
+```{r, fig.height=6, fig.width=15}
+#| column: screen-inset-right
 #| echo: false
 #| message: false
 #| warning: false
-wrap_plots(plot_base_gamm_not_summed)
-wrap_plots(plot_base_gamm_not_summed)
+wrap_plots(plot_adjusted_gamm_not_summed[1:8], ncol = 4)
+wrap_plots(plot_adjusted_gamm_not_summed[9:16], ncol = 4)
+wrap_plots(plot_adjusted_gamm_not_summed[17:22], ncol = 4)
+```
+
+### Quartiles 
+```{r,  fig.height=15, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+plot_quart_sensi_not_summed
 ```
 

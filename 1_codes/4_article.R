@@ -50,9 +50,13 @@ table_2 <- covar |>
 # Distribution of pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498).
 figure_1 <- descrip_expo_group_by_als
 
-# Figure 2 - gamm models ----
+# Figure 2 - forest plot quartiles ----
+# Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (conditional logistic regression models, sample size: 498).
+figure_2 <- plot_quart
+
+# Figure 3 - gamm models ----
 # Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (generalized additive mixed models, sample size: 498).
-figure_2_a <- wrap_plots(
+figure_3_a <- wrap_plots(
   plot_base_gamm$PCB_DL,
   plot_adjusted_gamm$PCB_DL,
   plot_copollutant_gamm$PCB_DL,
@@ -70,7 +74,7 @@ figure_2_a <- wrap_plots(
   plot_copollutant_gamm$HCB, 
   ncol = 3)
 
-figure_2_b <- wrap_plots(
+figure_3_b <- wrap_plots(
   plot_base_gamm$ΣDDT,
   plot_adjusted_gamm$ΣDDT,
   plot_copollutant_gamm$ΣDDT,
@@ -87,10 +91,6 @@ figure_2_b <- wrap_plots(
   plot_adjusted_gamm$ΣPBDE,
   plot_copollutant_gamm$ΣPBDE,
   ncol = 3)
-
-# Figure 3 - forest plot quartiles ----
-# Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (conditional logistic regression models, sample size: 498).
-figure_3 <- plot_quart
 
 
 # Table S1 - exposure distribution ----
@@ -338,11 +338,11 @@ figure_S3_b <- wrap_plots(
   plot_copollutant_gamm_outlier$ΣPBDE,
   ncol = 3)
 
-# Figure S4 - not summed sensitivity analysis ----
-wrap_plots(plot_base_gamm_not_summed)
-wrap_plots(plot_base_gamm_not_summed)
+# Figure S4 - not summed sensitivity analysis quartiles ----
+figure_S4 <- plot_quart_sensi_not_summed 
 
-
+# Figure S5 - not summed sensitivity analysis gamm ----
+figure_S5 <- wrap_plots(plot_adjusted_gamm_not_summed)
 
 # Export ----
 table_1 <- read_docx() |> body_add_flextable(table_1) 
@@ -363,23 +363,23 @@ ggsave(
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/figure_2_a.tiff",
-  figure_2_a,
-  height = 12,
-  width = 9,
-  units = "in")
-
-ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/figure_2_b.tiff",
-  figure_2_b,
-  height = 12,
-  width = 9,
-  units = "in")
-
-ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/figure_3.tiff",
-  figure_3,
+  "~/Documents/POP_ALS_2025_02_03/2_output/figure_2.tiff",
+  figure_2,
   height = 8,
+  width = 9,
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/figure_3_a.tiff",
+  figure_3_a,
+  height = 12,
+  width = 9,
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/figure_3_b.tiff",
+  figure_3_b,
+  height = 12,
   width = 9,
   units = "in")
 
@@ -401,6 +401,13 @@ ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/figure_S3_b.tiff",
   figure_S3_b,
   height = 12,
+  width = 9,
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/figure_S4.tiff",
+  figure_S4,
+  height = 15,
   width = 9,
   units = "in")
 
