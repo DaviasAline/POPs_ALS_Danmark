@@ -642,3 +642,14 @@ wrap_plots(wrap_plots(plot_copollutant_gamm[5:7], nrow = 1),
            wrap_plots(plot_copollutant_gamm_outlier[5:7], nrow = 1), 
            nrow = 2)
 ```
+
+
+## Sensitivity analysis pollutants not summed
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(plot_base_gamm_not_summed)
+wrap_plots(plot_base_gamm_not_summed)
+```
+

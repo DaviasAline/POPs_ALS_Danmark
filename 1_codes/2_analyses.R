@@ -1460,7 +1460,7 @@ for (var in POPs_group_outlier) {
 
 rm(var, formula, model, model_summary)
 
-### merging the sensitivity results ----
+#### merging  ----
 sensitivity_results_outlier <- bind_rows(model1_spline_outlier,
                                   model1_quadratic_outlier,
                                  model1_cubic_outlier, 
@@ -1528,6 +1528,127 @@ rm(model1_spline_outlier,
    model2_quadratic_outlier,
    model2_cubic_outlier)
 
+
+## sensitivity analyses pollutants not summed ----
+### quartiles ----
+model1_quart_not_summed <- data.frame(variable = character(),
+                                      df = integer(),
+                                      OR = numeric(),
+                                      lower_CI = numeric(),
+                                      upper_CI = numeric(),
+                                      p_value = numeric(),
+                                      stringsAsFactors = FALSE)
+
+for (var in POPs_included_quart) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  
+  model <- clogit(formula, data = bdd_danish)
+  
+  model_summary <- tidy(model)
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  df_value <- model_summary$term
+  
+  model1_quart_not_summed <- rbind(model1_quart_not_summed, data.frame(variable = var,
+                                                                       df = df_value, 
+                                                                       OR = OR,
+                                                                       lower_CI = lower_CI,
+                                                                       upper_CI = upper_CI,
+                                                                       "p-value" = p_value))
+}
+
+model1_quart_not_summed <- model1_quart_not_summed %>% 
+  mutate(
+    df = str_sub(df, start = -1), 
+    model = "base_quart_not_summed") %>%
+  select(variable, model, everything())
+rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
+
+model2_quart_not_summed <- data.frame(variable = character(),
+                                      df = integer(),
+                                      OR = numeric(),
+                                      lower_CI = numeric(),
+                                      upper_CI = numeric(),
+                                      p_value = numeric(),
+                                      stringsAsFactors = FALSE)
+
+for (var in POPs_included_quart) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+  model <- clogit(formula, data = bdd_danish)
+  model_summary <- tidy(model) %>% filter(grepl(paste0("^", var), term))
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  df_value <- model_summary$term
+  model2_quart_not_summed <- rbind(model2_quart_not_summed, data.frame(variable = var,
+                                                                       df = df_value, 
+                                                                       OR = OR,
+                                                                       lower_CI = lower_CI,
+                                                                       upper_CI = upper_CI,
+                                                                       "p-value" = p_value))
+}
+
+model2_quart_not_summed <- model2_quart_not_summed %>% 
+  mutate(
+    df = str_sub(df, start = -1), 
+    model = "adjusted_quart_not_summed") %>%
+  select(variable, model, everything())
+rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
+
+
+sensitivity_results_not_summed_quart <- 
+  bind_rows(model1_quart_not_summed, model2_quart_not_summed) |>
+  mutate(variable = gsub("_quart", "", variable), 
+         variable = gsub("BDE", "PBDE", variable),
+         variable = gsub('_', '-', variable),
+         variable = fct_recode(variable, "p,p'-DDE" = 'pp-DDE',  "p,p'-DDT" ="pp-DDT"),
+         OR = format(OR, nsmall = 1, digits = 1),
+         lower_CI = format(lower_CI, nsmall = 1, digits = 1),
+         upper_CI =  format(upper_CI, nsmall = 1, digits = 1),
+         p.value_raw = p.value, 
+         p.value = ifelse(p.value < 0.01, "<0.01", format(p.value, nsmall = 1, digits = 1)), 
+         "95%CI" = paste(lower_CI, ", ", upper_CI, sep = '')) %>%
+  arrange(variable) %>%
+  select(variable, 
+         model,
+         df,
+         starts_with("OR"), 
+         starts_with("95%"), 
+         starts_with("p.value"), 
+         lower_CI, upper_CI) 
+
+### gamm ----
+model1_gamm_not_summed <- list()
+
+for (var in POPs_included) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
+  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model_summary <- summary(model)
+  model1_gamm_outliers[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
+
+model2_gamm_not_summed <- list()
+
+for (var in POPSs_included) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + 
+                              smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model_summary <- summary(model)
+  model2_gamm_outliers[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
+
 # figures ----
 ## quartiles ----
 plot_quart <- main_results %>% 
@@ -1544,7 +1665,9 @@ plot_quart <- main_results %>%
                                "Most\nprevalent\nPCBs" = "PCB_4",
                                "Dioxin-like\nPCBs" = "PCB_DL",
                                "Non-dioxin-\nlike PCBs" = "PCB_NDL",
-                               "β-HCH" = "β_HCH")) %>%
+                               "β-HCH" = "β_HCH"), 
+        variable = fct_relevel(variable, 
+                               "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "Most\nprevalent\nPCBs", "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) %>%
   ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
@@ -1556,8 +1679,6 @@ plot_quart <- main_results %>%
         legend.position = "bottom", 
         strip.text.y = element_text(hjust = 0.5)) +
   coord_flip()
-
-
 
 
 plot_quart_bis <- main_results %>% 
@@ -1574,7 +1695,9 @@ plot_quart_bis <- main_results %>%
                                "Most\nprevalent\nPCBs" = "PCB_4",
                                "Dioxin-like\nPCBs" = "PCB_DL",
                                "Non-dioxin-\nlike PCBs" = "PCB_NDL",
-                               "β-HCH" = "β_HCH")) %>%
+                               "β-HCH" = "β_HCH"), 
+         variable = fct_relevel(variable, 
+                                "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "Most\nprevalent\nPCBs", "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) %>%
   ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
@@ -1587,7 +1710,34 @@ plot_quart_bis <- main_results %>%
         strip.text.y = element_text(hjust = 0.5)) +
   coord_flip()
 
-
+## quartiles not summed ----
+plot_quart_sensi_not_summed <- sensitivity_results_not_summed_quart %>% 
+  mutate(df = fct_recode(df, "Quartile 2" = "2", "Quartile 3" = "3", "Quartile 4" = "4"), 
+         df = fct_relevel(df, "Quartile 4", "Quartile 3", "Quartile 2" ), 
+         p.value_shape = ifelse(p.value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
+         model = fct_recode(model, 
+                            "Adjusted model" = "adjusted_quart_not_summed",
+                            "Base model" = "base_quart_not_summed"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
+         variable = fct_relevel(variable, 
+                                "PCB-118", "PCB-156", "PCB-28", "PCB-52", "PCB-74", "PCB-99",
+                                "PCB-101", "PCB-138", "PCB-153", "PCB-170", "PCB-180", "PCB-183",
+                                "PCB-187", "HCB", "p,p'-DDE", "p,p'-DDT", "β-HCH", "Transnonachlor",
+                                "Oxychlordane", "PBDE-47", "PBDE-99", "PBDE-153"), 
+         OR = as.numeric(as.character(OR)), 
+         lower_CI = as.numeric(as.character(lower_CI)), 
+         upper_CI = as.numeric(as.character(upper_CI))) |>
+  ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(rows = dplyr::vars(variable), cols = dplyr::vars(model), switch = "y") +  
+  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  labs(x = "POPs", y = "Odds Ratio (OR)", color = "p-value") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip()
 
 ## model 1 ----
 ### spline ----
@@ -1964,6 +2114,98 @@ plot_base_gamm_outlier <- map(POPs_group_outlier, function(var) {
 rm(pollutant_labels)
 
 ### gamm not summed ----
+POPs_included_labels <- gsub("_", "-", POPs_included)
+POPs_included_labels <- gsub("BDE", "PBDE", POPs_included_labels)
+POPs_included_labels <- gsub("pp", "p,p'", POPs_included_labels)
+pollutant_labels <- set_names(c(POPs_included_labels, POPs_included))
+
+plot_base_gamm_not_summed <- map(POPs_included, function(var) {
+  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
+  
+  model <- gam(formula,
+               family = binomial,
+               method = "REML",
+               data = bdd_danish)
+  
+  bdd_pred <- bdd_danish %>%                                                    # création bdd avec covariables ramenées à leur moyenne
+    mutate(across(
+      all_of(c("sex", "baseline_age")),
+      ~ if (is.numeric(.))
+        mean(., na.rm = TRUE)
+      else
+        names(which.max(table(.))),
+      .names = "adj_{.col}"
+    )) %>%
+    select(all_of(var), starts_with("adj_")) %>%
+    rename_with( ~ gsub("adj_", "", .x))
+  
+  pred <- predict(model,
+                  newdata = bdd_pred,
+                  type = "link",
+                  se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred %>%
+    mutate(
+      prob = plogis(pred$fit),
+      # plogit does exp(pred$fit) / (1 + exp(pred$fit))
+      prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+      prob_upper = plogis(pred$fit + 1.96 * pred$se.fit)
+    )
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"],
+                nsmall = 1,
+                digits = 1)
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =
+                                                            2, digits = 2))
+  x_max <- max(bdd_danish[[var]], na.rm = TRUE)
+  x_label <- pollutant_labels[var]
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "blue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper),
+                fill = "blue",
+                alpha = 0.2) +
+    labs(x = var, y = "Predicted probability of ALS") +
+    annotate(
+      "text",
+      x = x_max,
+      y = Inf,
+      label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+      hjust = 1,
+      vjust = 1.2,
+      size = 4,
+      color = "black"
+    ) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(color = 'white'),
+      axis.title.x = element_blank(),
+      axis.line.x = element_blank(),
+      axis.ticks.x = element_blank()
+    ) +
+    ggtitle("Base model")
+  
+  p2 <- ggplot(bdd_pred) +
+    aes(x = "", y = .data[[var]]) +
+    geom_boxplot(fill = "blue") +
+    coord_flip() +
+    ylab(x_label) +
+    xlab("") +
+    theme_minimal()
+  
+  p <- p1 / p2 + plot_layout(
+    ncol = 1,
+    nrow = 2,
+    heights = c(10, 1),
+    guides = 'collect'
+  ) +
+    theme_minimal()
+  p
+}) %>%
+  set_names(POPs_included_labels)
+rm(pollutant_labels)
 
 ## model 2 ----
 ### spline ----
@@ -2357,6 +2599,68 @@ plot_adjusted_gamm_outlier <- map(POPs_group_outlier, function(var) {
 rm(pollutant_labels)
 
 ### gamm not summed ----
+POPs_included_labels <- gsub("_", "-", POPs_included)
+POPs_included_labels <- gsub("BDE", "PBDE", POPs_included_labels)
+POPs_included_labels <- gsub("pp", "p,p'", POPs_included_labels)
+pollutant_labels <- set_names(c(POPs_included_labels, POPs_included))
+
+plot_adjusted_gamm_not_summed <- map(POPs_included, function(var) {
+  
+  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age + 
+                              smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+  
+  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
+  
+  bdd_pred <- bdd_danish %>%                                                    # création bdd avec covariables ramenées à leur moyenne
+    mutate(across(all_of(c("sex", "baseline_age", 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')), 
+                  ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.))), 
+                  .names = "adj_{.col}")) %>%
+    select(all_of(var), starts_with("adj_")) %>%
+    rename_with(~ gsub("adj_", "", .x)) 
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred %>%
+    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
+           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
+  x_max <- max(bdd_danish[[var]], na.rm = TRUE)
+  x_label <- pollutant_labels[var] 
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "blue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
+    labs(x = var, y = "Predicted probability of ALS") +
+    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 1, vjust = 1.2, size = 4, color = "black") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(color = 'white'),
+          axis.title.x = element_blank(),
+          axis.line.x = element_blank(),
+          axis.ticks.x = element_blank()) +
+    ggtitle("Adjusted model")
+  
+  p2 <- ggplot(bdd_pred) +
+    aes(x = "", y = .data[[var]]) +
+    geom_boxplot(fill = "blue") +
+    coord_flip() +
+    ylab(x_label) + 
+    xlab("") + 
+    theme_minimal()
+  
+  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
+                           guides = 'collect') + 
+    theme_minimal()
+  p
+}) %>% 
+  set_names(POPs_included_labels)
+rm(pollutant_labels)
+
 
 ## model 3 ----
 ### gamm ----

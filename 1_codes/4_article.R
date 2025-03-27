@@ -204,6 +204,62 @@ table_S2 <- table_S2 |> flextable() |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 rm(extra_rows)
 
+# Table S3 - sensitivity analyse pollutant not summed (quartiles) ----
+extra_rows <- sensitivity_results_not_summed_quart %>%
+  distinct(variable) %>% 
+  mutate(
+    quartiles = "1",
+    "OR_base_not_summed" = '-', "95%CI_base_not_summed" = '-', "p.value_base_not_summed" = '',
+    "OR_adjusted_not_summed" = '-', "95%CI_adjusted_not_summed" = '-', "p.value_adjusted_not_summed" = '')
+
+Table_S3 <- 
+  sensitivity_results_not_summed_quart |>
+  select(-lower_CI, -upper_CI, - p.value_raw) |>
+  pivot_wider(
+    names_from = model,  
+    values_from = c(OR, `95%CI`, p.value)) |>
+  select(variable, 
+         quartiles = df,
+         contains("base_quart"), 
+         contains("adjusted_quart")) 
+colnames(Table_S3) <- gsub('_quart', '', colnames(Table_S3))
+
+Table_S3 <- Table_S3 |>
+  mutate_if(is.numeric, as.character) |>
+  bind_rows(extra_rows) |>
+  mutate(
+    variable = gsub("_", "-", variable), 
+    variable = fct_relevel(variable, 
+                           "PCB-118", "PCB-156", "PCB-28", "PCB-52", "PCB-74", "PCB-99",
+                           "PCB-101", "PCB-138", "PCB-153", "PCB-170", "PCB-180", "PCB-183",
+                           "PCB-187", "HCB", "p,p'-DDE", "p,p'-DDT", "β-HCH", "Transnonachlor",
+                           "Oxychlordane", "PBDE-47", "PBDE-99", "PBDE-153")) |>
+  arrange(variable, quartiles) |>
+  rename('OR' = 'OR_base_not_summed', '95% CI' = '95%CI_base_not_summed', 'p-value' = 'p.value_base_not_summed', 
+         'OR ' = 'OR_adjusted_not_summed', '95% CI ' = '95%CI_adjusted_not_summed', 'p-value ' = 'p.value_adjusted_not_summed') |> 
+  flextable() |>
+  add_footer_lines(
+    "1POPs were summed as follows: Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; ΣPBDE corresponds to PBDEs 47, 99, 153; ΣDDT corresponds to p,p’-DDT and p,p’-DDE and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
+  2All models are matched for sex and age. Adjusted models further account for smoking, BMI, serum total cholesterol, marital status, and education. Co-pollutant models further include all chemicals, where the chemical of interest is categorized into quartiles, while the others are treated as continuous variables.
+  3Estimated risk of ALS when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
+  4CI: Confidence interval.") |>
+  add_header(
+    "variable" = "Exposures", "quartiles" = "Quartiles",
+    "OR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
+    "OR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model") |>
+  merge_h(part = "header") |>
+  merge_v(j = "variable") |>
+  theme_vanilla() |>
+  bold(j = "variable", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "variable", align = "left", part = "all") |> 
+  merge_at(j = "variable", part = "header") |>
+  merge_at(j = "quartiles", part = "header") |>
+  font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+rm(extra_rows)
+
 # Figure S1 - DAG ----
 # Directed acyclic graph of the relationship between pre-disease POP serum concentrations and ALS occurrence.
 
@@ -281,6 +337,11 @@ figure_S3_b <- wrap_plots(
   plot_adjusted_gamm_outlier$ΣPBDE,
   plot_copollutant_gamm_outlier$ΣPBDE,
   ncol = 3)
+
+# Figure S4 - not summed sensitivity analysis ----
+wrap_plots(plot_base_gamm_not_summed)
+wrap_plots(plot_base_gamm_not_summed)
+
 
 
 # Export ----
