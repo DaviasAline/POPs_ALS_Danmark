@@ -4,23 +4,6 @@
 # data loading - package loading ----
 source("~/Documents/POP_ALS_2025_02_03/1_codes/0_functions.R")
 source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
-library("see")
-library("scales")
-library('plotly')
-library('gridExtra')  
-library('ggeffects')
-library('mgcv')
-library('purrr')
-library('tidyr')
-library('ggstance')
-library('gratia')
-library('glue')
-library('see')
-library('kableExtra')
-library('knitr')
-library('officer')
-library('flextable')
-library('corrplot')
 
 covariates <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')
 

@@ -2,18 +2,6 @@
 # 03/02/2025
 
 # package loading ----
-library(haven)
-library(tidyverse)
-library(gtsummary)
-library(readxl)
-library(splines)
-library(questionr)
-library(esquisse)
-library(survival)
-library(splines)
-library(writexl)
-library(mice)
-library(see)
 source("~/Documents/POP_ALS_2025_02_03/1_codes/0_functions.R")
 
 # data loading ----
