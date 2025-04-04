@@ -408,3 +408,12 @@ custom_pvalue_fun <- function(x) {
     }
   })
 }
+
+
+replace_with_median <- function(data, var, quartile_var) {                       
+  new_var_name <- paste0(rlang::as_name(ensym(var)), "_quart_med")  
+  data %>%
+    group_by({{quartile_var}}) %>%
+    mutate(!!new_var_name := median({{var}}, na.rm = TRUE)) %>%
+    ungroup()
+}

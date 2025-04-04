@@ -610,11 +610,11 @@ bdd_tot <- bdd_tot %>%
          Σchlordane = Transnonachlor + Oxychlordane)
 
 
-bdd_tot_long <- bdd_tot %>%
-  select(sample, study, all_of(POPs), 
-         "PCB_DL", "PCB_NDL", "PCB_4", "HCB", "ΣDDT", "ΣHCH", "β_HCH", "Σchlordane") %>%
-  select(-α_HCH, -BDE_47, -BDE_99, -BDE_153) %>%
-  pivot_longer(cols = c(-sample, -study), names_to = "POPS", values_to = "values")
+# bdd_tot_long <- bdd_tot %>%
+#   select(sample, study, all_of(POPs), 
+#          "PCB_DL", "PCB_NDL", "PCB_4", "HCB", "ΣDDT", "ΣHCH", "β_HCH", "Σchlordane") %>%
+#   select(-α_HCH, -BDE_47, -BDE_99, -BDE_153) %>%
+#   pivot_longer(cols = c(-sample, -study), names_to = "POPS", values_to = "values")
 
 
 # variable labels ---- 
