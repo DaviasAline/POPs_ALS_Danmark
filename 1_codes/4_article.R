@@ -27,7 +27,7 @@ table_1 <- bdd_danish |>
   add_overall() |>
   add_n() |>
   as_flex_table() |>
-  font(fontname = "Calibri", part = "all") |> 
+  # font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   merge_at(i = 1, j = 1, part = "header") |>  
@@ -37,7 +37,7 @@ table_1 <- bdd_danish |>
 # Estimated risk of ALS occurrence attributed to subject characteristics in the Danish Diet, Cancer and Health study cohort (logistic regression models, sample size: 498). 
 table_2 <- covar |> 
   as_flex_table()|>
-  font(fontname = "Calibri", part = "all") |> 
+  # font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")  |>
   add_footer_lines(

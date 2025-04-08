@@ -14,19 +14,87 @@ toc-location: left
 #| message: false
 #| warning: false
 #| include: false
-source("~/Documents/POP_ALS_2025_02_03/1_codes/lipids in finland cohort.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/lipids.R")
 ```
 
 # Data description
-## Density plots 
+## Comparison finnish / danish
+### Covariates
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+bdd %>%
+  select("study", "sex", "marital_status_2cat", "smoking_2cat", "alcohol", "education", 
+         "bmi", "cholesterol", "baseline_age", "diagnosis_age") %>%
+  tbl_summary(by = "study") %>%
+  bold_labels() %>%
+  add_p()
+```
+
+### POPs
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+bdd |> 
+  select(sample, als, study, all_of(POPs), all_of(POPs_group)) |>
+  pivot_longer(cols = c(-sample, -als, -study), names_to = "POPs", values_to = "Values") |>
+  ggplot() +
+  aes(x = Values, y = POPs, fill = study) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1) +
+  labs(
+    x = "Serum concentration (/)",
+    y = "POPs",
+    fill = "Cohorts") +
+  theme_lucid()
+
+bdd |>
+  filter(als == 0) |>
+  select(study, all_of(POPs), all_of(POPs_group)) |>
+  tbl_summary(by = "study") |>
+  bold_labels() |>
+  add_n()
+```
+
+### Fatty acids
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+bdd |> 
+  select(sample, als, study, all_of(fattyacids), all_of(explanatory)) |>
+  pivot_longer(cols = c(-sample, -als, -study), names_to = "fattyacids", values_to = "Values") |>
+  ggplot() +
+  aes(x = Values, y = fattyacids, fill = study) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1) +
+  labs(
+    x = "Serum concentration (/)",
+    y = "Fatty acids",
+    fill = "Cohorts") +
+  theme_lucid()
+
+bdd |>
+  filter(als == 0) |>
+  select(study, all_of(fattyacids), all_of(explanatory)) |>
+  tbl_summary(by = "study") |>
+  bold_labels() |>
+  add_n()
+```
+
+# Descriptif Danish cohort
+## Fatty acids
+### Density plots 
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
 #| warning: false
 #| column: screen-inset-right
 
-bdd_finnish |> 
-  select(sample, all_of(fatty_acids)) |>
+bdd_danish |> 
+  select(sample, all_of(fattyacids)) |>
   pivot_longer(cols = -sample, names_to = "fattyacids", values_to = "values") |>
   ggplot() +
   aes(x = values) +
@@ -35,15 +103,15 @@ bdd_finnish |>
   facet_wrap(~fattyacids, scales = "free", ncol = 4)
 ```
 
-## Boxplots
+### Boxplots
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
 #| warning: false
 #| column: screen-inset-right
 
-bdd_finnish |> 
-  select(sample, all_of(fatty_acids)) |>
+bdd_danish |> 
+  select(sample, all_of(fattyacids)) |>
   pivot_longer(cols = -sample, names_to = "fattyacids", values_to = "values") |>
   ggplot() +
   aes(x = "", y = values) +
@@ -53,7 +121,7 @@ bdd_finnish |>
   theme(axis.title = element_blank()) +
   facet_wrap(~fattyacids, scales = "free", ncol = 3L, nrow = 14L)
 
-bdd_finnish |> select(sample, all_of(fatty_acids)) |>
+bdd_danish |> select(sample, all_of(fattyacids)) |>
   pivot_longer(cols = -sample, names_to = "fattyacids", values_to = "values") |>
   ggplot() +
   aes(x = values, y = fattyacids) +
@@ -61,24 +129,24 @@ bdd_finnish |> select(sample, all_of(fatty_acids)) |>
   theme_minimal()
 ```
 
-## Distribution tables 
+### Distribution tables 
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
 #| warning: false
 #| column: screen-inset-right
 
-descrip_num(data = bdd_finnish, vars = fatty_acids)
+descrip_num(data = bdd_danish, vars = fattyacids)
 ```
 
-## Heatmap of correlation
+### Heatmap of correlation
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
 #| warning: false
 #| column: screen-inset-right
 
-heatmap_fattyacids <- bdd_finnish |> select(all_of(fatty_acids))
+heatmap_fattyacids <- bdd_danish |> select(all_of(fattyacids))
 heatmap_fattyacids <- cor(heatmap_fattyacids, 
                     use = "pairwise.complete.obs", 
                     method = "pearson")
@@ -94,15 +162,109 @@ corrplot(heatmap_fattyacids,
          tl.cex = 1,
          col = rev(COL2(diverging = "RdYlBu")))
 
-heatmap_cor_pairwise(fatty_acids, POPs, decimal = 1, data = bdd_finnish)
+heatmap_cor_pairwise(fattyacids, POPs, decimal = 1, data = bdd_danish)
 ```
 
-## Calcium (indicator of quality)
+### Calcium (indicator of quality)
+Why are there two cholesterol variables?
+Why don't we have a calcium variable for the danish data 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-boxplot(data = bdd_finnish, vars = c("S-Ca", "fS-Trigly", "fS-Kol"))
-descrip_num(data = bdd_finnish, vars = c("S-Ca", "fS-Trigly", "fS-Kol"))
+boxplot(data = bdd_danish, vars = c("fS_Trigly", "fS_Kol", "cholesterol"))
+descrip_num(data = bdd_danish, vars = c("fS_Trigly", "fS_Kol", "cholesterol"))
+```
+
+# Descriptif Finnish cohort
+## Fatty acids
+### Density plots 
+```{r, fig.height=10, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+
+bdd_finnish |> 
+  select(sample, all_of(fattyacids)) |>
+  pivot_longer(cols = -sample, names_to = "fattyacids", values_to = "values") |>
+  ggplot() +
+  aes(x = values) +
+  geom_density(fill = "#112446") +
+  theme_minimal() +
+  facet_wrap(~fattyacids, scales = "free", ncol = 4)
+```
+
+### Boxplots
+```{r, fig.height=10, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+
+bdd_finnish |> 
+  select(sample, all_of(fattyacids)) |>
+  pivot_longer(cols = -sample, names_to = "fattyacids", values_to = "values") |>
+  ggplot() +
+  aes(x = "", y = values) +
+  geom_boxplot(shape = "circle", fill = "#112446") +
+  coord_flip() +
+  theme_bw() +
+  theme(axis.title = element_blank()) +
+  facet_wrap(~fattyacids, scales = "free", ncol = 3L, nrow = 14L)
+
+bdd_finnish |> select(sample, all_of(fattyacids)) |>
+  pivot_longer(cols = -sample, names_to = "fattyacids", values_to = "values") |>
+  ggplot() +
+  aes(x = values, y = fattyacids) +
+  geom_boxplot(fill = "#112446") +
+  theme_minimal()
+```
+
+### Distribution tables 
+```{r, fig.height=10, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+
+descrip_num(data = bdd_finnish, vars = fattyacids)
+```
+
+### Heatmap of correlation
+```{r, fig.height=10, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+
+heatmap_fattyacids <- bdd_finnish |> select(all_of(fattyacids))
+heatmap_fattyacids <- cor(heatmap_fattyacids, 
+                    use = "pairwise.complete.obs", 
+                    method = "pearson")
+
+corrplot(heatmap_fattyacids, 
+         method = 'color', 
+         type = "lower", 
+         tl.col = 'black', 
+         tl.srt = 45, 
+         addCoef.col = "black",
+         number.cex = 0.8,
+         number.digits = 1,
+         tl.cex = 1,
+         col = rev(COL2(diverging = "RdYlBu")))
+
+heatmap_cor_pairwise(fattyacids, POPs_finnish, decimal = 1, data = bdd_finnish)
+```
+
+### Calcium (indicator of quality)
+Why do we have 3 cholesterol variables in the finnish data ?
+Regarding the samples with Ca2+<2: run a sensitivity analysis without them
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+boxplot(data = bdd_finnish, vars = c("S_Ca", "fS_Trigly", "fS_Kol", "chol", "cholesterol"))
+descrip_num(data = bdd_finnish, vars = c("S_Ca", "fS_Trigly", "fS_Kol", "chol", "cholesterol"))
 ```
 

@@ -75,7 +75,7 @@ bdd_danish_long <- bdd_danish %>%
                                     "PBDEs" = "PBDE-47",
                                     "PBDEs" = "PBDE-99",
                                     
-                                    "OCPs" = "HCB",
+                                    "OCPs" = "OCP_HCB",
                                     #"OCPs" = "α-HCH", 
                                     "OCPs" = "β-HCH",
                                     #"OCPs" = "γ-HCH",
@@ -111,7 +111,7 @@ bdd_danish_long <- bdd_danish %>%
                             "β-HCH", 
                             "Oxychlordane", 
                             "Trans-nonachlor", 
-                            "HCB"))
+                            "OCP_HCB"))
 
 
 descrip_expo <- bdd_danish_long %>%
@@ -120,9 +120,9 @@ descrip_expo <- bdd_danish_long %>%
                        "PCB-118", "PCB-156", "PCB-28", "PCB-52", "PCB-74", "PCB-99",
                        "PCB-101", "PCB-138", "PCB-153", "PCB-170", "PCB-180", "PCB-183",
                        "PCB-187", "PBDE-47", "PBDE-99", "PBDE-153", "p,p'-DDT", "p,p'-DDE",
-                       "β-HCH", "Oxychlordane", "Trans-nonachlor", "HCB"), 
+                       "β-HCH", "Oxychlordane", "Trans-nonachlor", "OCP_HCB"), 
     POPs_group = fct_relevel(POPs_group, 
-                             "ΣPBDE", "Σchlordane",  "β-HCH", "ΣDDT", "HCB", "Non-dioxin-like PCBs", "Dioxin-like PCBs"),
+                             "ΣPBDE", "Σchlordane",  "β-HCH", "ΣDDT", "OCP_HCB", "Non-dioxin-like PCBs", "Dioxin-like PCBs"),
     POPs = factor(POPs, levels = rev(levels(POPs)))) %>%
   arrange(desc(POPs_group)) %>%
   ggplot() +
@@ -139,7 +139,7 @@ descrip_expo <- bdd_danish_long %>%
 descrip_expo_group <- bdd_danish_long %>%
   mutate(
     POPs_group = fct_relevel(POPs_group, 
-                             "ΣPBDE", "Σchlordane",  "β-HCH", "ΣDDT", "HCB", "Non-dioxin-like PCBs", "Dioxin-like PCBs")) %>%
+                             "ΣPBDE", "Σchlordane",  "β-HCH", "ΣDDT", "OCP_HCB", "Non-dioxin-like PCBs", "Dioxin-like PCBs")) %>%
   ggplot() +
   aes(x = POPs_group, y = Values) +
   geom_boxplot() +
@@ -157,7 +157,7 @@ descrip_expo_group_by_als <- bdd_danish_long |>
                      "Controls" = "0",
                      "Cases" = "1"), 
     POPs_group = fct_relevel(POPs_group, 
-                             "ΣPBDE", "Σchlordane",  "β-HCH", "ΣDDT", "HCB", "Non-dioxin-like PCBs", "Dioxin-like PCBs")) |>
+                             "ΣPBDE", "Σchlordane",  "β-HCH", "ΣDDT", "OCP_HCB", "Non-dioxin-like PCBs", "Dioxin-like PCBs")) |>
   ggplot() +
   aes(x = Values, y = POPs_group, fill = als) +
   geom_boxplot() +
@@ -173,16 +173,15 @@ cormat <- bdd_danish |>
   rename(
     "Dioxin-like PCBs" = PCB_DL,
     "Non-dioxin-like PCBs" = PCB_NDL, 
-    "p,p’-DDT"  = pp_DDT, 
-    "p,p’-DDE" = pp_DDE) |>
+    "p,p’-DDT"  = OCP_pp_DDT, 
+    "p,p’-DDE" = OCP_pp_DDE) |>
   rename_with(~ gsub("_", "-", .x)) |>  
-  rename_with(~ gsub("BDE", "PBDE", .x)) |>  
   select(
     "Dioxin-like PCBs", "PCB-118", "PCB-156", "Non-dioxin-like PCBs", "PCB-28", "PCB-52",
     "PCB-74", "PCB-99", "PCB-101", "PCB-138", "PCB-153", "PCB-170",
-    "PCB-180", "PCB-183", "PCB-187", "HCB", "ΣDDT", "p,p’-DDE",
-    "p,p’-DDT",  "β-HCH",  "Σchlordane", "Transnonachlor",
-    "Oxychlordane", "ΣPBDE" = "ΣPPBDE", "PBDE-47", "PBDE-99", "PBDE-153")
+    "PCB-180", "PCB-183", "PCB-187", "OCP-HCB", "ΣDDT", "p,p’-DDE",
+    "p,p’-DDT",  "OCP-β-HCH",  "Σchlordane", "OCP-transnonachlor",
+    "OCP-oxychlordane", "ΣPBDE", "PBDE-47", "PBDE-99", "PBDE-153")
 heatmap_POPs <- heatmap_cor(cormat = cormat, decimal = 1)
 rm(cormat)
 
@@ -540,20 +539,20 @@ rm(var, formula, model, model_summary)
 #### spline transformation ----
 model3_spline_HCB <- 
   clogit(als ~ 
-           ns(HCB, df = 4) + 
+           ns(OCP_HCB, df = 4) + 
            strata(match) + 
-           PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + β_HCH + Σchlordane + 
+           PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
-  filter(grepl("HCB", term)) |>
+  filter(grepl("OCP_HCB", term)) |>
   mutate(df = c(1, 2, 3, 4))
 
 model3_spline_PCB_DL <- 
   clogit(als ~ 
            ns(PCB_DL, df = 4) + 
            strata(match) + 
-           HCB + PCB_NDL + ΣPBDE + ΣDDT + β_HCH + Σchlordane + 
+           OCP_HCB + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
@@ -564,7 +563,7 @@ model3_spline_PCB_NDL <-
   clogit(als ~ 
            ns(PCB_NDL, df = 4) + 
            strata(match) + 
-           HCB + PCB_DL + ΣPBDE + ΣDDT + β_HCH + Σchlordane + 
+           OCP_HCB + PCB_DL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
@@ -575,7 +574,7 @@ model3_spline_ΣPBDE <-
   clogit(als ~ 
            ns(ΣPBDE, df = 4) + 
            strata(match) + 
-           HCB + PCB_DL + PCB_NDL + ΣDDT + β_HCH + Σchlordane + 
+           OCP_HCB + PCB_DL + PCB_NDL + ΣDDT + OCP_β_HCH + Σchlordane + 
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
@@ -586,7 +585,7 @@ model3_spline_ΣDDT <-
   clogit(als ~ 
            ns(ΣDDT, df = 4) + 
            strata(match) + 
-           HCB + PCB_DL + PCB_NDL + ΣPBDE + β_HCH + Σchlordane +
+           OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + OCP_β_HCH + Σchlordane +
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
@@ -595,20 +594,20 @@ model3_spline_ΣDDT <-
 
 model3_spline_β_HCH <- 
   clogit(als ~ 
-           ns(β_HCH, df = 4) + 
+           ns(OCP_β_HCH, df = 4) + 
            strata(match) + 
-           HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + Σchlordane +
+           OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + Σchlordane +
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
-  filter(grepl("β_HCH", term)) |>
+  filter(grepl("OCP_β_HCH", term)) |>
   mutate(df = c(1, 2, 3, 4))
 
 model3_spline_Σchlordane <- 
   clogit(als ~ 
            ns(Σchlordane, df = 4) + 
            strata(match) + 
-           HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + β_HCH +
+           OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH +
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
@@ -637,7 +636,7 @@ model3_quart_PCB_DL <-
   clogit(als ~ 
            PCB_DL_quart + 
            strata(match) + 
-           HCB + PCB_NDL + ΣPBDE + ΣDDT + β_HCH + Σchlordane + 
+           OCP_HCB + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
@@ -648,7 +647,7 @@ model3_quart_PCB_NDL <-
   clogit(als ~ 
            PCB_NDL_quart + 
            strata(match) + 
-           HCB + PCB_DL + ΣPBDE + ΣDDT + β_HCH + Σchlordane + 
+           OCP_HCB + PCB_DL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
@@ -657,20 +656,20 @@ model3_quart_PCB_NDL <-
 
 model3_quart_HCB <- 
   clogit(als ~ 
-           HCB_quart + 
+           OCP_HCB_quart + 
            strata(match) + 
-           PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + β_HCH + Σchlordane + 
+           PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
-  filter(grepl("HCB_quart", term)) |>
+  filter(grepl("OCP_HCB_quart", term)) |>
   mutate(df = c(2, 3, 4))
 
 model3_quart_ΣDDT <- 
   clogit(als ~ 
            ΣDDT_quart + 
            strata(match) + 
-           HCB + PCB_DL + PCB_NDL + ΣPBDE + β_HCH + Σchlordane + 
+           OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + OCP_β_HCH + Σchlordane + 
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
@@ -679,20 +678,20 @@ model3_quart_ΣDDT <-
 
 model3_quart_β_HCH <- 
   clogit(als ~ 
-           β_HCH_quart + 
+           OCP_β_HCH_quart + 
            strata(match) + 
-           HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + Σchlordane + 
+           OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + Σchlordane + 
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
-  filter(grepl("β_HCH_quart", term)) |>
+  filter(grepl("OCP_β_HCH_quart", term)) |>
   mutate(df = c(2, 3, 4))
 
 model3_quart_Σchlordane <- 
   clogit(als ~ 
            Σchlordane_quart + 
            strata(match) + 
-           HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + β_HCH + 
+           OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + 
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
@@ -703,7 +702,7 @@ model3_quart_ΣPBDE <-
   clogit(als ~ 
            ΣPBDE_quart + 
            strata(match) + 
-           HCB + PCB_DL + PCB_NDL + ΣDDT + β_HCH + Σchlordane + 
+           OCP_HCB + PCB_DL + PCB_NDL + ΣDDT + OCP_β_HCH + Σchlordane + 
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
@@ -727,7 +726,7 @@ model3_quart_bis <-
   clogit(als ~ 
            PCB_DL_quart + 
            strata(match) + 
-           HCB_quart + PCB_NDL_quart + ΣPBDE_quart + ΣDDT_quart + β_HCH_quart + Σchlordane_quart + 
+           OCP_HCB_quart + PCB_NDL_quart + ΣPBDE_quart + ΣDDT_quart + OCP_β_HCH_quart + Σchlordane_quart + 
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
@@ -746,20 +745,20 @@ rm(model3_quart_HCB, model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_ΣP
 #### quadratic tranformation ----
 model3_quadra_HCB <- 
   glm(als ~ 
-        poly(HCB, 2) + 
+        poly(OCP_HCB, 2) + 
         baseline_age + sex + 
-        PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + β_HCH + Σchlordane + 
+        PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
         smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
       family = binomial, data = bdd_danish) |>
   tidy()  |>
-  filter(grepl("HCB", term)) |>
+  filter(grepl("OCP_HCB", term)) |>
   mutate(df = c(1, 2))
 
 model3_quadra_PCB_DL <- 
   glm(als ~ 
         poly(PCB_DL, 2) + 
         baseline_age + sex + 
-        HCB + PCB_NDL + ΣPBDE + ΣDDT + β_HCH + Σchlordane + 
+        OCP_HCB + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
         smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
       family = binomial, data = bdd_danish) |>
   tidy()  |>
@@ -770,7 +769,7 @@ model3_quadra_PCB_NDL <-
   glm(als ~ 
         poly(PCB_NDL, 2) + 
         baseline_age + sex + 
-        HCB + PCB_DL + ΣPBDE + ΣDDT + β_HCH + Σchlordane + 
+        OCP_HCB + PCB_DL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
         smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
       family = binomial, data = bdd_danish) |>
   tidy()  |>
@@ -781,7 +780,7 @@ model3_quadra_ΣPBDE <-
   glm(als ~ 
         poly(ΣPBDE, 2) + 
         baseline_age + sex + 
-        HCB + PCB_DL + PCB_NDL + ΣDDT + β_HCH + Σchlordane + 
+        OCP_HCB + PCB_DL + PCB_NDL + ΣDDT + OCP_β_HCH + Σchlordane + 
         smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
       family = binomial, data = bdd_danish) |>
   tidy()  |>
@@ -792,7 +791,7 @@ model3_quadra_ΣDDT <-
   glm(als ~ 
         poly(ΣDDT, 2) + 
         baseline_age + sex + 
-        HCB + PCB_DL + PCB_NDL + ΣPBDE + β_HCH + Σchlordane + 
+        OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + OCP_β_HCH + Σchlordane + 
         smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
       family = binomial, data = bdd_danish) |>
   tidy()  |>
@@ -801,20 +800,20 @@ model3_quadra_ΣDDT <-
 
 model3_quadra_β_HCH <- 
   glm(als ~ 
-        poly(β_HCH, 2) + 
+        poly(OCP_β_HCH, 2) + 
         baseline_age + sex + 
-        HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + Σchlordane + 
+        OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + Σchlordane + 
         smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
       family = binomial, data = bdd_danish) |>
   tidy()  |>
-  filter(grepl("β_HCH", term)) |>
+  filter(grepl("OCP_β_HCH", term)) |>
   mutate(df = c(1, 2))
 
 model3_quadra_Σchlordane <- 
   glm(als ~ 
         poly(Σchlordane, 2) + 
         baseline_age + sex + 
-        HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + β_HCH + 
+        OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + 
         smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
       family = binomial, data = bdd_danish) |>
   tidy()  |>
@@ -839,20 +838,20 @@ rm(model3_quadra_HCB, model3_quadra_PCB_DL, model3_quadra_PCB_NDL, model3_quadra
 #### cubic tranformation ----
 model3_cubic_HCB <- 
   glm(als ~ 
-        poly(HCB, 3) + 
+        poly(OCP_HCB, 3) + 
         baseline_age + sex + 
-        PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + β_HCH + Σchlordane + 
+        PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
         smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
       family = binomial, data = bdd_danish) |>
   tidy()  |>
-  filter(grepl("HCB", term)) |>
+  filter(grepl("OCP_HCB", term)) |>
   mutate(df = c(1, 2, 3))
 
 model3_cubic_PCB_DL <- 
   glm(als ~ 
         poly(PCB_DL, 3) + 
         baseline_age + sex + 
-        HCB + PCB_NDL + ΣPBDE + ΣDDT + β_HCH + Σchlordane + 
+        OCP_HCB + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
         smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
       family = binomial, data = bdd_danish) |>
   tidy()  |>
@@ -863,7 +862,7 @@ model3_cubic_PCB_NDL <-
   glm(als ~ 
         poly(PCB_NDL, 3) + 
         baseline_age + sex + 
-        HCB + PCB_DL + ΣPBDE + ΣDDT + β_HCH + Σchlordane + 
+        OCP_HCB + PCB_DL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
         smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
       family = binomial, data = bdd_danish) |>
   tidy()  |>
@@ -874,7 +873,7 @@ model3_cubic_ΣPBDE <-
   glm(als ~ 
         poly(ΣPBDE, 3) + 
         baseline_age + sex + 
-        HCB + PCB_DL + PCB_NDL + ΣDDT + β_HCH + Σchlordane + 
+        OCP_HCB + PCB_DL + PCB_NDL + ΣDDT + OCP_β_HCH + Σchlordane + 
         smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
       family = binomial, data = bdd_danish) |>
   tidy()  |>
@@ -885,7 +884,7 @@ model3_cubic_ΣDDT <-
   glm(als ~ 
         poly(ΣDDT, 3) + 
         baseline_age + sex + 
-        HCB + PCB_DL + PCB_NDL + ΣPBDE + β_HCH + Σchlordane + 
+        OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + OCP_β_HCH + Σchlordane + 
         smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
       family = binomial, data = bdd_danish) |>
   tidy()  |>
@@ -894,20 +893,20 @@ model3_cubic_ΣDDT <-
 
 model3_cubic_β_HCH <- 
   glm(als ~ 
-        poly(β_HCH, 3) + 
+        poly(OCP_β_HCH, 3) + 
         baseline_age + sex + 
-        HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + Σchlordane + 
+        OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + Σchlordane + 
         smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
       family = binomial, data = bdd_danish) |>
   tidy()  |>
-  filter(grepl("β_HCH", term))  |>
+  filter(grepl("OCP_β_HCH", term))  |>
   mutate(df = c(1, 2, 3))
 
 model3_cubic_Σchlordane <- 
   glm(als ~ 
         poly(Σchlordane, 3) + 
         baseline_age + sex + 
-        HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + β_HCH + 
+        OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + 
         smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
       family = binomial, data = bdd_danish) |>
   tidy()  |>
@@ -1649,9 +1648,9 @@ plot_quart <- main_results %>%
                                "Most\nprevalent\nPCBs" = "PCB_4",
                                "Dioxin-like\nPCBs" = "PCB_DL",
                                "Non-dioxin-\nlike PCBs" = "PCB_NDL",
-                               "β-HCH" = "β_HCH"), 
+                               "β-HCH" = "OCP_β_HCH"), 
         variable = fct_relevel(variable, 
-                               "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "Most\nprevalent\nPCBs", "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) %>%
+                               "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "Most\nprevalent\nPCBs", "OCP_HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) %>%
   ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
@@ -1679,9 +1678,9 @@ plot_quart_bis <- main_results %>%
                                "Most\nprevalent\nPCBs" = "PCB_4",
                                "Dioxin-like\nPCBs" = "PCB_DL",
                                "Non-dioxin-\nlike PCBs" = "PCB_NDL",
-                               "β-HCH" = "β_HCH"), 
+                               "β-HCH" = "OCP_β_HCH"), 
          variable = fct_relevel(variable, 
-                                "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "Most\nprevalent\nPCBs", "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) %>%
+                                "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "Most\nprevalent\nPCBs", "OCP_HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) %>%
   ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
@@ -1706,7 +1705,7 @@ plot_quart_sensi_not_summed <- sensitivity_results_not_summed_quart %>%
          variable = fct_relevel(variable, 
                                 "PCB-118", "PCB-156", "PCB-28", "PCB-52", "PCB-74", "PCB-99",
                                 "PCB-101", "PCB-138", "PCB-153", "PCB-170", "PCB-180", "PCB-183",
-                                "PCB-187", "HCB", "p,p'-DDE", "p,p'-DDT", "β-HCH", "Transnonachlor",
+                                "PCB-187", "OCP_HCB", "p,p'-DDE", "p,p'-DDT", "β-HCH", "Transnonachlor",
                                 "Oxychlordane", "PBDE-47", "PBDE-99", "PBDE-153"), 
          OR = as.numeric(as.character(OR)), 
          lower_CI = as.numeric(as.character(lower_CI)), 
@@ -1977,7 +1976,7 @@ rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
 
 ### gamm ----
 pollutant_labels <- set_names(
-  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","OCP_HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group)
 
 plot_base_gamm <- map(POPs_group, function(var) {
@@ -2038,7 +2037,7 @@ rm(pollutant_labels)
 
 ### gamm outliers ----
 pollutant_labels <- set_names(
-  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","OCP_HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group_outlier)
 
 plot_base_gamm_outlier <- map(POPs_group_outlier, function(var) {
@@ -2462,7 +2461,7 @@ rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
 
 ### gamm ----
 pollutant_labels <- set_names(
-  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","OCP_HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group)
 
 plot_adjusted_gamm <- map(POPs_group, function(var) {
@@ -2523,7 +2522,7 @@ rm(pollutant_labels)
 
 ### gamm outliers ----
 pollutant_labels <- set_names(
-  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","OCP_HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group_outlier)
 
 plot_adjusted_gamm_outlier <- map(POPs_group_outlier, function(var) {
@@ -2651,11 +2650,11 @@ rm(pollutant_labels)
 POPs_group_bis <- setdiff(POPs_group, "PCB_4")
 pollutant_labels_bis <- set_names(
   c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
-    "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
+    "OCP_HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
   POPs_group_bis)
 
-model <- gam(als ~ s(PCB_DL) + s(PCB_NDL) + s(HCB) + s(ΣDDT) + 
-               s(β_HCH) + s(Σchlordane) + s(ΣPBDE) + 
+model <- gam(als ~ s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + 
+               s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) + 
                sex + baseline_age + 
                smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
              family = binomial, 
@@ -2718,11 +2717,11 @@ rm(POPs_group_bis, pollutant_labels_bis)
 POPs_group_outlier_bis <- setdiff(POPs_group_outlier, "PCB_4_outlier")
 pollutant_labels_bis <- set_names(
   c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
-    "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
+    "OCP_HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
   POPs_group_outlier_bis)
 
-model <- gam(als ~ s(PCB_DL_outlier) + s(PCB_NDL_outlier) + s(HCB_outlier) + s(ΣDDT_outlier) + 
-               s(β_HCH_outlier) + s(Σchlordane_outlier) + s(ΣPBDE_outlier) + 
+model <- gam(als ~ s(PCB_DL_outlier) + s(PCB_NDL_outlier) + s(OCP_HCB_outlier) + s(ΣDDT_outlier) + 
+               s(OCP_β_HCH_outlier) + s(Σchlordane_outlier) + s(ΣPBDE_outlier) + 
                sex + baseline_age + 
                smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
              family = binomial, 
