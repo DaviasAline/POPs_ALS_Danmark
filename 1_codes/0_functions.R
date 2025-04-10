@@ -4,7 +4,6 @@ library(distill)
 library(dplyr)
 library(esquisse)
 library(expss)
-library(flextable)
 library(ggpubr)
 library(grid)
 library(GGally)
@@ -44,7 +43,7 @@ library(see)
 library(scales)
 library(tidyverse)
 library(tidyr)
-
+library(flextable)
 
 ## Tableau descriptif variables numériques
 descrip_num <- function(data, vars) {                                           

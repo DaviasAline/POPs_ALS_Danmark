@@ -2,192 +2,12 @@
 # 03/02/2025
 
 # data loading - package loading ----
-source("~/Documents/POP_ALS_2025_02_03/1_codes/0_functions.R")
-source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/2_analyses_descriptive.R")
 
 covariates <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')
 
-# descriptif ----
-## covariates table ----
-descrip_covar <- bdd_danish|> 
-  mutate(
-    als = as.character(als),
-    als = fct_recode(als, "Controls" = "0", "Cases" = "1"),
-    als = fct_relevel(als, "Cases", "Controls"))|>
-  select(
-    als, baseline_age, diagnosis_age, death_age, 
-    sex, marital_status, education, alcohol, smoking, bmi, cholesterol)|>
-  tbl_summary(by = als)|>
-  bold_labels()|>
-  add_overall() 
 
-## exposures ----
-bdd_danish_long <- bdd_danish %>% 
-  select(sample, all_of(POPs), als) %>%
-  pivot_longer(cols = -c('sample', 'als'), names_to = "POPs", values_to = "Values") %>%
-  filter(!POPs %in% c("PeCB", "α_HCH", "γ_HCH")) %>%
-  mutate(POPs =  gsub("_", "-", POPs), 
-         POPs = fct_recode(POPs, 
-             "Trans-nonachlor" = "Transnonachlor",
-             "p,p'-DDE" = "pp-DDE",
-             "p,p'-DDT" = "pp-DDT", 
-             "PBDE-153" = "BDE-153",
-             "PBDE-47" = "BDE-47",
-             "PBDE-99" = "BDE-99"), 
-         POPs_group =  fct_recode(POPs, 
-             "ΣPBDE" = "PBDE-153",
-             "ΣPBDE" = "PBDE-47",
-             "ΣPBDE" = "PBDE-99",
-             "Σchlordane" = "Oxychlordane",
-             "Non-dioxin-like PCBs" = "PCB-101",
-             "Dioxin-like PCBs" = "PCB-118",
-             "Non-dioxin-like PCBs" = "PCB-138",
-             "Non-dioxin-like PCBs" = "PCB-153",
-             "Dioxin-like PCBs" = "PCB-156",
-             "Non-dioxin-like PCBs" = "PCB-170",
-             "Non-dioxin-like PCBs" = "PCB-180",
-             "Non-dioxin-like PCBs" = "PCB-183",
-             "Non-dioxin-like PCBs" = "PCB-187",
-             "Non-dioxin-like PCBs" = "PCB-28",
-             "Non-dioxin-like PCBs" = "PCB-52",
-             "Non-dioxin-like PCBs" = "PCB-74",
-             "Non-dioxin-like PCBs" = "PCB-99",
-             "ΣDDT" = "p,p'-DDE",
-             "ΣDDT" = "p,p'-DDT",
-             "Σchlordane" = "Trans-nonachlor"
-           ), 
-         POPs_group_2 =  fct_recode(POPs, 
-                                    "PCBs" = "PCB-101",
-                                    "PCBs" = "PCB-118",
-                                    "PCBs" = "PCB-138",
-                                    "PCBs" = "PCB-153",
-                                    "PCBs" = "PCB-156",
-                                    "PCBs" = "PCB-170",
-                                    "PCBs" = "PCB-180",
-                                    "PCBs" = "PCB-183",
-                                    "PCBs" = "PCB-187",
-                                    "PCBs" = "PCB-28",
-                                    "PCBs" = "PCB-52",
-                                    "PCBs" = "PCB-74",
-                                    "PCBs" = "PCB-99",
-                                    
-                                    "PBDEs" = "PBDE-153",
-                                    "PBDEs" = "PBDE-47",
-                                    "PBDEs" = "PBDE-99",
-                                    
-                                    "OCPs" = "OCP_HCB",
-                                    #"OCPs" = "α-HCH", 
-                                    "OCPs" = "β-HCH",
-                                    #"OCPs" = "γ-HCH",
-                                    "OCPs" = "p,p'-DDE",
-                                    "OCPs" = "p,p'-DDT",
-                                    "OCPs" = "Oxychlordane",
-                                    "OCPs" = "Trans-nonachlor" 
-                                    #"OCPs" = "PeCB"
-                                    ), 
-         POPs_group_2 = fct_relevel(POPs_group_2, 
-                                    "PCBs", "PBDEs", "OCPs"),
-         POPs = fct_relevel(POPs,      
-                            "PCB-28", 
-                            "PCB-52", 
-                            "PCB-74", 
-                            "PCB-99",
-                            "PCB-101", 
-                            "PCB-118", 
-                            "PCB-156",  
-                            "PCB-138", 
-                            "PCB-153", 
-                            "PCB-170", 
-                            "PCB-180", 
-                            "PCB-183",
-                            "PCB-187", 
-                            
-                            "PBDE-47", 
-                            "PBDE-99", 
-                            "PBDE-153", 
-                            
-                            "p,p'-DDT", 
-                            "p,p'-DDE",
-                            "β-HCH", 
-                            "Oxychlordane", 
-                            "Trans-nonachlor", 
-                            "OCP_HCB"))
-
-
-descrip_expo <- bdd_danish_long %>%
-  mutate(
-    POPs = fct_relevel(POPs, 
-                       "PCB-118", "PCB-156", "PCB-28", "PCB-52", "PCB-74", "PCB-99",
-                       "PCB-101", "PCB-138", "PCB-153", "PCB-170", "PCB-180", "PCB-183",
-                       "PCB-187", "PBDE-47", "PBDE-99", "PBDE-153", "p,p'-DDT", "p,p'-DDE",
-                       "β-HCH", "Oxychlordane", "Trans-nonachlor", "OCP_HCB"), 
-    POPs_group = fct_relevel(POPs_group, 
-                             "ΣPBDE", "Σchlordane",  "β-HCH", "ΣDDT", "OCP_HCB", "Non-dioxin-like PCBs", "Dioxin-like PCBs"),
-    POPs = factor(POPs, levels = rev(levels(POPs)))) %>%
-  arrange(desc(POPs_group)) %>%
-  ggplot() +
-  aes(x = POPs, y = Values, fill = POPs_group) +
-  geom_boxplot() +
-  scale_y_continuous(trans = "log", 
-                     labels = number_format(accuracy = 1)) +
-  labs(x = "POPs", y = "Values (pg/ml, log transformed)", fill = "POP groups") +
-  coord_flip() +
-  theme_lucid() +
-  scale_fill_brewer(palette = "Set2", direction = 1) 
-
-
-descrip_expo_group <- bdd_danish_long %>%
-  mutate(
-    POPs_group = fct_relevel(POPs_group, 
-                             "ΣPBDE", "Σchlordane",  "β-HCH", "ΣDDT", "OCP_HCB", "Non-dioxin-like PCBs", "Dioxin-like PCBs")) %>%
-  ggplot() +
-  aes(x = POPs_group, y = Values) +
-  geom_boxplot() +
-  scale_y_continuous(trans = "log", 
-                     labels = number_format(accuracy = 1)) +
-  labs(x = "POPs", y = "Values (pg/ml, log transformed)") +
-  coord_flip() +
-  theme_lucid() +
-  scale_fill_brewer(palette = "Set2", direction = 1) 
-
-descrip_expo_group_by_als <- bdd_danish_long |>
-  mutate(
-    als = as.character(als), 
-    als = fct_recode(als, 
-                     "Controls" = "0",
-                     "Cases" = "1"), 
-    POPs_group = fct_relevel(POPs_group, 
-                             "ΣPBDE", "Σchlordane",  "β-HCH", "ΣDDT", "OCP_HCB", "Non-dioxin-like PCBs", "Dioxin-like PCBs")) |>
-  ggplot() +
-  aes(x = Values, y = POPs_group, fill = als) +
-  geom_boxplot() +
-  scale_fill_hue(direction = 1) +
-  scale_x_continuous(trans = "log", 
-                     labels = number_format(accuracy = 1)) +
-  labs(fill = "ALS ", x = "Values (pg/ml, log transformed)", y = "POPs") +
-  theme_lucid() + 
-  theme(legend.position = "bottom")
-
-cormat <- bdd_danish |>
-  select(all_of(POPs), all_of(POPs_group)) |>
-  rename(
-    "Dioxin-like PCBs" = PCB_DL,
-    "Non-dioxin-like PCBs" = PCB_NDL, 
-    "p,p’-DDT"  = OCP_pp_DDT, 
-    "p,p’-DDE" = OCP_pp_DDE) |>
-  rename_with(~ gsub("_", "-", .x)) |>  
-  select(
-    "Dioxin-like PCBs", "PCB-118", "PCB-156", "Non-dioxin-like PCBs", "PCB-28", "PCB-52",
-    "PCB-74", "PCB-99", "PCB-101", "PCB-138", "PCB-153", "PCB-170",
-    "PCB-180", "PCB-183", "PCB-187", "OCP-HCB", "ΣDDT", "p,p’-DDE",
-    "p,p’-DDT",  "OCP-β-HCH",  "Σchlordane", "OCP-transnonachlor",
-    "OCP-oxychlordane", "ΣPBDE", "PBDE-47", "PBDE-99", "PBDE-153")
-heatmap_POPs <- heatmap_cor(cormat = cormat, decimal = 1)
-rm(cormat)
-
-
-# statistics ----
-## effects of the covariates on ALS ----
+# effects of the covariates on ALS ----
 covar <- tbl_merge(
   tbls = list(
     tbl_1 = bdd_danish |>
@@ -209,7 +29,7 @@ covar <- tbl_merge(
   bold_labels()), 
   tab_spanner = c("**Univariate**", "**Adjusted**"))
 
-## main analysis ----
+# main analysis ----
 ### model 1 ----
 #### spline transformation ----
 model1_spline <- data.frame(variable = character(),
@@ -1170,7 +990,6 @@ results_cubic <-
          contains("copollutant_cubic")) 
 colnames(results_cubic) <- gsub('_cubic', '', colnames(results_cubic))
 
-
 rm(model1_quart, model1_spline, model1_quadratic, model1_cubic,
    model2_quart, model2_spline, model2_quadratic, model2_cubic,
    model3_quart, model3_spline, model3_quadratic, model3_cubic,
@@ -1180,9 +999,7 @@ rm(model1_quart, model1_spline, model1_quadratic, model1_cubic,
    trend_base, trend_adjusted, 
    heterogeneity_tests, trend_tests)
 
-
-
-## sensitivity analyses without outliers ----
+# sensitivity analyses without outliers ----
 ### model 1  ----
 # adjusted for sex and age
 

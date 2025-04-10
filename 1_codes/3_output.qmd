@@ -14,60 +14,9 @@ toc-location: left
 #| message: false
 #| warning: false
 #| include: false
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2_analyses.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/2_analyses_fattyacids_ALS.R")
 ```
 
-# Comparison finnish/danish data
-
-## Metadata
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-bdd_tot %>%
-  select("study", "sex", "marital_status", "smoking", "alcohol", "education", 
-         "bmi", "cholesterol", "blod_sys", "blod_dias", "baseline_age", "diagnosis_age") %>%
-  tbl_summary(by = "study") %>%
-  bold_labels() %>%
-  add_p()
-```
-
-## POPs exposures
-
-```{r, fig.width=10, fig.height=10}
-#| echo: false
-#| message: false
-#| warning: false
-
-bdd_tot_long %>% 
-  ggplot() +
-  aes(x = POPS, y = values, fill = study) +
-  geom_boxplot() +
-  scale_fill_hue(direction = 1) +
-  scale_y_continuous(trans = "log", 
-                     labels = number_format(accuracy = 1)) +
-  labs(x = "POPs", y = "Values (log transformed)", fill = "Study") +
-  coord_flip() +
-  theme_lucid()
-```
-
-```{r, fig.width=10}
-#| echo: false
-#| message: false
-#| warning: false
-bdd_tot_long %>% 
-  filter(POPS %in% c("HCB", "PCB_4", "PCB_DL", "PCB_NDL", "PeCB", "β_HCH", "Σchlordane", "ΣDDT", "ΣHCH")) %>%
-  ggplot() +
-  aes(x = POPS, y = values, fill = study) +
-  geom_boxplot() +
-  scale_fill_hue(direction = 1) +
-  scale_y_continuous(trans = "log", 
-                     labels = number_format(accuracy = 1)) +
-  labs(x = "POPs", y = "Values (log transformed)", fill = "Study") +
-  coord_flip() +
-  theme_lucid()
-```
 
 # Danish data description
 
@@ -79,10 +28,12 @@ Not imputed for missing data
 #| echo: false
 #| message: false
 #| warning: false
-descrip_covar
+descrip_covar_danish |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
 ```
 
-## POPs exposures
+## POPs 
 
 ### Distribution tables
 
@@ -90,17 +41,40 @@ descrip_covar
 #| echo: false
 #| message: false
 #| warning: false
-table_1 <- descrip_num(data = bdd_danish, vars = POPs)
-table_1 <- left_join(table_1, bdd_loq, by = "variable") 
+table_1 <- descrip_num(data = bdd_danish, vars = c(POPs, POPs_group))
+table_1 <- left_join(table_1, bdd_danish_loq, by = "variable") |>
+  mutate(
+    variable = fct_recode(variable, 
+    "PCB-118,138,153,180" = "PCB_4",  
+    "Dioxin-like PCBs" = "PCB_DL", 
+    "Non dioxin-like PCBs" = "PCB_NDL", 
+    "HCB" = "OCP_HCB",
+    "Oxychlordane" = "OCP_oxychlordane",
+    "PeCB" = "OCP_PeCB",
+    "p,p'-DDE" = "OCP_pp_DDE",
+    "p,p'-DDT" = "OCP_pp_DDT",
+    "Transnonachlor" = "OCP_transnonachlor",
+    "α_HCH" = "OCP_α_HCH",
+    "β_HCH" = "OCP_β_HCH",
+    "γ_HCH" = "OCP_γ_HCH"), 
+    variable = gsub("_", "-", variable), 
+    variable = fct_relevel(
+      variable, 
+      "PCB-118,138,153,180",  "Dioxin-like PCBs", "PCB-118", "PCB-156", 
+         "Non dioxin-like PCBs", "PCB-28", "PCB-52", "PCB-74", "PCB-99", "PCB-101", 
+         "PCB-138", "PCB-153", "PCB-170", "PCB-180", "PCB-183", "PCB-187", 
+         "HCB", "ΣDDT", "p,p'-DDT",  "p,p'-DDE",  
+         "α-HCH", "β-HCH", "γ-HCH", 
+         "Σchlordane", "Oxychlordane", "Transnonachlor", 
+         "PeCB",   
+         "ΣPBDE", "PBDE-47", "PBDE-99", "PBDE-153")) |>
+  arrange(variable)
 table_1 %>% kable("html")
+
+# descrip_num(data = bdd_danish, vars = c(POPs_group, POPs_group_outlier)) %>% kable("html")
 ```
 
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-descrip_num(data = bdd_danish, vars = c(POPs_group, POPs_group_outlier)) %>% kable("html")
-```
+
 
 ### Comparison of distribution cases/controls
 
@@ -109,7 +83,7 @@ descrip_num(data = bdd_danish, vars = c(POPs_group, POPs_group_outlier)) %>% kab
 #| message: false
 #| warning: false
 bdd_danish |>
-  select(als, all_of(POPs), all_of(POPs_group), "ΣHCH") |>
+  select(als, all_of(POPs), all_of(POPs_group)) |>
     mutate(
     als = as.character(als), 
     als = fct_recode(als, "Controls" = "0", "Cases" = "1"), 
@@ -118,17 +92,19 @@ bdd_danish |>
          "PCB_4",  "PCB_DL", "PCB_118", "PCB_156", 
          "PCB_NDL", "PCB_28", "PCB_52", "PCB_74", "PCB_99", "PCB_101", 
          "PCB_138", "PCB_153", "PCB_170", "PCB_180", "PCB_183", "PCB_187", 
-         "HCB",  
-         "ΣDDT", "pp_DDT",  "pp_DDE",  
-         "ΣHCH", "α_HCH", "β_HCH", "γ_HCH", 
-         "Σchlordane", "Oxychlordane", "Transnonachlor", 
-         "PeCB",   
-         "ΣPBDE", "BDE_47", "BDE_99", "BDE_153") |>
+         "OCP_HCB",  
+         "ΣDDT", "OCP_pp_DDT",  "OCP_pp_DDE",  
+         "OCP_α_HCH", "OCP_β_HCH", "OCP_γ_HCH", 
+         "Σchlordane", "OCP_oxychlordane", "OCP_transnonachlor", 
+         "OCP_PeCB",   
+         "ΣPBDE", "PBDE_47", "PBDE_99", "PBDE_153") |>
   tbl_summary(by = als, 
               digits = all_continuous() ~1) |>
   bold_labels() |>
   add_overall() |>
-  add_p() 
+  add_p() |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
 ```
 
 ### Heatmap of correlation 
@@ -139,18 +115,20 @@ bdd_danish |>
 heatmap_POPs <- bdd_danish %>% 
   select(all_of(POPs), all_of(POPs_group)) |>
   rename(
+    "Transnonachlor" = "OCP_transnonachlor", 
+    "Oxychlordane" = "OCP_oxychlordane", 
     "Dioxin-like PCBs" = PCB_DL,
     "Non-dioxin-like PCBs" = PCB_NDL, 
-    "p,p’-DDT"  = pp_DDT, 
-    "p,p’-DDE" = pp_DDE) |>
+    "p,p’-DDT"  = OCP_pp_DDT, 
+    "p,p’-DDE" = OCP_pp_DDE) |>
+  rename_with(~ gsub("OCP_", "", .x)) |>  
   rename_with(~ gsub("_", "-", .x)) |>  
-  rename_with(~ gsub("BDE", "PBDE", .x)) |>  
   select(
     "Dioxin-like PCBs", "PCB-118", "PCB-156", "Non-dioxin-like PCBs", "PCB-28", "PCB-52",
     "PCB-74", "PCB-99", "PCB-101", "PCB-138", "PCB-153", "PCB-170",
     "PCB-180", "PCB-183", "PCB-187", "HCB", "ΣDDT", "p,p’-DDE",
     "p,p’-DDT",  "β-HCH",  "Σchlordane", "Transnonachlor",
-    "Oxychlordane", "ΣPBDE" = "ΣPPBDE", "PBDE-47", "PBDE-99", "PBDE-153")
+    "Oxychlordane", "ΣPBDE", "PBDE-47", "PBDE-99", "PBDE-153")
 
 heatmap_POPs <- cor(heatmap_POPs, 
                  use = "pairwise.complete.obs", 
@@ -169,48 +147,19 @@ corrplot(heatmap_POPs,
 
 ```
 
-```{r}
+
+### Boxplots
+
+```{r, fig.width=10, fig.height=10}
 #| echo: false
 #| message: false
 #| warning: false
-test <- bdd_danish |> select(PCB_28, PCB_52, PCB_74, PCB_99, PCB_101, PCB_138, PCB_153, 
-                               PCB_170, PCB_180, PCB_183, PCB_187) 
-heatmap_cor(cormat = test, decimal = 1)
-
-test <- bdd_danish |> select(PCB_118, PCB_156) 
-heatmap_cor(cormat = test, decimal = 1)
-
-test <- bdd_danish |> select(BDE_47,BDE_99, BDE_153) 
-heatmap_cor(cormat = test, decimal = 1)
-
-test <- bdd_danish |> select(pp_DDT, pp_DDE) 
-heatmap_cor(cormat = test, decimal = 1)
-
-test <- bdd_danish |> select(Transnonachlor, Oxychlordane) 
-heatmap_cor(cormat = test, decimal = 1)
-
-test <- bdd_danish |> select(all_of(POPs_group)) |> select(-PCB_4)
-heatmap_cor(cormat = test, decimal = 1)
-rm(test)
+# descrip_expo_danish
+descrip_expo_danish_by_als
 ```
 
-
-### Boxplot of distribution 
-
-```{r, fig.width=10}
-#| echo: false
-#| message: false
-#| warning: false
-descrip_expo
-```
-
-### POPs summed 
-```{r, , fig.width=10, fig.height=5}
-#| echo: false
-#| message: false
-#| warning: false
-descrip_expo_group
-```
+### Detailed distribution 
+#### Summed 
 
 ```{r}
 #| echo: false
@@ -221,12 +170,13 @@ boxplot(data = bdd_danish, vars = POPs_group)
 heatmap_cor(cormat = bdd_danish[POPs_group], decimal = 1)
 ```
 
-### PCBs
+#### PCBs
 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
+PCBs <- bdd_danish |> select(all_of(POPs)) |> select(contains("PCB")) |> colnames()
 densityplot(data = bdd_danish, vars = PCBs[1:9])
 ```
 
@@ -256,26 +206,28 @@ boxplot(data = bdd_danish, vars = PCBs[11:13])
 #| message: false
 #| warning: false
 heatmap_cor(cormat = bdd_danish[PCBs], decimal = 1)
+rm(PCBs)
 ```
 
-### OCPs
+#### OCPs
 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
+OCPs <- bdd_danish |> select(all_of(POPs)) |> select(contains("OCP")) |> colnames()
 densityplot(data = bdd_danish, vars = OCPs)
 boxplot(data = bdd_danish, vars = OCPs)
 heatmap_cor(cormat = bdd_danish[OCPs], decimal = 1)
 ```
 
-### PBDEs
+#### PBDEs
 
 ```{r,  fig.width=7, fig.height=3}
 #| echo: false
 #| message: false
 #| warning: false
-
+PBDEs <- bdd_danish |> select(all_of(POPs)) |> select(contains("PBDE")) |> colnames()
 densityplot(data = bdd_danish, vars = PBDEs)
 boxplot(data = bdd_danish, vars = PBDEs)
 ```
@@ -284,11 +236,548 @@ boxplot(data = bdd_danish, vars = PBDEs)
 #| echo: false
 #| message: false
 #| warning: false
-
 heatmap_cor(cormat = bdd_danish[PBDEs], decimal = 1)
 ```
 
-# Danish data statistics
+## Fatty acids 
+### Distribution tables 
+```{r, fig.height=10, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+descrip_num(data = bdd_danish, vars = fattyacids) |> 
+  mutate(variable = fct_recode(variable, !!!fatty_acid_labels)) |>
+    kable("html")
+```
+
+### Comparison of distribution cases/controls
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+bdd_danish |>
+  select(als, all_of(explanatory), all_of(fattyacids)) |>
+    mutate(
+    als = as.character(als), 
+    als = fct_recode(als, "Controls" = "0", "Cases" = "1"), 
+    als = fct_relevel(als, "Cases", "Controls")) |>
+  tbl_summary(by = als, 
+              digits = all_continuous() ~1) |>
+  bold_labels() |>
+  add_overall() |>
+  add_p() |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
+```
+
+### Heatmap of correlation
+```{r, fig.height=12, fig.width=12}
+#| echo: false
+#| message: false
+#| warning: false
+heatmap_fattyacids <- bdd_danish |> select(all_of(explanatory), all_of(fattyacids)) |>
+  rename(!!!fatty_acid_labels)
+heatmap_fattyacids <- cor(heatmap_fattyacids, 
+                    use = "pairwise.complete.obs", 
+                    method = "pearson")
+corrplot(heatmap_fattyacids, 
+         method = 'color', 
+         type = "lower", 
+         tl.col = 'black', 
+         tl.srt = 45, 
+         addCoef.col = "black",
+         number.cex = 0.8,
+         number.digits = 1,
+         tl.cex = 1,
+         col = rev(COL2(diverging = "RdYlBu")))
+heatmap_cor_pairwise(fattyacids, POPs, decimal = 1, data = bdd_danish)
+```
+
+
+
+### Boxplots
+```{r, fig.height=10, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+# descrip_fattyacids_danish
+descrip_fattyacids_danish_by_als
+```
+
+### Detailed distribution
+#### Density plots 
+```{r, fig.height=10, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+bdd_danish |> 
+  select(sample,all_of(explanatory),  all_of(fattyacids)) |>
+  pivot_longer(cols = -sample, names_to = "fattyacids", values_to = "values") |>
+  mutate(fattyacids = fct_recode(fattyacids, !!!fatty_acid_labels)) |>
+  ggplot() +
+  aes(x = values) +
+  geom_density(fill = "#112446") +
+  theme_minimal() +
+  facet_wrap(~fattyacids, scales = "free", ncol = 4)
+```
+
+## Multiple cholesterol variables
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+boxplot(data = bdd_danish, vars = c("fS_Kol", "cholesterol"))
+descrip_num(data = bdd_danish, vars = c("fS_Kol", "cholesterol")) |> kable("html")
+cor.test(bdd_danish$fS_Kol, bdd_danish$cholesterol)
+```
+
+
+# Finnish data description 
+## Metadata 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+descrip_covar_finnish  |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
+```
+
+## POPs
+
+### Distribution tables
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+table_1 <- bdd |> filter(!study %in% "Danish") 
+descrip_num(data = table_1, vars = POPs) |> 
+  mutate(
+    variable = fct_recode(variable, 
+    "PCB-118,138,153,180" = "PCB_4",  
+    "Dioxin-like PCBs" = "PCB_DL", 
+    "Non dioxin-like PCBs" = "PCB_NDL", 
+    "HCB" = "OCP_HCB",
+    "Oxychlordane" = "OCP_oxychlordane",
+    "PeCB" = "OCP_PeCB",
+    "p,p'-DDE" = "OCP_pp_DDE",
+    "p,p'-DDT" = "OCP_pp_DDT",
+    "Transnonachlor" = "OCP_transnonachlor",
+    "α_HCH" = "OCP_α_HCH",
+    "β_HCH" = "OCP_β_HCH",
+    "γ_HCH" = "OCP_γ_HCH"), 
+    variable = gsub("_", "-", variable), 
+    variable = fct_relevel(
+      variable, 
+      "PCB-118,138,153,180",  "Dioxin-like PCBs", "PCB-118", "PCB-156", 
+         "Non dioxin-like PCBs", "PCB-28", "PCB-52", "PCB-74", "PCB-99", "PCB-101", 
+         "PCB-138", "PCB-153", "PCB-170", "PCB-180", "PCB-183", "PCB-187", 
+         "HCB", "ΣDDT", "p,p'-DDT",  "p,p'-DDE",  
+         "α-HCH", "β-HCH", "γ-HCH", 
+         "Σchlordane", "Oxychlordane", "Transnonachlor", 
+         "PeCB",   
+         "ΣPBDE", "PBDE-47", "PBDE-99", "PBDE-153")) |>
+  arrange(variable) |>
+  kable("html")
+rm(table_1)
+
+# descrip_num(data = bdd_finnish, vars = c(POPs_group, POPs_group_outlier)) |> kable("html")
+```
+
+
+### Comparison of distribution cases/controls
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+bdd |>
+  filter(!study %in% c("Danish")) |>
+  select(als, all_of(POPs), all_of(POPs_group)) |>
+    mutate(
+    als = as.character(als), 
+    als = fct_recode(als, "Controls" = "0", "Cases" = "1"), 
+    als = fct_relevel(als, "Cases", "Controls")) |>
+  select(als, 
+         "PCB_4",  "PCB_DL", "PCB_118", "PCB_156", 
+         "PCB_NDL", "PCB_28", "PCB_52", "PCB_74", "PCB_99", "PCB_101", 
+         "PCB_138", "PCB_153", "PCB_170", "PCB_180", "PCB_183", "PCB_187", 
+         "OCP_HCB",  
+         "ΣDDT", "OCP_pp_DDT",  "OCP_pp_DDE",  
+         "OCP_α_HCH", "OCP_β_HCH", "OCP_γ_HCH", 
+         "Σchlordane", "OCP_oxychlordane", "OCP_transnonachlor", 
+         "OCP_PeCB",   
+         "ΣPBDE", "PBDE_47", "PBDE_99", "PBDE_153") |>
+  tbl_summary(by = als, 
+              digits = all_continuous() ~1) |>
+  bold_labels() |>
+  add_overall() |>
+  add_p() |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
+```
+
+### Heatmap of correlation 
+```{r fig.height=10, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+
+heatmap_POPs <- bdd |>
+  filter(!study %in% c("Danish")) |>
+  select(all_of(POPs), all_of(POPs_group)) |>
+  rename(
+    "Dioxin-like PCBs" = PCB_DL,
+    "Non-dioxin-like PCBs" = PCB_NDL, 
+    "p,p’-DDT"  = OCP_pp_DDT, 
+    "p,p’-DDE" = OCP_pp_DDE) |>
+  rename_with(~ gsub("OCP_", "", .x)) |>  
+  rename_with(~ gsub("_", "-", .x)) |>  
+  select(
+    "Dioxin-like PCBs", "PCB-118", "PCB-156", "Non-dioxin-like PCBs", "PCB-28", "PCB-52",
+    "PCB-74", "PCB-99", "PCB-101", "PCB-138", "PCB-153", "PCB-170",
+    "PCB-180", "PCB-183", "PCB-187", "HCB", "ΣDDT", "p,p’-DDE",
+    "p,p’-DDT",  "β-HCH",  "Σchlordane", "transnonachlor",
+    "oxychlordane", "ΣPBDE", "PBDE-47", "PBDE-99", "PBDE-153")
+
+heatmap_POPs <- cor(heatmap_POPs, 
+                 use = "pairwise.complete.obs", 
+                 method = "pearson")
+
+corrplot(heatmap_POPs, 
+         method = 'color', 
+         type = "lower", 
+         tl.col = 'black', 
+         tl.srt = 45, 
+         addCoef.col = "black",
+         number.cex = 0.8,
+         number.digits = 1,
+         tl.cex = 1,
+         col = rev(COL2(diverging = "RdYlBu")))
+
+```
+
+### Boxplots
+
+```{r, fig.width=10, fig.height=10}
+#| echo: false
+#| message: false
+#| warning: false
+# descrip_expo_finnish
+descrip_expo_finnish_by_als
+```
+
+### Detailed distribution
+#### Summed 
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+densityplot(data = bdd_finnish, vars = POPs_group)
+boxplot(data = bdd_finnish, vars = POPs_group)
+heatmap_cor(cormat = bdd_finnish[POPs_group], decimal = 1)
+```
+
+#### PCBs
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+PCBs <- bdd_finnish |> select(all_of(POPs_finnish)) |> select(contains("PCB")) |> colnames()
+densityplot(data = bdd_finnish, vars = PCBs[1:9])
+```
+
+```{r, fig.height=3.33}
+#| echo: false
+#| message: false
+#| warning: false
+densityplot(data = bdd_finnish, vars = PCBs[10:13])
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+boxplot(data = bdd_finnish, vars = PCBs[1:10])
+```
+
+```{r, fig.height=2}
+#| echo: false
+#| message: false
+#| warning: false
+boxplot(data = bdd_finnish, vars = PCBs[11:13])
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+heatmap_cor(cormat = bdd_finnish[PCBs], decimal = 1)
+rm(PCBs)
+```
+
+#### OCPs
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+OCPs <- bdd_finnish |> select(all_of(POPs_finnish)) |> select(contains("OCP")) |> colnames()
+densityplot(data = bdd_finnish, vars = OCPs)
+boxplot(data = bdd_finnish, vars = OCPs)
+# heatmap_cor(cormat = bdd_finnish[OCPs], decimal = 1)
+```
+
+#### PBDEs
+
+```{r,  fig.width=7, fig.height=3}
+#| echo: false
+#| message: false
+#| warning: false
+PBDEs <- bdd_finnish |> select(all_of(POPs_finnish)) |> select(contains("PBDE")) |> colnames()
+densityplot(data = bdd_finnish, vars = PBDEs)
+boxplot(data = bdd_finnish, vars = PBDEs)
+```
+
+```{r,  fig.width=7, fig.height=4}
+#| echo: false
+#| message: false
+#| warning: false
+heatmap_cor(cormat = bdd_finnish[PBDEs], decimal = 1)
+```
+
+
+## Fatty acids
+### Distribution tables 
+```{r, fig.height=10, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+descrip_num(data = bdd_finnish, vars = fattyacids) |> 
+  mutate(variable = fct_recode(variable, !!!fatty_acid_labels)) |>
+  kable("html")
+```
+
+### Comparison of distribution cases/controls
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+bdd_finnish |>
+  select(als, all_of(explanatory), all_of(fattyacids)) |>
+    mutate(
+    als = as.character(als), 
+    als = fct_recode(als, "Controls" = "0", "Cases" = "1"), 
+    als = fct_relevel(als, "Cases", "Controls")) |>
+  tbl_summary(by = als, 
+              digits = all_continuous() ~1) |>
+  bold_labels() |>
+  add_overall() |>
+  add_p() |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
+```
+
+### Heatmap of correlation
+```{r, fig.height=12, fig.width=12}
+#| echo: false
+#| message: false
+#| warning: false
+heatmap_fattyacids <- bdd_finnish |> 
+  select(all_of(explanatory), all_of(fattyacids)) |>
+  rename(!!!fatty_acid_labels) 
+heatmap_fattyacids <- cor(heatmap_fattyacids, 
+                    use = "pairwise.complete.obs", 
+                    method = "pearson")
+
+corrplot(heatmap_fattyacids, 
+         method = 'color', 
+         type = "lower", 
+         tl.col = 'black', 
+         tl.srt = 45, 
+         addCoef.col = "black",
+         number.cex = 0.8,
+         number.digits = 1,
+         tl.cex = 1,
+         col = rev(COL2(diverging = "RdYlBu")))
+
+heatmap_cor_pairwise(fattyacids, POPs_finnish, decimal = 1, data = bdd_finnish)
+```
+
+### Boxplots
+```{r, fig.height=10, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+# descrip_fattyacids_finnish
+descrip_fattyacids_finnish_by_als
+```
+
+### Detailed distribution 
+```{r, fig.height=10, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+
+bdd_finnish |> 
+  select(sample, all_of(explanatory),  all_of(fattyacids)) |>
+  pivot_longer(cols = -sample, names_to = "fattyacids", values_to = "values") |>
+    mutate(fattyacids = fct_recode(fattyacids, !!!fatty_acid_labels)) |>
+  ggplot() +
+  aes(x = "", y = values) +
+  geom_boxplot(shape = "circle", fill = "#112446") +
+  coord_flip() +
+  theme_bw() +
+  theme(axis.title = element_blank()) +
+  facet_wrap(~fattyacids, scales = "free", ncol = 3L, nrow = 14L)
+```
+
+
+## Multiple cholesterol variables issue
+Why do we have 3 cholesterol variables in the finnish data ?
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+boxplot(data = bdd_finnish, vars = c("fS_Kol", "chol", "cholesterol"))
+descrip_num(data = bdd_finnish, vars = c("fS_Kol", "chol", "cholesterol")) |> kable("html")
+heatmap_cholesterol <- bdd_finnish |> select("fS_Kol", "chol", "cholesterol")
+heatmap_cholesterol <- cor(heatmap_cholesterol, 
+                    use = "pairwise.complete.obs", 
+                    method = "pearson")
+
+corrplot(heatmap_cholesterol, 
+         method = 'color', 
+         type = "lower", 
+         tl.col = 'black', 
+         tl.srt = 45, 
+         addCoef.col = "black",
+         number.cex = 0.8,
+         number.digits = 1,
+         tl.cex = 1,
+         col = rev(COL2(diverging = "RdYlBu")))
+
+```
+
+
+
+# Comparison danish/finnish data
+## Metadata
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+bdd %>%
+  select("study", "sex", "marital_status", "smoking", "alcohol", "education", 
+         "bmi", "cholesterol", "blod_sys", "blod_dias", "baseline_age", "diagnosis_age") %>%
+  tbl_summary(by = "study") %>%
+  bold_labels() %>%
+  add_p()|>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
+```
+
+## POPs 
+```{r, fig.width=10, fig.height=10}
+#| echo: false
+#| message: false
+#| warning: false
+bdd |>
+  select(study, all_of(POPs), all_of(POPs_group)) |>
+  pivot_longer(cols = -study, names_to = "POPs", values_to = "values") |>
+    mutate(
+    POPs = fct_recode(POPs, 
+                      "PCB-118,138,153,180" = "PCB_4", 
+                      "Dioxin-like PCBs" = "PCB_DL",
+                      "Non-dioxin-like PCBs" = "PCB_NDL", 
+                      "p,p’-DDT"  = "OCP_pp_DDT", 
+                      "p,p’-DDE" = "OCP_pp_DDE", 
+                      "Oxychlordane" = "OCP_oxychlordane", 
+                      "Transnonachlor" = "OCP_transnonachlor"), 
+    POPs = gsub("OCP_", "", POPs), 
+    POPs = gsub("_", "-", POPs), 
+    POPs = fct_relevel(POPs, 
+                       "PCB-118,138,153,180", 
+                       "Dioxin-like PCBs", "PCB-118", "PCB-156",
+                       "Non-dioxin-like PCBs",  "PCB-28",  "PCB-52", "PCB-74", "PCB-99", 
+                       "PCB-101",   "PCB-138", "PCB-153", "PCB-170", "PCB-180", "PCB-183", "PCB-187", 
+                       "HCB","ΣDDT","p,p’-DDT", "p,p’-DDE", 
+                       "α-HCH", "β-HCH", "γ-HCH", 
+                       "Σchlordane", "Oxychlordane", "Transnonachlor", 
+                       "PeCB",   "ΣPBDE", "PBDE-47","PBDE-99","PBDE-153"), 
+    POPs = fct_rev(POPs)) |>
+  ggplot() +
+  aes(x = POPs, y = values, fill = study) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1, 
+                 guide = guide_legend(reverse = TRUE)) +
+  scale_y_continuous(trans = "log", 
+                     labels = number_format(accuracy = 1)) +
+  labs(x = "POPs", y = "Values (pg/ml, log transformed)", fill = "Study") +
+  coord_flip() +
+  theme_lucid()
+
+# bdd |>
+#   select(study, all_of(POPs), all_of(POPs_group)) |>
+#   pivot_longer(cols = -study, names_to = "POPs", values_to = "values") |>
+#     mutate(
+#     POPs =   fct_relevel(POPs, 
+#     "PCB_DL", "PCB_118", "PCB_156", "PCB_NDL", "PCB_4", "PCB_28",
+#     "PCB_52", "PCB_74", "PCB_99", "PCB_101", "PCB_138", "PCB_153",
+#     "PCB_170", "PCB_180", "PCB_183", "PCB_187", "OCP_HCB", "OCP_PeCB",
+#     "ΣDDT", "OCP_pp_DDE", "OCP_pp_DDT", "Σchlordane", "OCP_oxychlordane",
+#     "OCP_transnonachlor", "OCP_α_HCH", "OCP_β_HCH", "OCP_γ_HCH",
+#     "ΣPBDE", "PBDE_47", "PBDE_99", "PBDE_153"), 
+#     POPs = fct_rev(POPs)) |>
+#   filter(POPs %in% c("OCP_HCB", "PCB_4", "PCB_DL", "PCB_NDL", "OCP_PeCB", "OCP_β_HCH", "Σchlordane", "ΣDDT", "ΣHCH", "ΣPBDE")) |>
+#   ggplot() +
+#   aes(x = POPs, y = values, fill = study) +
+#   geom_boxplot() +
+#   scale_fill_hue(direction = 1) +
+#   scale_y_continuous(trans = "log", 
+#                      labels = number_format(accuracy = 1)) +
+#   labs(x = "POPs", y = "Values (pg/ml, log transformed)", fill = "Study") +
+#   coord_flip() +
+#   theme_lucid() + 
+#   scale_fill_discrete()  
+
+```
+
+## Fatty acids
+```{r, fig.height=12, fig.width=12}
+#| echo: false
+#| message: false
+#| warning: false
+bdd |>
+  select(study, all_of(explanatory), all_of(fattyacids)) |>
+  pivot_longer(cols = -study, names_to = "fattyacids", values_to = "values") |>
+  mutate(fattyacids = fct_recode(fattyacids, !!!fatty_acid_labels)) |>
+  ggplot() +
+  aes(x = fattyacids, y = values, fill = study) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1, 
+                 guide = guide_legend(reverse = TRUE)) +
+  scale_y_continuous(trans = "log", 
+                     labels = number_format(accuracy = 1)) +
+  labs(x = "Fatty acids", y = "Values (log transformed)", fill = "Cohort") +
+  coord_flip() +
+  theme_lucid()
+
+bdd |>
+  filter(als == 0) |>
+  select(study, all_of(fattyacids), all_of(explanatory)) |>
+  tbl_summary(by = "study") |>
+  bold_labels() |>
+  add_n() |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
+```
+
+# POPs and ALS (in Danish cohort) 
 
 ## Effects of covariates on ALS diagnosis
 
@@ -296,7 +785,9 @@ heatmap_cor(cormat = bdd_danish[PBDEs], decimal = 1)
 #| echo: false
 #| message: false
 #| warning: false
-covar
+covar |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
 ```
 
 ## Effects of POPs on ALS occurence
@@ -498,19 +989,19 @@ grid.arrange(grobs = list(plot_adjusted_spline$PCB_4,
                        plot_adjusted_cubic_outlier$PCB_4), ncol = 6)
 ```
 
-#### HCB
+#### OCP_HCB
 
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-grid.arrange(grobs = list(plot_adjusted_spline$HCB, 
-                       plot_adjusted_spline_outlier$HCB,
-                       plot_adjusted_quadratic$HCB, 
-                       plot_adjusted_quadratic_outlier$HCB, 
-                       plot_adjusted_cubic$HCB, 
-                       plot_adjusted_cubic_outlier$HCB), ncol = 6)
+grid.arrange(grobs = list(plot_adjusted_spline$OCP_HCB, 
+                       plot_adjusted_spline_outlier$OCP_HCB,
+                       plot_adjusted_quadratic$OCP_HCB, 
+                       plot_adjusted_quadratic_outlier$OCP_HCB, 
+                       plot_adjusted_cubic$OCP_HCB, 
+                       plot_adjusted_cubic_outlier$OCP_HCB), ncol = 6)
 ```
 
 #### ΣDDT
@@ -528,19 +1019,19 @@ grid.arrange(grobs = list(plot_adjusted_spline$ΣDDT,
                        plot_adjusted_cubic_outlier$ΣDDT), ncol = 6)
 ```
 
-#### β_HCH
+#### OCP_β_HCH
 
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-grid.arrange(grobs = list(plot_adjusted_spline$β_HCH, 
-                       plot_adjusted_spline_outlier$β_HCH,
-                       plot_adjusted_quadratic$β_HCH, 
-                       plot_adjusted_quadratic_outlier$β_HCH, 
-                       plot_adjusted_cubic$β_HCH, 
-                       plot_adjusted_cubic_outlier$β_HCH), ncol = 6)
+grid.arrange(grobs = list(plot_adjusted_spline$OCP_β_HCH, 
+                       plot_adjusted_spline_outlier$OCP_β_HCH,
+                       plot_adjusted_quadratic$OCP_β_HCH, 
+                       plot_adjusted_quadratic_outlier$OCP_β_HCH, 
+                       plot_adjusted_cubic$OCP_β_HCH, 
+                       plot_adjusted_cubic_outlier$OCP_β_HCH), ncol = 6)
 ```
 
 #### Σchlordane
@@ -663,3 +1154,27 @@ wrap_plots(plot_adjusted_gamm_not_summed[17:22], ncol = 4)
 plot_quart_sensi_not_summed
 ```
 
+# Fatty acids and ALS 
+## Effects of subject characterist on ALS occurence in the Danish cohort 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+table_2 
+```
+
+## Effects of fatty acids on ALS occurence in the Danish cohort 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+table_3 |>
+set_table_properties(width = 1, layout = "autofit")
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+figure_2
+```

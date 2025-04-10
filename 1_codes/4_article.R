@@ -2,7 +2,7 @@
 # 18/03/2025
 
 # data loading - package loading ----
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2_analyses.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/2_analyses_POPs_ALS.R")
 
 
 # Table 1 - description of the subjects ----
@@ -199,7 +199,7 @@ table_S2 <- table_S2 |> flextable() |>
   align(j = "variable", align = "left", part = "all") |> 
   merge_at(j = "variable", part = "header") |>
   merge_at(j = "quartiles", part = "header") |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 rm(extra_rows)
