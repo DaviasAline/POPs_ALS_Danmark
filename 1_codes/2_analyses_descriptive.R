@@ -5,7 +5,7 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 
 # danish data ----
 ## metadata ----
-descrip_covar_danish <- bdd_danish|> 
+covar_danish <- bdd_danish|> 
   mutate(
     als = as.character(als),
     als = fct_recode(als, "Controls" = "0", "Cases" = "1"),
@@ -18,29 +18,31 @@ descrip_covar_danish <- bdd_danish|>
   add_overall() 
 
 ## POPs ----
-descrip_expo_danish <- bdd_danish |>
-  select(all_of(POPs), all_of(POPs_group)) |>
-  pivot_longer(cols = everything(), names_to = "POPs", values_to = "values") |>
+POPs_table_danish <- descrip_num(data = bdd_danish, vars = POPs_tot)
+POPs_table_danish <- left_join(POPs_table_danish, bdd_danish_loq, by = "variable") |>
+  mutate(variable = factor(variable, levels = POPs_labels), 
+         variable = fct_recode(variable, !!!POPs_labels)) |>
+  arrange(variable) 
+
+POPs_table_danish_by_als <- bdd_danish |>
+  select(als, all_of(POPs_tot)) |>
   mutate(
-    POPs = fct_recode(POPs, 
-      "PCB-118,138,153,180" = "PCB_4", 
-      "Dioxin-like PCBs" = "PCB_DL",
-      "Non-dioxin-like PCBs" = "PCB_NDL", 
-      "p,p’-DDT"  = "OCP_pp_DDT", 
-      "p,p’-DDE" = "OCP_pp_DDE", 
-      "Oxychlordane" = "OCP_oxychlordane", 
-      "Transnonachlor" = "OCP_transnonachlor"), 
-    POPs = gsub("OCP_", "", POPs), 
-    POPs = gsub("_", "-", POPs), 
-  POPs = fct_relevel(POPs, 
-                       "PCB-118,138,153,180", 
-                     "Dioxin-like PCBs", "PCB-118", "PCB-156",
-                     "Non-dioxin-like PCBs",  "PCB-28",  "PCB-52", "PCB-74", "PCB-99", 
-                     "PCB-101",   "PCB-138", "PCB-153", "PCB-170", "PCB-180", "PCB-183", "PCB-187", 
-                     "HCB","ΣDDT","p,p’-DDT", "p,p’-DDE", 
-                     "α-HCH", "β-HCH", "γ-HCH", 
-                     "Σchlordane", "Oxychlordane", "Transnonachlor", 
-                     "PeCB",   "ΣPBDE", "PBDE-47","PBDE-99","PBDE-153")) |>
+    als = as.character(als), 
+    als = fct_recode(als, "Controls" = "0", "Cases" = "1"), 
+    als = fct_relevel(als, "Cases", "Controls")) |>
+  tbl_summary(by = als, 
+              digits = all_continuous() ~1) |>
+  bold_labels() |>
+  add_overall() |>
+  add_p()
+
+POPs_boxplot_danish <- bdd_danish |>
+  select(all_of(POPs_tot)) |>
+  pivot_longer(cols = everything(), names_to = "POPs", values_to = "values") |>
+  mutate(POPs = factor(POPs, levels = POPs_labels), 
+         POPs = fct_recode(POPs, !!!POPs_labels), 
+         POPs = fct_rev(POPs)) |>
+  arrange(POPs) |>
   ggplot() +
   aes(x = POPs, y = values) +
   geom_boxplot() +
@@ -51,34 +53,17 @@ descrip_expo_danish <- bdd_danish |>
   coord_flip() +
   theme_lucid()
 
-descrip_expo_danish_by_als <- bdd_danish |>
-  select(als, all_of(POPs), all_of(POPs_group)) |>
+POPs_boxplot_danish_by_als <- bdd_danish |>
+  select(als, all_of(POPs_tot)) |>
   pivot_longer(cols = -als, names_to = "POPs", values_to = "values") |>
-  mutate(
-    POPs = fct_recode(POPs, 
-                      "PCB-118,138,153,180" = "PCB_4", 
-                      "Dioxin-like PCBs" = "PCB_DL",
-                      "Non-dioxin-like PCBs" = "PCB_NDL", 
-                      "p,p’-DDT"  = "OCP_pp_DDT", 
-                      "p,p’-DDE" = "OCP_pp_DDE", 
-                      "Oxychlordane" = "OCP_oxychlordane", 
-                      "Transnonachlor" = "OCP_transnonachlor"), 
-    POPs = gsub("OCP_", "", POPs), 
-    POPs = gsub("_", "-", POPs), 
-    POPs = fct_relevel(POPs, 
-                       "PCB-118,138,153,180", 
-                       "Dioxin-like PCBs", "PCB-118", "PCB-156",
-                       "Non-dioxin-like PCBs",  "PCB-28",  "PCB-52", "PCB-74", "PCB-99", 
-                       "PCB-101",   "PCB-138", "PCB-153", "PCB-170", "PCB-180", "PCB-183", "PCB-187", 
-                       "HCB","ΣDDT","p,p’-DDT", "p,p’-DDE", 
-                       "α-HCH", "β-HCH", "γ-HCH", 
-                       "Σchlordane", "Oxychlordane", "Transnonachlor", 
-                       "PeCB",   "ΣPBDE", "PBDE-47","PBDE-99","PBDE-153"), 
-    POPs = fct_rev(POPs), 
+  mutate(POPs = factor(POPs, levels = POPs_labels), 
+         POPs = fct_recode(POPs, !!!POPs_labels), 
+         POPs = fct_rev(POPs),
     als = as.character(als), 
     als = fct_recode(als, 
                      "Controls" = "0",
                      "Cases" = "1")) |>
+  arrange(POPs) |>
   ggplot() +
   aes(x = POPs, y = values, fill = als) +
   geom_boxplot() +
@@ -90,12 +75,39 @@ descrip_expo_danish_by_als <- bdd_danish |>
   coord_flip() +
   theme_lucid()
 
+POPs_heatmap_danish <- bdd_danish %>% 
+  select(all_of(POPs_tot)) |>
+  rename(!!!POPs_labels) 
+
+POPs_heatmap_danish <- cor(POPs_heatmap_danish, 
+                           use = "pairwise.complete.obs", 
+                           method = "pearson")
 
 ## fatty acids ----
-descrip_fattyacids_danish <- bdd_danish |>
-  select(all_of(explanatory), all_of(fattyacids)) |>
+fattyacids_table_danish <- 
+  descrip_num(data = bdd_danish, vars = c(explanatory, fattyacids)) |> 
+  mutate(variable = factor(variable, levels = fattyacids_labels), 
+         variable = fct_recode(variable, !!!fattyacids_labels)) |>
+  arrange(variable) 
+
+fattyacids_table_danish_by_als <- bdd_danish |>
+  select(als, all_of(fattyacids)) |>
+  mutate(
+    als = as.character(als), 
+    als = fct_recode(als, "Controls" = "0", "Cases" = "1"), 
+    als = fct_relevel(als, "Cases", "Controls")) |>
+  tbl_summary(by = als, 
+              digits = all_continuous() ~1) |>
+  bold_labels() |>
+  add_overall() |>
+  add_p() 
+
+fattyacids_boxplot_danish <- bdd_danish |>
+  select(all_of(fattyacids)) |>
   pivot_longer(cols = everything(), names_to = "fattyacids", values_to = "values") |>
-  mutate(fattyacids = fct_recode(fattyacids, !!!fatty_acid_labels)) |>
+  mutate(fattyacids = factor(fattyacids, levels = fattyacids_labels), 
+         fattyacids = fct_recode(fattyacids, !!!fattyacids_labels), 
+         fattyacids = fct_rev(fattyacids)) |>
   ggplot() +
   aes(x = fattyacids, y = values) +
   geom_boxplot() +
@@ -106,10 +118,12 @@ descrip_fattyacids_danish <- bdd_danish |>
   coord_flip() +
   theme_lucid()
 
-descrip_fattyacids_danish_by_als <- bdd_danish |>
-  select(als, all_of(explanatory), all_of(fattyacids)) |>
+fattyacids_boxplot_danish_by_als <- bdd_danish |>
+  select(als, all_of(fattyacids)) |>
   pivot_longer(cols = -als, names_to = "fattyacids", values_to = "values") |>
-  mutate(fattyacids = fct_recode(fattyacids, !!!fatty_acid_labels)) |>
+  mutate(fattyacids = factor(fattyacids, levels = fattyacids_labels), 
+         fattyacids = fct_recode(fattyacids, !!!fattyacids_labels), 
+         fattyacids = fct_rev(fattyacids)) |>
   mutate(
     als = as.character(als), 
     als = fct_recode(als, 
@@ -126,10 +140,17 @@ descrip_fattyacids_danish_by_als <- bdd_danish |>
   coord_flip() +
   theme_lucid()
 
+fattyacids_heatmap_danish <- bdd_danish |> select(all_of(fattyacids)) |>
+  rename(!!!fattyacids_labels) 
+fattyacids_heatmap_danish <- cor(fattyacids_heatmap_danish, 
+                                 use = "pairwise.complete.obs", 
+                                 method = "pearson")
+
+POPs_fattyacids_heatmap_danish <- heatmap_cor_pairwise(fattyacids, POPs, decimal = 1, data = bdd_danish)
 
 # finnish data ----
 ## metadata ----
-descrip_covar_finnish <- bdd_finnish |> 
+covar_finnish <- bdd_finnish |> 
   mutate(
     als = as.character(als),
     als = fct_recode(als, "Controls" = "0", "Cases" = "1"),
@@ -142,19 +163,33 @@ descrip_covar_finnish <- bdd_finnish |>
   add_overall() 
 
 ## POPs ----
-descrip_expo_finnish <- bdd |>
-  filter(study %in% c("Finnish_1", "Finnish_2", "Finnish_3")) |>
-  select(all_of(POPs), all_of(POPs_group)) |>
-  pivot_longer(cols = everything(), names_to = "POPs", values_to = "values") |>
+POPs_table_finnish <- bdd |> filter(!study %in% "Danish") 
+POPs_table_finnish <- descrip_num(data = POPs_table_finnish, vars = POPs_tot) |> 
+  mutate(variable = factor(variable, levels = POPs_labels), 
+         variable = fct_recode(variable, !!!POPs_labels)) |>
+  arrange(variable) 
+
+POPs_table_finnish_by_als <- bdd |>
+  filter(!study %in% c("Danish")) |>
+  select(als, all_of(POPs_tot)) |>
   mutate(
-    POPs =   fct_relevel(POPs, 
-                         "PCB_DL", "PCB_118", "PCB_156", "PCB_NDL", "PCB_4", "PCB_28",
-                         "PCB_52", "PCB_74", "PCB_99", "PCB_101", "PCB_138", "PCB_153",
-                         "PCB_170", "PCB_180", "PCB_183", "PCB_187", "OCP_HCB", "OCP_PeCB",
-                         "ΣDDT", "OCP_pp_DDE", "OCP_pp_DDT", "Σchlordane", "OCP_oxychlordane",
-                         "OCP_transnonachlor", "OCP_α_HCH", "OCP_β_HCH", "OCP_γ_HCH",
-                         "ΣPBDE", "PBDE_47", "PBDE_99", "PBDE_153"), 
-    POPs = fct_rev(POPs)) |>
+    als = as.character(als), 
+    als = fct_recode(als, "Controls" = "0", "Cases" = "1"), 
+    als = fct_relevel(als, "Cases", "Controls")) |>
+  tbl_summary(by = als, 
+              digits = all_continuous() ~1) |>
+  bold_labels() |>
+  add_overall() |>
+  add_p() 
+
+POPs_boxplot_finnish <- bdd |>
+  filter(study %in% c("Finnish_1", "Finnish_2", "Finnish_3")) |>
+  select(all_of(POPs_tot)) |>
+  pivot_longer(cols = everything(), names_to = "POPs", values_to = "values") |>
+  mutate(POPs = factor(POPs, levels = POPs_labels), 
+         POPs = fct_recode(POPs, !!!POPs_labels), 
+         POPs = fct_rev(POPs)) |>
+  arrange(POPs) |>
   ggplot() +
   aes(x = POPs, y = values) +
   geom_boxplot() +
@@ -165,35 +200,18 @@ descrip_expo_finnish <- bdd |>
   coord_flip() +
   theme_lucid()
 
-descrip_expo_finnish_by_als <- bdd |>
+POPs_boxplot_finnish_by_als <- bdd |>
   filter(study %in% c("Finnish_1", "Finnish_2", "Finnish_3")) |>
   select(als, all_of(POPs), all_of(POPs_group)) |>
   pivot_longer(cols = -als, names_to = "POPs", values_to = "values") |>
-  mutate(
-    POPs = fct_recode(POPs, 
-                      "PCB-118,138,153,180" = "PCB_4", 
-                      "Dioxin-like PCBs" = "PCB_DL",
-                      "Non-dioxin-like PCBs" = "PCB_NDL", 
-                      "p,p’-DDT"  = "OCP_pp_DDT", 
-                      "p,p’-DDE" = "OCP_pp_DDE", 
-                      "Oxychlordane" = "OCP_oxychlordane", 
-                      "Transnonachlor" = "OCP_transnonachlor"), 
-    POPs = gsub("OCP_", "", POPs), 
-    POPs = gsub("_", "-", POPs), 
-    POPs = fct_relevel(POPs, 
-                       "PCB-118,138,153,180", 
-                       "Dioxin-like PCBs", "PCB-118", "PCB-156",
-                       "Non-dioxin-like PCBs",  "PCB-28",  "PCB-52", "PCB-74", "PCB-99", 
-                       "PCB-101",   "PCB-138", "PCB-153", "PCB-170", "PCB-180", "PCB-183", "PCB-187", 
-                       "HCB","ΣDDT","p,p’-DDT", "p,p’-DDE", 
-                       "α-HCH", "β-HCH", "γ-HCH", 
-                       "Σchlordane", "Oxychlordane", "Transnonachlor", 
-                       "PeCB",   "ΣPBDE", "PBDE-47","PBDE-99","PBDE-153"), 
-    POPs = fct_rev(POPs), 
+  mutate(POPs = factor(POPs, levels = POPs_labels), 
+         POPs = fct_recode(POPs, !!!POPs_labels), 
+         POPs = fct_rev(POPs),
     als = as.character(als), 
     als = fct_recode(als, 
                      "Controls" = "0",
                      "Cases" = "1")) |>
+  arrange(POPs) |>
   ggplot() +
   aes(x = POPs, y = values, fill = als) +
   geom_boxplot() +
@@ -205,11 +223,39 @@ descrip_expo_finnish_by_als <- bdd |>
   coord_flip() +
   theme_lucid()
 
+POPs_heatmap_finnish <- bdd |>
+  filter(!study %in% c("Danish")) |>
+  select(all_of(POPs_tot)) |>
+  rename(!!!POPs_labels) 
+
+POPs_heatmap_finnish <- cor(POPs_heatmap_finnish, 
+                            use = "pairwise.complete.obs", 
+                            method = "pearson")
+
 ## fatty acids ----
-descrip_fattyacids_finnish <- bdd_finnish |>
-  select(all_of(explanatory), all_of(fattyacids)) |>
+fattyacids_table_finnish <-
+  descrip_num(data = bdd_finnish, vars = fattyacids) |> 
+  mutate(variable = fct_recode(variable, !!!fattyacids_labels)) 
+
+fattyacids_table_finnish_by_als <- 
+  bdd_finnish |>
+  select(als, all_of(fattyacids)) |>
+  mutate(
+    als = as.character(als), 
+    als = fct_recode(als, "Controls" = "0", "Cases" = "1"), 
+    als = fct_relevel(als, "Cases", "Controls")) |>
+  tbl_summary(by = als, 
+              digits = all_continuous() ~1) |>
+  bold_labels() |>
+  add_overall() |>
+  add_p() 
+
+fattyacids_boxplot_finnish <- bdd_finnish |>
+  select(all_of(fattyacids)) |>
   pivot_longer(cols = everything(), names_to = "fattyacids", values_to = "values") |>
-  mutate(fattyacids = fct_recode(fattyacids, !!!fatty_acid_labels)) |>
+  mutate(fattyacids = factor(fattyacids, levels = fattyacids_labels), 
+         fattyacids = fct_recode(fattyacids, !!!fattyacids_labels), 
+         fattyacids = fct_rev(fattyacids)) |>
   ggplot() +
   aes(x = fattyacids, y = values) +
   geom_boxplot() +
@@ -220,13 +266,15 @@ descrip_fattyacids_finnish <- bdd_finnish |>
   coord_flip() +
   theme_lucid()
 
-descrip_fattyacids_finnish_by_als <- bdd_finnish |>
-  select(als, all_of(explanatory), all_of(fattyacids)) |>
+
+fattyacids_boxplot_finnish_by_als <- bdd_finnish |>
+  select(als, all_of(fattyacids)) |>
   pivot_longer(cols = -als, names_to = "fattyacids", values_to = "values") |>
-  mutate(fattyacids = fct_recode(fattyacids, !!!fatty_acid_labels)) |>
-  mutate(
-    als = as.character(als), 
-    als = fct_recode(als, 
+  mutate(fattyacids = factor(fattyacids, levels = fattyacids_labels), 
+         fattyacids = fct_recode(fattyacids, !!!fattyacids_labels), 
+         fattyacids = fct_rev(fattyacids), 
+         als = as.character(als), 
+         als = fct_recode(als, 
                      "Controls" = "0",
                      "Cases" = "1")) |>
   ggplot() +
@@ -240,7 +288,165 @@ descrip_fattyacids_finnish_by_als <- bdd_finnish |>
   coord_flip() +
   theme_lucid()
 
+fattyacids_heatmap_finnish <- bdd_finnish |> 
+  select(all_of(fattyacids)) |>
+  rename(!!!fattyacids_labels) 
+fattyacids_heatmap_finnish <- cor(fattyacids_heatmap_finnish, 
+                                  use = "pairwise.complete.obs", 
+                                  method = "pearson")
+
+POPs_fattyacids_heatmap_finnish <- heatmap_cor_pairwise(fattyacids, POPs_finnish, decimal = 1, data = bdd_finnish)
+
 # comparison danish / finnish ----
 ## metadata ----
+covar_comp <- bdd %>%
+  select("study", "sex", "marital_status", "smoking", "alcohol", "education", 
+         "bmi", "cholesterol", "blod_sys", "blod_dias", "baseline_age", "diagnosis_age") %>%
+  tbl_summary(by = "study") %>%
+  bold_labels() %>%
+  add_p()
+
 ## POPs ----
+POPs_table_comp <- bdd |>
+  filter(als == 0) |>
+  select(study, all_of(POPs_tot)) |>
+  tbl_summary(by = "study") |>
+  bold_labels() |>
+  add_n() 
+
+POPs_boxplot_comp <- bdd |>
+  select(study, all_of(POPs_tot)) |>
+  pivot_longer(cols = -study, names_to = "POPs", values_to = "values") |>
+  mutate(POPs = factor(POPs, levels = POPs_labels), 
+         POPs = fct_recode(POPs, !!!POPs_labels), 
+         POPs = fct_rev(POPs)) |>
+  arrange(POPs) |>
+  ggplot() +
+  aes(x = POPs, y = values, fill = study) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1, 
+                 guide = guide_legend(reverse = TRUE)) +
+  scale_y_continuous(trans = "log", 
+                     labels = number_format(accuracy = 1)) +
+  labs(x = "POPs", y = "Values (pg/ml, log transformed)", fill = "Study") +
+  coord_flip() +
+  theme_lucid()
+
+# bdd |>
+#   select(study, all_of(POPs), all_of(POPs_group)) |>
+#   pivot_longer(cols = -study, names_to = "POPs", values_to = "values") |>
+#     mutate(
+#     POPs =   fct_relevel(POPs, 
+#     "PCB_DL", "PCB_118", "PCB_156", "PCB_NDL", "PCB_4", "PCB_28",
+#     "PCB_52", "PCB_74", "PCB_99", "PCB_101", "PCB_138", "PCB_153",
+#     "PCB_170", "PCB_180", "PCB_183", "PCB_187", "OCP_HCB", "OCP_PeCB",
+#     "ΣDDT", "OCP_pp_DDE", "OCP_pp_DDT", "Σchlordane", "OCP_oxychlordane",
+#     "OCP_transnonachlor", "OCP_α_HCH", "OCP_β_HCH", "OCP_γ_HCH",
+#     "ΣPBDE", "PBDE_47", "PBDE_99", "PBDE_153"), 
+#     POPs = fct_rev(POPs)) |>
+#   filter(POPs %in% c("OCP_HCB", "PCB_4", "PCB_DL", "PCB_NDL", "OCP_PeCB", "OCP_β_HCH", "Σchlordane", "ΣDDT", "ΣHCH", "ΣPBDE")) |>
+#   ggplot() +
+#   aes(x = POPs, y = values, fill = study) +
+#   geom_boxplot() +
+#   scale_fill_hue(direction = 1) +
+#   scale_y_continuous(trans = "log", 
+#                      labels = number_format(accuracy = 1)) +
+#   labs(x = "POPs", y = "Values (pg/ml, log transformed)", fill = "Study") +
+#   coord_flip() +
+#   theme_lucid() + 
+#   scale_fill_discrete()  
+
+
 ## fatty acids ----
+fattyacids_table_comp <- bdd |>
+  filter(als == 0) |>
+  select(study, all_of(fattyacids)) |>
+  tbl_summary(by = "study") |>
+  bold_labels() |>
+  add_n()
+
+fattyacids_boxplot_comp <- bdd |>
+  select(study, all_of(fattyacids)) |>
+  pivot_longer(cols = -study, names_to = "fattyacids", values_to = "values") |>
+  mutate(fattyacids = fct_recode(fattyacids, !!!fattyacids_labels)) |>
+  ggplot() +
+  aes(x = fattyacids, y = values, fill = study) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1, 
+                 guide = guide_legend(reverse = TRUE)) +
+  scale_y_continuous(trans = "log", 
+                     labels = number_format(accuracy = 1)) +
+  labs(x = "Fatty acids", y = "Values (log transformed)", fill = "Cohort") +
+  coord_flip() +
+  theme_lucid()
+
+
+# Assemblage ----
+descriptive <- list(
+  danish = list(
+    covar_danish = covar_danish, 
+    POPs_table_danish = POPs_table_danish,
+    POPs_table_danish_by_als = POPs_table_danish_by_als,
+    POPs_boxplot_danish = POPs_boxplot_danish,
+    POPs_boxplot_danish_by_als = POPs_boxplot_danish_by_als,
+    POPs_heatmap_danish = POPs_heatmap_danish,
+    fattyacids_table_danish = fattyacids_table_danish,
+    fattyacids_table_danish_by_als = fattyacids_table_danish_by_als,
+    fattyacids_boxplot_danish = fattyacids_boxplot_danish,
+    fattyacids_boxplot_danish_by_als = fattyacids_boxplot_danish_by_als, 
+    fattyacids_heatmap_danish = fattyacids_heatmap_danish, 
+    POPs_fattyacids_heatmap_danish = POPs_fattyacids_heatmap_danish),
+  finnish = list(
+    covar_finnish = covar_finnish,
+    POPs_table_finnish = POPs_table_finnish,
+    POPs_table_finnish_by_als = POPs_table_finnish_by_als,
+    POPs_boxplot_finnish = POPs_boxplot_finnish,
+    POPs_boxplot_finnish_by_als = POPs_boxplot_finnish_by_als,
+    POPs_heatmap_finnish = POPs_heatmap_finnish,
+    fattyacids_table_finnish = fattyacids_table_finnish,
+    fattyacids_table_finnish_by_als = fattyacids_table_finnish_by_als,
+    fattyacids_boxplot_finnish = fattyacids_boxplot_finnish,
+    fattyacids_boxplot_finnish_by_als = fattyacids_boxplot_finnish_by_als, 
+    fattyacids_heatmap_finnish = fattyacids_heatmap_finnish, 
+    POPs_fattyacids_heatmap_finnish = POPs_fattyacids_heatmap_finnish),
+  comp = list(
+    covar_comp = covar_comp,
+    POPs_table_comp = POPs_table_comp,
+    POPs_boxplot_comp = POPs_boxplot_comp,
+    fattyacids_table_comp = fattyacids_table_comp,
+    fattyacids_boxplot_comp = fattyacids_boxplot_comp))
+
+
+rm(
+  covar_danish,
+  POPs_table_danish,
+  POPs_table_danish_by_als,
+  POPs_boxplot_danish,
+  POPs_boxplot_danish_by_als,
+  POPs_heatmap_danish, 
+  fattyacids_table_danish,
+  fattyacids_table_danish_by_als,
+  fattyacids_boxplot_danish,
+  fattyacids_boxplot_danish_by_als,
+  fattyacids_heatmap_danish,
+  POPs_fattyacids_heatmap_danish, 
+  
+  covar_finnish,
+  POPs_table_finnish,
+  POPs_table_finnish_by_als,
+  POPs_boxplot_finnish,
+  POPs_boxplot_finnish_by_als,
+  POPs_heatmap_finnish, 
+  fattyacids_table_finnish,
+  fattyacids_table_finnish_by_als,
+  fattyacids_boxplot_finnish,
+  fattyacids_boxplot_finnish_by_als,
+  fattyacids_heatmap_finnish, 
+  POPs_fattyacids_heatmap_finnish, 
+  
+  covar_comp,
+  POPs_table_comp,
+  POPs_boxplot_comp,
+  fattyacids_table_comp,
+  fattyacids_boxplot_comp
+)

@@ -328,6 +328,17 @@ bdd_finnish  <-
 POPs <- bdd_danish |> select(contains("PCB_"), contains("OCP_"), contains("PBDE_")) |> colnames()
 POPs_quart <- paste0(POPs, "_quart")
 
+POPs_tot <- c("PCB_4",  
+              "PCB_DL", "PCB_118", "PCB_156", 
+              "PCB_NDL", "PCB_28", "PCB_52", "PCB_74", "PCB_99", "PCB_101", 
+              "PCB_138", "PCB_153", "PCB_170", "PCB_180", "PCB_183", "PCB_187", 
+              "OCP_HCB",  
+              "ΣDDT", "OCP_pp_DDT",  "OCP_pp_DDE",
+              "OCP_α_HCH", "OCP_β_HCH", "OCP_γ_HCH", 
+              "Σchlordane", "OCP_oxychlordane", "OCP_transnonachlor", 
+              "OCP_PeCB",   
+              "ΣPBDE", "PBDE_47", "PBDE_99", "PBDE_153")
+
 POPs_group <- c("PCB_DL", "PCB_NDL", "PCB_4", "OCP_HCB", "ΣDDT", "OCP_β_HCH", "Σchlordane", "ΣPBDE")
 POPs_group_quart <- paste0(POPs_group, "_quart")
 POPs_group_outlier <- paste0(POPs_group, "_outlier")
@@ -338,7 +349,10 @@ POPs_included <- bdd_danish |> select(all_of(POPs)) |> select(-OCP_PeCB, - OCP_�
 POPs_included_quart <- paste0(POPs_included, "_quart")
 POPs_included_outlier <- paste0(POPs_included, "_outlier")
 
-fattyacids <- bdd_danish |> select(contains("_sat"), contains("_ω9"), contains("_ω7"), contains("_ω6"), contains("_ω3")) |> colnames()
+fattyacids <- bdd_danish |> 
+  select(contains("_sat"), contains("_ω9"), contains("_ω7"), contains("_ω6"), contains("_ω3")) |> 
+  colnames()
+fattyacids <- c("pufas", "pufas_ω9", "pufas_ω6", "pufas_ω3", fattyacids)
 explanatory <- c("pufas", "pufas_ω9", "pufas_ω3", "pufas_ω6", 
                  "rumenic_acid_ω6", "linoleic_acid_ω6", "dihomo_γ_linolenic_acid_ω6", "arachidonic_acid_ω6", "adrenic_acid_ω6",
                  "α_linolenic_acid_ω3", "timnodonic_acid_ω3", "clupanodonic_acid_ω3", "cervonic_acid_ω3") 
@@ -647,9 +661,9 @@ var_label(bdd_danish) <- list(
   PCB_180 = "PCB-180", 
   PCB_183 = "PCB-183", 
   PCB_187 = "PCB-187", 
-  PBDE_47 = "BDE-47", 
-  PBDE_99 = "BDE-99", 
-  PBDE_153 = "BDE-153", 
+  PBDE_47 = "PBDE-47", 
+  PBDE_99 = "PBDE-99", 
+  PBDE_153 = "PBDE-153", 
   PCB_DL =  "Dioxin-like PCBs", 
   PCB_NDL = "Non dioxin-like PCBs", 
   PCB_4 = "PCB-118,138,153,180",
@@ -704,7 +718,7 @@ var_label(bdd_finnish) <- list(
   OCP_β_HCH = "β-HCH", 
   OCP_γ_HCH = "γ-HCH", 
   OCP_oxychlordane = "Oxychlordane", 
-  OCP_transnonachlor = "Trans-nonachlor", 
+  OCP_transnonachlor = "Transnonachlor", 
   OCP_pp_DDT = "p,p'-DDT", 
   OCP_pp_DDE = "p,p'-DDE", 
   PCB_28 = "PCB-28", 
@@ -720,9 +734,9 @@ var_label(bdd_finnish) <- list(
   PCB_180 = "PCB-180", 
   PCB_183 = "PCB-183", 
   PCB_187 = "PCB-187", 
-  PBDE_47 = "BDE-47", 
-  PBDE_99 = "BDE-99", 
-  PBDE_153 = "BDE-153", 
+  PBDE_47 = "PBDE-47", 
+  PBDE_99 = "PBDE-99", 
+  PBDE_153 = "PBDE-153", 
   PCB_DL =  "Dioxin-like PCBs", 
   PCB_NDL = "Non dioxin-like PCBs", 
   PCB_4 = "PCB-118,138,153,180",
@@ -783,7 +797,7 @@ var_label(bdd) <- list(
   OCP_β_HCH = "β-HCH", 
   OCP_γ_HCH = "γ-HCH", 
   OCP_oxychlordane = "Oxychlordane", 
-  OCP_transnonachlor = "Trans-nonachlor", 
+  OCP_transnonachlor = "Transnonachlor", 
   OCP_pp_DDT = "p,p'-DDT", 
   OCP_pp_DDE = "p,p'-DDE", 
   PCB_28 = "PCB-28", 
@@ -799,9 +813,9 @@ var_label(bdd) <- list(
   PCB_180 = "PCB-180", 
   PCB_183 = "PCB-183", 
   PCB_187 = "PCB-187", 
-  PBDE_47 = "BDE-47", 
-  PBDE_99 = "BDE-99", 
-  PBDE_153 = "BDE-153", 
+  PBDE_47 = "PBDE-47", 
+  PBDE_99 = "PBDE-99", 
+  PBDE_153 = "PBDE-153", 
   PCB_DL =  "Dioxin-like PCBs", 
   PCB_NDL = "Non dioxin-like PCBs", 
   PCB_4 = "PCB-118,138,153,180",
@@ -838,7 +852,11 @@ var_label(bdd) <- list(
   "pufas" = "Insaturared acids")
 
 
-fatty_acid_labels <- c(
+fattyacids_labels <- c(
+  "Insaturared acids" = "pufas", 
+  "ω9 instaturated acids" = "pufas_ω9", 
+  "ω6 insaturated acids" = "pufas_ω6", 
+  "ω3 instaurated acids" = "pufas_ω3", 
   "Myristic acid" = "myristic_acid_sat", 
   "Pentadecylic acid" = "pentadecylic_acid_sat", 
   "Palmitic acid" = "palmitic_acid_sat", 
@@ -865,9 +883,40 @@ fatty_acid_labels <- c(
   "α-linolenic acid (ALA) ω3" = "α_linolenic_acid_ω3", 
   "Timnodonic acid (EPA) ω3" = "timnodonic_acid_ω3", 
   "Clupanodonic acid (DPA) ω3" = "clupanodonic_acid_ω3", 
-  "Cervonic acid (DHA) ω3" = "cervonic_acid_ω3", 
-  "ω9 instaturated acids" = "pufas_ω9", 
-  "ω6 insaturated acids" = "pufas_ω6", 
-  "ω3 instaurated acids" = "pufas_ω3", 
-  "Insaturared acids" = "pufas"
+  "Cervonic acid (DHA) ω3" = "cervonic_acid_ω3")
+
+POPs_labels <- c(
+  "PCB-118,138,153,180" = "PCB_4",
+  "Dioxin-like PCBs" = "PCB_DL",
+  "PCB-118" = "PCB_118",
+  "PCB-156" = "PCB_156",
+  "Non dioxin-like PCBs" = "PCB_NDL",
+  "PCB-28" = "PCB_28",
+  "PCB-52" = "PCB_52",
+  "PCB-74" = "PCB_74",
+  "PCB-99" = "PCB_99",
+  "PCB-101" = "PCB_101",
+  "PCB-138" = "PCB_138",
+  "PCB-153" = "PCB_153",
+  "PCB-170" = "PCB_170",
+  "PCB-180" = "PCB_180",
+  "PCB-183" = "PCB_183",
+  "PCB-187" = "PCB_187",
+  "HCB" = "OCP_HCB",
+  "ΣDDT" = "ΣDDT",
+  "p,p'-DDT" = "OCP_pp_DDT",
+  "p,p'-DDE" = "OCP_pp_DDE",
+  "α-HCH" = "OCP_α_HCH",
+  "β-HCH" = "OCP_β_HCH",
+  "γ-HCH" = "OCP_γ_HCH",
+  "Σchlordane" = "Σchlordane",
+  "Oxychlordane" = "OCP_oxychlordane",
+  "Transnonachlor" = "OCP_transnonachlor",
+  "Pentachlorobenzene (PeCB)" = "OCP_PeCB",
+  "ΣPBDE" = "ΣPBDE",
+  "PBDE-47" = "PBDE_47",
+  "PBDE-99" = "PBDE_99",
+  "PBDE-153" = "PBDE_153"
 )
+
+
