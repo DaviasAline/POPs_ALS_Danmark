@@ -352,17 +352,19 @@ POPs_included_outlier <- paste0(POPs_included, "_outlier")
 fattyacids <- bdd_danish |> 
   select(contains("_sat"), contains("_ω9"), contains("_ω7"), contains("_ω6"), contains("_ω3")) |> 
   colnames()
-fattyacids <- c("pufas", "pufas_ω9", "pufas_ω6", "pufas_ω3", fattyacids)
-explanatory <- c("pufas", "pufas_ω9", "pufas_ω3", "pufas_ω6", 
-                 "rumenic_acid_ω6", "linoleic_acid_ω6", "dihomo_γ_linolenic_acid_ω6", "arachidonic_acid_ω6", "adrenic_acid_ω6",
-                 "α_linolenic_acid_ω3", "timnodonic_acid_ω3", "clupanodonic_acid_ω3", "cervonic_acid_ω3") 
+fattyacids <- c("pufas", "pufas_ω9", "pufas_ω7", "pufas_ω6", "pufas_ω3", "ratio_ω6_ω3", fattyacids)
+explanatory <- c("pufas_sd", "pufas_ω9_sd", "pufas_ω7_sd", "pufas_ω6_sd", "pufas_ω3_sd", "ratio_ω6_ω3_sd",
+                 "rumenic_acid_ω6_sd", "linoleic_acid_ω6_sd", "dihomo_γ_linolenic_acid_ω6_sd", "arachidonic_acid_ω6_sd", "adrenic_acid_ω6_sd",
+                 "α_linolenic_acid_ω3_sd", "timnodonic_acid_ω3_sd", "clupanodonic_acid_ω3_sd", "cervonic_acid_ω3_sd") 
+explanatory_quart <- c("pufas_quart", "pufas_ω9_quart", "pufas_ω7_quart", "pufas_ω6_quart", "pufas_ω3_quart", "ratio_ω6_ω3_quart",
+                 "rumenic_acid_ω6_quart", "linoleic_acid_ω6_quart", "dihomo_γ_linolenic_acid_ω6_quart", "arachidonic_acid_ω6_quart", "adrenic_acid_ω6_quart",
+                 "α_linolenic_acid_ω3_quart", "timnodonic_acid_ω3_quart", "clupanodonic_acid_ω3_quart", "cervonic_acid_ω3_quart") 
 
 covariates_danish <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')
-
+covariates_finnish <- c("marital_status_2cat", 'smoking_2cat', 'bmi', 'cholesterol')     # education removed because missing in one finnish cohort 
 
 POPs_finnish <- ifelse(POPs %in% c("PCB_28", "PCB_52", "OCP_PeCB", "OCP_α_HCH", "OCP_γ_HCH", 
                            "OCP_oxychlordane", "PBDE_47", "PBDE_99", "PBDE_153"), paste0(POPs, "_raw"), POPs)
-covariates_finnish <- c('sex', 'baseline_age', 'smoking', 'bmi', 'cholesterol', 'marital_status')                                 # education removed because missing in one finnish cohort 
 
 # variable creation ----
 ## danish data ----
@@ -384,6 +386,7 @@ bdd_danish <- bdd_danish |>
     diagnosis_age = as.numeric(difftime(als_date, birth_date, units = "days")) / 365.25, 
     death_age = as.numeric(difftime(death_date, birth_date, units = "days")) / 365.25, 
     follow_up = as.numeric(difftime(als_date, baseline_date, units = "days"))/365.25,
+    ALS_duration = death_age - diagnosis_age, 
     marital_status_2cat = 
       fct_recode(marital_status, 
                  "Other" = "Widowed",
@@ -398,8 +401,7 @@ bdd_danish <- bdd_danish |>
                 .names = "{.col}_quart")) |>
   mutate(
     PCB_DL = PCB_118 + PCB_156, 
-    PCB_NDL = PCB_28 + PCB_52 + PCB_74 + PCB_99 + PCB_101 + PCB_138 + PCB_153 + 
-      PCB_170 + PCB_180 + PCB_183 + PCB_187, 
+    PCB_NDL = PCB_28 + PCB_52 + PCB_74 + PCB_99 + PCB_101 + PCB_138 + PCB_153 + PCB_170 + PCB_180 + PCB_183 + PCB_187, 
     PCB_4 = PCB_118 + PCB_138 + PCB_153 + PCB_180, 
     ΣPBDE = PBDE_47 + PBDE_99 + PBDE_153, 
     ΣDDT = OCP_pp_DDT + OCP_pp_DDE,  
@@ -421,8 +423,23 @@ bdd_danish <- bdd_danish |>
     lower_bound <- Q1 - 1.5 * IQR
     upper_bound <- Q3 + 1.5 * IQR
     ifelse(. < lower_bound | . > upper_bound, NA, .)
-  }, .names = "{.col}_outlier")) 
-
+  }, .names = "{.col}_outlier")) |>
+  mutate(
+    acids_sat = myristic_acid_sat + pentadecylic_acid_sat + palmitic_acid_sat + margaric_acid_sat + stearic_acid_sat +  
+      arachidic_acid_sat + dehenic_acid_sat + lignoceric_acid_sat,  
+    pufas_ω9 = dma16x_acid_ω9 + ptol2_acid_ω9 + dma18x_acid_ω9 + oleic_acid_ω9 + gadoleic_acid_ω9 + nervonic_acid_ω9, 
+    pufas_ω7 = palmitoleic_acid_ω7 + i17_acid_ω7 + ai17_acid_ω7 + vaccenic_acid_ω7,   
+    pufas_ω6 = rumenic_acid_ω6 + linoleic_acid_ω6 + dihomo_γ_linolenic_acid_ω6 + arachidonic_acid_ω6 + adrenic_acid_ω6, 
+    pufas_ω3 = α_linolenic_acid_ω3 + timnodonic_acid_ω3 + clupanodonic_acid_ω3 + cervonic_acid_ω3, 
+    pufas = pufas_ω9 + pufas_ω7 + pufas_ω6 + pufas_ω3, 
+    fatty_acids = acids_sat + pufas, 
+    ratio_ω6_ω3 = pufas_ω6/pufas_ω3) |>
+  mutate(across(all_of(fattyacids),
+                scale,
+                .names = "{.col}_sd")) |>
+  mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                           
+                                             labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart"))
 
 bdd_danish <- bdd_danish %>%
   replace_with_median(OCP_HCB, OCP_HCB_quart) %>%
@@ -437,58 +454,67 @@ bdd_danish <- bdd_danish %>%
   replace_with_median(OCP_β_HCH, OCP_β_HCH_quart)
 
 
-bdd_danish <- bdd_danish |>
-  mutate(
-    pufas_ω9 = dma16x_acid_ω9 + ptol2_acid_ω9 + dma18x_acid_ω9 + oleic_acid_ω9 + gadoleic_acid_ω9 + nervonic_acid_ω9, 
-    pufas_ω3 = α_linolenic_acid_ω3 + timnodonic_acid_ω3 + clupanodonic_acid_ω3 + cervonic_acid_ω3, 
-    pufas_ω6 = rumenic_acid_ω6 + linoleic_acid_ω6 + dihomo_γ_linolenic_acid_ω6 + arachidonic_acid_ω6 + adrenic_acid_ω6, 
-    pufas = dma16x_acid_ω9 + ptol2_acid_ω9 + dma18x_acid_ω9 + oleic_acid_ω9 + gadoleic_acid_ω9 + nervonic_acid_ω9 +
-      palmitoleic_acid_ω7 + i17_acid_ω7 + ai17_acid_ω7 + vaccenic_acid_ω7 +
-      rumenic_acid_ω6 + linoleic_acid_ω6 + dihomo_γ_linolenic_acid_ω6 + arachidonic_acid_ω6 + adrenic_acid_ω6 +
-      α_linolenic_acid_ω3 + timnodonic_acid_ω3 + clupanodonic_acid_ω3 + cervonic_acid_ω3) 
-
 ## finnish data ----
 bdd_finnish <- bdd_finnish |>
-    mutate(across(all_of(POPs_finnish), ~ factor(ntile(.x, 4),                  # POP variables creation
-                                         labels = c("Q1", "Q2", "Q3", "Q4")),
-                  .names = "{.col}_quart")) |>
-      mutate(
-        PCB_DL = PCB_118 + PCB_156, 
-        PCB_NDL = PCB_28_raw + PCB_52_raw + PCB_74 + PCB_99 + PCB_101 + PCB_138 + PCB_153 + 
-          PCB_170 + PCB_180 + PCB_183 + PCB_187, 
-        PCB_4 = PCB_118 + PCB_138 + PCB_153 + PCB_180, 
-        ΣPBDE = PBDE_47_raw + PBDE_99_raw + PBDE_153_raw, 
-        ΣDDT = OCP_pp_DDT + OCP_pp_DDE,  
-        ΣHCH = OCP_β_HCH + OCP_γ_HCH_raw, 
-        Σchlordane = OCP_transnonachlor + OCP_oxychlordane_raw) %>% # alpha HCH, gamma HCH exluded, beta HCH studied alone
-      mutate(
-        across(c("PCB_DL", 
-                 "PCB_NDL", 
-                 "PCB_4", 
-                 "ΣPBDE", 
-                 "ΣDDT", 
-                 "ΣHCH", 
-                 "Σchlordane"), ~ factor(ntile(.x, 4), labels = c("Q1", "Q2", "Q3", "Q4")),
-               .names = "{.col}_quart")) %>%
-      mutate(across(all_of(POPs_group), ~ {
-        Q1 <- quantile(., 0.25, na.rm = TRUE)
-        Q3 <- quantile(., 0.75, na.rm = TRUE)
-        IQR <- Q3 - Q1
-        lower_bound <- Q1 - 1.5 * IQR
-        upper_bound <- Q3 + 1.5 * IQR
-        ifelse(. < lower_bound | . > upper_bound, NA, .)
-      }, .names = "{.col}_outlier")) |>
   mutate(
-    smoking_2cat = fct_recode(smoking, 
+    smoking_2cat = fct_recode(smoking,                                          # metadata creation
                               "Ever" = "Current", 
                               "Ever" = "Previous"), 
     marital_status_2cat = 
       fct_recode(marital_status, 
                  "Other" = "Widowed",
                  "Other" = "Divorced",
-                 "Other" = "Unmarried"))
+                 "Other" = "Unmarried"), 
+    ALS_duration = death_age - diagnosis_age) |>
+  
+  mutate(across(all_of(POPs_finnish), ~ factor(ntile(.x, 4),                    # POP variables creation
+                                               labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) |>
+  mutate(
+    PCB_DL = PCB_118 + PCB_156, 
+    PCB_NDL = PCB_28_raw + PCB_52_raw + PCB_74 + PCB_99 + PCB_101 + PCB_138 + PCB_153 + 
+      PCB_170 + PCB_180 + PCB_183 + PCB_187, 
+    PCB_4 = PCB_118 + PCB_138 + PCB_153 + PCB_180, 
+    ΣPBDE = PBDE_47_raw + PBDE_99_raw + PBDE_153_raw, 
+    ΣDDT = OCP_pp_DDT + OCP_pp_DDE,  
+    ΣHCH = OCP_β_HCH + OCP_γ_HCH_raw, 
+    Σchlordane = OCP_transnonachlor + OCP_oxychlordane_raw) %>% # alpha HCH, gamma HCH exluded, beta HCH studied alone
+  mutate(
+    across(c("PCB_DL", 
+             "PCB_NDL", 
+             "PCB_4", 
+             "ΣPBDE", 
+             "ΣDDT", 
+             "ΣHCH", 
+             "Σchlordane"), ~ factor(ntile(.x, 4), labels = c("Q1", "Q2", "Q3", "Q4")),
+           .names = "{.col}_quart")) |>
+  mutate(across(all_of(POPs_group), ~ {
+    Q1 <- quantile(., 0.25, na.rm = TRUE)
+    Q3 <- quantile(., 0.75, na.rm = TRUE)
+    IQR <- Q3 - Q1
+    lower_bound <- Q1 - 1.5 * IQR
+    upper_bound <- Q3 + 1.5 * IQR
+    ifelse(. < lower_bound | . > upper_bound, NA, .)
+  }, .names = "{.col}_outlier")) |>
+  
+  mutate(                                                                       # fatty acids variables 
+    acids_sat = myristic_acid_sat + pentadecylic_acid_sat + palmitic_acid_sat + margaric_acid_sat + stearic_acid_sat +  
+      arachidic_acid_sat + dehenic_acid_sat + lignoceric_acid_sat,  
+    pufas_ω9 = dma16x_acid_ω9 + ptol2_acid_ω9 + dma18x_acid_ω9 + oleic_acid_ω9 + gadoleic_acid_ω9 + nervonic_acid_ω9, 
+    pufas_ω7 = palmitoleic_acid_ω7 + i17_acid_ω7 + ai17_acid_ω7 + vaccenic_acid_ω7,   
+    pufas_ω6 = rumenic_acid_ω6 + linoleic_acid_ω6 + dihomo_γ_linolenic_acid_ω6 + arachidonic_acid_ω6 + adrenic_acid_ω6, 
+    pufas_ω3 = α_linolenic_acid_ω3 + timnodonic_acid_ω3 + clupanodonic_acid_ω3 + cervonic_acid_ω3, 
+    pufas = pufas_ω9 + pufas_ω7 + pufas_ω6 + pufas_ω3, 
+    fatty_acids = acids_sat + pufas, 
+    ratio_ω6_ω3 = pufas_ω6/pufas_ω3) |>
+  mutate(across(
+    all_of(fattyacids),
+    scale,
+    .names = "{.col}_sd"))|>
+  mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                           
+                                             labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart"))
     
-
 bdd_finnish <- bdd_finnish %>%
       replace_with_median(OCP_HCB, OCP_HCB_quart) %>%
       replace_with_median(PCB_DL, PCB_DL_quart) %>%
@@ -501,17 +527,6 @@ bdd_finnish <- bdd_finnish %>%
       replace_with_median(OCP_PeCB_raw, OCP_PeCB_raw_quart) %>%
       replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) %>%
       replace_with_median(OCP_γ_HCH_raw, OCP_γ_HCH_raw_quart)
-
-    
-bdd_finnish <- bdd_finnish |>
-      mutate(
-        pufas_ω9 = dma16x_acid_ω9 + ptol2_acid_ω9 + dma18x_acid_ω9 + oleic_acid_ω9 + gadoleic_acid_ω9 + nervonic_acid_ω9, 
-        pufas_ω3 = α_linolenic_acid_ω3 + timnodonic_acid_ω3 + clupanodonic_acid_ω3 + cervonic_acid_ω3, 
-        pufas_ω6 = rumenic_acid_ω6 + linoleic_acid_ω6 + dihomo_γ_linolenic_acid_ω6 + arachidonic_acid_ω6 + adrenic_acid_ω6, 
-        pufas = dma16x_acid_ω9 + ptol2_acid_ω9 + dma18x_acid_ω9 + oleic_acid_ω9 + gadoleic_acid_ω9 + nervonic_acid_ω9 +
-          palmitoleic_acid_ω7 + i17_acid_ω7 + ai17_acid_ω7 + vaccenic_acid_ω7 +
-          rumenic_acid_ω6 + linoleic_acid_ω6 + dihomo_γ_linolenic_acid_ω6 + arachidonic_acid_ω6 + adrenic_acid_ω6 +
-          α_linolenic_acid_ω3 + timnodonic_acid_ω3 + clupanodonic_acid_ω3 + cervonic_acid_ω3)
     
 
 # missing values imputation (covariates) ----
@@ -600,8 +615,8 @@ bdd_danish_red <- bdd_danish |>
          education = education_i)
 
 bdd_finnish_red <- bdd_finnish |> 
-  select(sample, als, study, 
-         all_of(covariates_finnish), education, alcohol, smoking_2cat, marital_status_2cat, blod_sys, blod_dias, 
+  select(sample, als, study, match, 
+        baseline_age, sex,  'smoking', 'bmi', 'cholesterol', 'marital_status', education, alcohol, smoking_2cat, marital_status_2cat, blod_sys, blod_dias, 
          "baseline_age", "death_age", "diagnosis_age",                   
          all_of(POPs_finnish), 
          all_of(POPs_group), 
@@ -667,37 +682,55 @@ var_label(bdd_danish) <- list(
   PCB_DL =  "Dioxin-like PCBs", 
   PCB_NDL = "Non dioxin-like PCBs", 
   PCB_4 = "PCB-118,138,153,180",
-  "myristic_acid_sat" =  "Myristic acid", 
-  "pentadecylic_acid_sat" = "Pentadecylic acid", 
-  "palmitic_acid_sat" =  "Palmitic acid", 
-  "margaric_acid_sat" =  "Margaric acid", 
-  "stearic_acid_sat" = "Stearic acid",           
-  "arachidic_acid_sat" = "Arachidic acid",
-  "dehenic_acid_sat" = "Dehenic acid", 
-  "lignoceric_acid_sat" = "Lignoceric acid", 
-  "dma16x_acid_ω9" = "dma16x acid ω9", 
-  "ptol2_acid_ω9"  = "ptol2 acid ω9", 
-  "dma18x_acid_ω9" = "dma18x acid ω9", 
-  "oleic_acid_ω9" = "Oleic acid ω9", 
-  "gadoleic_acid_ω9" = "Gadoleic acid ω9", 
-  "nervonic_acid_ω9" = "Nervonic acid ω9",
-  "palmitoleic_acid_ω7" = "Palmitoleic acid ω7", 
-  "i17_acid_ω7" = "i17 acid ω7", 
-  "ai17_acid_ω7" = "ai17 acid ω7", 
-  "vaccenic_acid_ω7" = "Vaccenic acid ω7", 
-  "rumenic_acid_ω6" = "Rumenic acid ω6", 
-  "linoleic_acid_ω6" = "Linoleic acid ω6",          
-  "dihomo_γ_linolenic_acid_ω6" = "Dihomo-γ-linolenic acid ω6", 
-  "arachidonic_acid_ω6" = "Arachidonic acid ω6", 
-  "adrenic_acid_ω6" =  "Adrenic acid ω6", 
-  "α_linolenic_acid_ω3" = "α-linolenic acid (ALA) ω3", 
-  "timnodonic_acid_ω3" = "Timnodonic acid (EPA) ω3", 
-  "clupanodonic_acid_ω3"  ="Clupanodonic acid (DPA) ω3", 
-  "cervonic_acid_ω3" = "Cervonic acid (DHA) ω3", 
-  "pufas_ω9" = "ω9 instaturated acids", 
-  "pufas_ω6" = "ω6 insaturated acids", 
-  "pufas_ω3" = "ω3 instaurated acids", 
-  "pufas" = "Insaturared acids")
+  "myristic_acid_sat" =  "Myristic acid (%)", 
+  "pentadecylic_acid_sat" = "Pentadecylic acid (%)", 
+  "palmitic_acid_sat" =  "Palmitic acid (%)", 
+  "margaric_acid_sat" =  "Margaric acid (%)", 
+  "stearic_acid_sat" = "Stearic acid (%)",           
+  "arachidic_acid_sat" = "Arachidic acid (%)",
+  "dehenic_acid_sat" = "Dehenic acid (%)", 
+  "lignoceric_acid_sat" = "Lignoceric acid (%)", 
+  "dma16x_acid_ω9" = "dma16x acid ω9 (%)", 
+  "ptol2_acid_ω9"  = "ptol2 acid ω9 (%)", 
+  "dma18x_acid_ω9" = "dma18x acid ω9 (%)", 
+  "oleic_acid_ω9" = "Oleic acid ω9 (%)", 
+  "gadoleic_acid_ω9" = "Gadoleic acid ω9 (%)", 
+  "nervonic_acid_ω9" = "Nervonic acid ω9 (%)",
+  "palmitoleic_acid_ω7" = "Palmitoleic acid ω7 (%)", 
+  "i17_acid_ω7" = "i17 acid ω7 (%)", 
+  "ai17_acid_ω7" = "ai17 acid ω7 (%)", 
+  "vaccenic_acid_ω7" = "Vaccenic acid ω7 (%)", 
+  "rumenic_acid_ω6" = "Rumenic acid ω6 (%)", 
+  "linoleic_acid_ω6" = "Linoleic acid ω6 (%)",          
+  "dihomo_γ_linolenic_acid_ω6" = "Dihomo-γ-linolenic acid ω6 (%)", 
+  "arachidonic_acid_ω6" = "Arachidonic acid ω6 (%)", 
+  "adrenic_acid_ω6" =  "Adrenic acid ω6 (%)", 
+  "α_linolenic_acid_ω3" = "α-linolenic acid (ALA) ω3 (%)", 
+  "timnodonic_acid_ω3" = "Timnodonic acid (EPA) ω3 (%)", 
+  "clupanodonic_acid_ω3"  ="Clupanodonic acid (DPA) ω3 (%)", 
+  "cervonic_acid_ω3" = "Cervonic acid (DHA) ω3 (%)", 
+  "pufas_ω9" = "ω9 instaturated acids (%)", 
+  "pufas_ω7" = "ω7 insaturated acids (%)", 
+  "pufas_ω6" = "ω6 insaturated acids (%)", 
+  "pufas_ω3" = "ω3 instaurated acids (%)", 
+  "pufas" = "Insaturared acids (%)", 
+  "ratio_ω6_ω3" = "ω6/ω3 ratio (%)", 
+  
+  "rumenic_acid_ω6_sd" = "Rumenic acid ω6 (%)", 
+  "linoleic_acid_ω6_sd" = "Linoleic acid ω6 (%)",          
+  "dihomo_γ_linolenic_acid_ω6_sd" = "Dihomo-γ-linolenic acid ω6 (%)", 
+  "arachidonic_acid_ω6_sd" = "Arachidonic acid ω6 (%)", 
+  "adrenic_acid_ω6_sd" =  "Adrenic acid ω6 (%)", 
+  "α_linolenic_acid_ω3_sd" = "α-linolenic acid (ALA) ω3 (%)", 
+  "timnodonic_acid_ω3_sd" = "Timnodonic acid (EPA) ω3 (%)", 
+  "clupanodonic_acid_ω3_sd"  ="Clupanodonic acid (DPA) ω3 (%)", 
+  "cervonic_acid_ω3_sd" = "Cervonic acid (DHA) ω3 (%)", 
+  "pufas_ω9_sd" = "ω9 instaturated acids (%)", 
+  "pufas_ω7_sd" = "ω7 insaturated acids (%)", 
+  "pufas_ω6_sd" = "ω6 insaturated acids (%)", 
+  "pufas_ω3_sd" = "ω3 instaurated acids (%)", 
+  "pufas_sd" = "Insaturared acids (%)"
+  )
 
 var_label(bdd_finnish) <- list(
   sample = "Identifcation", 
@@ -740,37 +773,56 @@ var_label(bdd_finnish) <- list(
   PCB_DL =  "Dioxin-like PCBs", 
   PCB_NDL = "Non dioxin-like PCBs", 
   PCB_4 = "PCB-118,138,153,180",
-  "myristic_acid_sat" =  "Myristic acid", 
-  "pentadecylic_acid_sat" = "Pentadecylic acid", 
-  "palmitic_acid_sat" =  "Palmitic acid", 
-  "margaric_acid_sat" =  "Margaric acid", 
-  "stearic_acid_sat" = "Stearic acid",           
-  "arachidic_acid_sat" = "Arachidic acid",
-  "dehenic_acid_sat" = "Dehenic acid", 
-  "lignoceric_acid_sat" = "Lignoceric acid", 
-  "dma16x_acid_ω9" = "dma16x acid ω9", 
-  "ptol2_acid_ω9"  = "ptol2 acid ω9", 
-  "dma18x_acid_ω9" = "dma18x acid ω9", 
-  "oleic_acid_ω9" = "Oleic acid ω9", 
-  "gadoleic_acid_ω9" = "Gadoleic acid ω9", 
-  "nervonic_acid_ω9" = "Nervonic acid ω9",
-  "palmitoleic_acid_ω7" = "Palmitoleic acid ω7", 
-  "i17_acid_ω7" = "i17 acid ω7", 
-  "ai17_acid_ω7" = "ai17 acid ω7", 
-  "vaccenic_acid_ω7" = "Vaccenic acid ω7", 
-  "rumenic_acid_ω6" = "Rumenic acid ω6", 
-  "linoleic_acid_ω6" = "Linoleic acid ω6",          
-  "dihomo_γ_linolenic_acid_ω6" = "Dihomo-γ-linolenic acid ω6", 
-  "arachidonic_acid_ω6" = "Arachidonic acid ω6", 
-  "adrenic_acid_ω6" =  "Adrenic acid ω6", 
-  "α_linolenic_acid_ω3" = "α-linolenic acid (ALA) ω3", 
-  "timnodonic_acid_ω3" = "Timnodonic acid (EPA) ω3", 
-  "clupanodonic_acid_ω3"  ="Clupanodonic acid (DPA) ω3", 
-  "cervonic_acid_ω3" = "Cervonic acid (DHA) ω3", 
-  "pufas_ω9" = "ω9 instaturated acids", 
-  "pufas_ω6" = "ω6 insaturated acids", 
-  "pufas_ω3" = "ω3 instaurated acids", 
-  "pufas" = "Insaturared acids")
+  "myristic_acid_sat" =  "Myristic acid (%)", 
+  "pentadecylic_acid_sat" = "Pentadecylic acid (%)", 
+  "palmitic_acid_sat" =  "Palmitic acid (%)", 
+  "margaric_acid_sat" =  "Margaric acid (%)", 
+  "stearic_acid_sat" = "Stearic acid (%)",           
+  "arachidic_acid_sat" = "Arachidic acid (%)",
+  "dehenic_acid_sat" = "Dehenic acid (%)", 
+  "lignoceric_acid_sat" = "Lignoceric acid (%)", 
+  "dma16x_acid_ω9" = "dma16x acid ω9 (%)", 
+  "ptol2_acid_ω9"  = "ptol2 acid ω9 (%)", 
+  "dma18x_acid_ω9" = "dma18x acid ω9 (%)", 
+  "oleic_acid_ω9" = "Oleic acid ω9 (%)", 
+  "gadoleic_acid_ω9" = "Gadoleic acid ω9 (%)", 
+  "nervonic_acid_ω9" = "Nervonic acid ω9 (%)",
+  "palmitoleic_acid_ω7" = "Palmitoleic acid ω7 (%)", 
+  "i17_acid_ω7" = "i17 acid ω7 (%)", 
+  "ai17_acid_ω7" = "ai17 acid ω7 (%)", 
+  "vaccenic_acid_ω7" = "Vaccenic acid ω7 (%)", 
+  "rumenic_acid_ω6" = "Rumenic acid ω6 (%)", 
+  "linoleic_acid_ω6" = "Linoleic acid ω6 (%)",          
+  "dihomo_γ_linolenic_acid_ω6" = "Dihomo-γ-linolenic acid ω6 (%)", 
+  "arachidonic_acid_ω6" = "Arachidonic acid ω6 (%)", 
+  "adrenic_acid_ω6" =  "Adrenic acid ω6 (%)", 
+  "α_linolenic_acid_ω3" = "α-linolenic acid (ALA) ω3 (%)", 
+  "timnodonic_acid_ω3" = "Timnodonic acid (EPA) ω3 (%)", 
+  "clupanodonic_acid_ω3"  ="Clupanodonic acid (DPA) ω3 (%)", 
+  "cervonic_acid_ω3" = "Cervonic acid (DHA) ω3 (%)", 
+  "pufas_ω9" = "ω9 insaturated acids (%)", 
+  "pufas_ω7" = "ω7 insaturated acids (%)", 
+  "pufas_ω6" = "ω6 insaturated acids (%)", 
+  "pufas_ω3" = "ω3 instaurated acids (%)", 
+  "pufas" = "Insaturared acids (%)", 
+  "ratio_ω6_ω3" = "ω6/ω3 ratio (%)", 
+  
+  "rumenic_acid_ω6_sd" = "Rumenic acid ω6 (%)", 
+  "linoleic_acid_ω6_sd" = "Linoleic acid ω6 (%)",          
+  "dihomo_γ_linolenic_acid_ω6_sd" = "Dihomo-γ-linolenic acid ω6 (%)", 
+  "arachidonic_acid_ω6_sd" = "Arachidonic acid ω6 (%)", 
+  "adrenic_acid_ω6_sd" =  "Adrenic acid ω6 (%)", 
+  "α_linolenic_acid_ω3_sd" = "α-linolenic acid (ALA) ω3 (%)", 
+  "timnodonic_acid_ω3_sd" = "Timnodonic acid (EPA) ω3 (%)", 
+  "clupanodonic_acid_ω3_sd"  ="Clupanodonic acid (DPA) ω3 (%)", 
+  "cervonic_acid_ω3_sd" = "Cervonic acid (DHA) ω3 (%)", 
+  "pufas_ω9_sd" = "ω9 insaturated acids (%)", 
+  "pufas_ω7_sd" = "ω7 insaturated acids (%)", 
+  "pufas_ω6_sd" = "ω6 insaturated acids (%)", 
+  "pufas_ω3_sd" = "ω3 instaurated acids (%)", 
+  "pufas_sd" = "Insaturared acids (%)", 
+  "ratio_ω6_ω3_sd" = "ω6/ω3 ratio (%)")
+
 
 var_label(bdd) <- list(
   sample = "Identifcation", 
@@ -819,71 +871,108 @@ var_label(bdd) <- list(
   PCB_DL =  "Dioxin-like PCBs", 
   PCB_NDL = "Non dioxin-like PCBs", 
   PCB_4 = "PCB-118,138,153,180",
-  "myristic_acid_sat" =  "Myristic acid", 
-  "pentadecylic_acid_sat" = "Pentadecylic acid", 
-  "palmitic_acid_sat" =  "Palmitic acid", 
-  "margaric_acid_sat" =  "Margaric acid", 
-  "stearic_acid_sat" = "Stearic acid",           
-  "arachidic_acid_sat" = "Arachidic acid",
-  "dehenic_acid_sat" = "Dehenic acid", 
-  "lignoceric_acid_sat" = "Lignoceric acid", 
-  "dma16x_acid_ω9" = "dma16x acid ω9", 
-  "ptol2_acid_ω9"  = "ptol2 acid ω9", 
-  "dma18x_acid_ω9" = "dma18x acid ω9", 
-  "oleic_acid_ω9" = "Oleic acid ω9", 
-  "gadoleic_acid_ω9" = "Gadoleic acid ω9", 
-  "nervonic_acid_ω9" = "Nervonic acid ω9",
-  "palmitoleic_acid_ω7" = "Palmitoleic acid ω7", 
-  "i17_acid_ω7" = "i17 acid ω7", 
-  "ai17_acid_ω7" = "ai17 acid ω7", 
-  "vaccenic_acid_ω7" = "Vaccenic acid ω7", 
-  "rumenic_acid_ω6" = "Rumenic acid ω6", 
-  "linoleic_acid_ω6" = "Linoleic acid ω6",          
-  "dihomo_γ_linolenic_acid_ω6" = "Dihomo-γ-linolenic acid ω6", 
-  "arachidonic_acid_ω6" = "Arachidonic acid ω6", 
-  "adrenic_acid_ω6" =  "Adrenic acid ω6", 
-  "α_linolenic_acid_ω3" = "α-linolenic acid (ALA) ω3", 
-  "timnodonic_acid_ω3" = "Timnodonic acid (EPA) ω3", 
-  "clupanodonic_acid_ω3"  ="Clupanodonic acid (DPA) ω3", 
-  "cervonic_acid_ω3" = "Cervonic acid (DHA) ω3", 
-  "pufas_ω9" = "ω9 instaturated acids", 
-  "pufas_ω6" = "ω6 insaturated acids", 
-  "pufas_ω3" = "ω3 instaurated acids", 
-  "pufas" = "Insaturared acids")
+  "myristic_acid_sat" =  "Myristic acid (%)", 
+  "pentadecylic_acid_sat" = "Pentadecylic acid (%)", 
+  "palmitic_acid_sat" =  "Palmitic acid (%)", 
+  "margaric_acid_sat" =  "Margaric acid (%)", 
+  "stearic_acid_sat" = "Stearic acid (%)",           
+  "arachidic_acid_sat" = "Arachidic acid (%)",
+  "dehenic_acid_sat" = "Dehenic acid (%)", 
+  "lignoceric_acid_sat" = "Lignoceric acid (%)", 
+  "dma16x_acid_ω9" = "dma16x acid ω9 (%)", 
+  "ptol2_acid_ω9"  = "ptol2 acid ω9 (%)", 
+  "dma18x_acid_ω9" = "dma18x acid ω9 (%)", 
+  "oleic_acid_ω9" = "Oleic acid ω9 (%)", 
+  "gadoleic_acid_ω9" = "Gadoleic acid ω9 (%)", 
+  "nervonic_acid_ω9" = "Nervonic acid ω9 (%)",
+  "palmitoleic_acid_ω7" = "Palmitoleic acid ω7 (%)", 
+  "i17_acid_ω7" = "i17 acid ω7 (%)", 
+  "ai17_acid_ω7" = "ai17 acid ω7 (%)", 
+  "vaccenic_acid_ω7" = "Vaccenic acid ω7 (%)", 
+  "rumenic_acid_ω6" = "Rumenic acid ω6 (%)", 
+  "linoleic_acid_ω6" = "Linoleic acid ω6 (%)",          
+  "dihomo_γ_linolenic_acid_ω6" = "Dihomo-γ-linolenic acid ω6 (%)", 
+  "arachidonic_acid_ω6" = "Arachidonic acid ω6 (%)", 
+  "adrenic_acid_ω6" =  "Adrenic acid ω6 (%)", 
+  "α_linolenic_acid_ω3" = "α-linolenic acid (ALA) ω3 (%)", 
+  "timnodonic_acid_ω3" = "Timnodonic acid (EPA) ω3 (%)", 
+  "clupanodonic_acid_ω3"  ="Clupanodonic acid (DPA) ω3 (%)", 
+  "cervonic_acid_ω3" = "Cervonic acid (DHA) ω3 (%)", 
+  "pufas_ω9" = "ω9 insaturated acids (%)", 
+  "pufas_ω7" = "ω7 insaturated acids (%)", 
+  "pufas_ω6" = "ω6 insaturated acids (%)", 
+  "pufas_ω3" = "ω3 insaturated acids (%)", 
+  "pufas" = "Insaturared acids (%)", 
+  "ratio_ω6_ω3" = "ω6/ω3 ratio (%)", 
+  
+  "rumenic_acid_ω6_sd" = "Rumenic acid ω6 (%)", 
+  "linoleic_acid_ω6_sd" = "Linoleic acid ω6 (%)",          
+  "dihomo_γ_linolenic_acid_ω6_sd" = "Dihomo-γ-linolenic acid ω6 (%)", 
+  "arachidonic_acid_ω6_sd" = "Arachidonic acid ω6 (%)", 
+  "adrenic_acid_ω6_sd" =  "Adrenic acid ω6 (%)", 
+  "α_linolenic_acid_ω3_sd" = "α-linolenic acid (ALA) ω3 (%)", 
+  "timnodonic_acid_ω3_sd" = "Timnodonic acid (EPA) ω3 (%)", 
+  "clupanodonic_acid_ω3_sd"  ="Clupanodonic acid (DPA) ω3 (%)", 
+  "cervonic_acid_ω3_sd" = "Cervonic acid (DHA) ω3 (%)", 
+  "pufas_ω9_sd" = "ω9 instaturated acids (%)", 
+  "pufas_ω7_sd" = "ω7 insaturated acids (%)", 
+  "pufas_ω6_sd" = "ω6 insaturated acids (%)", 
+  "pufas_ω3_sd" = "ω3 insaturated acids (%)", 
+  "pufas_sd" = "Insaturared acids (%)", 
+  "ratio_ω6_ω3_sd" = "ω6/ω3 ratio (%)")
 
 
 fattyacids_labels <- c(
-  "Insaturared acids" = "pufas", 
-  "ω9 instaturated acids" = "pufas_ω9", 
-  "ω6 insaturated acids" = "pufas_ω6", 
-  "ω3 instaurated acids" = "pufas_ω3", 
-  "Myristic acid" = "myristic_acid_sat", 
-  "Pentadecylic acid" = "pentadecylic_acid_sat", 
-  "Palmitic acid" = "palmitic_acid_sat", 
-  "Margaric acid" = "margaric_acid_sat", 
-  "Stearic acid" = "stearic_acid_sat",           
-  "Arachidic acid" = "arachidic_acid_sat",
-  "Dehenic acid" = "dehenic_acid_sat", 
-  "Lignoceric acid" = "lignoceric_acid_sat", 
-  "dma16x acid ω9" = "dma16x_acid_ω9", 
-  "ptol2 acid ω9"  = "ptol2_acid_ω9", 
-  "dma18x acid ω9" = "dma18x_acid_ω9", 
-  "Oleic acid ω9" = "oleic_acid_ω9", 
-  "Gadoleic acid ω9" = "gadoleic_acid_ω9", 
-  "Nervonic acid ω9" = "nervonic_acid_ω9",
-  "Palmitoleic acid ω7" = "palmitoleic_acid_ω7", 
-  "i17 acid ω7" = "i17_acid_ω7", 
-  "ai17 acid ω7" = "ai17_acid_ω7", 
-  "Vaccenic acid ω7" = "vaccenic_acid_ω7", 
-  "Rumenic acid ω6" = "rumenic_acid_ω6", 
-  "Linoleic acid ω6" = "linoleic_acid_ω6",          
-  "Dihomo-γ-linolenic acid ω6" = "dihomo_γ_linolenic_acid_ω6", 
-  "Arachidonic acid ω6" = "arachidonic_acid_ω6", 
-  "Adrenic acid ω6" = "adrenic_acid_ω6", 
-  "α-linolenic acid (ALA) ω3" = "α_linolenic_acid_ω3", 
-  "Timnodonic acid (EPA) ω3" = "timnodonic_acid_ω3", 
-  "Clupanodonic acid (DPA) ω3" = "clupanodonic_acid_ω3", 
-  "Cervonic acid (DHA) ω3" = "cervonic_acid_ω3")
+  "Insaturared acids (%)" = "pufas", 
+  "ω9 insaturated acids (%)" = "pufas_ω9", 
+  "ω7 insaturated acids (%)" = "pufas_ω7", 
+  "ω6 insaturated acids (%)" = "pufas_ω6", 
+  "ω3 instaurated acids (%)" = "pufas_ω3", 
+  "ω6/ω3 ratio" = "ratio_ω6_ω3",
+  "Myristic acid (%)" = "myristic_acid_sat", 
+  "Pentadecylic acid (%)" = "pentadecylic_acid_sat", 
+  "Palmitic acid (%)" = "palmitic_acid_sat", 
+  "Margaric acid (%)" = "margaric_acid_sat", 
+  "Stearic acid (%)" = "stearic_acid_sat",           
+  "Arachidic acid (%)" = "arachidic_acid_sat",
+  "Dehenic acid (%)" = "dehenic_acid_sat", 
+  "Lignoceric acid (%)" = "lignoceric_acid_sat", 
+  "dma16x acid ω9 (%)" = "dma16x_acid_ω9", 
+  "ptol2 acid ω9 (%)"  = "ptol2_acid_ω9", 
+  "dma18x acid ω9 (%)" = "dma18x_acid_ω9", 
+  "Oleic acid ω9 (%)" = "oleic_acid_ω9", 
+  "Gadoleic acid ω9 (%)" = "gadoleic_acid_ω9", 
+  "Nervonic acid ω9 (%)" = "nervonic_acid_ω9",
+  "Palmitoleic acid ω7 (%)" = "palmitoleic_acid_ω7", 
+  "i17 acid ω7 (%)" = "i17_acid_ω7", 
+  "ai17 acid ω7 (%)" = "ai17_acid_ω7", 
+  "Vaccenic acid ω7 (%)" = "vaccenic_acid_ω7", 
+  "Rumenic acid ω6 (%)" = "rumenic_acid_ω6", 
+  "Linoleic acid ω6 (%)" = "linoleic_acid_ω6",          
+  "Dihomo-γ-linolenic acid ω6 (%)" = "dihomo_γ_linolenic_acid_ω6", 
+  "Arachidonic acid ω6 (%)" = "arachidonic_acid_ω6", 
+  "Adrenic acid ω6 (%)" = "adrenic_acid_ω6", 
+  "α-linolenic acid (ALA) ω3 (%)" = "α_linolenic_acid_ω3", 
+  "Timnodonic acid (EPA) ω3 (%)" = "timnodonic_acid_ω3", 
+  "Clupanodonic acid (DPA) ω3 (%)" = "clupanodonic_acid_ω3", 
+  "Cervonic acid (DHA) ω3 (%)" = "cervonic_acid_ω3") 
+
+explanatury_sd_labels <- c(  
+  "Insaturated acids (%)" = "pufas_sd", 
+  "ω9 insaturated acids (%)" = "pufas_ω9_sd", 
+  "ω7 insaturated acids (%)" = "pufas_ω7_sd", 
+  "ω6 insaturated acids (%)" = "pufas_ω6_sd", 
+  "ω3 instaurated acids (%)" = "pufas_ω3_sd", 
+  "ratio_ω6_ω3_sd" = "ω6/ω3 ratio",
+  "Rumenic acid ω6 (%)" = "rumenic_acid_ω6_sd", 
+  "Linoleic acid ω6 (%)" = "linoleic_acid_ω6_sd",          
+  "Dihomo-γ-linolenic acid ω6 (%)" = "dihomo_γ_linolenic_acid_ω6_sd", 
+  "Arachidonic acid ω6 (%)" = "arachidonic_acid_ω6_sd", 
+  "Adrenic acid ω6 (%)" = "adrenic_acid_ω6_sd", 
+  "α-linolenic acid (ALA) ω3 (%)" = "α_linolenic_acid_ω3_sd", 
+  "Timnodonic acid (EPA) ω3 (%)" = "timnodonic_acid_ω3_sd", 
+  "Clupanodonic acid (DPA) ω3 (%)" = "clupanodonic_acid_ω3_sd", 
+  "Cervonic acid (DHA) ω3 (%)" = "cervonic_acid_ω3_sd")
 
 POPs_labels <- c(
   "PCB-118,138,153,180" = "PCB_4",
@@ -916,7 +1005,6 @@ POPs_labels <- c(
   "ΣPBDE" = "ΣPBDE",
   "PBDE-47" = "PBDE_47",
   "PBDE-99" = "PBDE_99",
-  "PBDE-153" = "PBDE_153"
-)
+  "PBDE-153" = "PBDE_153")
 
 

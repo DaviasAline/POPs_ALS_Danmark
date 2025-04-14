@@ -896,20 +896,21 @@ plot_quart_sensi_not_summed
 ```
 
 # Fatty acids and ALS 
-## Effects of subject characterist on ALS occurence in the Danish cohort 
+## Danish cohort
+### Effects of subject characterist on ALS occurence in the Danish cohort 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-table_2 
+table_2_danish
 ```
 
-## Effects of fatty acids on ALS occurence in the Danish cohort 
+### Effects of fatty acids on ALS occurence in the Danish cohort 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-table_3 |>
+table_3_sd_danish |>
 set_table_properties(width = 1, layout = "autofit")
 ```
 
@@ -917,5 +918,15 @@ set_table_properties(width = 1, layout = "autofit")
 #| echo: false
 #| message: false
 #| warning: false
-figure_2
+figure_2_sd_danish
+```
+
+## Finnish cohorts 
+### Effects of fatty acids on ALS occurence in the Finnish cohorts
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+table_3_sd_finnish |>
+set_table_properties(width = 1, layout = "autofit")
 ```

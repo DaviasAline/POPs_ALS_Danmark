@@ -7,51 +7,159 @@
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2_analyses_POPs_ALS.R")
 
 ## main analysis ----
-model1 <- map_dfr(explanatory, function(var) {                                   # map_dfr() met tout dans un seul dataframe par rapport a map() qui renvoit une liste
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+### Danish cohort ----
+#### Base model 
+model1_sd_danish <- map_dfr(explanatory, function(expl) {                       # map_dfr() met tout dans un seul dataframe par rapport a map() qui renvoit une liste
+  formula <- as.formula(paste("als ~", expl, "+ strata(match)"))
   model <- clogit(formula, data = bdd_danish)
   model_summary <- tidy(model)
-  
   tibble(
-    model = "model 1",
-    variable = var,
-    df = model_summary$term,
+    model = "base",
+    explanatory = expl,
+    term = model_summary$term,
     OR = exp(model_summary$estimate),
     lower_CI = exp(model_summary$estimate - 1.96 * model_summary$std.error),
     upper_CI = exp(model_summary$estimate + 1.96 * model_summary$std.error),
     `p-value` = model_summary$p.value)
 })
 
-model2 <- map_dfr(explanatory, function(var) {                                   # map_dfr() met tout dans un seul dataframe par rapport a map() qui renvoit une liste
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+model1_quart_danish <- map_dfr(explanatory_quart, function(expl) {              # map_dfr() met tout dans un seul dataframe par rapport a map() qui renvoit une liste
+  formula <- as.formula(paste("als ~", expl, "+ strata(match)"))
   model <- clogit(formula, data = bdd_danish)
   model_summary <- tidy(model)
-  
   tibble(
-    model = "model 2",
-    variable = var,
-    df = model_summary$term,
+    model = "base",
+    explanatory = expl,
+    term = model_summary$term,
     OR = exp(model_summary$estimate),
     lower_CI = exp(model_summary$estimate - 1.96 * model_summary$std.error),
     upper_CI = exp(model_summary$estimate + 1.96 * model_summary$std.error),
     `p-value` = model_summary$p.value)
 })
 
-main_results_fattyacids_ALS <- bind_rows(model1, model2) |>
-  filter(variable == df) |>
+#### Adjusted model 
+model2_sd_danish <- map_dfr(explanatory, function(expl) {                       # map_dfr() met tout dans un seul dataframe par rapport a map() qui renvoit une liste
+  formula <- as.formula(paste("als ~", expl, "+ strata(match) + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+  model <- clogit(formula, data = bdd_danish)
+  model_summary <- tidy(model)
+  tibble(
+    model = "adjusted",
+    explanatory = expl,
+    term = model_summary$term,
+    OR = exp(model_summary$estimate),
+    lower_CI = exp(model_summary$estimate - 1.96 * model_summary$std.error),
+    upper_CI = exp(model_summary$estimate + 1.96 * model_summary$std.error),
+    `p-value` = model_summary$p.value)
+})
+
+model2_quart_danish <- map_dfr(explanatory_quart, function(expl) {              # map_dfr() met tout dans un seul dataframe par rapport a map() qui renvoit une liste
+  formula <- as.formula(paste("als ~", expl, "+ strata(match) + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+  model <- clogit(formula, data = bdd_danish)
+  model_summary <- tidy(model) 
+  tibble(
+    model = "adjusted",
+    explanatory = expl,
+    term = model_summary$term,
+    OR = exp(model_summary$estimate),
+    lower_CI = exp(model_summary$estimate - 1.96 * model_summary$std.error),
+    upper_CI = exp(model_summary$estimate + 1.96 * model_summary$std.error),
+    `p-value` = model_summary$p.value)
+})
+
+#### Assemblage 
+main_results_fattyacids_ALS_danish <- bind_rows(model1_sd_danish, model2_sd_danish, model1_quart_danish, model2_quart_danish) |>
+  filter(str_starts(term, explanatory))   |>  # to keep only the quartiles term without the covariates (str_starts() is checking whether the string in term starts with the string in expl)
   mutate(
     OR = as.numeric(sprintf("%.1f", OR)),
     lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
     upper_CI = as.numeric(sprintf("%.1f", upper_CI)),, 
-    "95%CI" = paste(lower_CI, ", ", upper_CI, sep = ''),
+    "95% CI" = paste(lower_CI, ", ", upper_CI, sep = ''),
     `p-value_raw`= `p-value`, 
-    `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = "."))) 
+    `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")), 
+    term = ifelse(str_detect(term, "_sd"), "continuous", term), 
+    term = ifelse(str_detect(term, "_quartQ2"), "quartile 2", term), 
+    term = ifelse(str_detect(term, "_quartQ3"), "quartile 3", term), 
+    term = ifelse(str_detect(term, "_quartQ4"), "quartile 4", term)) 
 
-rm(model1, model2)
+rm(model1_sd_danish, model2_sd_danish, model1_quart_danish, model2_quart_danish)
+
+
+### Finnish cohorts ----
+run_clogit <- function(formula, data) {                                         # function to run the conditional logistic regression
+  model <- clogit(formula, data = data)
+  coef_data <- summary(model)$coefficients[1, c("coef", "se(coef)")]
+  tibble(coef = coef_data[1], se = coef_data[2])
+}
+
+#### Base model 
+model1_sd_finnish <- map_dfr(explanatory, function(expl) {
+  formula <- as.formula(paste("als ~", expl, "+ strata(match)"))                # base formula: matched, not ajstuded
+  
+  bdd_finnish_1 <- bdd |> filter(study == "Finnish_1")                          # creation of one dataset per finnish cohort
+  bdd_finnish_2 <- bdd |> filter(study == "Finnish_2")
+  bdd_finnish_3 <- bdd |> filter(study == "Finnish_3")
+  
+  results <- list(                                                              # run of the simple conditional logistic regression
+    finnish_1 = run_clogit(formula, bdd_finnish_1),
+    finnish_2 = run_clogit(formula, bdd_finnish_2),
+    finnish_3 = run_clogit(formula, bdd_finnish_3)) |>
+    bind_rows(.id = "dataset") %>%
+    mutate(var = se^2, explanatory = expl)
+  
+  rma_fit <- rma(yi = coef, vi = var, data = results, method = "DL")            # run of the meta-analyse (metafor package as Ian did)
+  
+  tibble(                                                                       # creation of the table of results
+    model = "base", 
+    explanatory = expl,
+    OR = exp(as.numeric(rma_fit$beta)),
+    lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
+    upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
+    p.value = as.numeric(rma_fit$pval)
+    
+  )
+})
+
+#### Adjusted model 
+model2_sd_finnish <- map_dfr(explanatory, function(expl) {
+  formula <- as.formula(paste("als ~", expl, "+",                               # adjusted formula: matched and ajstuded
+                              covariates_finnish, "+ strata(match)"))
+  
+  bdd_finnish_1 <- bdd |> filter(study == "Finnish_1")                          # creation of one dataset per finnish cohort
+  bdd_finnish_2 <- bdd |> filter(study == "Finnish_2")
+  bdd_finnish_3 <- bdd |> filter(study == "Finnish_3")
+  
+  results <- list(                                                              # run of the simple conditional logistic regression
+    finnish_1 = run_clogit(formula, bdd_finnish_1),
+    finnish_2 = run_clogit(formula, bdd_finnish_2),
+    finnish_3 = run_clogit(formula, bdd_finnish_3)) |>
+    bind_rows(.id = "dataset") %>%
+    mutate(var = se^2, explanatory = expl)
+  
+  rma_fit <- rma(yi = coef, vi = var, data = results, method = "DL")            # run of the meta-analyse (metafor package as Ian did)
+  
+  tibble(                                                                       # creation of the table of results
+    model = "adjusted", 
+    explanatory = expl,
+    OR = exp(as.numeric(rma_fit$beta)),
+    lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
+    upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
+    p.value = as.numeric(rma_fit$pval)
+  )
+})
+
+#### Assemblage 
+main_results_fattyacids_ALS_finnish <- bind_rows(model1_sd_finnish, model2_sd_finnish) |>
+  mutate(OR = as.numeric(sprintf("%.1f", OR)),
+         lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
+         upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
+         p.value = ifelse(p.value < 0.01, "<0.01", number(p.value, accuracy = 0.01, decimal.mark = ".")), 
+         "95% CI" = paste(lower_CI, ", ", upper_CI, sep = ''))
+
+rm(model1_sd_finnish, model2_sd_finnish)
 
 ## results presentation ----
-### table 1 ----
-table_1 <- bdd_danish |>
+### table 1 danish ----
+table_1_danish <- bdd_danish |>
   mutate(
     als = as.character(als),
     als = fct_recode(als, "Controls" = "0", "Cases" = "1"),
@@ -78,8 +186,8 @@ table_1 <- bdd_danish |>
   merge_at(i = 1, j = 2, part = "header")  
 
 
-### table 2 ----
-table_2 <- tbl_merge(
+### table 2 danish ----
+table_2_danish <- tbl_merge(
   tbls = list(
     tbl_1 = bdd_danish |>
       select(als, all_of(covariates_danish)) |>
@@ -108,52 +216,70 @@ table_2 <- tbl_merge(
   2CI: Confidence interval.
   3Estimated risk of ALS when the characteristic is increasing by one unit, or compared to the reference category; adjusted for all the variables in the table.")
 
-### table 3 ----
-table_3 <- main_results_fattyacids_ALS |>
-  select(model, variable, OR, "95%CI", "p-value") |>
-  pivot_wider(names_from = "model", values_from = c("OR", "95%CI", "p-value")) |>
-  select(variable, contains("model 1"), contains("model 2")) |>
-  rename("OR" = "OR_model 1", "95% CI" = "95%CI_model 1", "p-value" = "p-value_model 1", 
-         "OR " = "OR_model 2", "95% CI " = "95%CI_model 2", "p-value " = "p-value_model 2") |>
-  mutate(variable = fct_recode(variable, 
-    "Adrenic acid (ω6)" = "adrenic_acid_ω6",
-    "Arachidonic acid (ω6)" = "arachidonic_acid_ω6",
-    "Cervonic acid (DHA, ω3)" = "cervonic_acid_ω3",
-    "Clupanodonic acid (DPA, ω3)" = "clupanodonic_acid_ω3",
-    "Dihomo-γ-linolenic acid (ω6)" = "dihomo_γ_linolenic_acid_ω6",
-    "Linoleic acid (LA, ω6)" = "linoleic_acid_ω6",
-    "Total PUFAs" = "pufas",
-    "Total ω3 PUFAs" = "pufas_ω3",
-    "Total ω6 PUFAs" = "pufas_ω6",
-    "Total ω9 PUFAs" = "pufas_ω9",
-    "Rumenic acid (ω6)" = "rumenic_acid_ω6",
-    "Timnodonic acid (EPA, ω3)" = "timnodonic_acid_ω3",
-    "α-linolenic acid (ALA, ω3)" = "α_linolenic_acid_ω3"))
+### table 3 danish ----
+table_3_sd_danish <- main_results_fattyacids_ALS_danish |>
+  filter(term == "continuous") |>
+  select(model, explanatory, OR, "95% CI", "p-value") |>
+  pivot_wider(names_from = "model", values_from = c("OR", "95% CI", "p-value")) |>
+  select(explanatory, contains("base"), contains("adjusted")) |>
+  rename("OR" = "OR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
+         "OR " = "OR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") 
 
-table_3 <- table_3 |> flextable() |>
+table_3_sd_danish <- table_3_sd_danish |>
+  mutate(explanatory = fct_recode(explanatory, !!!explanatury_sd_labels)) |>
+  flextable() |>
   add_footer_lines(
     "1All models are matched for sex and age. Adjusted models further account for smoking, BMI, serum total cholesterol, marital status, and education. 
-  2Estimated risk of ALS when pre-disease serum concentration of PUFAs is increasing by one unit (pg/ml).
+  2Estimated risk of ALS when pre-disease serum concentration of PUFAs is increasing by one percent.
   3CI: Confidence interval.") |>
   add_header(
-    "variable" = "Exposures", 
+    "explanatory" = "Fatty acids", 
     "OR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
     "OR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model") |>
   merge_h(part = "header") |>
-  merge_v(j = "variable") |>
+  merge_v(j = "explanatory") |>
   theme_vanilla() |>
-  bold(j = "variable", part = "body") |>
+  bold(j = "explanatory", part = "body") |>
   align(align = "center", part = "all") |>
-  align(j = "variable", align = "left", part = "all") |> 
-  merge_at(j = "variable", part = "header") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
+### table 3 finnish ----
+table_3_sd_finnish <- main_results_fattyacids_ALS_finnish |>
+  select(model, explanatory, OR, "95% CI", p.value) |>
+  pivot_wider(names_from = "model", values_from = c("OR", "95% CI", p.value)) |>
+  select(explanatory, contains("base"), contains("adjusted")) |>
+  rename("OR" = "OR_base", "95% CI" = "95% CI_base", "p-value" = "p.value_base", 
+         "OR " = "OR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p.value_adjusted") |>
+  mutate(explanatory = fct_recode(explanatory, !!!explanatury_sd_labels))
+
+table_3_sd_finnish <- table_3_sd_finnish |> 
+  flextable() |>
+  add_footer_lines(
+    "1All models are matched for age, sex, municipality, and serum freeze-thaw cycles. Adjusted models further account for smoking, BMI, serum total cholesterol and marital status. 
+  2Estimated risk of ALS when pre-disease serum concentration of PUFAs is increasing by one percent.
+  3CI: Confidence interval.") |>
+  add_header(
+    "explanatory" = "Exposures", 
+    "OR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
+    "OR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model") |>
+  merge_h(part = "header") |>
+  merge_v(j = "explanatory") |>
+  theme_vanilla() |>
+  bold(j = "explanatory", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 
-
 ### figure 1 ----
-figure_1 <- bdd_danish |>
+figure_1_danish <- bdd_danish |>
   select(als, all_of(explanatory)) |>
   pivot_longer(cols = -als, names_to = "PUFAs", values_to = "Values") |>
   mutate(
@@ -180,14 +306,15 @@ figure_1 <- bdd_danish |>
 
 
 ### figure 2 ----
-figure_2 <- main_results_fattyacids_ALS %>% 
-  filter(!variable == "adrenic_acid_ω6") |>
+figure_2_sd_danish <- main_results_fattyacids_ALS_danish |> 
+  filter(term == "continuous") |>
   mutate(p.value_shape = ifelse('p-value_raw'<0.05, "p-value<0.05", "p-value≥0.05"), 
          model = fct_recode(model, 
-                            "Base model" = "model 1",
-                            "Adjusted model" = "model 2"),
-         model = fct_relevel(model, 'Base model', 'Adjusted model')) %>%
-  ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
+                            "Base model" = "base",
+                            "Adjusted model" = "adjusted"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
+         explanatory = fct_recode(explanatory, !!!explanatury_sd_labels)) |>
+  ggplot(aes(x = explanatory, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(cols = dplyr::vars(model), switch = "y", scales = "free_x") +  

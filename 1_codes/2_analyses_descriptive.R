@@ -85,7 +85,7 @@ POPs_heatmap_danish <- cor(POPs_heatmap_danish,
 
 ## fatty acids ----
 fattyacids_table_danish <- 
-  descrip_num(data = bdd_danish, vars = c(explanatory, fattyacids)) |> 
+  descrip_num(data = bdd_danish, vars = c(fattyacids)) |> 
   mutate(variable = factor(variable, levels = fattyacids_labels), 
          variable = fct_recode(variable, !!!fattyacids_labels)) |>
   arrange(variable) 
