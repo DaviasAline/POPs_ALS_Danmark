@@ -2,7 +2,7 @@
 # 03/02/2025
 
 # data loading - package loading ----
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2_analyses_descriptive.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/2.1_analyses_descriptive.R")
 
 covariates <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')
 

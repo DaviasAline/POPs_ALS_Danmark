@@ -14,7 +14,7 @@ toc-location: left
 #| message: false
 #| warning: false
 #| include: false
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2_analyses_fattyacids_ALS.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/2.3_analyses_fattyacids_ALS.R")
 ```
 
 
@@ -911,7 +911,7 @@ table_2_danish
 #| message: false
 #| warning: false
 table_3_sd_danish |>
-set_table_properties(width = 1, layout = "autofit")
+  set_table_properties(width = 1, layout = "autofit")
 ```
 
 ```{r}
@@ -921,6 +921,14 @@ set_table_properties(width = 1, layout = "autofit")
 figure_2_sd_danish
 ```
 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+table_3_quart_danish |>
+  set_table_properties(width = 1, layout = "autofit")
+```
+
 ## Finnish cohorts 
 ### Effects of fatty acids on ALS occurence in the Finnish cohorts
 ```{r}
@@ -928,5 +936,12 @@ figure_2_sd_danish
 #| message: false
 #| warning: false
 table_3_sd_finnish |>
-set_table_properties(width = 1, layout = "autofit")
+  set_table_properties(width = 1, layout = "autofit")
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+figure_2_sd_finnish
 ```

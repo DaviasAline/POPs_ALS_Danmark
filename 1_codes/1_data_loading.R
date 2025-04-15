@@ -353,6 +353,9 @@ fattyacids <- bdd_danish |>
   select(contains("_sat"), contains("_ω9"), contains("_ω7"), contains("_ω6"), contains("_ω3")) |> 
   colnames()
 fattyacids <- c("pufas", "pufas_ω9", "pufas_ω7", "pufas_ω6", "pufas_ω3", "ratio_ω6_ω3", fattyacids)
+explanatory_raw <- c("pufas", "pufas_ω9", "pufas_ω7", "pufas_ω6", "pufas_ω3", "ratio_ω6_ω3",
+                 "rumenic_acid_ω6", "linoleic_acid_ω6", "dihomo_γ_linolenic_acid_ω6", "arachidonic_acid_ω6", "adrenic_acid_ω6",
+                 "α_linolenic_acid_ω3", "timnodonic_acid_ω3", "clupanodonic_acid_ω3", "cervonic_acid_ω3") 
 explanatory <- c("pufas_sd", "pufas_ω9_sd", "pufas_ω7_sd", "pufas_ω6_sd", "pufas_ω3_sd", "ratio_ω6_ω3_sd",
                  "rumenic_acid_ω6_sd", "linoleic_acid_ω6_sd", "dihomo_γ_linolenic_acid_ω6_sd", "arachidonic_acid_ω6_sd", "adrenic_acid_ω6_sd",
                  "α_linolenic_acid_ω3_sd", "timnodonic_acid_ω3_sd", "clupanodonic_acid_ω3_sd", "cervonic_acid_ω3_sd") 
@@ -957,13 +960,30 @@ fattyacids_labels <- c(
   "Clupanodonic acid (DPA) ω3 (%)" = "clupanodonic_acid_ω3", 
   "Cervonic acid (DHA) ω3 (%)" = "cervonic_acid_ω3") 
 
-explanatury_sd_labels <- c(  
+explanatory_labels <- c(  
+  "Insaturated acids (%)" = "pufas", 
+  "ω9 insaturated acids (%)" = "pufas_ω9", 
+  "ω7 insaturated acids (%)" = "pufas_ω7", 
+  "ω6 insaturated acids (%)" = "pufas_ω6", 
+  "ω3 instaurated acids (%)" = "pufas_ω3", 
+  "ω6/ω3 ratio" = "ratio_ω6_ω3",
+  "Rumenic acid ω6 (%)" = "rumenic_acid_ω6", 
+  "Linoleic acid ω6 (%)" = "linoleic_acid_ω6",          
+  "Dihomo-γ-linolenic acid ω6 (%)" = "dihomo_γ_linolenic_acid_ω6", 
+  "Arachidonic acid ω6 (%)" = "arachidonic_acid_ω6", 
+  "Adrenic acid ω6 (%)" = "adrenic_acid_ω6", 
+  "α-linolenic acid (ALA) ω3 (%)" = "α_linolenic_acid_ω3", 
+  "Timnodonic acid (EPA) ω3 (%)" = "timnodonic_acid_ω3", 
+  "Clupanodonic acid (DPA) ω3 (%)" = "clupanodonic_acid_ω3", 
+  "Cervonic acid (DHA) ω3 (%)" = "cervonic_acid_ω3")
+
+explanatory_sd_labels <- c(  
   "Insaturated acids (%)" = "pufas_sd", 
   "ω9 insaturated acids (%)" = "pufas_ω9_sd", 
   "ω7 insaturated acids (%)" = "pufas_ω7_sd", 
   "ω6 insaturated acids (%)" = "pufas_ω6_sd", 
   "ω3 instaurated acids (%)" = "pufas_ω3_sd", 
-  "ratio_ω6_ω3_sd" = "ω6/ω3 ratio",
+  "ω6/ω3 ratio" = "ratio_ω6_ω3_sd",
   "Rumenic acid ω6 (%)" = "rumenic_acid_ω6_sd", 
   "Linoleic acid ω6 (%)" = "linoleic_acid_ω6_sd",          
   "Dihomo-γ-linolenic acid ω6 (%)" = "dihomo_γ_linolenic_acid_ω6_sd", 
