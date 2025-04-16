@@ -146,7 +146,8 @@ fattyacids_heatmap_danish <- cor(fattyacids_heatmap_danish,
                                  use = "pairwise.complete.obs", 
                                  method = "pearson")
 
-POPs_fattyacids_heatmap_danish <- heatmap_cor_pairwise(fattyacids, POPs, decimal = 1, data = bdd_danish)
+POPs_fattyacids_heatmap_danish <- 
+  heatmap_cor_pairwise(fattyacids, POPs, decimal = 1, data = bdd_danish)
 
 # finnish data ----
 ## metadata ----
@@ -183,7 +184,7 @@ POPs_table_finnish_by_als <- bdd |>
   add_p() 
 
 POPs_boxplot_finnish <- bdd |>
-  filter(study %in% c("Finnish_1", "Finnish_2", "Finnish_3")) |>
+  filter(study %in% c("FMC", "FMCF", "MFH")) |>
   select(all_of(POPs_tot)) |>
   pivot_longer(cols = everything(), names_to = "POPs", values_to = "values") |>
   mutate(POPs = factor(POPs, levels = POPs_labels), 
@@ -201,7 +202,7 @@ POPs_boxplot_finnish <- bdd |>
   theme_lucid()
 
 POPs_boxplot_finnish_by_als <- bdd |>
-  filter(study %in% c("Finnish_1", "Finnish_2", "Finnish_3")) |>
+  filter(study %in% c("FMC", "FMCF", "MFH")) |>
   select(als, all_of(POPs), all_of(POPs_group)) |>
   pivot_longer(cols = -als, names_to = "POPs", values_to = "values") |>
   mutate(POPs = factor(POPs, levels = POPs_labels), 
@@ -265,7 +266,6 @@ fattyacids_boxplot_finnish <- bdd_finnish |>
   labs(x = "Fattu acids", y = "Values (log transformed)") +
   coord_flip() +
   theme_lucid()
-
 
 fattyacids_boxplot_finnish_by_als <- bdd_finnish |>
   select(als, all_of(fattyacids)) |>

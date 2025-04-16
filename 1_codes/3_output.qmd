@@ -542,7 +542,7 @@ descriptive$danish$covar_danish |>
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-results_spline |> 
+results_POPs_ALS$main$results_spline |> 
   rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
          'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted',
          ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant') |>
@@ -560,7 +560,7 @@ results_spline |>
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-results_spline_outliers |> 
+results_POPs_ALS$sensitivity_outliers$results_spline_outliers |> 
   rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
          'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted'
          # ,
@@ -585,7 +585,7 @@ results_spline_outliers |>
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-results_quart |> 
+results_POPs_ALS$main$results_quart |> 
     rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
          'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted',
          ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant') |>
@@ -605,7 +605,7 @@ results_quart |>
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-results_quadratic |>
+results_POPs_ALS$main$results_quadratic |>
     rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
          'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted', 
          ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant'
@@ -624,7 +624,7 @@ results_quadratic |>
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-results_quadratic_outliers |>
+results_POPs_ALS$sensitivity_outliers$results_quadratic_outliers |>
     rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
          'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted'
          # ,
@@ -648,7 +648,7 @@ results_quadratic_outliers |>
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-results_cubic |>
+results_POPs_ALS$main$results_cubic |>
     rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
          'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted',
          ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant') |>
@@ -666,7 +666,7 @@ results_cubic |>
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-results_cubic_outliers |>
+results_POPs_ALS$sensitivity_outliers$results_cubic_outliers |>
     rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
          'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted'
          # ,
@@ -692,12 +692,14 @@ results_cubic_outliers |>
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-grid.arrange(grobs = list(plot_adjusted_spline$PCB_DL, 
-                       plot_adjusted_spline_outlier$PCB_DL, 
-                       plot_adjusted_quadratic$PCB_DL, 
-                       plot_adjusted_quadratic_outlier$PCB_DL, 
-                       plot_adjusted_cubic$PCB_DL, 
-                       plot_adjusted_cubic_outlier$PCB_DL), ncol = 6)
+grid.arrange(grobs = list(
+  results_POPs_ALS$main$plot_adjusted_spline$PCB_DL, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_spline_outlier$PCB_DL, 
+  results_POPs_ALS$main$plot_adjusted_quadratic$PCB_DL, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_quadratic_outlier$PCB_DL, 
+  results_POPs_ALS$main$plot_adjusted_cubic$PCB_DL, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_cubic_outlier$PCB_DL), 
+  ncol = 6)
 ```
 
 #### non dioxin like PCBs
@@ -707,12 +709,14 @@ grid.arrange(grobs = list(plot_adjusted_spline$PCB_DL,
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-grid.arrange(grobs = list(plot_adjusted_spline$PCB_NDL, 
-                       plot_adjusted_spline_outlier$PCB_NDL, 
-                       plot_adjusted_quadratic$PCB_NDL,
-                       plot_adjusted_quadratic_outlier$PCB_NDL, 
-                       plot_adjusted_cubic$PCB_NDL,
-                       plot_adjusted_cubic_outlier$PCB_NDL), ncol = 6)
+grid.arrange(grobs = list(
+  results_POPs_ALS$main$plot_adjusted_spline$PCB_NDL, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_spline_outlier$PCB_NDL, 
+  results_POPs_ALS$main$plot_adjusted_quadratic$PCB_NDL,
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_quadratic_outlier$PCB_NDL, 
+  results_POPs_ALS$main$plot_adjusted_cubic$PCB_NDL,
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_cubic_outlier$PCB_NDL), 
+  ncol = 6)
 ```
 
 #### 4 most commun PCBs
@@ -722,12 +726,14 @@ grid.arrange(grobs = list(plot_adjusted_spline$PCB_NDL,
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-grid.arrange(grobs = list(plot_adjusted_spline$PCB_4, 
-                       plot_adjusted_spline_outlier$PCB_4,
-                       plot_adjusted_quadratic$PCB_4, 
-                       plot_adjusted_quadratic_outlier$PCB_4, 
-                       plot_adjusted_cubic$PCB_4, 
-                       plot_adjusted_cubic_outlier$PCB_4), ncol = 6)
+grid.arrange(grobs = list(
+  results_POPs_ALS$main$plot_adjusted_spline$PCB_4, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_spline_outlier$PCB_4,
+  results_POPs_ALS$main$plot_adjusted_quadratic$PCB_4, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_quadratic_outlier$PCB_4, 
+  results_POPs_ALS$main$plot_adjusted_cubic$PCB_4, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_cubic_outlier$PCB_4), 
+  ncol = 6)
 ```
 
 #### OCP_HCB
@@ -737,12 +743,14 @@ grid.arrange(grobs = list(plot_adjusted_spline$PCB_4,
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-grid.arrange(grobs = list(plot_adjusted_spline$OCP_HCB, 
-                       plot_adjusted_spline_outlier$OCP_HCB,
-                       plot_adjusted_quadratic$OCP_HCB, 
-                       plot_adjusted_quadratic_outlier$OCP_HCB, 
-                       plot_adjusted_cubic$OCP_HCB, 
-                       plot_adjusted_cubic_outlier$OCP_HCB), ncol = 6)
+grid.arrange(grobs = list(
+  results_POPs_ALS$main$plot_adjusted_spline$OCP_HCB, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_spline_outlier$OCP_HCB,
+  results_POPs_ALS$main$plot_adjusted_quadratic$OCP_HCB, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_quadratic_outlier$OCP_HCB, 
+  results_POPs_ALS$main$plot_adjusted_cubic$OCP_HCB, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_cubic_outlier$OCP_HCB), 
+  ncol = 6)
 ```
 
 #### ΣDDT
@@ -752,12 +760,14 @@ grid.arrange(grobs = list(plot_adjusted_spline$OCP_HCB,
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-grid.arrange(grobs = list(plot_adjusted_spline$ΣDDT, 
-                       plot_adjusted_spline_outlier$ΣDDT,
-                       plot_adjusted_quadratic$ΣDDT, 
-                       plot_adjusted_quadratic_outlier$ΣDDT, 
-                       plot_adjusted_cubic$ΣDDT, 
-                       plot_adjusted_cubic_outlier$ΣDDT), ncol = 6)
+grid.arrange(grobs = list(
+  results_POPs_ALS$main$plot_adjusted_spline$ΣDDT, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_spline_outlier$ΣDDT,
+  results_POPs_ALS$main$plot_adjusted_quadratic$ΣDDT, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_quadratic_outlier$ΣDDT, 
+  results_POPs_ALS$main$plot_adjusted_cubic$ΣDDT, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_cubic_outlier$ΣDDT), 
+  ncol = 6)
 ```
 
 #### OCP_β_HCH
@@ -767,12 +777,14 @@ grid.arrange(grobs = list(plot_adjusted_spline$ΣDDT,
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-grid.arrange(grobs = list(plot_adjusted_spline$OCP_β_HCH, 
-                       plot_adjusted_spline_outlier$OCP_β_HCH,
-                       plot_adjusted_quadratic$OCP_β_HCH, 
-                       plot_adjusted_quadratic_outlier$OCP_β_HCH, 
-                       plot_adjusted_cubic$OCP_β_HCH, 
-                       plot_adjusted_cubic_outlier$OCP_β_HCH), ncol = 6)
+grid.arrange(grobs = list(
+  results_POPs_ALS$main$plot_adjusted_spline$OCP_β_HCH, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_spline_outlier$OCP_β_HCH,
+  results_POPs_ALS$main$plot_adjusted_quadratic$OCP_β_HCH, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_quadratic_outlier$OCP_β_HCH, 
+  results_POPs_ALS$main$plot_adjusted_cubic$OCP_β_HCH, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_cubic_outlier$OCP_β_HCH), 
+  ncol = 6)
 ```
 
 #### Σchlordane
@@ -782,12 +794,14 @@ grid.arrange(grobs = list(plot_adjusted_spline$OCP_β_HCH,
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-grid.arrange(grobs = list(plot_adjusted_spline$Σchlordane, 
-                       plot_adjusted_spline_outlier$Σchlordane,
-                       plot_adjusted_quadratic$Σchlordane, 
-                       plot_adjusted_quadratic_outlier$Σchlordane, 
-                       plot_adjusted_cubic$Σchlordane, 
-                       plot_adjusted_cubic_outlier$Σchlordane), ncol = 6)
+grid.arrange(grobs = list(
+  results_POPs_ALS$main$plot_adjusted_spline$Σchlordane, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_spline_outlier$Σchlordane,
+  results_POPs_ALS$main$plot_adjusted_quadratic$Σchlordane, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_quadratic_outlier$Σchlordane, 
+  results_POPs_ALS$main$plot_adjusted_cubic$Σchlordane, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_cubic_outlier$Σchlordane), 
+  ncol = 6)
 ```
 
 #### ΣPBDE
@@ -797,12 +811,14 @@ grid.arrange(grobs = list(plot_adjusted_spline$Σchlordane,
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-grid.arrange(grobs = list(plot_adjusted_spline$ΣPBDE, 
-                       plot_adjusted_spline_outlier$ΣPBDE,
-                       plot_adjusted_quadratic$ΣPBDE, 
-                       plot_adjusted_quadratic_outlier$ΣPBDE, 
-                       plot_adjusted_cubic$ΣPBDE, 
-                       plot_adjusted_cubic_outlier$ΣPBDE), ncol = 6)
+grid.arrange(grobs = list(
+  results_POPs_ALS$main$plot_adjusted_spline$ΣPBDE, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_spline_outlier$ΣPBDE,
+  results_POPs_ALS$main$plot_adjusted_quadratic$ΣPBDE, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_quadratic_outlier$ΣPBDE, 
+  results_POPs_ALS$main$plot_adjusted_cubic$ΣPBDE, 
+  results_POPs_ALS$sensitivity_outliers$plot_adjusted_cubic_outlier$ΣPBDE), 
+  ncol = 6)
 ```
 
 ### forest plot quartiles
@@ -811,14 +827,14 @@ grid.arrange(grobs = list(plot_adjusted_spline$ΣPBDE,
 #| echo: false
 #| message: false
 #| warning: false
-plot_quart
+results_POPs_ALS$main$plot_quart
 ```
 
 ```{r fig.height=9, fig.width=9}
 #| echo: false
 #| message: false
 #| warning: false
-plot_quart_bis
+results_POPs_ALS$main$plot_quart_bis
 ```
 
 ### gamm models
@@ -832,11 +848,11 @@ Relationship between POPs exposure at baseline time and ALS occurrence estimated
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-wrap_plots(wrap_plots(plot_adjusted_gamm[1:4], nrow = 1), 
-           wrap_plots(plot_adjusted_gamm_outlier[1:4], nrow = 1), 
+wrap_plots(wrap_plots(results_POPs_ALS$main$plot_adjusted_gamm[1:4], nrow = 1), 
+           wrap_plots(results_POPs_ALS$sensitivity_outliers$plot_adjusted_gamm_outlier[1:4], nrow = 1), 
            nrow = 2)
-wrap_plots(wrap_plots(plot_adjusted_gamm[5:8], nrow = 1), 
-           wrap_plots(plot_adjusted_gamm_outlier[5:8], nrow = 1), 
+wrap_plots(wrap_plots(results_POPs_ALS$main$plot_adjusted_gamm[5:8], nrow = 1), 
+           wrap_plots(results_POPs_ALS$sensitivity_outliers$plot_adjusted_gamm_outlier[5:8], nrow = 1), 
            nrow = 2)
 ```
 
@@ -849,11 +865,11 @@ Relationship between POPs exposure at baseline time and ALS occurrence estimated
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-wrap_plots(wrap_plots(plot_adjusted_gamm[1:4], nrow = 1), 
-           wrap_plots(plot_adjusted_gamm_outlier[1:4], nrow = 1), 
+wrap_plots(wrap_plots(results_POPs_ALS$main$plot_adjusted_gamm[1:4], nrow = 1), 
+           wrap_plots(results_POPs_ALS$sensitivity_outliers$plot_adjusted_gamm_outlier[1:4], nrow = 1), 
            nrow = 2)
-wrap_plots(wrap_plots(plot_adjusted_gamm[5:8], nrow = 1), 
-           wrap_plots(plot_adjusted_gamm_outlier[5:8], nrow = 1), 
+wrap_plots(wrap_plots(results_POPs_ALS$main$plot_adjusted_gamm[5:8], nrow = 1), 
+           wrap_plots(results_POPs_ALS$sensitivity_outliers$plot_adjusted_gamm_outlier[5:8], nrow = 1), 
            nrow = 2)
 ```
 
@@ -866,11 +882,11 @@ Relationship between POPs exposure at baseline time and ALS occurrence estimated
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-wrap_plots(wrap_plots(plot_copollutant_gamm[1:4], nrow = 1), 
-           wrap_plots(plot_copollutant_gamm_outlier[1:4], nrow = 1), 
+wrap_plots(wrap_plots(results_POPs_ALS$main$plot_copollutant_gamm[1:4], nrow = 1), 
+           wrap_plots(results_POPs_ALS$sensitivity_outliers$plot_copollutant_gamm_outlier[1:4], nrow = 1), 
            nrow = 2)
-wrap_plots(wrap_plots(plot_copollutant_gamm[5:7], nrow = 1), 
-           wrap_plots(plot_copollutant_gamm_outlier[5:7], nrow = 1), 
+wrap_plots(wrap_plots(results_POPs_ALS$main$plot_copollutant_gamm[5:7], nrow = 1), 
+           wrap_plots(results_POPs_ALS$sensitivity_outliers$plot_copollutant_gamm_outlier[5:7], nrow = 1), 
            nrow = 2)
 ```
 
@@ -882,9 +898,9 @@ wrap_plots(wrap_plots(plot_copollutant_gamm[5:7], nrow = 1),
 #| echo: false
 #| message: false
 #| warning: false
-wrap_plots(plot_adjusted_gamm_not_summed[1:8], ncol = 4)
-wrap_plots(plot_adjusted_gamm_not_summed[9:16], ncol = 4)
-wrap_plots(plot_adjusted_gamm_not_summed[17:22], ncol = 4)
+wrap_plots(results_POPs_ALS$sensitivity_not_summed$plot_adjusted_gamm_not_summed[1:8], ncol = 4)
+wrap_plots(results_POPs_ALS$sensitivity_not_summed$plot_adjusted_gamm_not_summed[9:16], ncol = 4)
+wrap_plots(results_POPs_ALS$sensitivity_not_summed$plot_adjusted_gamm_not_summed[17:22], ncol = 4)
 ```
 
 ### Quartiles 
@@ -892,7 +908,7 @@ wrap_plots(plot_adjusted_gamm_not_summed[17:22], ncol = 4)
 #| echo: false
 #| message: false
 #| warning: false
-plot_quart_sensi_not_summed
+results_POPs_ALS$sensitivity_not_summed$plot_quart_sensi_not_summed
 ```
 
 # Fatty acids and ALS 
@@ -902,15 +918,16 @@ plot_quart_sensi_not_summed
 #| echo: false
 #| message: false
 #| warning: false
-table_2_danish
+results_fattyacids_ALS$danish$covar_als_table_danish
 ```
 
 ### Effects of fatty acids on ALS occurence in the Danish cohort 
+#### Continuous coding (standardized)
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-table_3_sd_danish |>
+results_fattyacids_ALS$danish$fattyacids_sd_als_table_danish |>
   set_table_properties(width = 1, layout = "autofit")
 ```
 
@@ -918,24 +935,42 @@ table_3_sd_danish |>
 #| echo: false
 #| message: false
 #| warning: false
-figure_2_sd_danish
+results_fattyacids_ALS$danish$fattyacids_sd_als_figure_danish
 ```
 
+#### Quartiles 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-table_3_quart_danish |>
+results_fattyacids_ALS$danish$fattyacids_quart_als_table_danish |>
   set_table_properties(width = 1, layout = "autofit")
+```
+
+```{r, fig.height=12}
+#| echo: false
+#| message: false
+#| warning: false
+results_fattyacids_ALS$danish$fattyacids_quart_als_figure_danish
 ```
 
 ## Finnish cohorts 
-### Effects of fatty acids on ALS occurence in the Finnish cohorts
+### Effects of subject characterist on ALS occurence in the Finnish cohorts
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-table_3_sd_finnish |>
+
+```
+
+
+### Effects of fatty acids on ALS occurence in the Finnish cohorts
+#### Continuous coding (standardized)
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_fattyacids_ALS$finnish$fattyacids_sd_als_table_finnish |>
   set_table_properties(width = 1, layout = "autofit")
 ```
 
@@ -943,5 +978,22 @@ table_3_sd_finnish |>
 #| echo: false
 #| message: false
 #| warning: false
-figure_2_sd_finnish
+results_fattyacids_ALS$finnish$fattyacids_sd_als_figure_finnish
 ```
+
+#### Quartiles 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_fattyacids_ALS$finnish$fattyacids_quart_als_table_finnish |>
+  set_table_properties(width = 1, layout = "autofit")
+```
+
+```{r, fig.height=12}
+#| echo: false
+#| message: false
+#| warning: false
+results_fattyacids_ALS$finnish$fattyacids_quart_als_figure_finnish
+```
+

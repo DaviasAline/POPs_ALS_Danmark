@@ -6,7 +6,6 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/2.1_analyses_descriptive.R")
 
 covariates <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')
 
-
 # effects of the covariates on ALS ----
 covar <- tbl_merge(
   tbls = list(
@@ -145,7 +144,6 @@ model1_quadratic <- model1_quadratic %>%
     model = "base_quadra") %>%
   select(variable, model, everything())
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
-
 
 #### cubic transformation ----
 model1_cubic <- data.frame(
@@ -1328,7 +1326,6 @@ rm(model1_spline_outlier,
    model2_quadratic_outlier,
    model2_cubic_outlier)
 
-
 ## sensitivity analyses pollutants not summed ----
 ### quartiles ----
 model1_quart_not_summed <- data.frame(variable = character(),
@@ -1401,13 +1398,11 @@ model2_quart_not_summed <- model2_quart_not_summed %>%
   select(variable, model, everything())
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
 
-
 sensitivity_results_not_summed_quart <- 
   bind_rows(model1_quart_not_summed, model2_quart_not_summed) |>
   mutate(variable = gsub("_quart", "", variable), 
-         variable = gsub("BDE", "PBDE", variable),
          variable = gsub('_', '-', variable),
-         variable = fct_recode(variable, "p,p'-DDE" = 'pp-DDE',  "p,p'-DDT" ="pp-DDT"),
+         variable = fct_recode(variable, "p,p'-DDE" = 'OCP-pp-DDE',  "p,p'-DDT" ="OCP-pp-DDT"),
          OR = format(OR, nsmall = 1, digits = 1),
          lower_CI = format(lower_CI, nsmall = 1, digits = 1),
          upper_CI =  format(upper_CI, nsmall = 1, digits = 1),
@@ -1522,8 +1517,8 @@ plot_quart_sensi_not_summed <- sensitivity_results_not_summed_quart %>%
          variable = fct_relevel(variable, 
                                 "PCB-118", "PCB-156", "PCB-28", "PCB-52", "PCB-74", "PCB-99",
                                 "PCB-101", "PCB-138", "PCB-153", "PCB-170", "PCB-180", "PCB-183",
-                                "PCB-187", "OCP_HCB", "p,p'-DDE", "p,p'-DDT", "β-HCH", "Transnonachlor",
-                                "Oxychlordane", "PBDE-47", "PBDE-99", "PBDE-153"), 
+                                "PCB-187", "OCP-HCB", "p,p'-DDE", "p,p'-DDT", "OCP-β-HCH", "OCP-transnonachlor",
+                                "OCP-oxychlordane", "PBDE-47", "PBDE-99", "PBDE-153"), 
          OR = as.numeric(as.character(OR)), 
          lower_CI = as.numeric(as.character(lower_CI)), 
          upper_CI = as.numeric(as.character(upper_CI))) |>
@@ -2599,4 +2594,59 @@ plot_copollutant_gamm_outlier <- map(POPs_group_outlier_bis, function(var) {
 })|> set_names(POPs_group_outlier_bis)
 rm(POPs_group_outlier_bis, pollutant_labels_bis)
 
+
+results_POPs_ALS <- 
+  list(main = list(main_results = main_results, 
+                   results_spline = results_spline, 
+                   results_quart = results_quart, 
+                   results_quadratic = results_quadratic, 
+                   results_cubic = results_cubic, 
+                   model1_gamm = model1_gamm, 
+                   model2_gamm = model2_gamm, 
+                   plot_quart = plot_quart, 
+                   plot_quart_bis = plot_quart_bis, 
+                   plot_base_spline = plot_base_spline, 
+                   plot_base_quadratic = plot_base_quadratic, 
+                   plot_base_cubic = plot_base_cubic, 
+                   plot_base_gamm = plot_base_gamm, 
+                   plot_adjusted_spline = plot_adjusted_spline, 
+                   plot_adjusted_quadratic = plot_adjusted_quadratic, 
+                   plot_adjusted_cubic = plot_adjusted_cubic, 
+                   plot_adjusted_gamm = plot_adjusted_gamm, 
+                   plot_copollutant_gamm = plot_copollutant_gamm), 
+       sensitivity_outliers = list(sensitivity_results_outlier = sensitivity_results_outlier, 
+                                   results_spline_outliers = results_spline_outliers, 
+                                   results_quadratic_outliers = results_quadratic_outliers, 
+                                   results_cubic_outliers = results_cubic_outliers, 
+                                   model1_gamm_outliers = model1_gamm_outliers, 
+                                   model2_gamm_outliers = model2_gamm_outliers, 
+                                   plot_base_spline_outlier = plot_base_spline_outlier, 
+                                   plot_base_quadratic_outlier = plot_base_quadratic_outlier, 
+                                   plot_base_cubic_outlier = plot_base_cubic_outlier, 
+                                   plot_base_gamm_outlier = plot_base_gamm_outlier, 
+                                   plot_adjusted_spline_outlier = plot_adjusted_spline_outlier, 
+                                   plot_adjusted_quadratic_outlier = plot_adjusted_quadratic_outlier, 
+                                   plot_adjusted_cubic_outlier = plot_adjusted_cubic_outlier, 
+                                   plot_adjusted_gamm_outlier = plot_adjusted_gamm_outlier, 
+                                   plot_copollutant_gamm_outlier = plot_copollutant_gamm_outlier), 
+       sensitivity_not_summed = list(sensitivity_results_not_summed_quart = sensitivity_results_not_summed_quart, 
+                                     model1_gamm_not_summed = model1_gamm_not_summed, 
+                                     model2_gamm_not_summed = model2_gamm_not_summed,
+                                     model1_quart_not_summed = model1_quart_not_summed, 
+                                     model2_quart_not_summed = model2_quart_not_summed, 
+                                     plot_quart_sensi_not_summed = plot_quart_sensi_not_summed, 
+                                     plot_base_gamm_not_summed = plot_base_gamm_not_summed, 
+                                     plot_adjusted_gamm_not_summed = plot_adjusted_gamm_not_summed))
+
+rm(main_results, results_spline, results_quart, results_quadratic, results_cubic, model1_gamm, model2_gamm, 
+   sensitivity_results_outlier, results_spline_outliers, results_quadratic_outliers, results_cubic_outliers, 
+   model1_gamm_outliers, model2_gamm_outliers, 
+   sensitivity_results_not_summed_quart, model1_gamm_not_summed, model2_gamm_not_summed, model1_quart_not_summed, model2_quart_not_summed, 
+   plot_quart, plot_quart_bis, plot_quart_sensi_not_summed, 
+   plot_base_spline, plot_base_quadratic, plot_base_cubic, plot_base_gamm, 
+   plot_base_spline_outlier, plot_base_quadratic_outlier, plot_base_cubic_outlier, plot_base_gamm_outlier, 
+   plot_adjusted_spline, plot_adjusted_quadratic, plot_adjusted_cubic, plot_adjusted_gamm, 
+   plot_adjusted_spline_outlier, plot_adjusted_quadratic_outlier, plot_adjusted_cubic_outlier, plot_adjusted_gamm_outlier, 
+   plot_base_gamm_not_summed, plot_adjusted_gamm_not_summed, 
+   plot_copollutant_gamm, plot_copollutant_gamm_outlier)
 

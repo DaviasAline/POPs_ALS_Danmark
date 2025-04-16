@@ -316,9 +316,9 @@ bdd_finnish  <-
                                 ">12 years" = "3"),
          study = as.character(study),
          study = fct_recode(study,
-                            "Finnish_1" = "1",
-                            "Finnish_2" = "2",
-                            "Finnish_3" = "3")) |> 
+                            "FMC" = "1",
+                            "FMCF" = "2",
+                            "MFH" = "3")) |> 
          mutate(across(c( "fS_Trigly", "fS_Kol","S_Ca"),                        # adjusting the class of some variables
                        ~as.numeric(gsub(",", ".", ., fixed = TRUE)))) |>
   select(-X1, -X7, -X3, -XDATE2, -LIM1, -LIM2, -LIM3, -LIM4, -X, -XInt3, -XINT1, - X12) # empty variables to delate
@@ -740,7 +740,9 @@ var_label(bdd_finnish) <- list(
   match = "match", 
   sex = "Sex", 
   marital_status = "Marital status",
+  marital_status_2cat = "Marital status",
   smoking = "Smoking status", 
+  smoking_2cat = "Smoking status", 
   alcohol = "Alcohol consumption (g/week)", 
   education = "Education", 
   bmi = "Boby mass index (kg/m²)",

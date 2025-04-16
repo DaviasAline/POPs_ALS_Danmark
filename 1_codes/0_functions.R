@@ -323,31 +323,8 @@ heatmap_cor_pairwise <- function(data, vars_1, vars_2, decimal){
     select(all_of({{vars_2}})) %>%
     as.matrix()
   
-  rownames(cormat) <- rownames(cormat) %>%
-    str_replace_all(
-      c("mo_" = "",
-        "ch_" = "",
-        "_total_i_cor_" = " ",
-        "_i_cor_" = " ", 
-        "_ms" = "", 
-        "DINCH" = "ΣDINCH",
-        "DiNP" = "ΣDiNP",
-        "DEHP" = "ΣDEHP", 
-        "_ln" =""))
-  
   cormat_long <- 
-    reshape2::melt(cormat, na.rm = TRUE) %>% # passer en df long rapidement 
-    mutate(
-      Var1 = fct_relevel(
-        Var1, 
-        "ΣDINCH Y1", "ΣDINCH t3", "ΣDINCH t2", 
-        "ohMPHP Y1", "ohMPHP t3", "ohMPHP t2", 
-        "MEP Y1", "MEP t2", "MEP t3", 
-        "MBzP Y1", "MBzP t3", "MBzP t2", 
-        "MiBP Y1", "MiBP t3", "MiBP t2", 
-        "ΣDiNP Y1", "ΣDiNP t3", "ΣDiNP t2", 
-        "MnBP Y1", "MnBP t3", "MnBP t2", 
-        "ΣDEHP Y1", "ΣDEHP t3", "ΣDEHP t2"))
+    reshape2::melt(cormat, na.rm = TRUE)  # passer en df long rapidement 
   
   heatmap <-                                       # faire la heatmap
     ggplot(cormat_long, aes(Var2, Var1, fill = value)) +
