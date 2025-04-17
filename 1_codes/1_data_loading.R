@@ -30,6 +30,9 @@ bdd_danish <- left_join(bdd_danish, bdd_danish_fattyacids, by = "code")
 bdd_danish <- left_join(bdd_danish, bdd_danish_lipids, by = "Barcode")
 rm(bdd_danish_POPs, bdd_danish_lipids, bdd_danish_fattyacids)
 
+# bdd_danish |> filter(saet == 72) |> View()                           
+bdd_danish <- bdd_danish %>% filter(!code %in% c("208", "209", "210"))        # we decided to remove match 72 because the controls doesn't match in term of sex and age with the case
+
 bdd_danish_loq <- 
   read_excel("/Volumes/shared/EOME/Weisskopf/POPs-ALS/Data/Danish EPIC data/2024_ALS-Denmark-POP-Final-Results.xlsx", 
              sheet = "Results-blank-subtracted", 
@@ -94,7 +97,7 @@ bdd_finnish <- left_join(bdd_finnish, bdd_finnish_POPs_raw, by = c("PSEUDO_ID", 
 # bdd_finnish <- left_join(bdd_finnish, bdd_finnish_POPs_not_raw, by = c("PSEUDO_ID", "Batch"))
 bdd_finnish <- full_join(bdd_finnish, bdd_finnish_lipids, by = "PSEUDO_ID")
 bdd_finnish <- full_join(bdd_finnish, bdd_finnish_fattyacids, by = c("BARCODE", "PSEUDO_ID"))
-bdd_finnish <- bdd_finnish |> filter(!PSEUDO_ID == "9047039803")                  # removing the personn that wants to be removed from the analyses 
+bdd_finnish <- bdd_finnish |> filter(!PSEUDO_ID == "9047039803")                # removing the personn that wants to be removed from the analyses 
 rm(bdd_finnish_POPs_raw, bdd_finnish_lipids, bdd_finnish_fattyacids)
 
 # data cleaning ----
@@ -203,6 +206,8 @@ bdd_finnish  <-
          "SUBJECT_ID" , 
          "BARCODE", 
          "status_als", 
+         municipality = MUNICIPALITY, 
+         thawed = THAWED, 
          match = STRATUM,
          als = CASE,
          als_class =  ALS_CLASS, 
@@ -318,7 +323,9 @@ bdd_finnish  <-
          study = fct_recode(study,
                             "FMC" = "1",
                             "FMCF" = "2",
-                            "MFH" = "3")) |> 
+                            "MFH" = "3"), 
+         municipality = as.factor(as.character(municipality)), 
+         thawed = as.factor(as.character(thawed))) |> 
          mutate(across(c( "fS_Trigly", "fS_Kol","S_Ca"),                        # adjusting the class of some variables
                        ~as.numeric(gsub(",", ".", ., fixed = TRUE)))) |>
   select(-X1, -X7, -X3, -XDATE2, -LIM1, -LIM2, -LIM3, -LIM4, -X, -XInt3, -XINT1, - X12) # empty variables to delate
@@ -385,11 +392,18 @@ bdd_danish <- bdd_danish |>
                              "≤7 years of primary school", 
                              "7-10 years of primary school",
                              "≥7 years of primary school"),
+    als_date = as.character(als_date), 
+    als_date = case_when(sample == "283" ~ "2006-10-24", 
+                         sample == "300" ~ "1999-07-14",
+                         TRUE ~ als_date), 
+    als_date = as.Date(als_date), 
     baseline_age = as.numeric(difftime(baseline_date, birth_date, units = "days")) / 365.25, 
     diagnosis_age = as.numeric(difftime(als_date, birth_date, units = "days")) / 365.25, 
     death_age = as.numeric(difftime(death_date, birth_date, units = "days")) / 365.25, 
     follow_up = as.numeric(difftime(als_date, baseline_date, units = "days"))/365.25,
-    ALS_duration = death_age - diagnosis_age, 
+    time_baseline_diagnosis = diagnosis_age - baseline_age, 
+    time_baseline_death = death_age - baseline_age, 
+    time_diagnosis_death = death_age - diagnosis_age, 
     marital_status_2cat = 
       fct_recode(marital_status, 
                  "Other" = "Widowed",
@@ -468,7 +482,9 @@ bdd_finnish <- bdd_finnish |>
                  "Other" = "Widowed",
                  "Other" = "Divorced",
                  "Other" = "Unmarried"), 
-    ALS_duration = death_age - diagnosis_age) |>
+    time_baseline_diagnosis = diagnosis_age - baseline_age, 
+    time_baseline_death = death_age - baseline_age, 
+    time_diagnosis_death = death_age - diagnosis_age) |>
   
   mutate(across(all_of(POPs_finnish), ~ factor(ntile(.x, 4),                    # POP variables creation
                                                labels = c("Q1", "Q2", "Q3", "Q4")),
@@ -606,7 +622,9 @@ rm(pred, method, bdd_danish_i, bdd_danish_ii, covar_a_imputer)
 bdd_danish_red <- bdd_danish |> 
   select(sample, als, study, match, 
          all_of(covariates_danish), 
-         "baseline_age", "death_age", "diagnosis_age",  alcohol, smoking, marital_status_2cat, blod_sys, blod_dias, 
+         "baseline_age", "death_age", "diagnosis_age",  
+         time_baseline_diagnosis, time_baseline_death, time_diagnosis_death,
+         alcohol, smoking, marital_status_2cat, blod_sys, blod_dias, 
          all_of(POPs), 
          all_of(POPs_group), 
          all_of(POPs_group_quart), 
@@ -620,7 +638,9 @@ bdd_danish_red <- bdd_danish |>
 bdd_finnish_red <- bdd_finnish |> 
   select(sample, als, study, match, 
         baseline_age, sex,  'smoking', 'bmi', 'cholesterol', 'marital_status', education, alcohol, smoking_2cat, marital_status_2cat, blod_sys, blod_dias, 
-         "baseline_age", "death_age", "diagnosis_age",                   
+         "baseline_age", "death_age", "diagnosis_age", S_Ca,  
+        municipality, thawed, 
+        time_baseline_diagnosis, time_baseline_death, time_diagnosis_death,
          all_of(POPs_finnish), 
          all_of(POPs_group), 
          all_of(POPs_group_quart), 
@@ -657,6 +677,9 @@ var_label(bdd_danish) <- list(
   baseline_age = "Age at baseline",
   diagnosis_age = "Age at ALS diagnosis", 
   death_age = "Age at death",
+  time_baseline_diagnosis = "Duration between baseline and ALS diagnosis (years)", 
+  time_baseline_death = "Duration between baseline and death (years)", 
+  time_diagnosis_death = "Duration between diagnosis and death (years)",
   OCP_PeCB = "Pentachlorobenzene (PeCB)",            
   OCP_HCB = "HCB",            
   OCP_α_HCH = "α-HCH",
@@ -750,6 +773,9 @@ var_label(bdd_finnish) <- list(
   baseline_age = "Age at baseline",
   diagnosis_age = "Age at ALS diagnosis", 
   death_age = "Age at death",
+  time_baseline_diagnosis = "Duration between baseline and ALS diagnosis (years)", 
+  time_baseline_death = "Duration between baseline and death (years)", 
+  time_diagnosis_death = "Duration between diagnosis and death (years)",
   OCP_PeCB = "Pentachlorobenzene (PeCB)",            
   OCP_HCB = "HCB",            
   OCP_α_HCH = "α-HCH",
@@ -848,6 +874,9 @@ var_label(bdd) <- list(
   blod_dias = "Diastolic blood presure (mmHg)",
   diagnosis_age = "Age at ALS diagnosis", 
   death_age = "Age at death",
+  time_baseline_diagnosis = "Duration between baseline and ALS diagnosis (years)", 
+  time_baseline_death = "Duration between baseline and death (years)", 
+  time_diagnosis_death = "Duration between diagnosis and death (years)",
   OCP_PeCB = "Pentachlorobenzene (PeCB)",            
   OCP_HCB = "HCB",            
   OCP_α_HCH = "α-HCH",

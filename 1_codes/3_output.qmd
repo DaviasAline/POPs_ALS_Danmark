@@ -28,7 +28,7 @@ Not imputed for missing data
 #| echo: false
 #| message: false
 #| warning: false
-descriptive$danish$covar_danish |>
+results_descriptive$danish$covar_danish |>
   as_gt() |>
   gt::tab_options(table.font.size = "small")
 ```
@@ -41,7 +41,7 @@ descriptive$danish$covar_danish |>
 #| echo: false
 #| message: false
 #| warning: false
-descriptive$danish$POPs_table_danish |> kable("html")
+results_descriptive$danish$POPs_table_danish |> kable("html")
 ```
 
 
@@ -52,7 +52,7 @@ descriptive$danish$POPs_table_danish |> kable("html")
 #| echo: false
 #| message: false
 #| warning: false
-descriptive$danish$POPs_table_danish_by_als |>
+results_descriptive$danish$POPs_table_danish_by_als |>
   as_gt() |>
   gt::tab_options(table.font.size = "small")
 ```
@@ -62,7 +62,7 @@ descriptive$danish$POPs_table_danish_by_als |>
 #| echo: false
 #| message: false
 #| warning: false
-corrplot(descriptive$danish$POPs_heatmap_danish, 
+corrplot(results_descriptive$danish$POPs_heatmap_danish, 
          method = 'color', 
          type = "lower", 
          tl.col = 'black', 
@@ -82,7 +82,7 @@ corrplot(descriptive$danish$POPs_heatmap_danish,
 #| message: false
 #| warning: false
 # descrip_expo_danish
-descriptive$danish$POPs_boxplot_danish_by_als
+results_descriptive$danish$POPs_boxplot_danish_by_als
 ```
 
 ### Detailed distribution 
@@ -172,7 +172,7 @@ heatmap_cor(cormat = bdd_danish[PBDEs], decimal = 1)
 #| echo: false
 #| message: false
 #| warning: false
-descriptive$danish$fattyacids_table_danish |> kable("html")
+results_descriptive$danish$fattyacids_table_danish |> kable("html")
 ```
 
 ### Comparison of distribution cases/controls
@@ -181,7 +181,7 @@ descriptive$danish$fattyacids_table_danish |> kable("html")
 #| echo: false
 #| message: false
 #| warning: false
-descriptive$danish$fattyacids_table_danish_by_als |>
+results_descriptive$danish$fattyacids_table_danish_by_als |>
   as_gt() |>
   gt::tab_options(table.font.size = "small")
 ```
@@ -191,7 +191,7 @@ descriptive$danish$fattyacids_table_danish_by_als |>
 #| echo: false
 #| message: false
 #| warning: false
-corrplot(descriptive$danish$fattyacids_heatmap_danish, 
+corrplot(results_descriptive$danish$fattyacids_heatmap_danish, 
          method = 'color', 
          type = "lower", 
          tl.col = 'black', 
@@ -208,8 +208,8 @@ corrplot(descriptive$danish$fattyacids_heatmap_danish,
 #| echo: false
 #| message: false
 #| warning: false
-# descriptive$danish$fattyacids_boxplot_danish
-descriptive$danish$fattyacids_boxplot_danish_by_als
+# results_descriptive$danish$fattyacids_boxplot_danish
+results_descriptive$danish$fattyacids_boxplot_danish_by_als
 ```
 
 ### Detailed distribution
@@ -233,7 +233,7 @@ bdd_danish |>
 #| echo: false
 #| message: false
 #| warning: false
-descriptive$danish$POPs_fattyacids_heatmap_danish
+results_descriptive$danish$POPs_fattyacids_heatmap_danish
 ```
 
 ## Multiple cholesterol variables
@@ -246,6 +246,23 @@ descrip_num(data = bdd_danish, vars = c("fS_Kol", "cholesterol")) |> kable("html
 cor.test(bdd_danish$fS_Kol, bdd_danish$cholesterol)
 ```
 
+## Timing between baseline, ALS diagnosis and death 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+timing <- bdd |> 
+  filter(study == "Danish") |>
+  filter(als == 1) |>
+  select(baseline_age, diagnosis_age, death_age, 
+         time_baseline_diagnosis, time_baseline_death, time_diagnosis_death)
+
+timing |> tbl_summary()
+
+descrip_num(data = timing, vars = colnames(timing))
+rm(timing)
+```
+
 
 # Finnish data description 
 ## Metadata 
@@ -253,7 +270,7 @@ cor.test(bdd_danish$fS_Kol, bdd_danish$cholesterol)
 #| echo: false
 #| message: false
 #| warning: false
-descriptive$finnish$covar_finnish |>
+results_descriptive$finnish$covar_finnish |>
   as_gt() |>
   gt::tab_options(table.font.size = "small")
 ```
@@ -264,7 +281,7 @@ descriptive$finnish$covar_finnish |>
 #| echo: false
 #| message: false
 #| warning: false
-descriptive$finnish$POPs_table_finish |> kable("html")
+results_descriptive$finnish$POPs_table_finish |> kable("html")
 ```
 
 
@@ -274,7 +291,7 @@ descriptive$finnish$POPs_table_finish |> kable("html")
 #| echo: false
 #| message: false
 #| warning: false
-descriptive$finnish$POPs_table_finnish_by_als |>
+results_descriptive$finnish$POPs_table_finnish_by_als |>
   as_gt() |>
   gt::tab_options(table.font.size = "small")
 ```
@@ -284,7 +301,7 @@ descriptive$finnish$POPs_table_finnish_by_als |>
 #| echo: false
 #| message: false
 #| warning: false
-corrplot(descriptive$finnish$POPs_heatmap_finnish, 
+corrplot(results_descriptive$finnish$POPs_heatmap_finnish, 
          method = 'color', 
          type = "lower", 
          tl.col = 'black', 
@@ -302,8 +319,8 @@ corrplot(descriptive$finnish$POPs_heatmap_finnish,
 #| echo: false
 #| message: false
 #| warning: false
-# descriptive$finnish$POPs_boxplot_finnish
-descriptive$finnish$POPs_boxplot_finnish_by_als
+# results_descriptive$finnish$POPs_boxplot_finnish
+results_descriptive$finnish$POPs_boxplot_finnish_by_als
 ```
 
 ### Detailed distribution
@@ -394,7 +411,7 @@ heatmap_cor(cormat = bdd_finnish[PBDEs], decimal = 1)
 #| echo: false
 #| message: false
 #| warning: false
-descriptive$finnish$fattyacids_table_finnish |> kable("html")
+results_descriptive$finnish$fattyacids_table_finnish |> kable("html")
 ```
 
 ### Comparison of distribution cases/controls
@@ -402,7 +419,7 @@ descriptive$finnish$fattyacids_table_finnish |> kable("html")
 #| echo: false
 #| message: false
 #| warning: false
-descriptive$finnish$fattyacids_table_finnish_by_als |>
+results_descriptive$finnish$fattyacids_table_finnish_by_als |>
   as_gt() |>
   gt::tab_options(table.font.size = "small")
 ```
@@ -412,7 +429,7 @@ descriptive$finnish$fattyacids_table_finnish_by_als |>
 #| echo: false
 #| message: false
 #| warning: false
-corrplot(descriptive$finnish$fattyacids_heatmap_finnish, 
+corrplot(results_descriptive$finnish$fattyacids_heatmap_finnish, 
          method = 'color', 
          type = "lower", 
          tl.col = 'black', 
@@ -429,8 +446,8 @@ corrplot(descriptive$finnish$fattyacids_heatmap_finnish,
 #| echo: false
 #| message: false
 #| warning: false
-# descriptive$finnish$fattyacids_boxplot_finnish
-descriptive$finnish$fattyacids_boxplot_finnish_by_als
+# results_descriptive$finnish$fattyacids_boxplot_finnish
+results_descriptive$finnish$fattyacids_boxplot_finnish_by_als
 ```
 
 ### Detailed distribution 
@@ -455,7 +472,7 @@ bdd_finnish |>
 #| echo: false
 #| message: false
 #| warning: false
-descriptive$finnish$POPs_fattyacids_heatmap_finnish
+results_descriptive$finnish$POPs_fattyacids_heatmap_finnish
 ```
 
 ## Multiple cholesterol variables issue
@@ -484,6 +501,59 @@ corrplot(heatmap_cholesterol,
 
 ```
 
+## Timing between baseline, ALS diagnosis and death 
+### FMC
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+timing <- bdd |> 
+  filter(study == "FMC") |>
+  filter(als == 1) |>
+  select(baseline_age, diagnosis_age, death_age) |>
+  mutate(time_baseline_diagnosis = diagnosis_age - baseline_age, 
+         time_baseline_death = death_age - baseline_age, 
+         time_diagnosis_death = death_age - diagnosis_age)
+
+timing |> tbl_summary()
+
+descrip_num(data = timing, vars = colnames(timing))
+rm(timing)
+```
+
+### FMCF
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+timing <- bdd |> 
+  filter(study == "FMCF") |>
+  filter(als == 1) |>
+  select(baseline_age, diagnosis_age, death_age, 
+         time_baseline_diagnosis, time_baseline_death, time_diagnosis_death)
+
+timing |> tbl_summary()
+
+descrip_num(data = timing, vars = colnames(timing))
+rm(timing)
+```
+
+### MFH
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+timing <- bdd |> 
+  filter(study == "MFH") |>
+  filter(als == 1) |>
+  select(baseline_age, diagnosis_age, death_age, 
+         time_baseline_diagnosis, time_baseline_death, time_diagnosis_death)
+
+timing |> tbl_summary()
+
+descrip_num(data = timing, vars = colnames(timing))
+rm(timing)
+```
 
 # Comparison danish/finnish data
 ## Metadata
@@ -491,7 +561,7 @@ corrplot(heatmap_cholesterol,
 #| echo: false
 #| message: false
 #| warning: false
-descriptive$comp$covar_comp |>
+results_descriptive$comp$covar_comp |>
   as_gt() |>
   gt::tab_options(table.font.size = "small")
 ```
@@ -501,10 +571,10 @@ descriptive$comp$covar_comp |>
 #| echo: false
 #| message: false
 #| warning: false
-descriptive$comp$POPs_table_comp |>
+results_descriptive$comp$POPs_table_comp |>
   as_gt() |>
   gt::tab_options(table.font.size = "small")
-descriptive$comp$POPs_boxplot_comp
+results_descriptive$comp$POPs_boxplot_comp
 ```
 
 ## Fatty acids
@@ -512,10 +582,10 @@ descriptive$comp$POPs_boxplot_comp
 #| echo: false
 #| message: false
 #| warning: false
-descriptive$comp$fattyacids_table_comp |>
+results_descriptive$comp$fattyacids_table_comp |>
   as_gt() |>
   gt::tab_options(table.font.size = "small")
-descriptive$comp$fattyacids_boxplot_comp 
+results_descriptive$comp$fattyacids_boxplot_comp 
 ```
 
 # POPs and ALS (in Danish cohort) 
@@ -526,7 +596,7 @@ descriptive$comp$fattyacids_boxplot_comp
 #| echo: false
 #| message: false
 #| warning: false
-descriptive$danish$covar_danish |>
+results_descriptive$danish$covar_danish |>
   as_gt() |>
   gt::tab_options(table.font.size = "small")
 ```
@@ -997,3 +1067,34 @@ results_fattyacids_ALS$finnish$fattyacids_quart_als_table_finnish |>
 results_fattyacids_ALS$finnish$fattyacids_quart_als_figure_finnish
 ```
 
+### Sensitivity Ca 
+#### Continuous coding (standardized)
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_fattyacids_ALS$sensi_ca$fattyacids_quart_als_table_sensi_ca_finnish 
+results_fattyacids_ALS$sensi_ca$fattyacids_quart_als_figure_sensi_ca_finnish
+```
+
+```{r, fig.height=10}
+#| echo: false
+#| message: false
+#| warning: false
+results_fattyacids_ALS$sensi_ca$fattyacids_quart_als_figure_sensi_ca_finnish
+```
+
+#### Quartiles
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_fattyacids_ALS$sensi_ca$fattyacids_quart_als_table_sensi_ca_finnish 
+```
+
+```{r, fig.height=13}
+#| echo: false
+#| message: false
+#| warning: false
+results_fattyacids_ALS$sensi_ca$fattyacids_quart_als_figure_sensi_ca_finnish
+```

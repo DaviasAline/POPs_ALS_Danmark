@@ -382,7 +382,7 @@ fattyacids_boxplot_comp <- bdd |>
 
 
 # Assemblage ----
-descriptive <- list(
+results_descriptive <- list(
   danish = list(
     covar_danish = covar_danish, 
     POPs_table_danish = POPs_table_danish,

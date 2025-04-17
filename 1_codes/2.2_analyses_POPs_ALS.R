@@ -1002,7 +1002,7 @@ rm(model1_quart, model1_spline, model1_quadratic, model1_cubic,
 # adjusted for sex and age
 
 #### spline transformation ----
-model1_spline_outlier <- data.frame(
+model1_spline_outliers <- data.frame(
   variable = character(),
   df = integer(),
   OR = numeric(),
@@ -1026,7 +1026,7 @@ for (var in POPs_group_outlier) {
   p_value <- model_summary$p.value
   df_value <- model_summary$term
   
-  model1_spline_outlier <- rbind(model1_spline_outlier, data.frame(variable = var,
+  model1_spline_outliers <- rbind(model1_spline_outliers, data.frame(variable = var,
                                                                    df = df_value, 
                                                                    OR = OR,
                                                                    lower_CI = lower_CI,
@@ -1034,7 +1034,7 @@ for (var in POPs_group_outlier) {
                                                                    "p-value" = p_value))
 }
 
-model1_spline_outlier <- model1_spline_outlier %>% 
+model1_spline_outliers <- model1_spline_outliers %>% 
   mutate(
     df = str_sub(df, start = -1), 
     model = "base_spline") %>%
@@ -1042,7 +1042,7 @@ model1_spline_outlier <- model1_spline_outlier %>%
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
 
 #### quadratic transformation ----
-model1_quadratic_outlier <- data.frame(
+model1_quadratic_outliers <- data.frame(
   variable = character(),
   df = integer(),
   OR = numeric(),
@@ -1065,7 +1065,7 @@ for (var in POPs_group_outlier) {
   p_value <- model_summary$p.value
   df_value <- model_summary$term
   
-  model1_quadratic_outlier <- rbind(model1_quadratic_outlier, data.frame(variable = var,
+  model1_quadratic_outliers <- rbind(model1_quadratic_outliers, data.frame(variable = var,
                                                                          df = df_value, 
                                                                          OR = OR,
                                                                          lower_CI = lower_CI,
@@ -1073,7 +1073,7 @@ for (var in POPs_group_outlier) {
                                                                          "p-value" = p_value))
 }
 
-model1_quadratic_outlier <- model1_quadratic_outlier %>% 
+model1_quadratic_outliers <- model1_quadratic_outliers %>% 
   mutate(
     df = str_sub(df, start = -1), 
     model = "base_quadra") %>%
@@ -1081,7 +1081,7 @@ model1_quadratic_outlier <- model1_quadratic_outlier %>%
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
 
 #### cubic transformation ----
-model1_cubic_outlier <- data.frame(
+model1_cubic_outliers <- data.frame(
   variable = character(),
   df = integer(),
   OR = numeric(),
@@ -1104,7 +1104,7 @@ for (var in POPs_group_outlier) {
   p_value <- model_summary$p.value
   df_value <- model_summary$term
   
-  model1_cubic_outlier <- rbind(model1_cubic_outlier, data.frame(variable = var,
+  model1_cubic_outliers <- rbind(model1_cubic_outliers, data.frame(variable = var,
                                                                  df = df_value, 
                                                                  OR = OR,
                                                                  lower_CI = lower_CI,
@@ -1112,7 +1112,7 @@ for (var in POPs_group_outlier) {
                                                                  "p-value" = p_value))
 }
 
-model1_cubic_outlier <- model1_cubic_outlier %>% 
+model1_cubic_outliers <- model1_cubic_outliers %>% 
   mutate(
     df = str_sub(df, start = -1), 
     model = "base_cubic") %>%
@@ -1136,7 +1136,7 @@ rm(var, formula, model, model_summary)
 # adjusted for sex, age, smoking_2cat_i, BMI, serum total cholesterol_i, marital status and education
 
 #### spline transformation ----
-model2_spline_outlier <- data.frame(
+model2_spline_outliers <- data.frame(
   variable = character(),
   df = integer(),
   OR = numeric(),
@@ -1155,7 +1155,7 @@ for (var in POPs_group_outlier) {
   upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
   p_value <- model_summary$p.value
   df_value <- model_summary$term
-  model2_spline_outlier <- rbind(model2_spline_outlier, data.frame(variable = var,
+  model2_spline_outliers <- rbind(model2_spline_outliers, data.frame(variable = var,
                                                                    df = df_value, 
                                                                    OR = OR,
                                                                    lower_CI = lower_CI,
@@ -1163,7 +1163,7 @@ for (var in POPs_group_outlier) {
                                                                    "p-value" = p_value))
 }
 
-model2_spline_outlier <- model2_spline_outlier %>% 
+model2_spline_outliers <- model2_spline_outliers %>% 
   mutate(
     df = str_sub(df, start = -1), 
     model = "adjusted_spline") %>%
@@ -1171,7 +1171,7 @@ model2_spline_outlier <- model2_spline_outlier %>%
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
 
 #### quadratic transformation ----
-model2_quadratic_outlier <- data.frame(
+model2_quadratic_outliers <- data.frame(
   variable = character(),
   df = integer(),
   OR = numeric(),
@@ -1191,7 +1191,7 @@ for (var in POPs_group_outlier) {
   upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
   p_value <- model_summary$p.value
   df_value <- model_summary$term
-  model2_quadratic_outlier <- rbind(model2_quadratic_outlier, 
+  model2_quadratic_outliers <- rbind(model2_quadratic_outliers, 
                                     data.frame(variable = var,
                                                df = df_value, 
                                                OR = OR,
@@ -1200,7 +1200,7 @@ for (var in POPs_group_outlier) {
                                                "p-value" = p_value))
 }
 
-model2_quadratic_outlier <- model2_quadratic_outlier %>% 
+model2_quadratic_outliers <- model2_quadratic_outliers %>% 
   mutate(
     df = str_sub(df, start = -1), 
     model = "adjusted_quadra") %>%
@@ -1208,7 +1208,7 @@ model2_quadratic_outlier <- model2_quadratic_outlier %>%
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
 
 #### cubic transformation ----
-model2_cubic_outlier <- data.frame(
+model2_cubic_outliers <- data.frame(
   variable = character(),
   df = integer(),
   OR = numeric(),
@@ -1228,7 +1228,7 @@ for (var in POPs_group_outlier) {
   upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
   p_value <- model_summary$p.value
   df_value <- model_summary$term
-  model2_cubic_outlier <- rbind(model2_cubic_outlier, 
+  model2_cubic_outliers <- rbind(model2_cubic_outliers, 
                                 data.frame(variable = var,
                                            df = df_value, 
                                            OR = OR,
@@ -1237,7 +1237,7 @@ for (var in POPs_group_outlier) {
                                            "p-value" = p_value))
 }
 
-model2_cubic_outlier <- model2_cubic_outlier %>% 
+model2_cubic_outliers <- model2_cubic_outliers %>% 
   mutate(
     df = str_sub(df, start = -1), 
     model = "adjusted_cubic") %>%
@@ -1259,12 +1259,12 @@ for (var in POPs_group_outlier) {
 rm(var, formula, model, model_summary)
 
 #### merging  ----
-sensitivity_results_outlier <- bind_rows(model1_spline_outlier,
-                                  model1_quadratic_outlier,
-                                 model1_cubic_outlier, 
-                                 model2_spline_outlier,
-                                model2_quadratic_outlier,
-                                 model2_cubic_outlier) %>% 
+sensitivity_results_outlier <- bind_rows(model1_spline_outliers,
+                                  model1_quadratic_outliers,
+                                 model1_cubic_outliers, 
+                                 model2_spline_outliers,
+                                model2_quadratic_outliers,
+                                 model2_cubic_outliers) %>% 
   arrange(variable) %>%
   mutate(
     OR = as.numeric(sprintf("%.1f", OR)), 
@@ -1319,12 +1319,12 @@ results_cubic_outliers <-
          contains("copollutant_cubic")) 
 colnames(results_cubic_outliers) <- gsub('_cubic', '', colnames(results_cubic_outliers))
 
-rm(model1_spline_outlier,
-   model1_quadratic_outlier,
-   model1_cubic_outlier, 
-   model2_spline_outlier,
-   model2_quadratic_outlier,
-   model2_cubic_outlier)
+rm(model1_spline_outliers,
+   model1_quadratic_outliers,
+   model1_cubic_outliers, 
+   model2_spline_outliers,
+   model2_quadratic_outliers,
+   model2_cubic_outliers)
 
 ## sensitivity analyses pollutants not summed ----
 ### quartiles ----
@@ -2522,7 +2522,7 @@ plot_copollutant_gamm <- map(POPs_group_bis, function(var) {
                            guides = 'collect')
   p
 })|> set_names(POPs_group_bis)
-rm(POPs_group_bis, pollutant_labels_bis)
+rm(POPs_group_bis, pollutant_labels_bis, model)
 
 
 ### gamm outliers ----
@@ -2592,11 +2592,12 @@ plot_copollutant_gamm_outlier <- map(POPs_group_outlier_bis, function(var) {
                            guides = 'collect')
   p
 })|> set_names(POPs_group_outlier_bis)
-rm(POPs_group_outlier_bis, pollutant_labels_bis)
+rm(POPs_group_outlier_bis, pollutant_labels_bis, model)
 
 
 results_POPs_ALS <- 
   list(main = list(main_results = main_results, 
+                   covar = covar, 
                    results_spline = results_spline, 
                    results_quart = results_quart, 
                    results_quadratic = results_quadratic, 
@@ -2638,7 +2639,7 @@ results_POPs_ALS <-
                                      plot_base_gamm_not_summed = plot_base_gamm_not_summed, 
                                      plot_adjusted_gamm_not_summed = plot_adjusted_gamm_not_summed))
 
-rm(main_results, results_spline, results_quart, results_quadratic, results_cubic, model1_gamm, model2_gamm, 
+rm(main_results, covar, results_spline, results_quart, results_quadratic, results_cubic, model1_gamm, model2_gamm, 
    sensitivity_results_outlier, results_spline_outliers, results_quadratic_outliers, results_cubic_outliers, 
    model1_gamm_outliers, model2_gamm_outliers, 
    sensitivity_results_not_summed_quart, model1_gamm_not_summed, model2_gamm_not_summed, model1_quart_not_summed, model2_quart_not_summed, 
