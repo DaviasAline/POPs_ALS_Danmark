@@ -18,11 +18,15 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/2.4_analyses_fattyacids_ALS_survi
 ```
 
 
+
+
 # Danish data description
 
 ## Metadata
 
 Not imputed for missing data
+
+
 
 ```{r}
 #| echo: false
@@ -33,9 +37,13 @@ results_descriptive$danish$covar_danish |>
   gt::tab_options(table.font.size = "small")
 ```
 
+
+
 ## POPs 
 
 ### Distribution tables
+
+
 
 ```{r}
 #| echo: false
@@ -46,7 +54,11 @@ results_descriptive$danish$POPs_table_danish |> kable("html")
 
 
 
+
+
 ### Comparison of distribution cases/controls
+
+
 
 ```{r}
 #| echo: false
@@ -57,7 +69,11 @@ results_descriptive$danish$POPs_table_danish_by_als |>
   gt::tab_options(table.font.size = "small")
 ```
 
+
+
 ### Heatmap of correlation 
+
+
 ```{r fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
@@ -75,7 +91,11 @@ corrplot(results_descriptive$danish$POPs_heatmap_danish,
 ```
 
 
+
+
 ### Boxplots
+
+
 
 ```{r, fig.width=10, fig.height=10}
 #| echo: false
@@ -85,8 +105,12 @@ corrplot(results_descriptive$danish$POPs_heatmap_danish,
 results_descriptive$danish$POPs_boxplot_danish_by_als
 ```
 
+
+
 ### Detailed distribution 
 #### Summed 
+
+
 
 ```{r}
 #| echo: false
@@ -97,7 +121,11 @@ boxplot(data = bdd_danish, vars = POPs_group)
 heatmap_cor(cormat = bdd_danish[POPs_group], decimal = 1)
 ```
 
+
+
 #### PCBs
+
+
 
 ```{r}
 #| echo: false
@@ -136,7 +164,11 @@ heatmap_cor(cormat = bdd_danish[PCBs], decimal = 1)
 rm(PCBs)
 ```
 
+
+
 #### OCPs
+
+
 
 ```{r}
 #| echo: false
@@ -148,7 +180,11 @@ boxplot(data = bdd_danish, vars = OCPs)
 heatmap_cor(cormat = bdd_danish[OCPs], decimal = 1)
 ```
 
+
+
 #### PBDEs
+
+
 
 ```{r,  fig.width=7, fig.height=3}
 #| echo: false
@@ -166,8 +202,12 @@ boxplot(data = bdd_danish, vars = PBDEs)
 heatmap_cor(cormat = bdd_danish[PBDEs], decimal = 1)
 ```
 
+
+
 ## Fatty acids 
 ### Distribution tables 
+
+
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
@@ -175,7 +215,11 @@ heatmap_cor(cormat = bdd_danish[PBDEs], decimal = 1)
 results_descriptive$danish$fattyacids_table_danish |> kable("html")
 ```
 
+
+
 ### Comparison of distribution cases/controls
+
+
 
 ```{r}
 #| echo: false
@@ -186,7 +230,11 @@ results_descriptive$danish$fattyacids_table_danish_by_als |>
   gt::tab_options(table.font.size = "small")
 ```
 
+
+
 ### Heatmap of correlation
+
+
 ```{r, fig.height=12, fig.width=12}
 #| echo: false
 #| message: false
@@ -203,7 +251,11 @@ corrplot(results_descriptive$danish$fattyacids_heatmap_danish,
          col = rev(COL2(diverging = "RdYlBu")))
 ```
 
+
+
 ### Boxplots
+
+
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
@@ -212,8 +264,12 @@ corrplot(results_descriptive$danish$fattyacids_heatmap_danish,
 results_descriptive$danish$fattyacids_boxplot_danish_by_als
 ```
 
+
+
 ### Detailed distribution
 #### Density plots 
+
+
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
@@ -228,7 +284,11 @@ bdd_danish |>
   theme_minimal() +
   facet_wrap(~fattyacids, scales = "free", ncol = 4)
 ```
+
+
 ## Heatmap POPs/Fatty acids 
+
+
 ```{r, fig.width=12, fig.height=12}
 #| echo: false
 #| message: false
@@ -236,7 +296,11 @@ bdd_danish |>
 results_descriptive$danish$POPs_fattyacids_heatmap_danish
 ```
 
+
+
 ## Multiple cholesterol variables
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -246,7 +310,11 @@ descrip_num(data = bdd_danish, vars = c("fS_Kol", "cholesterol")) |> kable("html
 cor.test(bdd_danish$fS_Kol, bdd_danish$cholesterol)
 ```
 
+
+
 ## Timing between baseline, ALS diagnosis and death 
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -264,8 +332,12 @@ rm(timing)
 ```
 
 
+
+
 # Finnish data description 
 ## Metadata 
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -275,8 +347,12 @@ results_descriptive$finnish$covar_finnish |>
   gt::tab_options(table.font.size = "small")
 ```
 
+
+
 ## POPs
 ### Distribution tables
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -285,7 +361,11 @@ results_descriptive$finnish$POPs_table_finish |> kable("html")
 ```
 
 
+
+
 ### Comparison of distribution cases/controls
+
+
 
 ```{r}
 #| echo: false
@@ -296,7 +376,11 @@ results_descriptive$finnish$POPs_table_finnish_by_als |>
   gt::tab_options(table.font.size = "small")
 ```
 
+
+
 ### Heatmap of correlation 
+
+
 ```{r fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
@@ -313,7 +397,11 @@ corrplot(results_descriptive$finnish$POPs_heatmap_finnish,
          col = rev(COL2(diverging = "RdYlBu")))
 ```
 
+
+
 ### Boxplots
+
+
 
 ```{r, fig.width=10, fig.height=10}
 #| echo: false
@@ -323,8 +411,12 @@ corrplot(results_descriptive$finnish$POPs_heatmap_finnish,
 results_descriptive$finnish$POPs_boxplot_finnish_by_als
 ```
 
+
+
 ### Detailed distribution
 #### Summed 
+
+
 
 ```{r}
 #| echo: false
@@ -335,7 +427,11 @@ boxplot(data = bdd_finnish, vars = POPs_group)
 heatmap_cor(cormat = bdd_finnish[POPs_group], decimal = 1)
 ```
 
+
+
 #### PCBs
+
+
 
 ```{r}
 #| echo: false
@@ -374,7 +470,11 @@ heatmap_cor(cormat = bdd_finnish[PCBs], decimal = 1)
 rm(PCBs)
 ```
 
+
+
 #### OCPs
+
+
 
 ```{r}
 #| echo: false
@@ -386,7 +486,11 @@ boxplot(data = bdd_finnish, vars = OCPs)
 # heatmap_cor(cormat = bdd_finnish[OCPs], decimal = 1)
 ```
 
+
+
 #### PBDEs
+
+
 
 ```{r,  fig.width=7, fig.height=3}
 #| echo: false
@@ -405,8 +509,12 @@ heatmap_cor(cormat = bdd_finnish[PBDEs], decimal = 1)
 ```
 
 
+
+
 ## Fatty acids
 ### Distribution tables 
+
+
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
@@ -414,7 +522,11 @@ heatmap_cor(cormat = bdd_finnish[PBDEs], decimal = 1)
 results_descriptive$finnish$fattyacids_table_finnish |> kable("html")
 ```
 
+
+
 ### Comparison of distribution cases/controls
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -424,7 +536,11 @@ results_descriptive$finnish$fattyacids_table_finnish_by_als |>
   gt::tab_options(table.font.size = "small")
 ```
 
+
+
 ### Heatmap of correlation
+
+
 ```{r, fig.height=12, fig.width=12}
 #| echo: false
 #| message: false
@@ -441,7 +557,11 @@ corrplot(results_descriptive$finnish$fattyacids_heatmap_finnish,
          col = rev(COL2(diverging = "RdYlBu")))
 ```
 
+
+
 ### Boxplots
+
+
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
@@ -450,7 +570,11 @@ corrplot(results_descriptive$finnish$fattyacids_heatmap_finnish,
 results_descriptive$finnish$fattyacids_boxplot_finnish_by_als
 ```
 
+
+
 ### Detailed distribution 
+
+
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
@@ -467,7 +591,11 @@ bdd_finnish |>
   theme(axis.title = element_blank()) +
   facet_wrap(~fattyacids, scales = "free", ncol = 3L, nrow = 14L)
 ```
+
+
 ## Heatmap POPs/Fatty acids 
+
+
 ```{r, fig.width=12, fig.height=12}
 #| echo: false
 #| message: false
@@ -475,8 +603,12 @@ bdd_finnish |>
 results_descriptive$finnish$POPs_fattyacids_heatmap_finnish
 ```
 
+
+
 ## Multiple cholesterol variables issue
 Why do we have 3 cholesterol variables in the finnish data ?
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -501,8 +633,12 @@ corrplot(heatmap_cholesterol,
 
 ```
 
+
+
 ## Timing between baseline, ALS diagnosis and death 
 ### FMC
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -521,7 +657,11 @@ descrip_num(data = timing, vars = colnames(timing))
 rm(timing)
 ```
 
+
+
 ### FMCF
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -538,7 +678,11 @@ descrip_num(data = timing, vars = colnames(timing))
 rm(timing)
 ```
 
+
+
 ### MFH
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -555,8 +699,12 @@ descrip_num(data = timing, vars = colnames(timing))
 rm(timing)
 ```
 
+
+
 # Comparison danish/finnish data
 ## Metadata
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -566,7 +714,11 @@ results_descriptive$comp$covar_comp |>
   gt::tab_options(table.font.size = "small")
 ```
 
+
+
 ## POPs 
+
+
 ```{r, fig.width=10, fig.height=10}
 #| echo: false
 #| message: false
@@ -577,7 +729,11 @@ results_descriptive$comp$POPs_table_comp |>
 results_descriptive$comp$POPs_boxplot_comp
 ```
 
+
+
 ## Fatty acids
+
+
 ```{r, fig.height=12, fig.width=12}
 #| echo: false
 #| message: false
@@ -588,9 +744,13 @@ results_descriptive$comp$fattyacids_table_comp |>
 results_descriptive$comp$fattyacids_boxplot_comp 
 ```
 
+
+
 # POPs and ALS occurence (in Danish cohort) 
 
 ## Effects of covariates on ALS diagnosis
+
+
 
 ```{r}
 #| echo: false
@@ -601,11 +761,15 @@ results_descriptive$danish$covar_danish |>
   gt::tab_options(table.font.size = "small")
 ```
 
+
+
 ## Effects of POPs on ALS occurence
 
 ### Spline transformation
 
 #### main analysis
+
+
 
 ```{r}
 #| echo: false
@@ -623,7 +787,11 @@ results_POPs_ALS_occurrence$main$results_spline |>
   kable_styling(fixed_thead = TRUE)
 ```
 
+
+
 #### sensitivity analysis without outliers
+
+
 
 ```{r}
 #| echo: false
@@ -646,9 +814,13 @@ results_POPs_ALS_occurrence$sensitivity_outliers$results_spline_outliers |>
   kable_styling(fixed_thead = TRUE)
 ```
 
+
+
 ### Quartile transformation
 
 #### main analysis
+
+
 
 ```{r}
 #| echo: false
@@ -666,9 +838,13 @@ results_POPs_ALS_occurrence$main$results_quart |>
   kable_styling(fixed_thead = TRUE)
 ```
 
+
+
 ### Quadratic transformation
 
 #### main analysis
+
+
 
 ```{r}
 #| echo: false
@@ -687,7 +863,11 @@ results_POPs_ALS_occurrence$main$results_quadratic |>
   kable_styling(fixed_thead = TRUE)
 ```
 
+
+
 #### sensitivity analysis without outliers
+
+
 
 ```{r}
 #| echo: false
@@ -709,9 +889,13 @@ results_POPs_ALS_occurrence$sensitivity_outliers$results_quadratic_outliers |>
   kable_styling(fixed_thead = TRUE)
 ```
 
+
+
 ### Cubic transformation
 
 #### main analysis
+
+
 
 ```{r}
 #| echo: false
@@ -729,7 +913,11 @@ results_POPs_ALS_occurrence$main$results_cubic |>
   kable_styling(fixed_thead = TRUE)
 ```
 
+
+
 #### sensitivity analysis without outliers
+
+
 
 ```{r}
 #| echo: false
@@ -751,11 +939,15 @@ results_POPs_ALS_occurrence$sensitivity_outliers$results_cubic_outliers |>
   kable_styling(fixed_thead = TRUE)
 ```
 
+
+
 ## Vizualization
 
 ### model comparison splines, linear quadratic and cubic
 
 #### dioxin like PCBs
+
+
 
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
@@ -772,7 +964,11 @@ grid.arrange(grobs = list(
   ncol = 6)
 ```
 
+
+
 #### non dioxin like PCBs
+
+
 
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
@@ -789,7 +985,11 @@ grid.arrange(grobs = list(
   ncol = 6)
 ```
 
+
+
 #### 4 most commun PCBs
+
+
 
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
@@ -806,7 +1006,11 @@ grid.arrange(grobs = list(
   ncol = 6)
 ```
 
+
+
 #### OCP_HCB
+
+
 
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
@@ -823,7 +1027,11 @@ grid.arrange(grobs = list(
   ncol = 6)
 ```
 
+
+
 #### ΣDDT
+
+
 
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
@@ -840,7 +1048,11 @@ grid.arrange(grobs = list(
   ncol = 6)
 ```
 
+
+
 #### OCP_β_HCH
+
+
 
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
@@ -857,7 +1069,11 @@ grid.arrange(grobs = list(
   ncol = 6)
 ```
 
+
+
 #### Σchlordane
+
+
 
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
@@ -874,7 +1090,11 @@ grid.arrange(grobs = list(
   ncol = 6)
 ```
 
+
+
 #### ΣPBDE
+
+
 
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
@@ -891,7 +1111,11 @@ grid.arrange(grobs = list(
   ncol = 6)
 ```
 
+
+
 ### forest plot quartiles
+
+
 
 ```{r fig.height=9, fig.width=9}
 #| echo: false
@@ -907,12 +1131,16 @@ results_POPs_ALS_occurrence$main$plot_quart
 results_POPs_ALS_occurrence$main$plot_quart_bis
 ```
 
+
+
 ### gamm models
 
 #### Base models
 
 Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex and age. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
 
+
+
 ```{r, fig.height=6, fig.width=15}
 #| echo: false
 #| message: false
@@ -925,11 +1153,15 @@ wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gamm[5:8], 
            wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gamm_outlier[5:8], nrow = 1), 
            nrow = 2)
 ```
+
+
 
 #### Adjusted models
 
 Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
 
+
+
 ```{r, fig.height=6, fig.width=15}
 #| echo: false
 #| message: false
@@ -943,9 +1175,13 @@ wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gamm[5:8], 
            nrow = 2)
 ```
 
+
+
 #### Copollutant model
 
 Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates and all other co-pollutants are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status, education and for the other co-pollutants. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
+
+
 
 ```{r, fig.height=6, fig.width=15}
 #| echo: false
@@ -961,8 +1197,12 @@ wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_copollutant_gamm[5:7
 ```
 
 
+
+
 ## Sensitivity analysis pollutants not summed
 ### GAMMs 
+
+
 ```{r, fig.height=6, fig.width=15}
 #| column: screen-inset-right
 #| echo: false
@@ -973,7 +1213,11 @@ wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gamm
 wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gamm_not_summed[17:22], ncol = 4)
 ```
 
+
+
 ### Quartiles 
+
+
 ```{r,  fig.height=15, fig.width=10}
 #| echo: false
 #| message: false
@@ -981,9 +1225,13 @@ wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gamm
 results_POPs_ALS_occurrence$sensitivity_not_summed$plot_quart_sensi_not_summed
 ```
 
+
+
 # Fatty acids and ALS occurence
 ## Danish cohort
 ### Effects of subject characterist on ALS occurence in the Danish cohort 
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -991,8 +1239,12 @@ results_POPs_ALS_occurrence$sensitivity_not_summed$plot_quart_sensi_not_summed
 results_fattyacids_ALS_occurrence$danish$covar_als_table_danish
 ```
 
+
+
 ### Effects of fatty acids on ALS occurence in the Danish cohort 
 #### Continuous coding (standardized)
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1008,7 +1260,11 @@ results_fattyacids_ALS_occurrence$danish$fattyacids_sd_als_table_danish |>
 results_fattyacids_ALS_occurrence$danish$fattyacids_sd_als_figure_danish
 ```
 
+
+
 #### Quartiles 
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1024,8 +1280,12 @@ results_fattyacids_ALS_occurrence$danish$fattyacids_quart_als_table_danish |>
 results_fattyacids_ALS_occurrence$danish$fattyacids_quart_als_figure_danish
 ```
 
+
+
 ## Finnish cohorts 
 ### Effects of subject characterist on ALS occurence in the Finnish cohorts
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1034,8 +1294,12 @@ results_fattyacids_ALS_occurrence$danish$fattyacids_quart_als_figure_danish
 ```
 
 
+
+
 ### Effects of fatty acids on ALS occurence in the Finnish cohorts
 #### Continuous coding (standardized)
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1051,7 +1315,11 @@ results_fattyacids_ALS_occurrence$finnish$fattyacids_sd_als_table_finnish |>
 results_fattyacids_ALS_occurrence$finnish$fattyacids_sd_als_figure_finnish
 ```
 
+
+
 #### Quartiles 
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1067,8 +1335,12 @@ results_fattyacids_ALS_occurrence$finnish$fattyacids_quart_als_table_finnish |>
 results_fattyacids_ALS_occurrence$finnish$fattyacids_quart_als_figure_finnish
 ```
 
+
+
 ### Sensitivity Ca 
 #### Continuous coding (standardized)
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1084,7 +1356,11 @@ results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_figure_sensi_ca_
 results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_figure_sensi_ca_finnish
 ```
 
+
+
 #### Quartiles
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1100,7 +1376,11 @@ results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_figure_sensi_ca_
 ```
 
 
+
+
 # Fatty acids ans ALS survival 
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1109,11 +1389,15 @@ densityplot(data = bdd_finnish, vars = "follow_up_death")
 ```
 
 
+
+
 ## Danish cohort 
 To be done when 
 
 ## Finnish cohorts 
 ## Continuous coding (standardized)
+
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1123,7 +1407,11 @@ results_fattyacids_ALS_survival$finnish$fattyacids_sd_als_table_finnish |>
 results_fattyacids_ALS_survival$finnish$fattyacids_sd_als_figure_finnish
 ```
 
+
+
 ## Quartiles 
+
+
 ```{r}
 #| echo: false
 #| message: false

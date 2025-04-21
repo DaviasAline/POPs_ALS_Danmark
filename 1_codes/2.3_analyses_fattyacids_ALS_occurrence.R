@@ -1,12 +1,12 @@
 # Aline Davias
 # April 9, 2025 
-# Analyses on fatty acids and PUFAs
+# Analyses on fatty acids and ALS occurrence in both Danish and Finnish cohorts
 
 
 # data loading - package loading ----
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2.2_analyses_POPs_ALS.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/2.2_analyses_POPs_ALS_occurrence.R")
 
-# main analysis ----
+# Occurrence analyses ----
 ## Danish cohort ----
 ### Base model ----
 model1_sd_danish <- map_dfr(explanatory, function(expl) {                       # map_dfr() met tout dans un seul dataframe par rapport a map() qui renvoit une liste
@@ -88,7 +88,6 @@ main_results_fattyacids_ALS_danish <-
 rm(model1_sd_danish, model2_sd_danish, model1_quart_danish, model2_quart_danish)
 
 ## Finnish cohorts ----
-### Main analysis ----
 run_clogit <- function(formula, data) {
   model <- clogit(formula, data = data)
   model_summary <- summary(model)
@@ -99,16 +98,25 @@ run_clogit <- function(formula, data) {
     se = coefs[, "se(coef)"])
 }
 
-#### Base model ----
+### Base model ----
 model1_sd_finnish <- map_dfr(explanatory, function(expl) {
   formula <- as.formula(paste("als ~", expl, "+ strata(match)"))                # base formula: matched, not ajstuded
   
-  bdd_finnish_1 <- bdd |> filter(study == "FMC")                          # creation of one dataset per finnish cohort
-  bdd_finnish_2 <- bdd |> filter(study == "FMCF")
+  bdd_finnish_FMC <- bdd |>                                                     # set the datasets
+    filter(study == "FMC") |>                                                   # cohort selection
+    mutate(across(all_of(fattyacids),                                           # create cohort specific scaled fatty acids variables 
+                  scale,
+                  .names = "{.col}_sd"))  
+  
+  bdd_finnish_FMCF <- bdd |>                                                    # set the datasets
+    filter(study == "FMCF") |>                                                  # cohort selection
+    mutate(across(all_of(fattyacids),                                           # create cohort specific scaled fatty acids variables 
+                  scale,
+                  .names = "{.col}_sd"))
   
   results <- list(                                                              # run of the simple conditional logistic regression
-    finnish_1 = run_clogit(formula, bdd_finnish_1),
-    finnish_2 = run_clogit(formula, bdd_finnish_2)) |>
+    finnish_1 = run_clogit(formula, bdd_finnish_FMC),
+    finnish_2 = run_clogit(formula, bdd_finnish_FMCF)) |>
     bind_rows(.id = "dataset") %>%
     mutate(var = se^2, explanatory = expl)
   
@@ -129,22 +137,20 @@ model1_sd_finnish <- map_dfr(explanatory, function(expl) {
 model1_quart_finnish <- map_dfr(explanatory_quart, function(expl) {
   formula <- as.formula(paste("als ~", expl, "+ strata(match)"))                # base formula: matched, not ajstuded
   
-  bdd_finnish_1 <- bdd |> filter(study == "FMC")                                # creation of one dataset per finnish cohort
-  bdd_finnish_2 <- bdd |> filter(study == "FMCF")
-  
-  bdd_finnish_1 <- bdd_finnish_1 |>                                             # creation of quartiles cohort specific 
-    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                           
-                                               labels = c("Q1", "Q2", "Q3", "Q4")),
-                  .names = "{.col}_quart")) 
-  bdd_finnish_2 <- bdd_finnish_2 |>                                             
-    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                           
+  bdd_finnish_FMC <- bdd |>                                                     
+    filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
+    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                    # creation of quartiles cohort specific                      
+                                             labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) 
+  bdd_finnish_FMCF <- bdd |> 
+    filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
+    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                    # creation of quartiles cohort specific    
                                                labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart"))
   
-  
   results <- list(                                                              # run of the simple conditional logistic regression
-    finnish_1 = run_clogit(formula, bdd_finnish_1),
-    finnish_2 = run_clogit(formula, bdd_finnish_2)) |>
+    finnish_1 = run_clogit(formula, bdd_finnish_FMC),
+    finnish_2 = run_clogit(formula, bdd_finnish_FMCF)) |>
     bind_rows(.id = "dataset") %>%
     mutate(var = se^2, 
            explanatory = expl,
@@ -170,18 +176,27 @@ model1_quart_finnish <- map_dfr(explanatory_quart, function(expl) {
   return(meta_results)
 })
 
-#### Adjusted model ----
+### Adjusted model ----
 model2_sd_finnish <- map_dfr(explanatory, function(expl) {
   formula <- as.formula(paste("als ~", expl, "+",                               # adjusted formula: matched and ajstuded
                               paste(covariates_finnish, collapse = " + "), 
                               "+ strata(match)"))
   
-  bdd_finnish_1 <- bdd |> filter(study == "FMC")                                # creation of one dataset per finnish cohort
-  bdd_finnish_2 <- bdd |> filter(study == "FMCF")
+  bdd_finnish_FMC <- bdd |>                                                     # set the datasets
+    filter(study == "FMC") |>                                                   # cohort selection
+    mutate(across(all_of(fattyacids),                                           # create cohort specific scaled fatty acids variables 
+                  scale,
+                  .names = "{.col}_sd"))  
+  
+  bdd_finnish_FMCF <- bdd |>                                                    # set the datasets
+    filter(study == "FMCF") |>                                                  # cohort selection
+    mutate(across(all_of(fattyacids),                                           # create cohort specific scaled fatty acids variables 
+                  scale,
+                  .names = "{.col}_sd"))
   
   results <- list(                                                              # run of the simple conditional logistic regression
-    finnish_1 = run_clogit(formula, bdd_finnish_1),
-    finnish_2 = run_clogit(formula, bdd_finnish_2)) |>
+    finnish_1 = run_clogit(formula, bdd_finnish_FMC),
+    finnish_2 = run_clogit(formula, bdd_finnish_FMCF)) |>
     bind_rows(.id = "dataset") |>
     mutate(var = se^2, explanatory = expl) |>
     filter(str_starts(term, explanatory))    # to keep only the quartiles term without the covariates (str_starts() is checking whether the string in term starts with the string in expl)
@@ -204,22 +219,21 @@ model2_quart_finnish <- map_dfr(explanatory_quart, function(expl) {
                               paste(covariates_finnish, collapse = " + "), 
                               "+ strata(match)"))
   
-  bdd_finnish_1 <- bdd |> filter(study == "FMC")                          # creation of one dataset per finnish cohort
-  bdd_finnish_2 <- bdd |> filter(study == "FMCF")
-  
-  bdd_finnish_1 <- bdd_finnish_1 |>                                             # creation of quartiles cohort specific 
-    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                           
+  bdd_finnish_FMC <- bdd |>                                                     
+    filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
+    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                    # creation of quartiles cohort specific                      
                                                labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart")) 
-  bdd_finnish_2 <- bdd_finnish_2 |>                                             
-    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                           
+  bdd_finnish_FMCF <- bdd |> 
+    filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
+    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                    # creation of quartiles cohort specific    
                                                labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart"))
   
   
   results <- list(                                                              # run of the simple conditional logistic regression
-    finnish_1 = run_clogit(formula, bdd_finnish_1),
-    finnish_2 = run_clogit(formula, bdd_finnish_2)) |>
+    finnish_1 = run_clogit(formula, bdd_finnish_FMC),
+    finnish_2 = run_clogit(formula, bdd_finnish_FMCF)) |>
     bind_rows(.id = "dataset") %>%
     mutate(var = se^2, 
            explanatory = expl,
@@ -246,7 +260,7 @@ model2_quart_finnish <- map_dfr(explanatory_quart, function(expl) {
   return(meta_results)
 })
 
-#### Assemblage ----
+### Assemblage ----
 main_results_fattyacids_ALS_finnish <- 
   bind_rows(model1_sd_finnish, model2_sd_finnish, model1_quart_finnish, model2_quart_finnish) |>
    mutate(
@@ -263,17 +277,17 @@ main_results_fattyacids_ALS_finnish <-
 
 rm(model1_sd_finnish, model2_sd_finnish, model1_quart_finnish, model2_quart_finnish)
 
-### Sensitivity analysis - remove samples with Ca2+<2 ----
+## Sensitivity analysis - remove samples with Ca2+<2 ----
 descrip_num(data = bdd_finnish, vars = "S_Ca")
 bdd |>
   filter(study %in% c('FMC', 'FMCF', 'MFH')) |>
   filter(S_Ca>2) 
 
-bdd_finnish_sensi_ca <- bdd |>           # filtrer pout garder que les triplets de cas-control qui ont tous Ca2+>2
-  filter(study %in% c('FMC', 'FMCF')) |>
-  group_by(match) |>
-  filter(n() == 3, all(S_Ca > 2)) |>    
-  ungroup()                              # n = 111 au lieu de 257
+# bdd_finnish_sensi_ca <- bdd |>           # filtrer pout garder que les triplets de cas-control qui ont tous Ca2+>2
+#   filter(study %in% c('FMC', 'FMCF')) |>
+#   group_by(match) |>
+#   filter(n() == 3, all(S_Ca > 2)) |>    
+#   ungroup()                              # n = 111 au lieu de 257
 
 bdd_finnish_sensi_ca <- bdd |>           # filtrer pout garder que les lignes qui ont Ca2+>2
   filter(study %in% c('FMC', 'FMCF')) |>
@@ -978,7 +992,7 @@ fattyacids_quart_als_figure_sensi_ca_finnish <- sensi_ca_results_fattyacids_ALS_
 
 
 
-results_fattyacids_ALS <- 
+results_fattyacids_ALS_occurrence <- 
   list(danish = list(main_results_fattyacids_ALS_danish = main_results_fattyacids_ALS_danish, 
                      descriptive_table_by_als_danish = descriptive_table_by_als_danish, 
                      covar_als_table_danish = covar_als_table_danish, 

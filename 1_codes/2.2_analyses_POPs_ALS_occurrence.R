@@ -2595,7 +2595,7 @@ plot_copollutant_gamm_outlier <- map(POPs_group_outlier_bis, function(var) {
 rm(POPs_group_outlier_bis, pollutant_labels_bis, model)
 
 
-results_POPs_ALS <- 
+results_POPs_ALS_occurrence <- 
   list(main = list(main_results = main_results, 
                    covar = covar, 
                    results_spline = results_spline, 

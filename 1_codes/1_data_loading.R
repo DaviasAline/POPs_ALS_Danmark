@@ -225,10 +225,11 @@ bdd_finnish  <-
          baseline_age = AGE_BASELINE,
          death_age = age_death,
          diagnosis_age = AGE_ALS,
-         follow_up = FOLLOW_UP_ALS,
+         follow_up_als = FOLLOW_UP_ALS,
          "THAWED",  "MUNICIPALITY",  "LEVEL_URBANISATION",  
          "LEISURE_EXERCISE", "chol", "cholesterol", "GHEALTH", "HEALTH", "Batch", 
-         "FOLLOW_UP_Death", "status_death",
+         follow_up_death ="FOLLOW_UP_Death", 
+         "status_death",
          contains("PCB_"),
          OCP_PeCB = "PeCB", 
          OCP_PeCB_raw = "PeCB_raw", 
@@ -630,7 +631,8 @@ bdd_danish_red <- bdd_danish |>
          all_of(POPs_group_quart), 
          all_of(POPs_group_quart_med),
          all_of(fattyacids), 
-         all_of(explanatory)) |>
+         all_of(explanatory), 
+         all_of(explanatory_quart)) |>
   rename(smoking_2cat = smoking_2cat_i, 
          cholesterol = cholesterol_i, 
          education = education_i)
@@ -639,6 +641,7 @@ bdd_finnish_red <- bdd_finnish |>
   select(sample, als, study, match, 
         baseline_age, sex,  'smoking', 'bmi', 'cholesterol', 'marital_status', education, alcohol, smoking_2cat, marital_status_2cat, blod_sys, blod_dias, 
          "baseline_age", "death_age", "diagnosis_age", S_Ca,  
+        follow_up_death, status_death, 
         municipality, thawed, 
         time_baseline_diagnosis, time_baseline_death, time_diagnosis_death,
          all_of(POPs_finnish), 
@@ -646,7 +649,8 @@ bdd_finnish_red <- bdd_finnish |>
          all_of(POPs_group_quart), 
          all_of(POPs_group_quart_med),
          all_of(fattyacids), 
-         all_of(explanatory)) |>
+         all_of(explanatory), 
+        all_of(explanatory_quart)) |>
   rename_with(~ gsub("_raw", "", .x)) |>
   mutate(sample = as.character(sample))
 
@@ -776,6 +780,8 @@ var_label(bdd_finnish) <- list(
   time_baseline_diagnosis = "Duration between baseline and ALS diagnosis (years)", 
   time_baseline_death = "Duration between baseline and death (years)", 
   time_diagnosis_death = "Duration between diagnosis and death (years)",
+  follow_up_death	= "Length of follow-up from ALS diagnosis", 
+  status_death	= "Status at end of follow-up from ALS diagnosis", 
   OCP_PeCB = "Pentachlorobenzene (PeCB)",            
   OCP_HCB = "HCB",            
   OCP_α_HCH = "α-HCH",
@@ -877,6 +883,8 @@ var_label(bdd) <- list(
   time_baseline_diagnosis = "Duration between baseline and ALS diagnosis (years)", 
   time_baseline_death = "Duration between baseline and death (years)", 
   time_diagnosis_death = "Duration between diagnosis and death (years)",
+  follow_up_death	= "Length of follow-up from ALS diagnosis", 
+  status_death	= "Status at end of follow-up from ALS diagnosis", 
   OCP_PeCB = "Pentachlorobenzene (PeCB)",            
   OCP_HCB = "HCB",            
   OCP_α_HCH = "α-HCH",
