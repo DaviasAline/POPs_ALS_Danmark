@@ -6,6 +6,24 @@
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2.3_analyses_fattyacids_ALS_occurrence.R")
 
 # Danish cohort ----
+## Verif data ----
+bdd_danish |> 
+  filter(als == 1) |>
+  select(time_diagnosis_death) |>
+  tbl_summary()
+
+densityplot(data = bdd_finnish, vars = "time_diagnosis_death")
+
+bdd |> 
+  filter(study %in% c("Danish")) |>
+  filter(als == 1) |>
+  select(sex, baseline_age, all_of(explanatory_raw), all_of(explanatory_quart)) |>
+  tbl_summary( type = all_of(explanatory_raw) ~ "continuous",
+               statistic = list(all_continuous() ~ "{median} ({p25}, {p75})", 
+                                all_categorical() ~ "{n} ({p}%)")) |>
+  add_n()
+
+
 ## Base model ----
 ## Adjusted model ----
 
@@ -17,14 +35,16 @@ bdd_finnish |>
   mutate(status_death = as.factor(as.character(status_death))) |>
   tbl_summary()
 
-densityplot(data = bdd_finnish, vars = "follow_up_death")
+bdd_cases_finnish <- bdd_finnish |> 
+  filter(als == 1)
+densityplot(data = bdd_cases_finnish, vars = "follow_up_death")
+descrip_num(data = bdd_cases_finnish, vars = "follow_up_death")
 
 bdd |> 
   filter(study %in% c("FMC", "FMCF")) |>
   filter(als == 1) |>
-  select(follow_up_death, status_death, sex, baseline_age, thawed, municipality, all_of(explanatory_raw), all_of(explanatory_quart)) |>
-  tbl_summary( type = all_of(explanatory_raw) ~ "continuous",
-               statistic = list(all_continuous() ~ "{median} ({p25}, {p75})", 
+  select(follow_up_death, status_death, sex, baseline_age, thawed, level_urbanization, all_of(covariates_finnish), education) |>
+  tbl_summary(statistic = list(all_continuous() ~ "{median} ({p25}, {p75})", 
                                 all_categorical() ~ "{n} ({p}%)")) |>
   add_n()
 
@@ -32,7 +52,7 @@ bdd |>
 bdd |> 
   filter(study == "FMCF") |>
   filter(als == 1) |>
-  select(follow_up_death, status_death, sex, baseline_age, thawed, municipality, all_of(explanatory_raw), all_of(explanatory_quart)) |>
+  select(follow_up_death, status_death, sex, baseline_age, thawed, level_urbanization, all_of(explanatory_raw), all_of(explanatory_quart)) |>
   tbl_summary( type = all_of(explanatory_raw) ~ "continuous",
                statistic = list(all_continuous() ~ "{median} ({p25}, {p75})", 
                                 all_categorical() ~ "{n} ({p}%)")) |>
@@ -71,9 +91,9 @@ model1_cox_sd_finnish <- map_dfr(explanatory, function(expl) {
                         event = bdd_cases_FMCF$status_death)
   
   formula_FMC <-                                                                # set the formulas
-    as.formula(paste("surv_obj_FMC ~", expl, "+ baseline_age + sex + thawed"))  
+    as.formula(paste("surv_obj_FMC ~", expl, "+ baseline_age + sex + thawed + level_urbanization"))  
   formula_FMCF <- 
-    as.formula(paste("surv_obj_FMCF ~", expl, "+ baseline_age + sex + thawed"))
+    as.formula(paste("surv_obj_FMCF ~", expl, "+ baseline_age + sex + thawed + level_urbanization"))
   
   results <- list(                                                              # run of the simple cox models 
     finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
@@ -119,9 +139,9 @@ model1_cox_quart_finnish <- map_dfr(explanatory_quart, function(expl) {
                         event = bdd_cases_FMCF$status_death)
   
   formula_FMC <-                                                                # creation of the formulas
-    as.formula(paste("surv_obj_FMC ~", expl, "+ baseline_age + sex + thawed"))  
+    as.formula(paste("surv_obj_FMC ~", expl, "+ baseline_age + sex + thawed + level_urbanization"))  
   formula_FMCF <- 
-    as.formula(paste("surv_obj_FMCF ~", expl, "+ baseline_age + sex + thawed"))
+    as.formula(paste("surv_obj_FMCF ~", expl, "+ baseline_age + sex + thawed + level_urbanization"))
   
   results <- list(                                                              # run of the simple cox model
     finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
@@ -170,10 +190,10 @@ model2_cox_sd_finnish <- map_dfr(explanatory, function(expl) {
   
   formula_FMC <- as.formula(paste("surv_obj_FMC ~", expl, "+",                  # set the formulas              
                               paste(covariates_finnish, collapse = " + "), 
-                              "+ baseline_age + sex + thawed"))
+                              "+ baseline_age + sex + thawed + level_urbanization"))
   formula_FMCF <- as.formula(paste("surv_obj_FMCF ~", expl, "+",                            
                                   paste(covariates_finnish, collapse = " + "), 
-                                  "+ baseline_age + sex + thawed"))
+                                  "+ baseline_age + sex + thawed + level_urbanization"))
   
   results <- list(                                                              # run of the simple cox models 
     finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
@@ -220,10 +240,10 @@ model2_cox_quart_finnish <- map_dfr(explanatory_quart, function(expl) {
   
   formula_FMC <- as.formula(paste("surv_obj_FMC ~", expl, "+",                  # set the formulas              
                                   paste(covariates_finnish, collapse = " + "), 
-                                  "+ baseline_age + sex + thawed"))
+                                  "+ baseline_age + sex + thawed + level_urbanization"))
   formula_FMCF <- as.formula(paste("surv_obj_FMCF ~", expl, "+",                            
                                    paste(covariates_finnish, collapse = " + "), 
-                                   "+ baseline_age + sex + thawed"))
+                                   "+ baseline_age + sex + thawed + level_urbanization"))
   
   results <- list(                                                              # run of the simple cox model
     finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
@@ -399,7 +419,7 @@ fattyacids_sd_als_table_finnish <- main_results_fattyacids_ALS_finnish |>
   mutate(explanatory = fct_recode(explanatory, !!!explanatory_labels)) |> 
   flextable() |>
   add_footer_lines(
-    "1All models are adjusted for age, sex, /!\ municipality /!\ , and serum freeze-thaw cycles. Adjusted models further account for smoking, BMI, serum total cholesterol and marital status. 
+    "1All models are adjusted for age, sex, level of urbanization and serum freeze-thaw cycles. Adjusted models further account for smoking, BMI, serum total cholesterol and marital status. 
   2Estimated risk of ALS associated with a one standard deviation increase in pre-disease serum concentration of PUFAs.
   3CI: Confidence interval.") |>
   add_header(
@@ -444,7 +464,7 @@ fattyacids_quart_als_table_finnish <-
   arrange(explanatory) |>
   flextable() |>
   add_footer_lines(
-    "1All models are adjusted for age, sex, /!\ municipality /!\ , and serum freeze-thaw cycles. Adjusted models further account for smoking, BMI, serum total cholesterol and marital status. 
+    "1All models are adjusted for age, sex, level of urbanization and serum freeze-thaw cycles. Adjusted models further account for smoking, BMI, serum total cholesterol and marital status. 
   2Estimated risk of ALS when pre-disease serum concentration of PUFAs compared to quartile 1.
   3CI: Confidence interval.") |>
   add_header(
@@ -527,4 +547,5 @@ rm(main_results_fattyacids_ALS_finnish,
    fattyacids_quart_als_table_finnish, 
    fattyacids_sd_als_figure_finnish, 
    fattyacids_quart_als_figure_finnish)
+
 

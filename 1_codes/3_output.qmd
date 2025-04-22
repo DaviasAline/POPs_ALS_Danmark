@@ -1113,7 +1113,7 @@ densityplot(data = bdd_finnish, vars = "follow_up_death")
 To be done when 
 
 ## Finnish cohorts 
-## Continuous coding (standardized)
+### Continuous coding (standardized)
 ```{r}
 #| echo: false
 #| message: false
@@ -1123,7 +1123,7 @@ results_fattyacids_ALS_survival$finnish$fattyacids_sd_als_table_finnish |>
 results_fattyacids_ALS_survival$finnish$fattyacids_sd_als_figure_finnish
 ```
 
-## Quartiles 
+### Quartiles 
 ```{r}
 #| echo: false
 #| message: false
@@ -1133,6 +1133,9 @@ results_fattyacids_ALS_survival$finnish$fattyacids_quart_als_table_finnish |>
 ```
 
 ```{r, fig.height=12}
+#| echo: false
+#| message: false
+#| warning: false
 results_fattyacids_ALS_survival$finnish$fattyacids_quart_als_figure_finnish
 ```
 
