@@ -328,6 +328,7 @@ bdd_finnish  <-
          municipality = as.factor(as.character(municipality)), 
          level_urbanization = as.factor(as.character(level_urbanization)), 
          # status_death = as.factor(as.character(status_death)),                # do not factor the status_death variable (if yes, there is an issue in the cox models)
+         follow_up_death = follow_up_death/ 30.44,
          thawed = as.factor(as.character(thawed))) |> 
          mutate(across(c( "fS_Trigly", "fS_Kol","S_Ca"),                        # adjusting the class of some variables
                        ~as.numeric(gsub(",", ".", ., fixed = TRUE)))) |>
@@ -407,6 +408,7 @@ bdd_danish <- bdd_danish |>
     follow_up_death = case_when(als == 1 & !is.na(death_date) ~ as.numeric(difftime(death_date, als_date, units = "days")), 
                                 als == 1 & is.na(death_date) ~ as.numeric(difftime("2017-09-19", als_date, units = "days")), 
                                 als == 0 ~ NA), 
+    follow_up_death = follow_up_death/ 30.44,
     status_death = case_when(als == 1 & !is.na(death_date) ~ 1, 
                              als == 1 & is.na(death_date) ~ 0, 
                              als == 0 ~ NA),
@@ -694,7 +696,7 @@ var_label(bdd_danish) <- list(
   time_baseline_diagnosis = "Duration between baseline and ALS diagnosis (years)", 
   time_baseline_death = "Duration between baseline and death (years)", 
   time_diagnosis_death = "Duration between diagnosis and death (years)",
-  follow_up_death	= "Length of follow-up from ALS diagnosis (days)", 
+  follow_up_death	= "Length of follow-up from ALS diagnosis (months)", 
   status_death	= "Status at end of follow-up from ALS diagnosis", 
   OCP_PeCB = "Pentachlorobenzene (PeCB)",            
   OCP_HCB = "HCB",            
@@ -794,7 +796,7 @@ var_label(bdd_finnish) <- list(
   time_baseline_diagnosis = "Duration between baseline and ALS diagnosis (years)", 
   time_baseline_death = "Duration between baseline and death (years)", 
   time_diagnosis_death = "Duration between diagnosis and death (years)",
-  follow_up_death	= "Length of follow-up from ALS diagnosis (days)", 
+  follow_up_death	= "Length of follow-up from ALS diagnosis (months)", 
   status_death	= "Status at end of follow-up from ALS diagnosis", 
   OCP_PeCB = "Pentachlorobenzene (PeCB)",            
   OCP_HCB = "HCB",            
@@ -899,7 +901,7 @@ var_label(bdd) <- list(
   time_baseline_diagnosis = "Duration between baseline and ALS diagnosis (years)", 
   time_baseline_death = "Duration between baseline and death (years)", 
   time_diagnosis_death = "Duration between diagnosis and death (years)",
-  follow_up_death	= "Length of follow-up from ALS diagnosis (days)", 
+  follow_up_death	= "Length of follow-up from ALS diagnosis (months)", 
   status_death	= "Status at end of follow-up from ALS diagnosis", 
   OCP_PeCB = "Pentachlorobenzene (PeCB)",            
   OCP_HCB = "HCB",            
@@ -1048,6 +1050,25 @@ explanatory_sd_labels <- c(
   "Timnodonic acid (EPA) ω3 (%)" = "timnodonic_acid_ω3_sd", 
   "Clupanodonic acid (DPA) ω3 (%)" = "clupanodonic_acid_ω3_sd", 
   "Cervonic acid (DHA) ω3 (%)" = "cervonic_acid_ω3_sd")
+
+
+explanatory_quart_labels <- c(
+  pufas_quart = "unsaturated acids",
+  pufas_ω9_quart = "ω9 unsaturated acids",
+  pufas_ω7_quart = "ω7 unsaturated acids",
+  pufas_ω6_quart = "ω6 unsaturated acids",
+  pufas_ω3_quart = "ω3 unsaturated acids",
+  ratio_ω6_ω3_quart = "ω6/ω3 ratio",
+  rumenic_acid_ω6_quart = "rumenic acid ω6",
+  linoleic_acid_ω6_quart = "linoleic acid ω6",
+  dihomo_γ_linolenic_acid_ω6_quart = "dihomo-γ-linolenic acid ω6",
+  arachidonic_acid_ω6_quart = "arachidonic acid ω6",
+  adrenic_acid_ω6_quart = "adrenic acid ω6",
+  α_linolenic_acid_ω3_quart = "α-linolenic acid (ALA) ω3",
+  timnodonic_acid_ω3_quart = "timnodonic acid (EPA) ω3",
+  clupanodonic_acid_ω3_quart = "clupanodonic acid (DPA) ω3",
+  cervonic_acid_ω3_quart = "cervonic acid (DHA) ω3"
+)
 
 POPs_labels <- c(
   "PCB-118,138,153,180" = "PCB_4",

@@ -2,24 +2,37 @@
 # April 21, 2025 
 # Analysis of survival after ALS diagnosis depending on fatty acids levels  
 
-# data loading - package loading ----
+# Data loading - package loading ----
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2.3_analyses_fattyacids_ALS_occurrence.R")
 
 # Danish cohort ----
-## Verif data ----
-bdd_danish |> 
-  filter(als == 1) |>
-  select(follow_up_death, status_death) |>
-  tbl_summary()
+## Covar model ----
+bdd_cases_danish <- bdd_danish |>                                             # set the dataset
+  filter(als == 1) |>                                                         # case selection
+  select(follow_up_death, status_death, sex, baseline_age, 
+       bmi, marital_status_2cat_i, smoking_2cat_i, education_i, cholesterol_i) 
 
-densityplot(data = bdd_danish, vars = "follow_up_death")
-descrip_num(data = bdd_danish, vars = "follow_up_death")
+surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,                            # set the outcomes
+                        event = bdd_cases_danish$status_death)
 
-bdd_danish |> 
-  filter(als == 1) |>
-  filter(follow_up_death != 0) |>
-  select(follow_up_death, status_death) |>
-  tbl_summary()
+covar_danish <- tbl_merge(tbls = list(
+  tbl_uvregression(
+    data = bdd_cases_danish, 
+    y = surv_obj_danish, 
+    method = survival::coxph,  
+    exponentiate = TRUE,
+    include = c("sex", "baseline_age", 
+                "bmi", "marital_status_2cat_i", "smoking_2cat_i", "education_i", "cholesterol_i")) |>
+    bold_labels() |>
+    bold_p(), 
+  tbl_regression(
+    coxph(surv_obj_danish ~ sex + baseline_age + bmi + marital_status_2cat_i + smoking_2cat_i + education_i + cholesterol_i, data = bdd_cases_danish),
+    exponentiate = TRUE) |>
+    bold_labels() |>
+    bold_p()), 
+  tab_spanner = c("**Crude**", "**Adjusted**"))
+rm(bdd_cases_danish, surv_obj_danish)
+
 
 ## Base model sd ----
 model1_cox_sd_danish <- map_dfr(explanatory, function(expl) {
@@ -55,9 +68,9 @@ model1_cox_quart_danish <- map_dfr(explanatory_quart, function(expl) {
   
   bdd_cases_danish <- bdd_danish |>                                             # set the datasets
     filter(als == 1) |>                                                         # case selection
-    mutate(across(all_of(fattyacids),                                           # create cohort specific scaled fatty acids variables 
-                  scale,
-                  .names = "{.col}_sd"))  
+    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                    # creation of fatty acids quartiles (cohort specific)                        
+                                               labels = c("Q1", "Q2", "Q3", "Q4")),
+                  .names = "{.col}_quart")) 
   
   surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,              # set the outcomes
                           event = bdd_cases_danish$status_death)
@@ -81,7 +94,11 @@ model1_cox_quart_danish <- map_dfr(explanatory_quart, function(expl) {
 ## Adjusted model sd ----
 model2_cox_sd_danish <- map_dfr(explanatory, function(expl) {
   
-  bdd_cases_danish <- bdd_danish |> filter(als == 1)                            # set the dataset
+  bdd_cases_danish <- bdd_danish |>                                             # set the dataset
+    filter(als == 1) |>                            
+    mutate(across(all_of(fattyacids),                                           # create cohort specific scaled fatty acids variables 
+                  scale,
+                  .names = "{.col}_sd"))  
   
   surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,              # set the outcomes
                        event = bdd_cases_danish$status_death)
@@ -132,21 +149,6 @@ model2_cox_quart_danish <- map_dfr(explanatory_quart, function(expl) {
 
 
 # Finnish cohort ----
-## Verif data ----
-bdd_finnish |> 
-  filter(als == 1) |>
-  select(follow_up_death, status_death, study) |>
-  tbl_summary(by = "study")
-
-densityplot(data = bdd_finnish, vars = "follow_up_death")
-descrip_num(data = bdd_finnish, vars = "follow_up_death")
-
-bdd_finnish |> 
-  filter(als == 1) |>
-  filter(follow_up_death != 0) |>
-  select(follow_up_death, status_death, study) |>
-  tbl_summary(by = "study")
-
 run_cox <- function(formula, data) {
   model <- coxph(formula, data = data)
   model_summary <- summary(model)
@@ -212,16 +214,16 @@ model1_cox_quart_finnish <- map_dfr(explanatory_quart, function(expl) {
   bdd_cases_FMC <- bdd |>                                                       # set the datasets
     filter(als == 1) |>                                                         # case selection
     filter(study == "FMC") |>                                                   # cohort selection
-    mutate(across(all_of(fattyacids),                                           # create cohort specific scaled fatty acids variables 
-                  scale,
-                  .names = "{.col}_sd"))  
+    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                    # creation of fatty acids quartiles (cohort specific)                        
+                                               labels = c("Q1", "Q2", "Q3", "Q4")),
+                  .names = "{.col}_quart")) 
   
   bdd_cases_FMCF <- bdd |>                                                      # set the datasets
     filter(als == 1) |>                                                         # case selection
     filter(study == "FMCF") |>                                                  # cohort selection
-    mutate(across(all_of(fattyacids),                                           # create cohort specific scaled fatty acids variables 
-                  scale,
-                  .names = "{.col}_sd"))
+    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                    # creation of fatty acids quartiles (cohort specific)                        
+                                               labels = c("Q1", "Q2", "Q3", "Q4")),
+                  .names = "{.col}_quart")) 
   
   surv_obj_FMC <- Surv(time = bdd_cases_FMC$follow_up_death,                    # set the outcomes
                        event = bdd_cases_FMC$status_death)
@@ -260,8 +262,19 @@ model1_cox_quart_finnish <- map_dfr(explanatory_quart, function(expl) {
 ## Adjusted model sd ----
 model2_cox_sd_finnish <- map_dfr(explanatory, function(expl) {
   
-  bdd_cases_FMC <- bdd |> filter(als == 1) |> filter(study == "FMC")            # set the datasets
-  bdd_cases_FMCF <- bdd |> filter(als == 1) |> filter(study == "FMCF")
+  bdd_cases_FMC <- bdd |>                                                       # set the datasets
+    filter(als == 1) |>                                                         # filter to get only the cases
+    filter(study == "FMC") |>                                                   # filter to get only one cohort  
+    mutate(across(all_of(fattyacids),                                           # create cohort specific scaled fatty acids variables 
+                  scale,
+                  .names = "{.col}_sd"))  
+  
+  bdd_cases_FMCF <- bdd |>                                                      # set the datasets
+    filter(als == 1) |>                                                         # filter to get only the cases
+    filter(study == "FMCF") |>                                                  # filter to get only one cohort 
+    mutate(across(all_of(fattyacids),                                           # create cohort specific scaled fatty acids variables 
+                  scale,
+                  .names = "{.col}_sd"))  
   
   surv_obj_FMC <- Surv(time = bdd_cases_FMC$follow_up_death,                    # set the outcomes
                        event = bdd_cases_FMC$status_death)
@@ -419,7 +432,7 @@ fattyacids_sd_als_table_danish <- main_results_fattyacids_ALS_survival |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 ### table fatty acids (quart) - als survival ----
-quartile1_rows <- main_results_fattyacids_ALS |>
+quartile1_rows <- main_results_fattyacids_ALS_survival |>
   filter(study == "Danish") |>
   distinct(model, explanatory) |>
   mutate(
@@ -428,7 +441,7 @@ quartile1_rows <- main_results_fattyacids_ALS |>
     "95% CI" = "-",
     `p-value` = "")
 
-fattyacids_quart_als_table_danish <- main_results_fattyacids_ALS |>
+fattyacids_quart_als_table_danish <- main_results_fattyacids_ALS_survival |>
   filter(study == "Danish") |>
   filter(!term == "Continuous") |>
   select(model, explanatory, term, HR, "95% CI", "p-value") |>
@@ -472,7 +485,7 @@ rm(quartile1_rows)
 
 
 ### figure fatty acids (sd) - als survival ----
-fattyacids_sd_als_figure_danish <- main_results_fattyacids_ALS |>
+fattyacids_sd_als_figure_danish <- main_results_fattyacids_ALS_survival |>
   filter(study == "Danish") |>
   filter(term == "Continuous") |>
   mutate(model = fct_recode(model, 
@@ -496,7 +509,7 @@ fattyacids_sd_als_figure_danish <- main_results_fattyacids_ALS |>
   coord_flip()
 
 ### figure fatty acids (quart) - als survival ----
-fattyacids_quart_als_figure_danish <- main_results_fattyacids_ALS |>
+fattyacids_quart_als_figure_danish <- main_results_fattyacids_ALS_survival |>
   filter(study == "Danish") |>
   filter(!term == "Continuous") |>
   mutate(model = fct_recode(model, 
@@ -518,6 +531,40 @@ fattyacids_quart_als_figure_danish <- main_results_fattyacids_ALS |>
         legend.position = "bottom", 
         strip.text.y.left = element_text(angle = 0, hjust = 0.5, vjust = 0.5)) +
   coord_flip()
+
+### figure cumulative incidence fatty acids (quart) - als survival ----
+bdd_cases_danish <- bdd_danish |>                                               # set the datasets
+  filter(als == 1) |>                                                           # case selection
+  mutate(across(all_of(fattyacids), ~ factor(
+    ntile(.x, 4),                                                               # creation of fatty acids quartiles (cohort and cases specific)
+    labels = c("Q1", "Q2", "Q3", "Q4")), 
+    .names = "{.col}_quart")) 
+
+create_surv_plot <- function(expl) {
+  formula <- as.formula(paste0("Surv(follow_up_death, status_death) ~ `", expl, "`"))
+  fit <- survfit(formula, data = bdd_cases_danish)
+  fit$call$formula <- formula
+  
+  plot <- ggsurvplot(
+    fit,
+    data = bdd_cases_danish,
+    fun = "event",
+    risk.table = TRUE,
+    pval = FALSE,
+    conf.int = FALSE,
+    palette = "Dark2",
+    xlab = "Follow-up (months)",
+    ylab = "Cumulative incidence",
+    legend.title = paste("Pre-disease", explanatory_quart_labels[[expl]], "level"),
+    legend.labs = c("Quartile 1", "Quartile 2", "Quartile 3", "Quartile 4")
+  )
+  
+  return(plot = plot)
+}
+
+survival_plots_danish <- map(explanatory_quart, create_surv_plot)
+names(survival_plots_danish) <- explanatory_quart
+rm(create_surv_plot, bdd_cases_danish)
 
 ## Finnish ----
 ### table fatty acids (sd) - als survival ----
@@ -551,7 +598,7 @@ fattyacids_sd_als_table_finnish <- main_results_fattyacids_ALS_survival |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 ### table fatty acids (quart) - als survival ----
-quartile1_rows <- main_results_fattyacids_ALS |>
+quartile1_rows <- main_results_fattyacids_ALS_survival |>
   filter(study == "Finnish") |>
   distinct(model, explanatory) |>
   mutate(
@@ -560,7 +607,7 @@ quartile1_rows <- main_results_fattyacids_ALS |>
     "95% CI" = "-",
     `p-value` = "")
 
-fattyacids_quart_als_table_finnish <- main_results_fattyacids_ALS |>
+fattyacids_quart_als_table_finnish <- main_results_fattyacids_ALS_survival |>
   filter(study == "Finnish") |>
   filter(!term == "Continuous") |>
   select(model, explanatory, term, HR, "95% CI", "p-value") |>
@@ -604,7 +651,7 @@ rm(quartile1_rows)
 
 
 ### figure fatty acids (sd) - als survival ----
-fattyacids_sd_als_figure_finnish <- main_results_fattyacids_ALS |>
+fattyacids_sd_als_figure_finnish <- main_results_fattyacids_ALS_survival |>
   filter(study == "Finnish") |>
   filter(term == "Continuous") |>
   mutate(model = fct_recode(model, 
@@ -628,7 +675,7 @@ fattyacids_sd_als_figure_finnish <- main_results_fattyacids_ALS |>
   coord_flip()
 
 ### figure fatty acids (quart) - als survival ----
-fattyacids_quart_als_figure_finnish <- main_results_fattyacids_ALS |>
+fattyacids_quart_als_figure_finnish <- main_results_fattyacids_ALS_survival |>
   filter(study == "Finnish") |>
   filter(!term == "Continuous") |>
   mutate(model = fct_recode(model, 
@@ -653,21 +700,23 @@ fattyacids_quart_als_figure_finnish <- main_results_fattyacids_ALS |>
 
 # Assemblage ----
 results_fattyacids_ALS_survival <- 
-  list(main_analysis = list(main_results_fattyacids_ALS = main_results_fattyacids_ALS), 
+  list(main_analysis = list(main_results_fattyacids_ALS_survival = main_results_fattyacids_ALS_survival), 
        finnish = list(
-                      # covar_als_table_finnish = covar_als_table_finnish, 
+                      # covar_als_table_danish = covar_als_table_danish, 
+                      covar_danish = covar_danish, 
                       fattyacids_sd_als_table_finnish = fattyacids_sd_als_table_finnish, 
                       fattyacids_quart_als_table_finnish = fattyacids_quart_als_table_finnish, 
                       fattyacids_sd_als_figure_finnish = fattyacids_sd_als_figure_finnish, 
                       fattyacids_quart_als_figure_finnish = fattyacids_quart_als_figure_finnish), 
        danish = list(
-         # covar_als_table_danish = covar_als_table_danish, 
+         covar_danish = covar_danish, 
          fattyacids_sd_als_table_danish = fattyacids_sd_als_table_danish, 
          fattyacids_quart_als_table_danish = fattyacids_quart_als_table_danish, 
          fattyacids_sd_als_figure_danish = fattyacids_sd_als_figure_danish, 
-         fattyacids_quart_als_figure_danish = fattyacids_quart_als_figure_danish))
+         fattyacids_quart_als_figure_danish = fattyacids_quart_als_figure_danish, 
+         survival_plots_danish = survival_plots_danish))
 
-rm(main_results_fattyacids_ALS, 
+rm(main_results_fattyacids_ALS_survival, 
    fattyacids_sd_als_table_finnish, 
    fattyacids_quart_als_table_finnish, 
    fattyacids_sd_als_figure_finnish, 
@@ -675,6 +724,5 @@ rm(main_results_fattyacids_ALS,
    fattyacids_sd_als_table_danish, 
    fattyacids_quart_als_table_danish, 
    fattyacids_sd_als_figure_danish, 
-   fattyacids_quart_als_figure_danish)
-
-
+   fattyacids_quart_als_figure_danish, 
+   survival_plots_danish)

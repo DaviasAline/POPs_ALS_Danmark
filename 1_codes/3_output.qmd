@@ -19,6 +19,21 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/2.4_analyses_fattyacids_ALS_survi
 
 
 # Danish data description
+## ALS survival
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+bdd_danish |> 
+  filter(als == 1) |>
+  ggplot() +
+  aes(x = follow_up_death) +
+  geom_density(fill = "lightgray") +
+  theme_bw() +
+  stat_overlay_normal_density(color = "red", linetype = "dashed") +
+  theme(axis.title = element_blank())
+descrip_num(data = bdd_danish, vars = "follow_up_death") |> kable("html")
+```
 
 ## Metadata
 
@@ -265,6 +280,20 @@ rm(timing)
 
 
 # Finnish data description 
+## ALS survival
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+bdd_finnish |> 
+  filter(als == 1) |>
+  select(follow_up_death, status_death, study) |>
+  tbl_summary(by = "study")
+
+densityplot(data = bdd_finnish, vars = "follow_up_death") 
+descrip_num(data = bdd_finnish, vars = "follow_up_death")|> kable("html")
+```
+
 ## Metadata 
 ```{r}
 #| echo: false
@@ -556,6 +585,31 @@ rm(timing)
 ```
 
 # Comparison danish/finnish data
+## ALS survival
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+bdd |> 
+  filter (als == 1) |>
+  select(follow_up_death, status_death, study) |>
+  tbl_summary(by = "study")
+
+bdd_cases_danish <- bdd_danish |> filter(als ==1)
+bdd_cases_FMC <- bdd_finnish |> filter(als ==1) |> filter(study == "FMC")
+bdd_cases_FMCF <- bdd_finnish |> filter(als ==1) |> filter(study == "FMCF")
+bdd_cases_MFH <- bdd_finnish |> filter(als ==1) |> filter(study == "MFH")
+list(descrip_num(data  = bdd_cases_danish, vars = "follow_up_death") |> mutate(study = "Danish"), 
+     descrip_num(data  = bdd_cases_FMC, vars = "follow_up_death") |> mutate(study = "FMC"), 
+     descrip_num(data  = bdd_cases_FMCF, vars = "follow_up_death") |> mutate(study = "FMCF"), 
+     descrip_num(data  = bdd_cases_MFH, vars = "follow_up_death") |> mutate(study = "MFH")) |>
+  bind_rows() |>
+  select(study, everything()) |> 
+  kable("html")
+  
+rm(bdd_cases_danish, bdd_cases_FMC, bdd_cases_FMCF, bdd_cases_MFH)
+```
+
 ## Metadata
 ```{r}
 #| echo: false
@@ -1101,18 +1155,62 @@ results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_figure_sensi_ca_
 
 
 # Fatty acids ans ALS survival 
+## Danish cohort 
+### Effects of covariates on ALS survival 
+```{r}
+#| echo: false
+#| message: true
+#| warning: false
+results_fattyacids_ALS_survival$danish$covar_danish
+```
+
+### Continuous coding (standardized)
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-densityplot(data = bdd_finnish, vars = "follow_up_death")
+results_fattyacids_ALS_survival$danish$fattyacids_sd_als_table_danish |>
+  set_table_properties(width = 1, layout = "autofit")
+results_fattyacids_ALS_survival$danish$fattyacids_sd_als_figure_danish
+```
+
+### Quartiles 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_fattyacids_ALS_survival$danish$fattyacids_quart_als_table_danish |>
+  set_table_properties(width = 1, layout = "autofit")
+```
+
+```{r, fig.height=12}
+#| echo: false
+#| message: false
+#| warning: false
+results_fattyacids_ALS_survival$danish$fattyacids_quart_als_figure_danish
+```
+
+```{r, fig.height=12, fig.width=12}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+arrange_ggsurvplots(
+  results_fattyacids_ALS_survival$danish$survival_plots_danish[1:4],
+  ncol = 2,              
+  nrow = 2)
 ```
 
 
-## Danish cohort 
-To be done when 
-
 ## Finnish cohorts 
+### Effects of covariates on ALS survival 
+To be done
+```{r}
+#| echo: false
+#| message: true
+#| warning: false
+```
+
 ### Continuous coding (standardized)
 ```{r}
 #| echo: false
@@ -1137,5 +1235,34 @@ results_fattyacids_ALS_survival$finnish$fattyacids_quart_als_table_finnish |>
 #| message: false
 #| warning: false
 results_fattyacids_ALS_survival$finnish$fattyacids_quart_als_figure_finnish
+```
+
+## Comparison of the results 
+```{r, fig.height=10}
+#| echo: false
+#| message: false
+#| warning: false
+results_fattyacids_ALS_survival$main_analysis$main_results_fattyacids_ALS_survival |>
+  filter(term == "Continuous") |>
+  mutate(model = fct_recode(model, 
+                            "Base model" = "base",
+                            "Adjusted model" = "adjusted"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
+         explanatory = factor(explanatory, levels = fattyacids_labels),
+         explanatory = fct_rev(explanatory),
+         explanatory = fct_recode(explanatory, !!!fattyacids_labels)) |>
+  arrange(explanatory) |> 
+  ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`, shape = study)) +
+  geom_pointrange(position = position_dodge(width = 0.6), size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
+  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  labs(x = "PUFAs", y = "Hazard Ratio (HR)", color = "p-value") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip()
+
 ```
 
