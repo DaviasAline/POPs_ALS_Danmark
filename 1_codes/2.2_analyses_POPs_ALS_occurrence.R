@@ -747,9 +747,6 @@ model3_cubic <- bind_rows(
 
 rm(model3_cubic_HCB, model3_cubic_PCB_DL, model3_cubic_PCB_NDL, model3_cubic_ΣPBDE, model3_cubic_ΣDDT, model3_cubic_β_HCH, model3_cubic_Σchlordane)
 
-### meta analysis ----
-
-
 
 ### heterogeneity tests ----
 #### model 1 spline ----
@@ -898,6 +895,159 @@ rm(var, test_1, test_2, formula, anova, p.value_trend)
 trend_tests <- 
   bind_rows(trend_base, trend_adjusted) %>%
   mutate(variable = gsub("_quart_med", "", variable))
+
+
+### metaanalysis (quart) ----
+run_clogit <- function(formula, data) {
+  model <- clogit(formula, data = data)
+  model_summary <- summary(model)
+  coefs <- model_summary$coefficients
+  tibble(
+    term = rownames(coefs),
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"])
+}
+POPs_group_metaanalysis <- setdiff(POPs_group, "ΣPBDE")                         # we don't include ΣPBDE in the metaanalysis because low levels 
+POPs_group_metaanalysis_quart <- paste0(POPs_group_metaanalysis, "_quart")
+
+#### Base model ----
+metaanalysis_base_quart <- map_dfr(POPs_group_metaanalysis_quart, function(expl) {
+  formula <- as.formula(paste("als ~", expl, "+ strata(match)"))                # base formula: matched, not ajstuded
+  
+  bdd_danish <- bdd |>                                                     
+    filter(study == "Danish") |>                                                # creation of one dataset per finnish cohort
+    mutate(across(all_of(POPs_group_metaanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
+                                                            labels = c("Q1", "Q2", "Q3", "Q4")),
+                  .names = "{.col}_quart")) 
+  
+  bdd_finnish_FMC <- bdd |>                                                     
+    filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
+    mutate(across(all_of(POPs_group_metaanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
+                                                            labels = c("Q1", "Q2", "Q3", "Q4")),
+                  .names = "{.col}_quart")) 
+  bdd_finnish_FMCF <- bdd |> 
+    filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
+    mutate(across(all_of(POPs_group_metaanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
+                                                            labels = c("Q1", "Q2", "Q3", "Q4")),
+                  .names = "{.col}_quart"))
+  bdd_finnish_MFH <- bdd |> 
+    filter(study == "MFH") |>                                                   # creation of one dataset per finnish cohort
+    mutate(across(all_of(POPs_group_metaanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
+                                                            labels = c("Q1", "Q2", "Q3", "Q4")),
+                  .names = "{.col}_quart"))
+  
+  results <- list(                                                              # run of the simple conditional logistic regression
+    danish = run_clogit(formula, bdd_danish),
+    finnish_FMC = run_clogit(formula, bdd_finnish_FMC),
+    finnish_FMCF = run_clogit(formula, bdd_finnish_FMCF), 
+    finnish_MFH = run_clogit(formula, bdd_finnish_MFH)) |>
+    bind_rows(.id = "dataset") |>
+    mutate(var = se^2, 
+           explanatory = expl,
+           term = case_when(
+             str_detect(term, "Q2") ~ "Quartile 2",
+             str_detect(term, "Q3") ~ "Quartile 3",
+             str_detect(term, "Q4") ~ "Quartile 4",
+             TRUE ~ NA_character_)) 
+  
+  meta_results <- results |>                                                    # run metanalyse (one per quartile per expl var)
+    group_by(explanatory, term) |> 
+    group_modify(~ {
+      rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
+      tibble(                                                                   # results table creation 
+        OR = exp(as.numeric(rma_fit$beta)),
+        lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
+        upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
+        `p-value` = as.numeric(rma_fit$pval))
+    }) |> 
+    ungroup() |> 
+    mutate(model = "base") |> 
+    relocate(model, explanatory, term)
+  return(meta_results)
+})
+
+#### Adjusted model ----
+metaanalysis_adjusted_quart <- map_dfr(POPs_group_metaanalysis_quart, function(expl) {
+  formula_educ <- 
+    as.formula(paste("als ~", expl, 
+                     "+ strata(match) + marital_status_2cat + smoking_2cat + bmi + cholesterol + education"))
+  formula_no_educ <- 
+    as.formula(paste("als ~", expl,                                             # education mot available in one finnish cohort
+                     "+ strata(match) + marital_status_2cat + smoking_2cat + bmi + cholesterol")) 
+  
+  bdd_danish <- bdd |>                                                     
+    filter(study == "Danish") |>                                                # creation of one dataset per finnish cohort
+    mutate(across(all_of(POPs_group_metaanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
+                                                            labels = c("Q1", "Q2", "Q3", "Q4")),
+                  .names = "{.col}_quart")) 
+  
+  bdd_finnish_FMC <- bdd |>                                                     
+    filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
+    mutate(across(all_of(POPs_group_metaanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
+                                                            labels = c("Q1", "Q2", "Q3", "Q4")),
+                  .names = "{.col}_quart")) 
+  bdd_finnish_FMCF <- bdd |> 
+    filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
+    mutate(across(all_of(POPs_group_metaanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
+                                                            labels = c("Q1", "Q2", "Q3", "Q4")),
+                  .names = "{.col}_quart"))
+  bdd_finnish_MFH <- bdd |> 
+    filter(study == "MFH") |>                                                   # creation of one dataset per finnish cohort
+    mutate(across(all_of(POPs_group_metaanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
+                                                            labels = c("Q1", "Q2", "Q3", "Q4")),
+                  .names = "{.col}_quart"))
+  
+  results <- list(                                                              # run of the simple conditional logistic regression
+    danish = run_clogit(formula_educ, bdd_danish),
+    finnish_FMC = run_clogit(formula_no_educ, bdd_finnish_FMC),                 # no education data for this cohort 
+    finnish_FMCF = run_clogit(formula_educ, bdd_finnish_FMCF), 
+    finnish_MFH = run_clogit(formula_educ, bdd_finnish_MFH)) |>
+    bind_rows(.id = "dataset") |>
+    mutate(var = se^2, 
+           explanatory = expl,
+           term = case_when(
+             str_detect(term, "Q2") ~ "Quartile 2",
+             str_detect(term, "Q3") ~ "Quartile 3",
+             str_detect(term, "Q4") ~ "Quartile 4",
+             TRUE ~ NA_character_)) |>
+    filter(str_detect(term, "Quartile"))                                        # filter to remove the covariates results
+  
+  meta_results <- results |>                                                    # run metanalyse (one per quartile per expl var)
+    group_by(explanatory, term) |> 
+    group_modify(~ {
+      rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
+      tibble(                                                                   # results table creation 
+        OR = exp(as.numeric(rma_fit$beta)),
+        lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
+        upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
+        `p-value` = as.numeric(rma_fit$pval))
+    }) |> 
+    ungroup() |> 
+    mutate(model = "adjusted") |> 
+    relocate(model, explanatory, term)
+  return(meta_results)
+})
+
+
+metaanalysis_quart <- bind_rows(metaanalysis_base_quart, metaanalysis_adjusted_quart) |> 
+  mutate(explanatory = gsub("_quart", "", explanatory), 
+         OR = as.numeric(sprintf("%.1f", OR)),
+         lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
+         upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
+         `p-value_raw` = `p-value`, 
+         `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")), 
+         `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`), 
+         "95%CI" = paste(lower_CI, ", ", upper_CI, sep = '')) |>
+  select(model,
+         explanatory, 
+         term,
+         starts_with("OR"), 
+         starts_with("95%"), 
+         starts_with("p-value"), 
+         lower_CI, upper_CI) 
+
+rm(metaanalysis_base_quart, metaanalysis_adjusted_quart, run_clogit, POPs_group_metaanalysis, POPs_group_metaanalysis_quart)
+
 
 ### merging the main results ----
 main_results <- bind_rows(model1_spline, 
@@ -2598,6 +2748,36 @@ plot_copollutant_gamm_outlier <- map(POPs_group_outlier_bis, function(var) {
 })|> set_names(POPs_group_outlier_bis)
 rm(POPs_group_outlier_bis, pollutant_labels_bis, model)
 
+## metanalysis ----
+
+plot_metaanalysis_quart <- metaanalysis_quart %>% 
+  mutate(`p-value_shape` = ifelse(`p-value_raw`<0.05, "p-value<0.05", "p-value≥0.05"), 
+         model = fct_recode(model, 
+                            "Adjusted model" = "adjusted",
+                            "Base model" = "base"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
+         term = fct_relevel(term, "Quartile 4", "Quartile 3", "Quartile 2" ), 
+         explanatory = fct_recode(explanatory, 
+                                  "Most\nprevalent\nPCBs" = "PCB_4",
+                                  "Dioxin-like\nPCBs" = "PCB_DL",
+                                  "Non-dioxin-\nlike PCBs" = "PCB_NDL",
+                                  "β-HCH" = "OCP_β_HCH", 
+                                  "HCB" = "OCP_HCB"), 
+         explanatory = fct_relevel(explanatory, 
+                                   "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "Most\nprevalent\nPCBs", "HCB", "ΣDDT", "β-HCH", "Σchlordane")) %>%
+  ggplot(aes(x = term, y = OR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y") +  
+  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  labs(x = "POPs", y = "Odds Ratio (OR)", color = "p-value") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip()
+
+
 # Assemblage -----
 results_POPs_ALS_occurrence <- 
   list(main = list(main_results = main_results, 
@@ -2641,7 +2821,9 @@ results_POPs_ALS_occurrence <-
                                      model2_quart_not_summed = model2_quart_not_summed, 
                                      plot_quart_sensi_not_summed = plot_quart_sensi_not_summed, 
                                      plot_base_gamm_not_summed = plot_base_gamm_not_summed, 
-                                     plot_adjusted_gamm_not_summed = plot_adjusted_gamm_not_summed))
+                                     plot_adjusted_gamm_not_summed = plot_adjusted_gamm_not_summed), 
+       metanalysis = list(metaanalysis_quart = metaanalysis_quart, 
+                          plot_metaanalysis_quart = plot_metaanalysis_quart))
 
 rm(main_results, covar, results_spline, results_quart, results_quadratic, results_cubic, model1_gamm, model2_gamm, 
    sensitivity_results_outlier, results_spline_outliers, results_quadratic_outliers, results_cubic_outliers, 
@@ -2653,5 +2835,6 @@ rm(main_results, covar, results_spline, results_quart, results_quadratic, result
    plot_adjusted_spline, plot_adjusted_quadratic, plot_adjusted_cubic, plot_adjusted_gamm, 
    plot_adjusted_spline_outlier, plot_adjusted_quadratic_outlier, plot_adjusted_cubic_outlier, plot_adjusted_gamm_outlier, 
    plot_base_gamm_not_summed, plot_adjusted_gamm_not_summed, 
-   plot_copollutant_gamm, plot_copollutant_gamm_outlier)
+   plot_copollutant_gamm, plot_copollutant_gamm_outlier, 
+   metaanalysis_quart, plot_metaanalysis_quart)
 
