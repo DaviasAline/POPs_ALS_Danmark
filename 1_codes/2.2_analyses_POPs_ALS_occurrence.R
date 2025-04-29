@@ -747,6 +747,10 @@ model3_cubic <- bind_rows(
 
 rm(model3_cubic_HCB, model3_cubic_PCB_DL, model3_cubic_PCB_NDL, model3_cubic_ΣPBDE, model3_cubic_ΣDDT, model3_cubic_β_HCH, model3_cubic_Σchlordane)
 
+### meta analysis ----
+
+
+
 ### heterogeneity tests ----
 #### model 1 spline ----
 heterogeneity_base_spline <- data.frame(variable = character(),
@@ -2594,7 +2598,7 @@ plot_copollutant_gamm_outlier <- map(POPs_group_outlier_bis, function(var) {
 })|> set_names(POPs_group_outlier_bis)
 rm(POPs_group_outlier_bis, pollutant_labels_bis, model)
 
-
+# Assemblage -----
 results_POPs_ALS_occurrence <- 
   list(main = list(main_results = main_results, 
                    covar = covar, 
