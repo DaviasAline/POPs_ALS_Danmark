@@ -184,15 +184,15 @@ model1_cubic <- model1_cubic %>%
   select(variable, model, everything())
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
 
-#### gamm ----
-model1_gamm <- list()
+#### gam ----
+model1_gam <- list()
 
 for (var in POPs_group) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
   model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
-  model1_gamm[[var]] <- model_summary
+  model1_gam[[var]] <- model_summary
 }
 
 rm(var, formula, model, model_summary)
@@ -340,15 +340,15 @@ model2_cubic <- model2_cubic %>%
   select(variable, model, everything())
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
 
-#### gamm ----
-model2_gamm <- list()
+#### gam ----
+model2_gam <- list()
 
 for (var in POPs_group) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
   model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
-  model2_gamm[[var]] <- model_summary
+  model2_gam[[var]] <- model_summary
 }
 
 rm(var, formula, model, model_summary)
@@ -897,7 +897,7 @@ trend_tests <-
   mutate(variable = gsub("_quart_med", "", variable))
 
 
-### metaanalysis (quart) ----
+### matanalysis (quart) ----
 run_clogit <- function(formula, data) {
   model <- clogit(formula, data = data)
   model_summary <- summary(model)
@@ -907,32 +907,32 @@ run_clogit <- function(formula, data) {
     coef = coefs[, "coef"],
     se = coefs[, "se(coef)"])
 }
-POPs_group_metaanalysis <- setdiff(POPs_group, "ΣPBDE")                         # we don't include ΣPBDE in the metaanalysis because low levels 
-POPs_group_metaanalysis_quart <- paste0(POPs_group_metaanalysis, "_quart")
+POPs_group_matanalysis <- setdiff(POPs_group, "ΣPBDE")                         # we don't include ΣPBDE in the matanalysis because low levels 
+POPs_group_matanalysis_quart <- paste0(POPs_group_matanalysis, "_quart")
 
 #### Base model ----
-metaanalysis_base_quart <- map_dfr(POPs_group_metaanalysis_quart, function(expl) {
+matanalysis_base_quart <- map_dfr(POPs_group_matanalysis_quart, function(expl) {
   formula <- as.formula(paste("als ~", expl, "+ strata(match)"))                # base formula: matched, not ajstuded
   
   bdd_danish <- bdd |>                                                     
     filter(study == "Danish") |>                                                # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metaanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
+    mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart")) 
   
   bdd_finnish_FMC <- bdd |>                                                     
     filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metaanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
+    mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart")) 
   bdd_finnish_FMCF <- bdd |> 
     filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metaanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
+    mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart"))
   bdd_finnish_MFH <- bdd |> 
     filter(study == "MFH") |>                                                   # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metaanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
+    mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart"))
   
@@ -967,7 +967,7 @@ metaanalysis_base_quart <- map_dfr(POPs_group_metaanalysis_quart, function(expl)
 })
 
 #### Adjusted model ----
-metaanalysis_adjusted_quart <- map_dfr(POPs_group_metaanalysis_quart, function(expl) {
+matanalysis_adjusted_quart <- map_dfr(POPs_group_matanalysis_quart, function(expl) {
   formula_educ <- 
     as.formula(paste("als ~", expl, 
                      "+ strata(match) + marital_status_2cat + smoking_2cat + bmi + cholesterol + education"))
@@ -977,23 +977,23 @@ metaanalysis_adjusted_quart <- map_dfr(POPs_group_metaanalysis_quart, function(e
   
   bdd_danish <- bdd |>                                                     
     filter(study == "Danish") |>                                                # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metaanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
+    mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart")) 
   
   bdd_finnish_FMC <- bdd |>                                                     
     filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metaanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
+    mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart")) 
   bdd_finnish_FMCF <- bdd |> 
     filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metaanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
+    mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart"))
   bdd_finnish_MFH <- bdd |> 
     filter(study == "MFH") |>                                                   # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metaanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
+    mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart"))
   
@@ -1029,7 +1029,7 @@ metaanalysis_adjusted_quart <- map_dfr(POPs_group_metaanalysis_quart, function(e
 })
 
 
-metaanalysis_quart <- bind_rows(metaanalysis_base_quart, metaanalysis_adjusted_quart) |> 
+matanalysis_quart <- bind_rows(matanalysis_base_quart, matanalysis_adjusted_quart) |> 
   mutate(explanatory = gsub("_quart", "", explanatory), 
          OR = as.numeric(sprintf("%.1f", OR)),
          lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
@@ -1046,7 +1046,7 @@ metaanalysis_quart <- bind_rows(metaanalysis_base_quart, metaanalysis_adjusted_q
          starts_with("p-value"), 
          lower_CI, upper_CI) 
 
-rm(metaanalysis_base_quart, metaanalysis_adjusted_quart, run_clogit, POPs_group_metaanalysis, POPs_group_metaanalysis_quart)
+rm(matanalysis_base_quart, matanalysis_adjusted_quart, run_clogit, POPs_group_matanalysis, POPs_group_matanalysis_quart)
 
 
 ### merging the main results ----
@@ -1274,15 +1274,15 @@ model1_cubic_outliers <- model1_cubic_outliers %>%
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
 
 
-#### gamm ----
-model1_gamm_outliers <- list()
+#### gam ----
+model1_gam_outliers <- list()
 
 for (var in POPs_group_outlier) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
   model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
-  model1_gamm_outliers[[var]] <- model_summary
+  model1_gam_outliers[[var]] <- model_summary
 }
 
 rm(var, formula, model, model_summary)
@@ -1398,8 +1398,8 @@ model2_cubic_outliers <- model2_cubic_outliers %>%
   select(variable, model, everything())
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
 
-#### gamm ----
-model2_gamm_outliers <- list()
+#### gam ----
+model2_gam_outliers <- list()
 
 for (var in POPs_group_outlier) {
   
@@ -1407,7 +1407,7 @@ for (var in POPs_group_outlier) {
                               smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
   model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
-  model2_gamm_outliers[[var]] <- model_summary
+  model2_gam_outliers[[var]] <- model_summary
 }
 
 rm(var, formula, model, model_summary)
@@ -1572,20 +1572,20 @@ sensitivity_results_not_summed_quart <-
          starts_with("p.value"), 
          lower_CI, upper_CI) 
 
-### gamm ----
-model1_gamm_not_summed <- list()
+### gam ----
+model1_gam_not_summed <- list()
 
 for (var in POPs_included) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
   model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
-  model1_gamm_outliers[[var]] <- model_summary
+  model1_gam_outliers[[var]] <- model_summary
 }
 
 rm(var, formula, model, model_summary)
 
-model2_gamm_not_summed <- list()
+model2_gam_not_summed <- list()
 
 for (var in POPs_included) {
   
@@ -1593,7 +1593,7 @@ for (var in POPs_included) {
                               smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
   model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
-  model2_gamm_outliers[[var]] <- model_summary
+  model2_gam_outliers[[var]] <- model_summary
 }
 
 rm(var, formula, model, model_summary)
@@ -1940,12 +1940,12 @@ for (var in POPs_group_outlier) {
 }
 rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
 
-### gamm ----
+### gam ----
 pollutant_labels <- set_names(
   c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","OCP_HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group)
 
-plot_base_gamm <- map(POPs_group, function(var) {
+plot_base_gam <- map(POPs_group, function(var) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
   
@@ -2001,12 +2001,12 @@ plot_base_gamm <- map(POPs_group, function(var) {
   set_names(POPs_group)
 rm(pollutant_labels)
 
-### gamm outliers ----
+### gam outliers ----
 pollutant_labels <- set_names(
   c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","OCP_HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group_outlier)
 
-plot_base_gamm_outlier <- map(POPs_group_outlier, function(var) {
+plot_base_gam_outlier <- map(POPs_group_outlier, function(var) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
   
@@ -2062,13 +2062,13 @@ plot_base_gamm_outlier <- map(POPs_group_outlier, function(var) {
   set_names(POPs_group)
 rm(pollutant_labels)
 
-### gamm not summed ----
+### gam not summed ----
 POPs_included_labels <- gsub("_", "-", POPs_included)
 POPs_included_labels <- gsub("BDE", "PBDE", POPs_included_labels)
 POPs_included_labels <- gsub("pp", "p,p'", POPs_included_labels)
 pollutant_labels <- set_names(c(POPs_included_labels, POPs_included))
 
-plot_base_gamm_not_summed <- map(POPs_included, function(var) {
+plot_base_gam_not_summed <- map(POPs_included, function(var) {
   formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
   
   model <- gam(formula,
@@ -2425,12 +2425,12 @@ for (var in POPs_group_outlier) {
 rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
 
 
-### gamm ----
+### gam ----
 pollutant_labels <- set_names(
   c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","OCP_HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group)
 
-plot_adjusted_gamm <- map(POPs_group, function(var) {
+plot_adjusted_gam <- map(POPs_group, function(var) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates, collapse = ' + ')}"))
   
@@ -2486,12 +2486,12 @@ plot_adjusted_gamm <- map(POPs_group, function(var) {
   set_names(POPs_group)
 rm(pollutant_labels)
 
-### gamm outliers ----
+### gam outliers ----
 pollutant_labels <- set_names(
   c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","OCP_HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group_outlier)
 
-plot_adjusted_gamm_outlier <- map(POPs_group_outlier, function(var) {
+plot_adjusted_gam_outlier <- map(POPs_group_outlier, function(var) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates, collapse = ' + ')}"))
   
@@ -2547,13 +2547,13 @@ plot_adjusted_gamm_outlier <- map(POPs_group_outlier, function(var) {
   set_names(POPs_group)
 rm(pollutant_labels)
 
-### gamm not summed ----
+### gam not summed ----
 POPs_included_labels <- gsub("_", "-", POPs_included)
 POPs_included_labels <- gsub("BDE", "PBDE", POPs_included_labels)
 POPs_included_labels <- gsub("pp", "p,p'", POPs_included_labels)
 pollutant_labels <- set_names(c(POPs_included_labels, POPs_included))
 
-plot_adjusted_gamm_not_summed <- map(POPs_included, function(var) {
+plot_adjusted_gam_not_summed <- map(POPs_included, function(var) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age + 
                               smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
@@ -2612,7 +2612,7 @@ rm(pollutant_labels)
 
 
 ## model 3 ----
-### gamm ----
+### gam ----
 POPs_group_bis <- setdiff(POPs_group, "PCB_4")
 pollutant_labels_bis <- set_names(
   c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
@@ -2628,7 +2628,7 @@ model <- gam(als ~ s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) +
              data = bdd_danish)
 
 
-plot_copollutant_gamm <- map(POPs_group_bis, function(var) {
+plot_copollutant_gam <- map(POPs_group_bis, function(var) {
   
   bdd_pred <- bdd_danish|>
     mutate(across(all_of(covariates),                                           # fixe toutes les covariables à leurs moyennes
@@ -2679,7 +2679,7 @@ plot_copollutant_gamm <- map(POPs_group_bis, function(var) {
 rm(POPs_group_bis, pollutant_labels_bis, model)
 
 
-### gamm outliers ----
+### gam outliers ----
 POPs_group_outlier_bis <- setdiff(POPs_group_outlier, "PCB_4_outlier")
 pollutant_labels_bis <- set_names(
   c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
@@ -2694,7 +2694,7 @@ model <- gam(als ~ s(PCB_DL_outlier) + s(PCB_NDL_outlier) + s(OCP_HCB_outlier) +
              method = "REML", 
              data = bdd_danish)
 
-plot_copollutant_gamm_outlier <- map(POPs_group_outlier_bis, function(var) {
+plot_copollutant_gam_outlier <- map(POPs_group_outlier_bis, function(var) {
   
   bdd_pred <- bdd_danish|>
     mutate(across(all_of(covariates), 
@@ -2750,7 +2750,7 @@ rm(POPs_group_outlier_bis, pollutant_labels_bis, model)
 
 ## metanalysis ----
 
-plot_metaanalysis_quart <- metaanalysis_quart %>% 
+plot_matanalysis_quart <- matanalysis_quart %>% 
   mutate(`p-value_shape` = ifelse(`p-value_raw`<0.05, "p-value<0.05", "p-value≥0.05"), 
          model = fct_recode(model, 
                             "Adjusted model" = "adjusted",
@@ -2786,55 +2786,55 @@ results_POPs_ALS_occurrence <-
                    results_quart = results_quart, 
                    results_quadratic = results_quadratic, 
                    results_cubic = results_cubic, 
-                   model1_gamm = model1_gamm, 
-                   model2_gamm = model2_gamm, 
+                   model1_gam = model1_gam, 
+                   model2_gam = model2_gam, 
                    plot_quart = plot_quart, 
                    plot_quart_bis = plot_quart_bis, 
                    plot_base_spline = plot_base_spline, 
                    plot_base_quadratic = plot_base_quadratic, 
                    plot_base_cubic = plot_base_cubic, 
-                   plot_base_gamm = plot_base_gamm, 
+                   plot_base_gam = plot_base_gam, 
                    plot_adjusted_spline = plot_adjusted_spline, 
                    plot_adjusted_quadratic = plot_adjusted_quadratic, 
                    plot_adjusted_cubic = plot_adjusted_cubic, 
-                   plot_adjusted_gamm = plot_adjusted_gamm, 
-                   plot_copollutant_gamm = plot_copollutant_gamm), 
+                   plot_adjusted_gam = plot_adjusted_gam, 
+                   plot_copollutant_gam = plot_copollutant_gam), 
        sensitivity_outliers = list(sensitivity_results_outlier = sensitivity_results_outlier, 
                                    results_spline_outliers = results_spline_outliers, 
                                    results_quadratic_outliers = results_quadratic_outliers, 
                                    results_cubic_outliers = results_cubic_outliers, 
-                                   model1_gamm_outliers = model1_gamm_outliers, 
-                                   model2_gamm_outliers = model2_gamm_outliers, 
+                                   model1_gam_outliers = model1_gam_outliers, 
+                                   model2_gam_outliers = model2_gam_outliers, 
                                    plot_base_spline_outlier = plot_base_spline_outlier, 
                                    plot_base_quadratic_outlier = plot_base_quadratic_outlier, 
                                    plot_base_cubic_outlier = plot_base_cubic_outlier, 
-                                   plot_base_gamm_outlier = plot_base_gamm_outlier, 
+                                   plot_base_gam_outlier = plot_base_gam_outlier, 
                                    plot_adjusted_spline_outlier = plot_adjusted_spline_outlier, 
                                    plot_adjusted_quadratic_outlier = plot_adjusted_quadratic_outlier, 
                                    plot_adjusted_cubic_outlier = plot_adjusted_cubic_outlier, 
-                                   plot_adjusted_gamm_outlier = plot_adjusted_gamm_outlier, 
-                                   plot_copollutant_gamm_outlier = plot_copollutant_gamm_outlier), 
+                                   plot_adjusted_gam_outlier = plot_adjusted_gam_outlier, 
+                                   plot_copollutant_gam_outlier = plot_copollutant_gam_outlier), 
        sensitivity_not_summed = list(sensitivity_results_not_summed_quart = sensitivity_results_not_summed_quart, 
-                                     model1_gamm_not_summed = model1_gamm_not_summed, 
-                                     model2_gamm_not_summed = model2_gamm_not_summed,
+                                     model1_gam_not_summed = model1_gam_not_summed, 
+                                     model2_gam_not_summed = model2_gam_not_summed,
                                      model1_quart_not_summed = model1_quart_not_summed, 
                                      model2_quart_not_summed = model2_quart_not_summed, 
                                      plot_quart_sensi_not_summed = plot_quart_sensi_not_summed, 
-                                     plot_base_gamm_not_summed = plot_base_gamm_not_summed, 
-                                     plot_adjusted_gamm_not_summed = plot_adjusted_gamm_not_summed), 
-       metanalysis = list(metaanalysis_quart = metaanalysis_quart, 
-                          plot_metaanalysis_quart = plot_metaanalysis_quart))
+                                     plot_base_gam_not_summed = plot_base_gam_not_summed, 
+                                     plot_adjusted_gam_not_summed = plot_adjusted_gam_not_summed), 
+       metanalysis = list(matanalysis_quart = matanalysis_quart, 
+                          plot_matanalysis_quart = plot_matanalysis_quart))
 
-rm(main_results, covar, results_spline, results_quart, results_quadratic, results_cubic, model1_gamm, model2_gamm, 
+rm(main_results, covar, results_spline, results_quart, results_quadratic, results_cubic, model1_gam, model2_gam, 
    sensitivity_results_outlier, results_spline_outliers, results_quadratic_outliers, results_cubic_outliers, 
-   model1_gamm_outliers, model2_gamm_outliers, 
-   sensitivity_results_not_summed_quart, model1_gamm_not_summed, model2_gamm_not_summed, model1_quart_not_summed, model2_quart_not_summed, 
+   model1_gam_outliers, model2_gam_outliers, 
+   sensitivity_results_not_summed_quart, model1_gam_not_summed, model2_gam_not_summed, model1_quart_not_summed, model2_quart_not_summed, 
    plot_quart, plot_quart_bis, plot_quart_sensi_not_summed, 
-   plot_base_spline, plot_base_quadratic, plot_base_cubic, plot_base_gamm, 
-   plot_base_spline_outlier, plot_base_quadratic_outlier, plot_base_cubic_outlier, plot_base_gamm_outlier, 
-   plot_adjusted_spline, plot_adjusted_quadratic, plot_adjusted_cubic, plot_adjusted_gamm, 
-   plot_adjusted_spline_outlier, plot_adjusted_quadratic_outlier, plot_adjusted_cubic_outlier, plot_adjusted_gamm_outlier, 
-   plot_base_gamm_not_summed, plot_adjusted_gamm_not_summed, 
-   plot_copollutant_gamm, plot_copollutant_gamm_outlier, 
-   metaanalysis_quart, plot_metaanalysis_quart)
+   plot_base_spline, plot_base_quadratic, plot_base_cubic, plot_base_gam, 
+   plot_base_spline_outlier, plot_base_quadratic_outlier, plot_base_cubic_outlier, plot_base_gam_outlier, 
+   plot_adjusted_spline, plot_adjusted_quadratic, plot_adjusted_cubic, plot_adjusted_gam, 
+   plot_adjusted_spline_outlier, plot_adjusted_quadratic_outlier, plot_adjusted_cubic_outlier, plot_adjusted_gam_outlier, 
+   plot_base_gam_not_summed, plot_adjusted_gam_not_summed, 
+   plot_copollutant_gam, plot_copollutant_gam_outlier, 
+   matanalysis_quart, plot_matanalysis_quart)
 

@@ -181,7 +181,7 @@ POPs_table_finnish_by_als <- bdd |>
               digits = all_continuous() ~1) |>
   bold_labels() |>
   add_overall() |>
-  add_p() 
+  add_p(include = -`OCP_α_HCH`) 
 
 POPs_boxplot_finnish <- bdd |>
   filter(study %in% c("FMC", "FMCF", "MFH")) |>
@@ -227,7 +227,8 @@ POPs_boxplot_finnish_by_als <- bdd |>
 POPs_heatmap_finnish <- bdd |>
   filter(!study %in% c("Danish")) |>
   select(all_of(POPs_tot)) |>
-  rename(!!!POPs_labels) 
+  rename(!!!POPs_labels) |>
+  select(-"α-HCH")
 
 POPs_heatmap_finnish <- cor(POPs_heatmap_finnish, 
                             use = "pairwise.complete.obs", 
@@ -304,7 +305,7 @@ covar_comp <- bdd %>%
          "bmi", "cholesterol", "blod_sys", "blod_dias", "baseline_age", "diagnosis_age") %>%
   tbl_summary(by = "study") %>%
   bold_labels() %>%
-  add_p()
+  add_p(include = -education)
 
 ## POPs ----
 POPs_table_comp <- bdd |>

@@ -353,6 +353,7 @@ POPs_tot <- c("PCB_4",
 POPs_group <- c("PCB_DL", "PCB_NDL", "PCB_4", "OCP_HCB", "ΣDDT", "OCP_β_HCH", "Σchlordane", "ΣPBDE")
 POPs_group_quart <- paste0(POPs_group, "_quart")
 POPs_group_outlier <- paste0(POPs_group, "_outlier")
+POPs_group_sd <- paste0(POPs_group, "_sd")
 
 POPs_group_quart_med <- paste0(POPs_group, "_quart_med")
 
@@ -1106,5 +1107,26 @@ POPs_labels <- c(
   "PBDE-47" = "PBDE_47",
   "PBDE-99" = "PBDE_99",
   "PBDE-153" = "PBDE_153")
+
+
+POPs_group_labels <- c(
+  "PCB-118,138,153,180" = "PCB_4",
+  "Dioxin-like PCBs" = "PCB_DL",
+  "Non dioxin-like PCBs" = "PCB_NDL",
+  "HCB" = "OCP_HCB",
+  "ΣDDT" = "ΣDDT",
+  "β-HCH" = "OCP_β_HCH",
+  "Σchlordane" = "Σchlordane",
+  "ΣPBDE" = "ΣPBDE")
+
+POPs_group_quart_labels <- c(
+  "PCB-118,138,153,180" = "PCB_4_quart",
+  "Dioxin-like PCBs" = "PCB_DL_quart",
+  "Non dioxin-like PCBs" = "PCB_NDL_quart",
+  "HCB" = "OCP_HCB_quart",
+  "ΣDDT" = "ΣDDT_quart",
+  "β-HCH" = "OCP_β_HCH_quart",
+  "Σchlordane" = "Σchlordane_quart",
+  "ΣPBDE" = "ΣPBDE_quart")
 
 
