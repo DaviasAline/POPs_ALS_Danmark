@@ -1614,9 +1614,10 @@ plot_quart <- main_results %>%
                                "Most\nprevalent\nPCBs" = "PCB_4",
                                "Dioxin-like\nPCBs" = "PCB_DL",
                                "Non-dioxin-\nlike PCBs" = "PCB_NDL",
-                               "β-HCH" = "OCP_β_HCH"), 
+                               "β-HCH" = "OCP_β_HCH", 
+                               "HCB" = "OCP_HCB"), 
         variable = fct_relevel(variable, 
-                               "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "Most\nprevalent\nPCBs", "OCP_HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) %>%
+                               "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "Most\nprevalent\nPCBs", "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) %>%
   ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
@@ -1644,9 +1645,10 @@ plot_quart_bis <- main_results %>%
                                "Most\nprevalent\nPCBs" = "PCB_4",
                                "Dioxin-like\nPCBs" = "PCB_DL",
                                "Non-dioxin-\nlike PCBs" = "PCB_NDL",
-                               "β-HCH" = "OCP_β_HCH"), 
+                               "β-HCH" = "OCP_β_HCH", 
+                               "HCB" = "OCP_HCB"), 
          variable = fct_relevel(variable, 
-                                "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "Most\nprevalent\nPCBs", "OCP_HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) %>%
+                                "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "Most\nprevalent\nPCBs", "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) %>%
   ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
@@ -1942,7 +1944,7 @@ rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
 
 ### gam ----
 pollutant_labels <- set_names(
-  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","OCP_HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group)
 
 plot_base_gam <- map(POPs_group, function(var) {
@@ -1979,6 +1981,7 @@ plot_base_gam <- map(POPs_group, function(var) {
     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
              hjust = 1, vjust = 1.2, size = 4, color = "black") +
     theme_minimal() +
+    scale_y_continuous(limits = c(0, 1)) +  
     theme(axis.text.x = element_text(color = 'white'),
           axis.title.x = element_blank(),
           axis.line.x = element_blank(),
@@ -2003,7 +2006,7 @@ rm(pollutant_labels)
 
 ### gam outliers ----
 pollutant_labels <- set_names(
-  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","OCP_HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group_outlier)
 
 plot_base_gam_outlier <- map(POPs_group_outlier, function(var) {
@@ -2040,6 +2043,7 @@ plot_base_gam_outlier <- map(POPs_group_outlier, function(var) {
     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
              hjust = 1, vjust = 1.2, size = 4, color = "black") +
     theme_minimal() +
+    scale_y_continuous(limits = c(0, 1)) +  
     theme(axis.text.x = element_text(color = 'white'),
           axis.title.x = element_blank(),
           axis.line.x = element_blank(),
@@ -2128,6 +2132,7 @@ plot_base_gam_not_summed <- map(POPs_included, function(var) {
       color = "black"
     ) +
     theme_minimal() +
+    scale_y_continuous(limits = c(0, 1)) +  
     theme(
       axis.text.x = element_text(color = 'white'),
       axis.title.x = element_blank(),
@@ -2427,7 +2432,7 @@ rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
 
 ### gam ----
 pollutant_labels <- set_names(
-  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","OCP_HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group)
 
 plot_adjusted_gam <- map(POPs_group, function(var) {
@@ -2464,6 +2469,7 @@ plot_adjusted_gam <- map(POPs_group, function(var) {
     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
              hjust = 1, vjust = 1.2, size = 4, color = "black") +
     theme_minimal() +
+    scale_y_continuous(limits = c(0, 1)) +  
     theme(axis.text.x = element_text(color = 'white'),
           axis.title.x = element_blank(),
           axis.line.x = element_blank(),
@@ -2488,7 +2494,7 @@ rm(pollutant_labels)
 
 ### gam outliers ----
 pollutant_labels <- set_names(
-  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","OCP_HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group_outlier)
 
 plot_adjusted_gam_outlier <- map(POPs_group_outlier, function(var) {
@@ -2525,6 +2531,7 @@ plot_adjusted_gam_outlier <- map(POPs_group_outlier, function(var) {
     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
              hjust = 1, vjust = 1.2, size = 4, color = "black") +
     theme_minimal() +
+    scale_y_continuous(limits = c(0, 1)) +  
     theme(axis.text.x = element_text(color = 'white'),
           axis.title.x = element_blank(),
           axis.line.x = element_blank(),
@@ -2588,6 +2595,7 @@ plot_adjusted_gam_not_summed <- map(POPs_included, function(var) {
     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
              hjust = 1, vjust = 1.2, size = 4, color = "black") +
     theme_minimal() +
+    scale_y_continuous(limits = c(0, 1)) +  
     theme(axis.text.x = element_text(color = 'white'),
           axis.title.x = element_blank(),
           axis.line.x = element_blank(),
@@ -2616,7 +2624,7 @@ rm(pollutant_labels)
 POPs_group_bis <- setdiff(POPs_group, "PCB_4")
 pollutant_labels_bis <- set_names(
   c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
-    "OCP_HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
+    "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
   POPs_group_bis)
 
 model <- gam(als ~ s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + 
@@ -2658,6 +2666,7 @@ plot_copollutant_gam <- map(POPs_group_bis, function(var) {
     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
              hjust = 1, vjust = 1.2, size = 4, color = "black") +
     theme_minimal() +
+    scale_y_continuous(limits = c(0, 1)) +  
     theme(axis.text.x = element_blank(),
           axis.title.x = element_blank(),
           axis.line.x = element_blank(),
@@ -2683,7 +2692,7 @@ rm(POPs_group_bis, pollutant_labels_bis, model)
 POPs_group_outlier_bis <- setdiff(POPs_group_outlier, "PCB_4_outlier")
 pollutant_labels_bis <- set_names(
   c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
-    "OCP_HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
+    "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
   POPs_group_outlier_bis)
 
 model <- gam(als ~ s(PCB_DL_outlier) + s(PCB_NDL_outlier) + s(OCP_HCB_outlier) + s(ΣDDT_outlier) + 
@@ -2728,6 +2737,7 @@ plot_copollutant_gam_outlier <- map(POPs_group_outlier_bis, function(var) {
     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
              hjust = 1, vjust = 1.2, size = 4, color = "black") +
     theme_minimal() +
+    scale_y_continuous(limits = c(0, 1)) +  
     theme(axis.text.x = element_blank(),
           axis.title.x = element_blank(),
           axis.line.x = element_blank(),
@@ -2749,7 +2759,6 @@ plot_copollutant_gam_outlier <- map(POPs_group_outlier_bis, function(var) {
 rm(POPs_group_outlier_bis, pollutant_labels_bis, model)
 
 ## metanalysis ----
-
 plot_matanalysis_quart <- matanalysis_quart %>% 
   mutate(`p-value_shape` = ifelse(`p-value_raw`<0.05, "p-value<0.05", "p-value≥0.05"), 
          model = fct_recode(model, 

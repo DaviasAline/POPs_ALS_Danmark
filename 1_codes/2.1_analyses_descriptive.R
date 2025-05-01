@@ -49,7 +49,7 @@ POPs_boxplot_danish <- bdd_danish |>
   scale_fill_hue(direction = 1) +
   scale_y_continuous(trans = "log", 
                      labels = number_format(accuracy = 1)) +
-  labs(x = "POPs", y = "Values (pg/ml, log transformed)") +
+  labs(x = "POPs", y = "Pre-disease serum concentrations (pg/ml)") +
   coord_flip() +
   theme_lucid()
 
@@ -71,9 +71,55 @@ POPs_boxplot_danish_by_als <- bdd_danish |>
                  guide = guide_legend(reverse = TRUE)) +
   scale_y_continuous(trans = "log", 
                      labels = number_format(accuracy = 1)) +
-  labs(x = "POPs", y = "Values (pg/ml, log transformed)", fill = "ALS") +
+  labs(x = "POPs", y = "Pre-disease serum concentrations (pg/ml)", fill = "ALS") +
   coord_flip() +
   theme_lucid()
+
+POPs_group_boxplot_danish_by_als <- bdd_danish |>
+  select(als, all_of(POPs_group)) |>
+  pivot_longer(cols = -als, names_to = "POPs", values_to = "values") |>
+  mutate(POPs = factor(POPs, levels = POPs_group_labels), 
+         POPs = fct_recode(POPs, !!!POPs_group_labels), 
+         POPs = fct_rev(POPs),
+         als = as.character(als), 
+         als = fct_recode(als, 
+                          "Controls" = "0",
+                          "Cases" = "1")) |>
+  arrange(POPs) |>
+  ggplot() +
+  aes(x = POPs, y = values, fill = als) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1, 
+                 guide = guide_legend(reverse = TRUE)) +
+  scale_y_continuous(trans = "log", 
+                     labels = number_format(accuracy = 1)) +
+  labs(x = "POPs", y = "Pre-disease serum concentrations (pg/ml)", fill = "ALS") +
+  coord_flip() +
+  theme_lucid()
+
+POPs_group_boxplot_danish_by_death <- bdd_danish |>
+  filter(als == 1) |>
+  select(status_death, all_of(POPs_group)) |>
+  pivot_longer(cols = -status_death, names_to = "POPs", values_to = "values") |>
+  mutate(POPs = factor(POPs, levels = POPs_group_labels), 
+         POPs = fct_recode(POPs, !!!POPs_group_labels), 
+         POPs = fct_rev(POPs),
+         status_death = as.character(status_death), 
+         status_death = fct_recode(status_death, 
+                                   "Alive" = "0",
+                                   "Deceased" = "1")) |>
+  arrange(POPs) |>
+  ggplot() +
+  aes(x = POPs, y = values, fill = status_death) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1, 
+                 guide = guide_legend(reverse = TRUE)) +
+  scale_y_continuous(trans = "log", 
+                     labels = number_format(accuracy = 1)) +
+  labs(x = "POPs", y = "Pre-disease serum concentrations (pg/ml)", fill = "") +
+  coord_flip() +
+  theme_lucid()
+
 
 POPs_heatmap_danish <- bdd_danish %>% 
   select(all_of(POPs_tot)) |>
@@ -114,7 +160,7 @@ fattyacids_boxplot_danish <- bdd_danish |>
   scale_fill_hue(direction = 1) +
   scale_y_continuous(trans = "log", 
                      labels = number_format(accuracy = 1)) +
-  labs(x = "Fattu acids", y = "Values (log transformed)") +
+  labs(x = "Fatty acids", y = "Pre-disease serum proportions (%)") +
   coord_flip() +
   theme_lucid()
 
@@ -136,7 +182,7 @@ fattyacids_boxplot_danish_by_als <- bdd_danish |>
                  guide = guide_legend(reverse = TRUE)) +
   scale_y_continuous(trans = "log", 
                      labels = number_format(accuracy = 1)) +
-  labs(x = "Fatty acids", y = "Values (log transformed)", fill = "ALS") +
+  labs(x = "Fatty acids", y = "Pre-disease serum proportions (%)", fill = "ALS") +
   coord_flip() +
   theme_lucid()
 
@@ -197,7 +243,7 @@ POPs_boxplot_finnish <- bdd |>
   scale_fill_hue(direction = 1) +
   scale_y_continuous(trans = "log", 
                      labels = number_format(accuracy = 1)) +
-  labs(x = "POPs", y = "Values (pg/ml, log transformed)") +
+  labs(x = "POPs", y = "Pre-disease serum concentrations (pg/ml)") +
   coord_flip() +
   theme_lucid()
 
@@ -220,9 +266,35 @@ POPs_boxplot_finnish_by_als <- bdd |>
                  guide = guide_legend(reverse = TRUE)) +
   scale_y_continuous(trans = "log", 
                      labels = number_format(accuracy = 1)) +
-  labs(x = "POPs", y = "Values (pg/ml, log transformed)", fill = "ALS") +
+  labs(x = "POPs", y = "Pre-disease serum concentrations (pg/ml)", fill = "ALS") +
   coord_flip() +
   theme_lucid()
+
+POPs_group_boxplot_finnish_by_als <- bdd |>
+  filter(study %in% c("FMC", "FMCF", "MFH")) |>
+  select(als, all_of(POPs_group)) |>
+  select(!contains("PBDE")) |>
+  pivot_longer(cols = -als, names_to = "POPs", values_to = "values") |>
+  mutate(POPs = factor(POPs, levels = POPs_group_labels), 
+         POPs = fct_recode(POPs, !!!POPs_group_labels), 
+         POPs = fct_rev(POPs),
+         als = as.character(als), 
+         als = fct_recode(als, 
+                          "Controls" = "0",
+                          "Cases" = "1")) |>
+  arrange(POPs) |>
+  ggplot() +
+  aes(x = POPs, y = values, fill = als) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1, 
+                 guide = guide_legend(reverse = TRUE)) +
+  scale_y_continuous(trans = "log", 
+                     labels = number_format(accuracy = 1)) +
+  labs(x = "POPs", y = "Pre-disease serum concentrations (pg/ml)", fill = "ALS") +
+  coord_flip() +
+  theme_lucid()
+
+
 
 POPs_heatmap_finnish <- bdd |>
   filter(!study %in% c("Danish")) |>
@@ -264,7 +336,7 @@ fattyacids_boxplot_finnish <- bdd_finnish |>
   scale_fill_hue(direction = 1) +
   scale_y_continuous(trans = "log", 
                      labels = number_format(accuracy = 1)) +
-  labs(x = "Fattu acids", y = "Values (log transformed)") +
+  labs(x = "Fatty acids", y = "Pre-disease serum proportions (%)") +
   coord_flip() +
   theme_lucid()
 
@@ -285,7 +357,7 @@ fattyacids_boxplot_finnish_by_als <- bdd_finnish |>
                  guide = guide_legend(reverse = TRUE)) +
   scale_y_continuous(trans = "log", 
                      labels = number_format(accuracy = 1)) +
-  labs(x = "Fatty acids", y = "Values (log transformed)", fill = "ALS") +
+  labs(x = "Fatty acids", y = "Pre-disease serum proportions (%)", fill = "ALS") +
   coord_flip() +
   theme_lucid()
 
@@ -329,7 +401,7 @@ POPs_boxplot_comp <- bdd |>
                  guide = guide_legend(reverse = TRUE)) +
   scale_y_continuous(trans = "log", 
                      labels = number_format(accuracy = 1)) +
-  labs(x = "POPs", y = "Values (pg/ml, log transformed)", fill = "Study") +
+  labs(x = "POPs", y = "Pre-disease serum concentrations (pg/ml)", fill = "Study") +
   coord_flip() +
   theme_lucid()
 
@@ -377,7 +449,7 @@ fattyacids_boxplot_comp <- bdd |>
                  guide = guide_legend(reverse = TRUE)) +
   scale_y_continuous(trans = "log", 
                      labels = number_format(accuracy = 1)) +
-  labs(x = "Fatty acids", y = "Values (log transformed)", fill = "Cohort") +
+  labs(x = "Fatty acids", y = "Pre-disease serum proportions (%)", fill = "Cohort") +
   coord_flip() +
   theme_lucid()
 
@@ -390,6 +462,8 @@ results_descriptive <- list(
     POPs_table_danish_by_als = POPs_table_danish_by_als,
     POPs_boxplot_danish = POPs_boxplot_danish,
     POPs_boxplot_danish_by_als = POPs_boxplot_danish_by_als,
+    POPs_group_boxplot_danish_by_als = POPs_group_boxplot_danish_by_als,
+    POPs_group_boxplot_danish_by_death = POPs_group_boxplot_danish_by_death,    # among cases
     POPs_heatmap_danish = POPs_heatmap_danish,
     fattyacids_table_danish = fattyacids_table_danish,
     fattyacids_table_danish_by_als = fattyacids_table_danish_by_als,
@@ -403,6 +477,7 @@ results_descriptive <- list(
     POPs_table_finnish_by_als = POPs_table_finnish_by_als,
     POPs_boxplot_finnish = POPs_boxplot_finnish,
     POPs_boxplot_finnish_by_als = POPs_boxplot_finnish_by_als,
+    POPs_group_boxplot_finnish_by_als = POPs_group_boxplot_finnish_by_als,
     POPs_heatmap_finnish = POPs_heatmap_finnish,
     fattyacids_table_finnish = fattyacids_table_finnish,
     fattyacids_table_finnish_by_als = fattyacids_table_finnish_by_als,

@@ -33,6 +33,7 @@ covar_danish <- tbl_merge(tbls = list(
   tab_spanner = c("**Crude**", "**Adjusted**"))
 rm(bdd_cases_danish, surv_obj_danish)
 
+## Main analysis 
 ## Base model sd ----
 model1_cox_sd_danish <- map_dfr(POPs_group_sd, function(expl) {
   
@@ -58,7 +59,7 @@ model1_cox_sd_danish <- map_dfr(POPs_group_sd, function(expl) {
     coef = coefs[, "coef"],
     se = coefs[, "se(coef)"], 
     `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory)) 
+    filter(str_starts(term, explanatory))                                       # remove the covariates results
   
 })
 
@@ -87,7 +88,7 @@ model1_cox_quart_danish <- map_dfr(POPs_group_quart, function(expl) {
     coef = coefs[, "coef"],
     se = coefs[, "se(coef)"], 
     `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory)) 
+    filter(str_starts(term, explanatory))                                       # remove the covariates results
 })
 
 ## Adjusted model sd ----
@@ -115,7 +116,7 @@ model2_cox_sd_danish <- map_dfr(POPs_group_sd, function(expl) {
     coef = coefs[, "coef"],
     se = coefs[, "se(coef)"], 
     `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory)) 
+    filter(str_starts(term, explanatory))                                       # remove the covariates results 
 })
 
 ## Ajusted model quart ----
@@ -143,7 +144,7 @@ model2_cox_quart_danish <- map_dfr(POPs_group_quart, function(expl) {
     coef = coefs[, "coef"],
     se = coefs[, "se(coef)"], 
     `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory)) 
+    filter(str_starts(term, explanatory))                                       # remove the covariates results
 })
 
 
@@ -214,13 +215,13 @@ bdd_cases_FMCF <- bdd |>                                                        
 formula <- "Surv(follow_up_death, status_death) ~ baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol"
 formula <- as.formula(formula)
 
-covar_adjusted_finnish <- list(                                                    # run of the simple cox models
+covar_adjusted_finnish <- list(                                                 # run of the simple cox models
   finnish_FMC = run_cox(formula, bdd_cases_FMC),
   finnish_FMCF = run_cox(formula, bdd_cases_FMCF)) |>
   bind_rows(.id = "dataset") |>
   mutate(var = se^2)
 
-covar_adjusted_finnish <- covar_adjusted_finnish |>                                   # run metanalyse
+covar_adjusted_finnish <- covar_adjusted_finnish |>                             # run metanalyse
   group_by(term) |>
   group_modify( ~ {
     rma_fit <- rma(yi = .x$coef,
@@ -281,7 +282,7 @@ model1_cox_sd_finnish <- map_dfr(POPs_group_sd, function(expl) {
     finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
     bind_rows(.id = "dataset") %>%
     mutate(var = se^2, explanatory = expl) |>
-    filter(explanatory == term)
+    filter(explanatory == term)                                                 # remove the covariates results                           
   
   rma_fit <- rma(yi = coef, vi = var, data = results, method = "DL")            # run of the meta-analyse (metafor package as Ian did)
   
@@ -331,7 +332,7 @@ model1_cox_quart_finnish <- map_dfr(POPs_group_quart, function(expl) {
     bind_rows(.id = "dataset") %>%
     mutate(var = se^2, 
            explanatory = expl) |>
-    filter(str_starts(term, explanatory)) 
+    filter(str_starts(term, explanatory))                                       # remove the covariates results
   
   meta_results <- results |>                                                    # run metanalyse (one per quartile per explanatory variable)
     group_by(explanatory, term) |> 
@@ -383,7 +384,7 @@ model2_cox_sd_finnish <- map_dfr(POPs_group_sd, function(expl) {
     finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
     bind_rows(.id = "dataset") %>%
     mutate(var = se^2, explanatory = expl) |>
-    filter(explanatory == term)
+    filter(explanatory == term)                                                 # remove the covariates results
   
   rma_fit <- rma(yi = coef, vi = var, data = results, method = "DL")            # run of the meta-analyse (metafor package as Ian did)
   
@@ -435,7 +436,7 @@ model2_cox_quart_finnish <- map_dfr(POPs_group_quart, function(expl) {
     bind_rows(.id = "dataset") %>%
     mutate(var = se^2, 
            explanatory = expl) |>
-    filter(str_starts(term, explanatory)) 
+    filter(str_starts(term, explanatory))                                       # remove the covariates results
   
   meta_results <- results |>                                                    # run metanalyse (one per quartile per explanatory variable)
     group_by(explanatory, term) |> 
@@ -510,7 +511,7 @@ model1_cox_sd_metanalysis <- map_dfr(POPs_group_sd, function(expl) {
     finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
     bind_rows(.id = "dataset") %>%
     mutate(var = se^2, explanatory = expl) |>
-    filter(explanatory == term)
+    filter(explanatory == term)                                                 # remove the covariates results
   
   rma_fit <- rma(yi = coef, vi = var, data = results, method = "DL")            # run of the meta-analyse (metafor package as Ian did)
   
@@ -572,7 +573,7 @@ model1_cox_quart_metanalysis <- map_dfr(POPs_group_quart, function(expl) {
     bind_rows(.id = "dataset") %>%
     mutate(var = se^2, 
            explanatory = expl) |>
-    filter(str_starts(term, explanatory)) 
+    filter(str_starts(term, explanatory))                                       # remove the covariates results
   
   meta_results <- results |>                                                    # run metanalyse (one per quartile per explanatory variable)
     group_by(explanatory, term) |> 
@@ -643,7 +644,7 @@ model2_cox_sd_metanalysis <- map_dfr(POPs_group_sd, function(expl) {
     finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
     bind_rows(.id = "dataset") %>%
     mutate(var = se^2, explanatory = expl) |>
-    filter(str_starts(term, explanatory)) 
+    filter(str_starts(term, explanatory))                                       # remove the covariates results
   
   rma_fit <- rma(yi = coef, vi = var, data = results, method = "DL")            # run of the meta-analyse (metafor package as Ian did)
   
@@ -699,7 +700,7 @@ model2_cox_quart_metanalysis <- map_dfr(POPs_group_quart, function(expl) {
     as.formula(paste("surv_obj_FMC ~", expl, 
                      "+ baseline_age + sex + 
                      thawed + level_urbanization + 
-                     smoking_2cat + bmi + cholesterol + marital_status_2cat"))  # ecducation not available
+                     smoking_2cat + bmi + cholesterol + marital_status_2cat"))  # education not available
   formula_FMCF <- 
     as.formula(paste("surv_obj_FMCF ~", expl, 
                      "+ baseline_age + sex + 
@@ -713,7 +714,7 @@ model2_cox_quart_metanalysis <- map_dfr(POPs_group_quart, function(expl) {
     bind_rows(.id = "dataset") %>%
     mutate(var = se^2, 
            explanatory = expl) |>
-    filter(str_starts(term, explanatory)) 
+    filter(str_starts(term, explanatory))                                       # remove the covariates results
   
   meta_results <- results |>                                                    # run metanalyse (one per quartile per explanatory variable)
     group_by(explanatory, term) |> 
@@ -733,7 +734,7 @@ model2_cox_quart_metanalysis <- map_dfr(POPs_group_quart, function(expl) {
 })
 
 # Assemblage ----
-main_results_POPs_group_ALS_survival <-       
+main_results_POPs_ALS_survival <-       
   bind_rows(
     model1_cox_sd_danish, model2_cox_sd_danish,
     model1_cox_quart_danish, model2_cox_quart_danish) |>
@@ -775,8 +776,10 @@ rm(model1_cox_sd_finnish, model2_cox_sd_finnish,
 # Tables and figures ----
 ## Danish ----
 ### table covariates - als survival ----
+covar_danish
+
 ### table POPs (sd) - als survival ----
-POPs_group_sd_als_table_danish <- main_results_POPs_group_ALS_survival |>
+POPs_sd_ALS_table_danish <- main_results_POPs_ALS_survival |>
   filter(study == "Danish") |>
   select(model, explanatory, term, HR, "95% CI", "p-value") |>
   filter(term == "Continuous") |>
@@ -806,7 +809,7 @@ POPs_group_sd_als_table_danish <- main_results_POPs_group_ALS_survival |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 ### table POPs (quart) - als survival ----
-quartile1_rows <- main_results_POPs_group_ALS_survival |>
+quartile1_rows <- main_results_POPs_ALS_survival |>
   filter(study == "Danish") |>
   distinct(model, explanatory) |>
   mutate(
@@ -815,14 +818,14 @@ quartile1_rows <- main_results_POPs_group_ALS_survival |>
     "95% CI" = "-",
     `p-value` = "")
 
-POPs_group_quart_als_table_danish <- main_results_POPs_group_ALS_survival |>
+POPs_quart_ALS_table_danish <- main_results_POPs_ALS_survival |>
   filter(study == "Danish") |>
   filter(!term == "Continuous") |>
   select(model, explanatory, term, HR, "95% CI", "p-value") |>
   mutate(across(everything(), as.character))
 
-POPs_group_quart_als_table_danish <- 
-  bind_rows(quartile1_rows, POPs_group_quart_als_table_danish) |>
+POPs_quart_ALS_table_danish <- 
+  bind_rows(quartile1_rows, POPs_quart_ALS_table_danish) |>
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
   pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
@@ -859,7 +862,7 @@ rm(quartile1_rows)
 
 
 ### figure POPs (sd) - als survival ----
-POPs_group_sd_als_figure_danish <- main_results_POPs_group_ALS_survival |>
+POPs_sd_ALS_figure_danish <- main_results_POPs_ALS_survival |>
   filter(study == "Danish") |>
   filter(term == "Continuous") |>
   mutate(model = fct_recode(model, 
@@ -875,7 +878,7 @@ POPs_group_sd_als_figure_danish <- main_results_POPs_group_ALS_survival |>
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
   scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "PUFAs", y = "Hazard Ratio (HR)", color = "p-value") +
+  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
         legend.position = "bottom", 
@@ -883,7 +886,7 @@ POPs_group_sd_als_figure_danish <- main_results_POPs_group_ALS_survival |>
   coord_flip()
 
 ### figure POPs (quart) - als survival ----
-POPs_group_quart_als_figure_danish <- main_results_POPs_group_ALS_survival |>
+POPs_quart_ALS_figure_danish <- main_results_POPs_ALS_survival |>
   filter(study == "Danish") |>
   filter(!term == "Continuous") |>
   mutate(model = fct_recode(model, 
@@ -899,7 +902,7 @@ POPs_group_quart_als_figure_danish <- main_results_POPs_group_ALS_survival |>
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
   scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "PUFAs", y = "Hazard Ratio (HR)", color = "p-value") +
+  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
         legend.position = "bottom", 
@@ -942,9 +945,58 @@ POPs_group_quart_als_figure_danish <- main_results_POPs_group_ALS_survival |>
 
 ## Finnish ----
 ### table covariates - als survival ----
+ref_rows <- covar_finnish |>
+  distinct(model, variable) |>
+  arrange(model, variable) |>
+  mutate(
+    term = c("continuous",  "continuous", "continuous", "1", "Other","Female","Never", "0",
+             "continuous",  "continuous", "continuous", "1", "Other","Female","Never", "0"),
+    HR = "-",
+    "95% CI" = "-",
+    `p-value` = "" ,
+    lower_CI = "", 
+    upper_CI = "")
+
+covar_ALS_table_finnish <- covar_finnish |>
+  mutate(
+    term = fct_recode(term, 
+                      "continuous" = "baseline_age",
+                      "continuous" = "bmi",
+                      "continuous" = "cholesterol",
+                      "2" = "level_urbanization2",
+                      "3" = "level_urbanization3",
+                      "4" = "level_urbanization4",
+                      "Married/cohabit" = "marital_status_2catMarried/cohabit",
+                      "Male" = "sexMale",
+                      "Ever" = "smoking_2catEver",
+                      "1" = "thawed1"),
+    HR = sprintf("%.1f", HR),
+    lower_CI = sprintf("%.1f", lower_CI),
+    upper_CI = sprintf("%.1f", upper_CI), 
+    `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
+    `p-value_raw` = `p-value`, 
+    `p-value_shape` = ifelse(`p-value_raw`<0.05, "p-value<0.05", "p-value≥0.05"), 
+    `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")), 
+    `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) 
+
+covar_ALS_table_finnish <- 
+  bind_rows(ref_rows, covar_ALS_table_finnish) |>
+  select(model, variable, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI) |>
+  mutate(
+    term = fct_relevel(term, 
+    "0", "1", "2", "3", "4", "continuous", "Never", "Ever", "Female", "Male", "Other", "Married/cohabit"), 
+    model = fct_relevel(model, "base", "adjusted"))|>
+  arrange(model, variable, term) |>
+  filter(!(term == "continuous" & HR == "-"))
+
+covar_ALS_table_finnish <- covar_ALS_table_finnish |>
+  select(-`p-value_raw`, -`p-value_shape`, -lower_CI, -upper_CI) |>
+  pivot_wider(names_from = model, values_from = c(HR, `95% CI`, `p-value`)) |>
+  select(variable, term, ends_with("base"), ends_with("adjusted"))
+rm(ref_rows)
 
 ### table POPs (sd) - als survival ----
-POPs_group_sd_als_table_finnish <- main_results_POPs_group_ALS_survival |>
+POPs_sd_ALS_table_finnish <- main_results_POPs_ALS_survival |>
   filter(study == "Finnish") |>
   select(model, explanatory, term, HR, "95% CI", "p-value") |>
   filter(term == "Continuous") |>
@@ -974,7 +1026,7 @@ POPs_group_sd_als_table_finnish <- main_results_POPs_group_ALS_survival |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 ### table POPs (quart) - als survival ----
-quartile1_rows <- main_results_POPs_group_ALS_survival |>
+quartile1_rows <- main_results_POPs_ALS_survival |>
   filter(study == "Finnish") |>
   distinct(model, explanatory) |>
   mutate(
@@ -983,14 +1035,14 @@ quartile1_rows <- main_results_POPs_group_ALS_survival |>
     "95% CI" = "-",
     `p-value` = "")
 
-POPs_group_quart_als_table_finnish <- main_results_POPs_group_ALS_survival |>
+POPs_quart_ALS_table_finnish <- main_results_POPs_ALS_survival |>
   filter(study == "Finnish") |>
   filter(!term == "Continuous") |>
   select(model, explanatory, term, HR, "95% CI", "p-value") |>
   mutate(across(everything(), as.character))
 
-POPs_group_quart_als_table_finnish <- 
-  bind_rows(quartile1_rows, POPs_group_quart_als_table_finnish) |>
+POPs_quart_ALS_table_finnish <- 
+  bind_rows(quartile1_rows, POPs_quart_ALS_table_finnish) |>
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
   pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
@@ -1027,7 +1079,7 @@ rm(quartile1_rows)
 
 
 ### figure POPs (sd) - als survival ----
-POPs_group_sd_als_figure_finnish <- main_results_POPs_group_ALS_survival |>
+POPs_sd_ALS_figure_finnish <- main_results_POPs_ALS_survival |>
   filter(study == "Finnish") |>
   filter(term == "Continuous") |>
   mutate(model = fct_recode(model, 
@@ -1043,7 +1095,7 @@ POPs_group_sd_als_figure_finnish <- main_results_POPs_group_ALS_survival |>
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
   scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "PUFAs", y = "Hazard Ratio (HR)", color = "p-value") +
+  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
         legend.position = "bottom", 
@@ -1051,7 +1103,7 @@ POPs_group_sd_als_figure_finnish <- main_results_POPs_group_ALS_survival |>
   coord_flip()
 
 ### figure POPs (quart) - als survival ----
-POPs_group_quart_als_figure_finnish <- main_results_POPs_group_ALS_survival |>
+POPs_quart_ALS_figure_finnish <- main_results_POPs_ALS_survival |>
   filter(study == "Finnish") |>
   filter(!term == "Continuous") |>
   mutate(model = fct_recode(model, 
@@ -1067,7 +1119,7 @@ POPs_group_quart_als_figure_finnish <- main_results_POPs_group_ALS_survival |>
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
   scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "PUFAs", y = "Hazard Ratio (HR)", color = "p-value") +
+  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
         legend.position = "bottom", 
@@ -1078,7 +1130,7 @@ POPs_group_quart_als_figure_finnish <- main_results_POPs_group_ALS_survival |>
 ### table covariates - als survival ----
 
 ### table POPs (sd) - als survival ----
-POPs_group_sd_als_table_metanalysis <- main_results_POPs_group_ALS_survival |>
+POPs_sd_ALS_table_metanalysis <- main_results_POPs_ALS_survival |>
   filter(study == "Metanalysis") |>
   select(model, explanatory, term, HR, "95% CI", "p-value") |>
   filter(term == "Continuous") |>
@@ -1108,7 +1160,7 @@ POPs_group_sd_als_table_metanalysis <- main_results_POPs_group_ALS_survival |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 ### table POPs (quart) - als survival ----
-quartile1_rows <- main_results_POPs_group_ALS_survival |>
+quartile1_rows <- main_results_POPs_ALS_survival |>
   filter(study == "Metanalysis") |>
   distinct(model, explanatory) |>
   mutate(
@@ -1117,14 +1169,14 @@ quartile1_rows <- main_results_POPs_group_ALS_survival |>
     "95% CI" = "-",
     `p-value` = "")
 
-POPs_group_quart_als_table_metanalysis <- main_results_POPs_group_ALS_survival |>
+POPs_quart_ALS_table_metanalysis <- main_results_POPs_ALS_survival |>
   filter(study == "Metanalysis") |>
   filter(!term == "Continuous") |>
   select(model, explanatory, term, HR, "95% CI", "p-value") |>
   mutate(across(everything(), as.character))
 
-POPs_group_quart_als_table_metanalysis <- 
-  bind_rows(quartile1_rows, POPs_group_quart_als_table_metanalysis) |>
+POPs_quart_ALS_table_metanalysis <- 
+  bind_rows(quartile1_rows, POPs_quart_ALS_table_metanalysis) |>
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
   pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
@@ -1161,7 +1213,7 @@ rm(quartile1_rows)
 
 
 ### figure POPs (sd) - als survival ----
-POPs_group_sd_als_figure_metanalysis <- main_results_POPs_group_ALS_survival |>
+POPs_sd_ALS_figure_metanalysis <- main_results_POPs_ALS_survival |>
   filter(study == "Metanalysis") |>
   filter(term == "Continuous") |>
   mutate(model = fct_recode(model, 
@@ -1177,7 +1229,7 @@ POPs_group_sd_als_figure_metanalysis <- main_results_POPs_group_ALS_survival |>
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
   scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "PUFAs", y = "Hazard Ratio (HR)", color = "p-value") +
+  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
         legend.position = "bottom", 
@@ -1185,7 +1237,7 @@ POPs_group_sd_als_figure_metanalysis <- main_results_POPs_group_ALS_survival |>
   coord_flip()
 
 ### figure POPs (quart) - als survival ----
-POPs_group_quart_als_figure_metanalysis <- main_results_POPs_group_ALS_survival |>
+POPs_quart_ALS_figure_metanalysis <- main_results_POPs_ALS_survival |>
   filter(study == "Metanalysis") |>
   filter(!term == "Continuous") |>
   mutate(model = fct_recode(model, 
@@ -1201,7 +1253,7 @@ POPs_group_quart_als_figure_metanalysis <- main_results_POPs_group_ALS_survival 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
   scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "PUFAs", y = "Hazard Ratio (HR)", color = "p-value") +
+  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
         legend.position = "bottom", 
@@ -1209,42 +1261,44 @@ POPs_group_quart_als_figure_metanalysis <- main_results_POPs_group_ALS_survival 
   coord_flip()
 
 # Assemblage ----
-results_POPs_group_ALS_survival <- 
-  list(main_analysis = list(main_results_POPs_group_ALS_survival = main_results_POPs_group_ALS_survival), 
+results_POPs_ALS_survival <- 
+  list(main_analysis = list(main_results_POPs_ALS_survival = main_results_POPs_ALS_survival), 
        danish = list(
          covar_danish = covar_danish, 
-         POPs_group_sd_als_table_danish = POPs_group_sd_als_table_danish, 
-         POPs_group_quart_als_table_danish = POPs_group_quart_als_table_danish, 
-         POPs_group_sd_als_figure_danish = POPs_group_sd_als_figure_danish, 
-         POPs_group_quart_als_figure_danish = POPs_group_quart_als_figure_danish), 
+         POPs_sd_ALS_table_danish = POPs_sd_ALS_table_danish, 
+         POPs_quart_ALS_table_danish = POPs_quart_ALS_table_danish, 
+         POPs_sd_ALS_figure_danish = POPs_sd_ALS_figure_danish, 
+         POPs_quart_ALS_figure_danish = POPs_quart_ALS_figure_danish), 
        finnish = list(
          covar_finnish = covar_finnish, 
-         POPs_group_sd_als_table_finnish = POPs_group_sd_als_table_finnish, 
-         POPs_group_quart_als_table_finnish = POPs_group_quart_als_table_finnish, 
-         POPs_group_sd_als_figure_finnish = POPs_group_sd_als_figure_finnish, 
-         POPs_group_quart_als_figure_finnish = POPs_group_quart_als_figure_finnish), 
+         covar_ALS_table_finnish = covar_ALS_table_finnish,
+         POPs_sd_ALS_table_finnish = POPs_sd_ALS_table_finnish, 
+         POPs_quart_ALS_table_finnish = POPs_quart_ALS_table_finnish, 
+         POPs_sd_ALS_figure_finnish = POPs_sd_ALS_figure_finnish, 
+         POPs_quart_ALS_figure_finnish = POPs_quart_ALS_figure_finnish), 
        metanalysis = list(
          # covar_metanalysis = covar_metanalysis, 
-         POPs_group_sd_als_table_metanalysis = POPs_group_sd_als_table_metanalysis, 
-         POPs_group_quart_als_table_metanalysis = POPs_group_quart_als_table_metanalysis, 
-         POPs_group_sd_als_figure_metanalysis = POPs_group_sd_als_figure_metanalysis, 
-         POPs_group_quart_als_figure_metanalysis = POPs_group_quart_als_figure_metanalysis))
+         POPs_sd_ALS_table_metanalysis = POPs_sd_ALS_table_metanalysis, 
+         POPs_quart_ALS_table_metanalysis = POPs_quart_ALS_table_metanalysis, 
+         POPs_sd_ALS_figure_metanalysis = POPs_sd_ALS_figure_metanalysis, 
+         POPs_quart_ALS_figure_metanalysis = POPs_quart_ALS_figure_metanalysis))
 
-rm(main_results_POPs_group_ALS_survival, 
+rm(main_results_POPs_ALS_survival, 
    covar_danish,
-   POPs_group_sd_als_table_danish, 
-   POPs_group_quart_als_table_danish, 
-   POPs_group_sd_als_figure_danish, 
-   POPs_group_quart_als_figure_danish, 
+   POPs_sd_ALS_table_danish, 
+   POPs_quart_ALS_table_danish, 
+   POPs_sd_ALS_figure_danish, 
+   POPs_quart_ALS_figure_danish, 
    
    covar_finnish,
-   POPs_group_sd_als_table_finnish, 
-   POPs_group_quart_als_table_finnish, 
-   POPs_group_sd_als_figure_finnish, 
-   POPs_group_quart_als_figure_finnish, 
+   covar_ALS_table_finnish, 
+   POPs_sd_ALS_table_finnish, 
+   POPs_quart_ALS_table_finnish, 
+   POPs_sd_ALS_figure_finnish, 
+   POPs_quart_ALS_figure_finnish, 
    
    # covar_metanalysis,
-   POPs_group_sd_als_table_metanalysis, 
-   POPs_group_quart_als_table_metanalysis, 
-   POPs_group_sd_als_figure_metanalysis, 
-   POPs_group_quart_als_figure_metanalysis)
+   POPs_sd_ALS_table_metanalysis, 
+   POPs_quart_ALS_table_metanalysis, 
+   POPs_sd_ALS_figure_metanalysis, 
+   POPs_quart_ALS_figure_metanalysis)

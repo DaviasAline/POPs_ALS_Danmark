@@ -14,7 +14,7 @@ toc-location: left
 #| message: false
 #| warning: false
 #| include: false
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2.4_analyses_fattyacids_ALS_survival.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/2.5_analyses_fattyacids_ALS_survival.R")
 ```
 
 
@@ -56,13 +56,12 @@ results_descriptive$danish$covar_danish |>
 #| echo: false
 #| message: false
 #| warning: false
-results_descriptive$danish$POPs_table_danish |> kable("html")
+results_descriptive$danish$POPs_table_danish  |> kable("html")
 ```
 
 
 
 ### Comparison of distribution cases/controls
-
 ```{r}
 #| echo: false
 #| message: false
@@ -73,7 +72,7 @@ results_descriptive$danish$POPs_table_danish_by_als |>
 ```
 
 ### Heatmap of correlation 
-```{r fig.height=10, fig.width=10}
+```{r fig.height=11, fig.width=11}
 #| echo: false
 #| message: false
 #| warning: false
@@ -98,6 +97,21 @@ corrplot(results_descriptive$danish$POPs_heatmap_danish,
 #| warning: false
 # descrip_expo_danish
 results_descriptive$danish$POPs_boxplot_danish_by_als
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_descriptive$danish$POPs_group_boxplot_danish_by_als
+```
+
+POPs distribution depending on alive/deceased status at the end of the follow-up (among cases) 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_descriptive$danish$POPs_group_boxplot_danish_by_death
 ```
 
 ### Detailed distribution 
@@ -252,7 +266,7 @@ results_descriptive$danish$POPs_fattyacids_heatmap_danish
 ```
 
 ## Multiple cholesterol variables
-```{r}
+```{r, fig.height=5}
 #| echo: false
 #| message: false
 #| warning: false
@@ -272,9 +286,12 @@ timing <- bdd |>
   select(baseline_age, diagnosis_age, death_age, 
          time_baseline_diagnosis, time_baseline_death, time_diagnosis_death)
 
-timing |> tbl_summary()
+timing |> 
+  tbl_summary() |> 
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
 
-descrip_num(data = timing, vars = colnames(timing))
+descrip_num(data = timing, vars = colnames(timing))  |> kable("html")
 rm(timing)
 ```
 
@@ -288,7 +305,9 @@ rm(timing)
 bdd_finnish |> 
   filter(als == 1) |>
   select(follow_up_death, status_death, study) |>
-  tbl_summary(by = "study")
+  tbl_summary(by = "study") |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
 
 densityplot(data = bdd_finnish, vars = "follow_up_death") 
 descrip_num(data = bdd_finnish, vars = "follow_up_death")|> kable("html")
@@ -310,7 +329,7 @@ results_descriptive$finnish$covar_finnish |>
 #| echo: false
 #| message: false
 #| warning: false
-results_descriptive$finnish$POPs_table_finish |> kable("html")
+results_descriptive$finnish$POPs_table_finnish |> kable("html")
 ```
 
 
@@ -326,7 +345,7 @@ results_descriptive$finnish$POPs_table_finnish_by_als |>
 ```
 
 ### Heatmap of correlation 
-```{r fig.height=10, fig.width=10}
+```{r fig.height=11, fig.width=11}
 #| echo: false
 #| message: false
 #| warning: false
@@ -496,6 +515,7 @@ bdd_finnish |>
   theme(axis.title = element_blank()) +
   facet_wrap(~fattyacids, scales = "free", ncol = 3L, nrow = 14L)
 ```
+
 ## Heatmap POPs/Fatty acids 
 ```{r, fig.width=12, fig.height=12}
 #| echo: false
@@ -542,11 +562,14 @@ timing <- bdd |>
   select(baseline_age, diagnosis_age, death_age) |>
   mutate(time_baseline_diagnosis = diagnosis_age - baseline_age, 
          time_baseline_death = death_age - baseline_age, 
-         time_diagnosis_death = death_age - diagnosis_age)
+         time_diagnosis_death = death_age - diagnosis_age) 
 
-timing |> tbl_summary()
+timing |> 
+  tbl_summary() |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
 
-descrip_num(data = timing, vars = colnames(timing))
+descrip_num(data = timing, vars = colnames(timing)) |>  kable("html")
 rm(timing)
 ```
 
@@ -561,9 +584,12 @@ timing <- bdd |>
   select(baseline_age, diagnosis_age, death_age, 
          time_baseline_diagnosis, time_baseline_death, time_diagnosis_death)
 
-timing |> tbl_summary()
+timing |> 
+  tbl_summary() |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
 
-descrip_num(data = timing, vars = colnames(timing))
+descrip_num(data = timing, vars = colnames(timing)) |>   kable("html")
 rm(timing)
 ```
 
@@ -578,9 +604,12 @@ timing <- bdd |>
   select(baseline_age, diagnosis_age, death_age, 
          time_baseline_diagnosis, time_baseline_death, time_diagnosis_death)
 
-timing |> tbl_summary()
+timing |> 
+  tbl_summary() |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
 
-descrip_num(data = timing, vars = colnames(timing))
+descrip_num(data = timing, vars = colnames(timing)) |> kable("html")
 rm(timing)
 ```
 
@@ -593,7 +622,9 @@ rm(timing)
 bdd |> 
   filter (als == 1) |>
   select(follow_up_death, status_death, study) |>
-  tbl_summary(by = "study")
+  tbl_summary(by = "study") |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
 
 bdd_cases_danish <- bdd_danish |> filter(als ==1)
 bdd_cases_FMC <- bdd_finnish |> filter(als ==1) |> filter(study == "FMC")
@@ -642,10 +673,9 @@ results_descriptive$comp$fattyacids_table_comp |>
 results_descriptive$comp$fattyacids_boxplot_comp 
 ```
 
-# POPs and ALS occurence (in Danish cohort) 
-
-## Effects of covariates on ALS diagnosis
-
+# POPs and ALS occurence 
+## Danish cohort 
+### Effects of subject characteristics on ALS occurence
 ```{r}
 #| echo: false
 #| message: false
@@ -655,162 +685,9 @@ results_descriptive$danish$covar_danish |>
   gt::tab_options(table.font.size = "small")
 ```
 
-## Effects of POPs on ALS occurence
-
-### Spline transformation
-
-#### main analysis
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-results_POPs_ALS_occurrence$main$results_spline |> 
-  rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
-         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted',
-         ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant') |>
-  kable("html", escape = FALSE, align = "c") |>
-  add_header_above(c(" " = 1, " " = 1, "Base model" = 3, "Adjusted model" = 3, "Copollutant model" = 3)) |>
-  column_spec(1:2, bold = TRUE, background = "#f0f0f0")  |>
-  scroll_box(width = "100%", height = "800px", extra_css = "scrollable-table") |>
-  kable_styling(fixed_thead = TRUE)
-```
-
-#### sensitivity analysis without outliers
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-results_POPs_ALS_occurrence$sensitivity_outliers$results_spline_outliers |> 
-  rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
-         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted'
-         # ,
-         # ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant'
-         ) |>
-  kable("html", escape = FALSE, align = "c") |>
-  add_header_above(c(" " = 1, " " = 1, "Base model" = 3, "Adjusted model" = 3
-                     # , 
-                     # "Copollutant model" = 3
-                     )) |>
-  column_spec(1:2, bold = TRUE, background = "#f0f0f0")  |>
-  scroll_box(width = "100%", height = "800px", extra_css = "scrollable-table") |>
-  kable_styling(fixed_thead = TRUE)
-```
-
-### Quartile transformation
-
-#### main analysis
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-results_POPs_ALS_occurrence$main$results_quart |> 
-    rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
-         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted',
-         ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant') |>
-  kable("html", escape = FALSE, align = "c") |>
-  add_header_above(c(" " = 1, " " = 1, "Base model" = 3, "Adjusted model" = 3, "Copollutant model" = 3)) |>
-  column_spec(1:2, bold = TRUE, background = "#f0f0f0")  |>
-  scroll_box(width = "100%", height = "800px", extra_css = "scrollable-table") |>
-  kable_styling(fixed_thead = TRUE)
-```
-
-### Quadratic transformation
-
-#### main analysis
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-results_POPs_ALS_occurrence$main$results_quadratic |>
-    rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
-         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted', 
-         ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant'
-         ) |>
-  kable("html", escape = FALSE, align = "c") |>
-  add_header_above(c(" " = 1, " " = 1, "Base model" = 3, "Adjusted model" = 3, "Copollutant model" = 3)) |>
-  column_spec(1:2, bold = TRUE, background = "#f0f0f0")  |>
-  scroll_box(width = "100%", height = "800px", extra_css = "scrollable-table")|>
-  kable_styling(fixed_thead = TRUE)
-```
-
-#### sensitivity analysis without outliers
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-results_POPs_ALS_occurrence$sensitivity_outliers$results_quadratic_outliers |>
-    rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
-         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted'
-         # ,
-         # ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant'
-         ) |>
-  kable("html", escape = FALSE, align = "c") |>
-  add_header_above(c(" " = 1, " " = 1, "Base model" = 3, "Adjusted model" = 3
-                     # , "Copollutant model" = 3
-                     )) |>
-  column_spec(1:2, bold = TRUE, background = "#f0f0f0")  |>
-  scroll_box(width = "100%", height = "800px", extra_css = "scrollable-table")|>
-  kable_styling(fixed_thead = TRUE)
-```
-
-### Cubic transformation
-
-#### main analysis
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-results_POPs_ALS_occurrence$main$results_cubic |>
-    rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
-         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted',
-         ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant') |>
-  kable("html", escape = FALSE, align = "c") |>
-  add_header_above(c(" " = 1, " " = 1, "Base model" = 3, "Adjusted model" = 3, "Copollutant model" = 3)) |>
-  column_spec(1:2, bold = TRUE, background = "#f0f0f0")  |>
-  scroll_box(width = "100%", height = "800px", extra_css = "scrollable-table")|>
-  kable_styling(fixed_thead = TRUE)
-```
-
-#### sensitivity analysis without outliers
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-results_POPs_ALS_occurrence$sensitivity_outliers$results_cubic_outliers |>
-    rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base',
-         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted'
-         # ,
-         # ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant'
-         ) |>
-  kable("html", escape = FALSE, align = "c") |>
-  add_header_above(c(" " = 1, " " = 1, "Base model" = 3, "Adjusted model" = 3
-                     # , "Copollutant model" = 3
-                     )) |>
-  column_spec(1:2, bold = TRUE, background = "#f0f0f0")  |>
-  scroll_box(width = "100%", height = "800px", extra_css = "scrollable-table")|>
-  kable_styling(fixed_thead = TRUE)
-```
-
-## Vizualization
-
-### model comparison splines, linear quadratic and cubic
-
-#### dioxin like PCBs
-
+### Effects of POPs on ALS occurence
+#### Splines, linear quadratic and cubic models
+##### dioxin like PCBs
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -826,8 +703,7 @@ grid.arrange(grobs = list(
   ncol = 6)
 ```
 
-#### non dioxin like PCBs
-
+##### non dioxin like PCBs
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -843,8 +719,7 @@ grid.arrange(grobs = list(
   ncol = 6)
 ```
 
-#### 4 most commun PCBs
-
+##### 4 most commun PCBs
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -860,8 +735,7 @@ grid.arrange(grobs = list(
   ncol = 6)
 ```
 
-#### OCP_HCB
-
+##### HCB
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -877,8 +751,7 @@ grid.arrange(grobs = list(
   ncol = 6)
 ```
 
-#### ΣDDT
-
+##### ΣDDT
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -894,8 +767,7 @@ grid.arrange(grobs = list(
   ncol = 6)
 ```
 
-#### OCP_β_HCH
-
+##### β-HCH
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -911,8 +783,7 @@ grid.arrange(grobs = list(
   ncol = 6)
 ```
 
-#### Σchlordane
-
+##### Σchlordane
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -928,8 +799,7 @@ grid.arrange(grobs = list(
   ncol = 6)
 ```
 
-#### ΣPBDE
-
+##### ΣPBDE
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -945,8 +815,9 @@ grid.arrange(grobs = list(
   ncol = 6)
 ```
 
-### forest plot quartiles
-
+#### Quartile models
+##### Main analysis
+The copollutant models have only the pollutant of interest as quartiles
 ```{r fig.height=9, fig.width=9}
 #| echo: false
 #| message: false
@@ -954,6 +825,7 @@ grid.arrange(grobs = list(
 results_POPs_ALS_occurrence$main$plot_quart
 ```
 
+The copollutant model have all the pollutants as quartiles
 ```{r fig.height=9, fig.width=9}
 #| echo: false
 #| message: false
@@ -961,79 +833,325 @@ results_POPs_ALS_occurrence$main$plot_quart
 results_POPs_ALS_occurrence$main$plot_quart_bis
 ```
 
-### gamm models
 
-#### Base models
-
-Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex and age. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
-
-```{r, fig.height=6, fig.width=15}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gamm[1:4], nrow = 1), 
-           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gamm_outlier[1:4], nrow = 1), 
-           nrow = 2)
-wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gamm[5:8], nrow = 1), 
-           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gamm_outlier[5:8], nrow = 1), 
-           nrow = 2)
-```
-
-#### Adjusted models
-
-Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
-
-```{r, fig.height=6, fig.width=15}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gamm[1:4], nrow = 1), 
-           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gamm_outlier[1:4], nrow = 1), 
-           nrow = 2)
-wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gamm[5:8], nrow = 1), 
-           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gamm_outlier[5:8], nrow = 1), 
-           nrow = 2)
-```
-
-#### Copollutant model
-
-Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive mixed model (GAMM) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates and all other co-pollutants are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status, education and for the other co-pollutants. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a GAMM that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
-
-```{r, fig.height=6, fig.width=15}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_copollutant_gamm[1:4], nrow = 1), 
-           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gamm_outlier[1:4], nrow = 1), 
-           nrow = 2)
-wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_copollutant_gamm[5:7], nrow = 1), 
-           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gamm_outlier[5:7], nrow = 1), 
-           nrow = 2)
-```
-
-
-## Sensitivity analysis pollutants not summed
-### GAMMs 
-```{r, fig.height=6, fig.width=15}
-#| column: screen-inset-right
-#| echo: false
-#| message: false
-#| warning: false
-wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gamm_not_summed[1:8], ncol = 4)
-wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gamm_not_summed[9:16], ncol = 4)
-wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gamm_not_summed[17:22], ncol = 4)
-```
-
-### Quartiles 
+##### Sensitivity analysis POPs not summed
 ```{r,  fig.height=15, fig.width=10}
 #| echo: false
 #| message: false
 #| warning: false
 results_POPs_ALS_occurrence$sensitivity_not_summed$plot_quart_sensi_not_summed
 ```
+
+
+#### GAM models
+##### Base models
+Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive model (gam) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex and age. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a gam that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
+
+```{r, fig.height=6, fig.width=15}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gam[1:4], nrow = 1), 
+           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier[1:4], nrow = 1), 
+           nrow = 2)
+wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gam[5:8], nrow = 1), 
+           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier[5:8], nrow = 1), 
+           nrow = 2)
+```
+
+##### Adjusted models
+Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive model (gam) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a gam that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
+
+```{r, fig.height=6, fig.width=15}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gam[1:4], nrow = 1), 
+           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier[1:4], nrow = 1), 
+           nrow = 2)
+wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gam[5:8], nrow = 1), 
+           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier[5:8], nrow = 1), 
+           nrow = 2)
+```
+
+##### Copollutant model
+Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive model (gam) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates and all other co-pollutants are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status, education and for the other co-pollutants. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a gam that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
+
+```{r, fig.height=6, fig.width=15}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_copollutant_gam[1:4], nrow = 1), 
+           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier[1:4], nrow = 1), 
+           nrow = 2)
+wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_copollutant_gam[5:7], nrow = 1), 
+           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier[5:7], nrow = 1), 
+           nrow = 2)
+```
+
+##### Sensitivity analysis POPs not summed
+```{r, fig.height=6, fig.width=15}
+#| column: screen-inset-right
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_not_summed[1:8], ncol = 4)
+wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_not_summed[9:16], ncol = 4)
+wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_not_summed[17:22], ncol = 4)
+```
+
+##### Comparison of the GAM models 
+###### dioxin like PCBs
+```{r, fig.height=7, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_base_gam$PCB_DL, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_DL, 
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$PCB_DL, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$PCB_DL, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$PCB_DL, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$PCB_DL,
+  nrow = 2)
+```
+
+###### non dioxin like PCBs
+```{r, fig.height=7, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_base_gam$PCB_NDL, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_NDL, 
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$PCB_NDL, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$PCB_NDL, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$PCB_NDL, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$PCB_NDL,
+  nrow = 2)
+```
+
+###### 4 most commun PCBs
+```{r, fig.height=7, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_base_gam$PCB_4, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_4,  
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$PCB_4, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$PCB_4,
+  nrow = 2)
+```
+
+###### HCB
+```{r, fig.height=7, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_base_gam$OCP_HCB, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$OCP_HCB, 
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$OCP_HCB, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$OCP_HCB, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$OCP_HCB, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$OCP_HCB,
+  nrow = 2)
+```
+
+###### ΣDDT
+```{r, fig.height=7, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_base_gam$ΣDDT, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$ΣDDT, 
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$ΣDDT, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$ΣDDT, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$ΣDDT, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$ΣDDT,
+  nrow = 2)
+```
+
+###### β-HCH
+```{r, fig.height=7, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_base_gam$OCP_β_HCH, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$OCP_β_HCH, 
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$OCP_β_HCH, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$OCP_β_HCH, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$OCP_β_HCH, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$OCP_β_HCH,
+  nrow = 2)
+```
+
+###### Σchlordane
+```{r, fig.height=7, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_base_gam$Σchlordane, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$Σchlordane, 
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$Σchlordane, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$Σchlordane, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$Σchlordane, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$Σchlordane,
+  nrow = 2)
+```
+
+###### ΣPBDE
+```{r, fig.height=7, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_base_gam$ΣPBDE, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$ΣPBDE, 
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$ΣPBDE, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$ΣPBDE, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$ΣPBDE, 
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$ΣPBDE,
+  nrow = 2)
+```
+
+## Metanalysis (quartiles)
+```{r fig.height=7, fig.width=6}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_occurrence$metanalysis$plot_matanalysis_quart
+```
+
+
+# POPs ans ALS survival 
+## Danish cohort
+### Effects of subject characteristics on ALS survival 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$danish$covar_danish |> 
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
+```
+
+### Effects of POPs on ALS survival 
+#### Continuous coding (standardized)
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$danish$POPs_sd_ALS_table_danish |>
+  set_table_properties(width = 1, layout = "autofit")
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$danish$POPs_sd_ALS_figure_danish
+```
+
+#### Quartiles 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$danish$POPs_quart_ALS_table_danish |>
+  set_table_properties(width = 1, layout = "autofit")
+```
+
+```{r, fig.height=7}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$danish$POPs_quart_ALS_figure_danish
+```
+
+## Finnish cohorts 
+### Effects of subject characteristics on ALS survival 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$finnish$covar_ALS_table_finnish  |> kable("html")
+```
+
+
+### Effects of POPs on ALS survival
+#### Continuous coding (standardized)
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$finnish$POPs_sd_ALS_table_finnish |>
+  set_table_properties(width = 1, layout = "autofit")
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$finnish$POPs_sd_ALS_figure_finnish
+```
+
+#### Quartiles 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$finnish$POPs_quart_ALS_table_finnish |>
+  set_table_properties(width = 1, layout = "autofit")
+```
+
+```{r, fig.height=7}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$finnish$POPs_quart_ALS_figure_finnish
+```
+
+## Metanalysis
+### Continuous coding (standardized)
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$metanalysis$POPs_sd_ALS_table_metanalysis |>
+  set_table_properties(width = 1, layout = "autofit")
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$metanalysis$POPs_sd_ALS_figure_metanalysis
+```
+
+### Quartiles 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_table_metanalysis |>
+  set_table_properties(width = 1, layout = "autofit")
+```
+
+```{r, fig.height=7}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_figure_metanalysis
+```
+
 
 # Fatty acids and ALS occurence
 ## Danish cohort
@@ -1079,7 +1197,7 @@ results_fattyacids_ALS_occurrence$danish$fattyacids_quart_als_figure_danish
 ```
 
 ## Finnish cohorts 
-### Effects of subject characterist on ALS occurence in the Finnish cohorts
+### Effects of subject characteristics on ALS occurence in the Finnish cohorts
 ```{r}
 #| echo: false
 #| message: false
@@ -1161,7 +1279,9 @@ results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_figure_sensi_ca_
 #| echo: false
 #| message: true
 #| warning: false
-results_fattyacids_ALS_survival$danish$covar_danish
+results_fattyacids_ALS_survival$danish$covar_danish |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
 ```
 
 ### Continuous coding (standardized)

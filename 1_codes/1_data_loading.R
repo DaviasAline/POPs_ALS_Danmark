@@ -671,7 +671,6 @@ bdd_finnish_red <- bdd_finnish |>
 bdd <- bind_rows(bdd_danish_red, bdd_finnish_red)
 rm(bdd_danish_red, bdd_finnish_red)
 
-
 # variable labels ----
 var_label(bdd_danish) <- list(
   sample = "Identifcation", 

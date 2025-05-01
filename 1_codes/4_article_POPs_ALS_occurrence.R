@@ -2,7 +2,7 @@
 # 18/03/2025
 
 # data loading - package loading ----
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2_analyses_POPs_ALS_occurrence.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/2.3_analyses_POPs_ALS_survival.R")
 
 
 # Table 1 - description of the subjects ----
@@ -27,7 +27,7 @@ table_1 <- bdd_danish |>
   add_overall() |>
   add_n() |>
   as_flex_table() |>
-  # font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   merge_at(i = 1, j = 1, part = "header") |>  
@@ -35,9 +35,9 @@ table_1 <- bdd_danish |>
 
 # Table 2 - effect of covariates on ALS occurence ----
 # Estimated risk of ALS occurrence attributed to subject characteristics in the Danish Diet, Cancer and Health study cohort (logistic regression models, sample size: 498). 
-table_2 <- covar |> 
+table_2 <- results_POPs_ALS_occurrence$main$covar |> 
   as_flex_table()|>
-  # font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")  |>
   add_footer_lines(
@@ -48,72 +48,57 @@ table_2 <- covar |>
 
 # Figure 1 - boxplot expo ----
 # Distribution of pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498).
-figure_1 <- descrip_expo_group_by_als
+figure_1 <- results_descriptive$danish$POPs_group_boxplot_danish_by_als
 
 # Figure 2 - forest plot quartiles ----
 # Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (conditional logistic regression models, sample size: 498).
-figure_2 <- plot_quart
+figure_2 <- results_POPs_ALS_occurrence$main$plot_quart
 
-# Figure 3 - gamm models ----
+# Figure 3 - gam models ----
 # Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (generalized additive mixed models, sample size: 498).
 figure_3_a <- wrap_plots(
-  plot_base_gamm$PCB_DL,
-  plot_adjusted_gamm$PCB_DL,
-  plot_copollutant_gamm$PCB_DL,
+  results_POPs_ALS_occurrence$main$plot_base_gam$PCB_DL,
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_DL,
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$PCB_DL,
   
-  plot_base_gamm$PCB_NDL,
-  plot_adjusted_gamm$PCB_NDL,
-  plot_copollutant_gamm$PCB_NDL,
+  results_POPs_ALS_occurrence$main$plot_base_gam$PCB_NDL, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_NDL,
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$PCB_NDL, 
   
-  plot_base_gamm$PCB_4,
-  plot_adjusted_gamm$PCB_4,
+  results_POPs_ALS_occurrence$main$plot_base_gam$PCB_4, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_4, 
   wrap_elements(grid::nullGrob()),
   
-  plot_base_gamm$HCB,
-  plot_adjusted_gamm$HCB,
-  plot_copollutant_gamm$HCB, 
+  results_POPs_ALS_occurrence$main$plot_base_gam$OCP_HCB,
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$OCP_HCB,
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$OCP_HCB, 
   ncol = 3)
 
 figure_3_b <- wrap_plots(
-  plot_base_gamm$ΣDDT,
-  plot_adjusted_gamm$ΣDDT,
-  plot_copollutant_gamm$ΣDDT,
+  results_POPs_ALS_occurrence$main$plot_base_gam$ΣDDT,
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$ΣDDT,
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$ΣDDT, 
   
-  plot_base_gamm$β_HCH,
-  plot_adjusted_gamm$β_HCH,
-  plot_copollutant_gamm$β_HCH,
+  results_POPs_ALS_occurrence$main$plot_base_gam$OCP_β_HCH, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$OCP_β_HCH,
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$OCP_β_HCH,
   
-  plot_base_gamm$Σchlordane,
-  plot_adjusted_gamm$Σchlordane,
-  plot_copollutant_gamm$Σchlordane,
+  results_POPs_ALS_occurrence$main$plot_base_gam$Σchlordane,
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$Σchlordane,
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$Σchlordane,
   
-  plot_base_gamm$ΣPBDE,
-  plot_adjusted_gamm$ΣPBDE,
-  plot_copollutant_gamm$ΣPBDE,
-  ncol = 3)
+  results_POPs_ALS_occurrence$main$plot_base_gam$ΣPBDE,
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$ΣPBDE,
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$ΣPBDE,
+  ncol = 3, nrow = 4)
 
 
 # Table S1 - exposure distribution ----
 # Distribution of pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498).
-table_S1 <- descrip_num(data = bdd_danish, 
-                        vars = c(POPs, "PCB_DL", "PCB_NDL", "ΣDDT", 
-                                 "Σchlordane", "ΣPBDE" )) |>
-  select(-Zero.count) |>
+table_S1 <- 
+  results_descriptive$danish$POPs_table_danish |>
+  select(-Zero.count, -"% > LOQ", -"LOQ") |>
   rename(Exposures = variable) |>
-  mutate(
-    Exposures = fct_recode(Exposures, 
-                           "Dioxin-like PCBs" = 'PCB_DL',
-                           "Non-dioxin-like PCBs" = 'PCB_NDL', 
-                           'p,p’-DDT'  = 'pp_DDT', 
-                           'p,p’-DDE' = "pp_DDE"), 
-    Exposures = gsub("_", "-", Exposures),
-    Exposures = fct_relevel(Exposures, 
-                            "Dioxin-like PCBs", "PCB-118", "PCB-156", "Non-dioxin-like PCBs", "PCB-28", "PCB-52",
-                            "PCB-74", "PCB-99", "PCB-101", "PCB-138", "PCB-153", "PCB-170",
-                            "PCB-180", "PCB-183", "PCB-187", "HCB", "PeCB", "ΣDDT", 'p,p’-DDE',
-                            'p,p’-DDT', "α-HCH", "β-HCH", "γ-HCH", "Σchlordane", "Transnonachlor",
-                            "Oxychlordane", "ΣPBDE", "BDE-47", "BDE-99", "BDE-153")) |>
-  arrange(Exposures) |>
   flextable()  |>
   add_footer_lines(
     'pg/ml.
@@ -131,8 +116,8 @@ table_S1 <- descrip_num(data = bdd_danish,
 
 # Table S2 - quartiles results ----
 # Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (conditional logistic regressions, sample size: 498).
-extra_rows <- results_quart %>%
-  distinct(variable) %>% 
+extra_rows <- results_POPs_ALS_occurrence$main$results_quart |>
+  distinct(variable) |> 
   mutate(
     quartiles = "1",
     "OR_base" = '-', "95%CI_base" = '-', "p.value_base" = '', "p.value_heterogeneity_base" = '', "p.value_trend_base" = '',
@@ -140,7 +125,7 @@ extra_rows <- results_quart %>%
     "OR_copollutant" = '-', "95%CI_copollutant" ='-', "p.value_copollutant" = '', , "p.value_heterogeneity_copollutant" = '', "p.value_trend_copollutant" = '')
 
 table_S2 <- 
-  main_results |>
+  results_POPs_ALS_occurrence$main$main_results |>
   select(-lower_CI, -upper_CI, - p.value_raw) |>
   filter(model %in% c('base_quart', 'adjusted_quart', 'copollutant_quart')) |>
   pivot_wider(
@@ -158,6 +143,7 @@ table_S2 <- table_S2 |>
   bind_rows(extra_rows) |>
   select(-p.value_heterogeneity_copollutant, -p.value_trend_copollutant) |>
   mutate(
+    variable = gsub("OCP_", "", variable), 
     variable = fct_relevel(variable, "PCB_DL", "PCB_NDL", "PCB_4", "HCB", "ΣDDT", "β_HCH", "Σchlordane", "ΣPBDE" ),
     variable = fct_recode(variable, 
                           "Most prevalent PCBs" = "PCB_4",
@@ -165,11 +151,11 @@ table_S2 <- table_S2 |>
                           "Non-dioxin-like PCBs" = "PCB_NDL",
                           "β-HCH" = "β_HCH")) |>
   arrange(variable, quartiles) |>
-  group_by(variable) %>%
+  group_by(variable) |>
   mutate(p.value_heterogeneity_base = ifelse(quartiles == '1', p.value_heterogeneity_base[quartiles == '2'], ''), 
          p.value_trend_base = ifelse(quartiles == '1', p.value_trend_base[quartiles == '2'], ''),
          p.value_heterogeneity_adjusted = ifelse(quartiles == '1', p.value_heterogeneity_adjusted[quartiles == '2'], ''), 
-         p.value_trend_adjusted = ifelse(quartiles == '1', p.value_trend_adjusted[quartiles == '2'], '')) %>%
+         p.value_trend_adjusted = ifelse(quartiles == '1', p.value_trend_adjusted[quartiles == '2'], '')) |>
   ungroup() |>
   rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base', 
          'Heterogeneity test' = 'p.value_heterogeneity_base', 'Trend test' = 'p.value_trend_base',
@@ -205,15 +191,15 @@ table_S2 <- table_S2 |> flextable() |>
 rm(extra_rows)
 
 # Table S3 - sensitivity analyse pollutant not summed (quartiles) ----
-extra_rows <- sensitivity_results_not_summed_quart %>%
-  distinct(variable) %>% 
+extra_rows <- results_POPs_ALS_occurrence$sensitivity_not_summed$sensitivity_results_not_summed_quart |>
+  distinct(variable) |> 
   mutate(
     quartiles = "1",
     "OR_base_not_summed" = '-', "95%CI_base_not_summed" = '-', "p.value_base_not_summed" = '',
     "OR_adjusted_not_summed" = '-', "95%CI_adjusted_not_summed" = '-', "p.value_adjusted_not_summed" = '')
 
-Table_S3 <- 
-  sensitivity_results_not_summed_quart |>
+table_S3 <- 
+  results_POPs_ALS_occurrence$sensitivity_not_summed$sensitivity_results_not_summed_quart |>
   select(-lower_CI, -upper_CI, - p.value_raw) |>
   pivot_wider(
     names_from = model,  
@@ -222,13 +208,15 @@ Table_S3 <-
          quartiles = df,
          contains("base_quart"), 
          contains("adjusted_quart")) 
-colnames(Table_S3) <- gsub('_quart', '', colnames(Table_S3))
+colnames(table_S3) <- gsub('_quart', '', colnames(table_S3))
 
-Table_S3 <- Table_S3 |>
+table_S3 <- table_S3 |>
   mutate_if(is.numeric, as.character) |>
   bind_rows(extra_rows) |>
   mutate(
+    variable = gsub("OCP-", "", variable), 
     variable = gsub("_", "-", variable), 
+    variable = fct_recode(variable, "Oxychlordane" = "oxychlordane", "Transnonachlor"= "transnonachlor"),
     variable = fct_relevel(variable, 
                            "PCB-118", "PCB-156", "PCB-28", "PCB-52", "PCB-74", "PCB-99",
                            "PCB-101", "PCB-138", "PCB-153", "PCB-170", "PCB-180", "PCB-183",
@@ -265,29 +253,9 @@ rm(extra_rows)
 
 # Figure S2 - heatmap of correlation between POP exposures ---- 
 # Pearson correlations between pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498). 
-figure_S2 <- bdd_danish %>% 
-  select(all_of(POPs), all_of(POPs_group)) |>
-  rename(
-    "Dioxin-like PCBs" = PCB_DL,
-    "Non-dioxin-like PCBs" = PCB_NDL, 
-    "p,p’-DDT"  = pp_DDT, 
-    "p,p’-DDE" = pp_DDE) |>
-  rename_with(~ gsub("_", "-", .x)) |>  
-  rename_with(~ gsub("BDE", "PBDE", .x)) |>  
-  select(
-    "Dioxin-like PCBs", "PCB-118", "PCB-156", "Non-dioxin-like PCBs", "PCB-28", "PCB-52",
-    "PCB-74", "PCB-99", "PCB-101", "PCB-138", "PCB-153", "PCB-170",
-    "PCB-180", "PCB-183", "PCB-187", "HCB", "ΣDDT", "p,p’-DDE",
-    "p,p’-DDT",  "β-HCH",  "Σchlordane", "Transnonachlor",
-    "Oxychlordane", "ΣPBDE" = "ΣPPBDE", "PBDE-47", "PBDE-99", "PBDE-153")
-
-figure_S2 <- cor(figure_S2, 
-                 use = "pairwise.complete.obs", 
-                 method = "pearson")
-
 plot.new()
 tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/figure_S2.tiff", units = "mm", width = 250, height = 250, res = 300)
-corrplot(figure_S2, 
+corrplot(results_descriptive$danish$POPs_heatmap_danish, 
          method = 'color', 
          type = "lower", 
          tl.col = 'black', 
@@ -303,46 +271,46 @@ dev.off()
 # Figure S3 - outliers sensitivity analysis ---- 
 # Sensitivity analyses - Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations after removing extreme values in the Danish Diet, Cancer and Health study cohort (generalized additive mixed models, sample size: 498).
 figure_S3_a <- wrap_plots(
-  plot_base_gamm_outlier$PCB_DL,
-  plot_adjusted_gamm_outlier$PCB_D,
-  plot_copollutant_gamm_outlier$PCB_DL,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$PCB_DL,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$PCB_DL,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$PCB_DL,
   
-  plot_base_gamm_outlier$PCB_NDL,
-  plot_adjusted_gamm_outlier$PCB_NDL,
-  plot_copollutant_gamm_outlier$PCB_NDL,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$PCB_NDL,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$PCB_NDL,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$PCB_NDL,
   
-  plot_base_gamm_outlier$PCB_4,
-  plot_adjusted_gamm_outlier$PCB_4,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$PCB_4,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$PCB_4,
   wrap_elements(grid::nullGrob()),
   
-  plot_base_gamm_outlier$HCB,
-  plot_adjusted_gamm_outlier$HCB,
-  plot_copollutant_gamm_outlier$HCB,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$OCP_HCB,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$OCP_HCB,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$OCP_HCB,
   ncol = 3)
 
 figure_S3_b <- wrap_plots(
-  plot_base_gamm_outlier$ΣDDT,
-  plot_adjusted_gamm_outlier$ΣDDT,
-  plot_copollutant_gamm_outlier$ΣDDT,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$ΣDDT,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$ΣDDT,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$ΣDDT,
   
-  plot_base_gamm_outlier$β_HCH,
-  plot_adjusted_gamm_outlier$β_HCH,
-  plot_copollutant_gamm_outlier$β_HCH,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$OCP_β_HCH,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$OCP_β_HCH,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$OCP_β_HCH,
   
-  plot_base_gamm_outlier$Σchlordane,
-  plot_adjusted_gamm_outlier$Σchlordane,
-  plot_copollutant_gamm_outlier$Σchlordane,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$Σchlordane,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$Σchlordane,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$Σchlordane,
   
-  plot_base_gamm_outlier$ΣPBDE,
-  plot_adjusted_gamm_outlier$ΣPBDE,
-  plot_copollutant_gamm_outlier$ΣPBDE,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$ΣPBDE,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$ΣPBDE,
+  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$ΣPBDE,
   ncol = 3)
 
 # Figure S4 - not summed sensitivity analysis quartiles ----
-figure_S4 <- plot_quart_sensi_not_summed 
+figure_S4 <- results_POPs_ALS_occurrence$sensitivity_not_summed$plot_quart_sensi_not_summed 
 
-# Figure S5 - not summed sensitivity analysis gamm ----
-figure_S5 <- wrap_plots(plot_adjusted_gamm_not_summed)
+# Figure S5 - not summed sensitivity analysis gam ----
+figure_S5 <- wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_not_summed)
 
 # Export ----
 table_1 <- read_docx() |> body_add_flextable(table_1) 
@@ -384,13 +352,6 @@ ggsave(
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/figure_S2.tiff",
-  figure_S2,
-  height = 10,
-  width = 10,
-  units = "in")
-
-ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/figure_S3_a.tiff",
   figure_S3_a,
   height = 12,
@@ -407,6 +368,13 @@ ggsave(
 ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/figure_S4.tiff",
   figure_S4,
+  height = 15,
+  width = 9,
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/figure_S5.tiff",
+  figure_S5,
   height = 15,
   width = 9,
   units = "in")
