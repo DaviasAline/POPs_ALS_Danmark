@@ -101,7 +101,11 @@ for (var in POPs_group_quart) {
 
 model1_quart <- model1_quart %>% 
   mutate(
-    df = str_sub(df, start = -1), 
+    df = case_when(
+      grepl("_quartQ2", df) ~ "Quartile 2",
+      grepl("_quartQ3", df) ~ "Quartile 3",
+      grepl("_quartQ4", df) ~ "Quartile 4",
+      TRUE ~ NA_character_),
     model = "base_quart") %>%
   select(variable, model, everything())
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
@@ -263,7 +267,11 @@ for (var in POPs_group_quart) {
 
 model2_quart <- model2_quart %>% 
   mutate(
-    df = str_sub(df, start = -1), 
+    df = case_when(
+      grepl("_quartQ2", df) ~ "Quartile 2",
+      grepl("_quartQ3", df) ~ "Quartile 3",
+      grepl("_quartQ4", df) ~ "Quartile 4",
+      TRUE ~ NA_character_),
     model = "adjusted_quart") %>%
   select(variable, model, everything())
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
@@ -458,8 +466,7 @@ model3_quart_PCB_DL <-
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
-  filter(grepl("PCB_DL_quart", term)) |>
-  mutate(df = c(2, 3, 4))
+  filter(grepl("PCB_DL_quart", term)) 
 
 model3_quart_PCB_NDL <- 
   clogit(als ~ 
@@ -469,8 +476,7 @@ model3_quart_PCB_NDL <-
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
-  filter(grepl("PCB_NDL_quart", term)) |>
-  mutate(df = c(2, 3, 4))
+  filter(grepl("PCB_NDL_quart", term)) 
 
 model3_quart_HCB <- 
   clogit(als ~ 
@@ -480,8 +486,7 @@ model3_quart_HCB <-
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
-  filter(grepl("OCP_HCB_quart", term)) |>
-  mutate(df = c(2, 3, 4))
+  filter(grepl("OCP_HCB_quart", term)) 
 
 model3_quart_ΣDDT <- 
   clogit(als ~ 
@@ -491,8 +496,7 @@ model3_quart_ΣDDT <-
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
-  filter(grepl("ΣDDT_quart", term)) |>
-  mutate(df = c(2, 3, 4))
+  filter(grepl("ΣDDT_quart", term)) 
 
 model3_quart_β_HCH <- 
   clogit(als ~ 
@@ -502,8 +506,7 @@ model3_quart_β_HCH <-
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
-  filter(grepl("OCP_β_HCH_quart", term)) |>
-  mutate(df = c(2, 3, 4))
+  filter(grepl("OCP_β_HCH_quart", term)) 
 
 model3_quart_Σchlordane <- 
   clogit(als ~ 
@@ -513,8 +516,7 @@ model3_quart_Σchlordane <-
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
-  filter(grepl("Σchlordane_quart", term)) |>
-  mutate(df = c(2, 3, 4))
+  filter(grepl("Σchlordane_quart", term)) 
 
 model3_quart_ΣPBDE <- 
   clogit(als ~ 
@@ -524,12 +526,16 @@ model3_quart_ΣPBDE <-
            smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tidy()  |>
-  filter(grepl("ΣPBDE_quart", term)) |>
-  mutate(df = c(2, 3, 4))
+  filter(grepl("ΣPBDE_quart", term)) 
 
 model3_quart <- bind_rows(
   model3_quart_HCB, model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_ΣPBDE, model3_quart_ΣDDT, model3_quart_β_HCH, model3_quart_Σchlordane) |>
   mutate(
+    df = case_when(
+      grepl("_quartQ2", term) ~ "Quartile 2",
+      grepl("_quartQ3", term) ~ "Quartile 3",
+      grepl("_quartQ4", term) ~ "Quartile 4",
+      TRUE ~ NA_character_),
     variable = gsub("_quartQ2", "", term), 
     variable = gsub("_quartQ3", "", variable), 
     variable = gsub("_quartQ4", "", variable), 
@@ -540,6 +546,9 @@ model3_quart <- bind_rows(
     upper_CI = exp(estimate + 1.96 * std.error)) |> 
   select(variable, model, df, OR, lower_CI, upper_CI, p.value)
 
+rm(model3_quart_HCB, model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_ΣPBDE, model3_quart_ΣDDT, model3_quart_β_HCH, model3_quart_Σchlordane)
+
+##### all the pollutants as quartiles
 model3_quart_bis <- 
   clogit(als ~ 
            PCB_DL_quart + 
@@ -550,6 +559,7 @@ model3_quart_bis <-
   tidy()  |>
   filter(grepl("quart", term)) |>
   mutate(df = str_extract(term, "Q[2-4]"), 
+         df = gsub("Q", "Quartile ", df),
          variable = str_remove(term, "Q[2-4]"), 
          variable = str_remove(variable, "_quart"), 
          model = "copollutant_quart_bis", 
@@ -558,7 +568,118 @@ model3_quart_bis <-
          upper_CI = exp(estimate + 1.96 * std.error)) |> 
   select(variable, model, df, OR, lower_CI, upper_CI, p.value)
 
-rm(model3_quart_HCB, model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_ΣPBDE, model3_quart_ΣDDT, model3_quart_β_HCH, model3_quart_Σchlordane)
+##### pollutant of interest as quartile while the others are s() transformed in a gam model 
+model3_quart_PCB_DL <- 
+  gam(als ~ 
+        PCB_DL_quart + 
+        s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+      family = binomial, 
+      method = 'REML',
+      data = bdd_danish) |>
+  summary()
+model3_quart_PCB_DL <- model3_quart_PCB_DL$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable") 
+
+model3_quart_PCB_NDL <- 
+  gam(als ~ 
+        PCB_NDL_quart + 
+        s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+      family = binomial, 
+      method = 'REML',
+      data = bdd_danish) |>
+  summary()
+model3_quart_PCB_NDL <- model3_quart_PCB_NDL$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable") 
+
+model3_quart_HCB <- 
+  gam(als ~ 
+        OCP_HCB_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+      family = binomial, 
+      method = 'REML',
+      data = bdd_danish) |>
+  summary()
+model3_quart_HCB <- model3_quart_HCB$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable") 
+
+model3_quart_ΣDDT <- 
+  gam(als ~ 
+        ΣDDT_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+      family = binomial, 
+      method = 'REML',
+      data = bdd_danish) |>
+  summary()
+model3_quart_ΣDDT <- model3_quart_ΣDDT$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable") 
+
+model3_quart_β_HCH <- 
+  gam(als ~ 
+        OCP_β_HCH_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
+        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+      family = binomial, 
+      method = 'REML',
+      data = bdd_danish) |>
+  summary()
+model3_quart_β_HCH <- model3_quart_β_HCH$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable") 
+
+model3_quart_Σchlordane <- 
+  gam(als ~ 
+        Σchlordane_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
+        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+      family = binomial, 
+      method = 'REML',
+      data = bdd_danish) |>
+  summary()
+model3_quart_Σchlordane <- model3_quart_Σchlordane$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable") 
+
+model3_quart_ΣPBDE <- 
+  gam(als ~ 
+        ΣPBDE_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+      family = binomial, 
+      method = 'REML',
+      data = bdd_danish) |>
+  summary()
+model3_quart_ΣPBDE <- model3_quart_ΣPBDE$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable") 
+
+model3_quart_bis_bis <- bind_rows(
+  model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_HCB, model3_quart_ΣDDT, model3_quart_β_HCH, model3_quart_Σchlordane, model3_quart_ΣPBDE) |>
+  filter(grepl("quart", variable)) |>
+  mutate(
+    df = case_when(
+      grepl("_quartQ2", variable) ~ "Quartile 2",
+      grepl("_quartQ3", variable) ~ "Quartile 3",
+      grepl("_quartQ4", variable) ~ "Quartile 4",
+      TRUE ~ NA_character_),
+    variable = gsub("_quartQ2", "", variable), 
+    variable = gsub("_quartQ3", "", variable), 
+    variable = gsub("_quartQ4", "", variable), 
+    model = "copollutant_quart_bis_bis", 
+    OR = exp(Estimate), 
+    lower_CI = exp(Estimate - 1.96 * `Std. Error`), 
+    upper_CI = exp(Estimate + 1.96 * `Std. Error`), 
+    p.value = `Pr(>|z|)`) |> 
+  select(model, variable, df, OR, lower_CI, upper_CI, p.value)
+
+rm(model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_HCB, model3_quart_ΣDDT, model3_quart_β_HCH, model3_quart_Σchlordane, model3_quart_ΣPBDE)
 
 #### quadratic tranformation ----
 model3_quadra_HCB <- 
@@ -841,8 +962,149 @@ for (var in POPs_group_quart) {
 }
 rm(var, test_1, test_2, formula, anova, p.value_heterogeneity)
 
+
+#### model 3 quartile ----
+test_1 <- gam(als ~ 
+                s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+test_2 <- gam(als ~ 
+                PCB_DL_quart + 
+                s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+
+anova <- anova(test_1, test_2, test = "Chisq")
+p.value_heterogeneity_PCB_DL <- tibble(variable = "PCB_DL", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+test_1 <- gam(als ~ 
+                s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+test_2 <- gam(als ~ 
+                PCB_NDL_quart + 
+                s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+
+anova <- anova(test_1, test_2, test = "Chisq")
+p.value_heterogeneity_PCB_NDL <- tibble(variable = "PCB_NDL", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+test_1 <- gam(als ~ 
+                s(PCB_DL) + s(PCB_DL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+test_2 <- gam(als ~ 
+                OCP_HCB_quart + 
+                s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+
+anova <- anova(test_1, test_2, test = "Chisq")
+p.value_heterogeneity_OCP_HCB <- tibble(variable = "OCP_HCB", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+test_1 <- gam(als ~ 
+                s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+test_2 <- gam(als ~ 
+                ΣDDT_quart + 
+                s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+
+anova <- anova(test_1, test_2, test = "Chisq")
+p.value_heterogeneity_ΣDDT <- tibble(variable = "ΣDDT", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+test_1 <- gam(als ~ 
+                s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+test_2 <- gam(als ~ 
+                OCP_β_HCH_quart + 
+                s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+
+anova <- anova(test_1, test_2, test = "Chisq")
+p.value_heterogeneity_OCP_β_HCH <- tibble(variable = "OCP_β_HCH", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+test_1 <- gam(als ~ 
+                s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+test_2 <- gam(als ~ 
+                Σchlordane_quart + 
+                s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+
+anova <- anova(test_1, test_2, test = "Chisq")
+p.value_heterogeneity_Σchlordane <- tibble(variable = "Σchlordane", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+test_1 <- gam(als ~ 
+                s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+test_2 <- gam(als ~ 
+                ΣPBDE_quart + 
+                s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+
+anova <- anova(test_1, test_2, test = "Chisq")
+p.value_heterogeneity_ΣPBDE <- tibble(variable = "ΣPBDE", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+heterogeneity_copollutant_bis_bis <- bind_rows(p.value_heterogeneity_PCB_DL, 
+                                               p.value_heterogeneity_PCB_NDL, 
+                                               p.value_heterogeneity_OCP_HCB, 
+                                               p.value_heterogeneity_ΣDDT, 
+                                               p.value_heterogeneity_OCP_β_HCH, 
+                                               p.value_heterogeneity_Σchlordane, 
+                                               p.value_heterogeneity_ΣPBDE) |>
+  mutate(model = "copollutant_quart_bis_bis")
+
+
+rm(test_1, test_2, anova, 
+   p.value_heterogeneity_PCB_DL, 
+   p.value_heterogeneity_PCB_NDL, 
+   p.value_heterogeneity_OCP_HCB, 
+   p.value_heterogeneity_ΣDDT, 
+   p.value_heterogeneity_OCP_β_HCH, 
+   p.value_heterogeneity_Σchlordane, 
+   p.value_heterogeneity_ΣPBDE)
+
+
 heterogeneity_tests <- 
-  bind_rows(heterogeneity_base_spline, heterogeneity_base_quart, heterogeneity_adjusted_spline, heterogeneity_adjusted_quart) %>%
+  bind_rows(heterogeneity_base_spline, heterogeneity_base_quart, heterogeneity_adjusted_spline, heterogeneity_adjusted_quart, heterogeneity_copollutant_bis_bis) %>%
   mutate(variable = gsub("_quart", "", variable))
 
 ### trend tests ----
@@ -892,12 +1154,150 @@ for (var in POPs_group_quart_med) {
 }
 rm(var, test_1, test_2, formula, anova, p.value_trend)
 
+#### model 3 quartile ----
+test_1 <- gam(als ~ 
+                s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+test_2 <- gam(als ~ 
+                PCB_DL_quart_med + 
+                s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+
+anova <- anova(test_1, test_2, test = "Chisq")
+p.value_trend_PCB_DL <- tibble(variable = "PCB_DL", p.value_trend = anova$`Pr(>Chi)`[2])
+
+test_1 <- gam(als ~ 
+                s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+test_2 <- gam(als ~ 
+                PCB_NDL_quart_med + 
+                s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+
+anova <- anova(test_1, test_2, test = "Chisq")
+p.value_trend_PCB_NDL <- tibble(variable = "PCB_NDL", p.value_trend = anova$`Pr(>Chi)`[2])
+
+test_1 <- gam(als ~ 
+                s(PCB_DL) + s(PCB_DL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+test_2 <- gam(als ~ 
+                OCP_HCB_quart_med + 
+                s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+
+anova <- anova(test_1, test_2, test = "Chisq")
+p.value_trend_OCP_HCB <- tibble(variable = "OCP_HCB", p.value_trend = anova$`Pr(>Chi)`[2])
+
+test_1 <- gam(als ~ 
+                s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+test_2 <- gam(als ~ 
+                ΣDDT_quart_med + 
+                s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+
+anova <- anova(test_1, test_2, test = "Chisq")
+p.value_trend_ΣDDT <- tibble(variable = "ΣDDT", p.value_trend = anova$`Pr(>Chi)`[2])
+
+test_1 <- gam(als ~ 
+                s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+test_2 <- gam(als ~ 
+                OCP_β_HCH_quart_med + 
+                s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+
+anova <- anova(test_1, test_2, test = "Chisq")
+p.value_trend_OCP_β_HCH <- tibble(variable = "OCP_β_HCH", p.value_trend = anova$`Pr(>Chi)`[2])
+
+test_1 <- gam(als ~ 
+                s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+test_2 <- gam(als ~ 
+                Σchlordane_quart_med + 
+                s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+
+anova <- anova(test_1, test_2, test = "Chisq")
+p.value_trend_Σchlordane <- tibble(variable = "Σchlordane", p.value_trend = anova$`Pr(>Chi)`[2])
+
+test_1 <- gam(als ~ 
+                s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+test_2 <- gam(als ~ 
+                ΣPBDE_quart_med + 
+                s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+              family = binomial, 
+              method = 'ML',
+              data = bdd_danish)
+
+anova <- anova(test_1, test_2, test = "Chisq")
+p.value_trend_ΣPBDE <- tibble(variable = "ΣPBDE", p.value_trend = anova$`Pr(>Chi)`[2])
+
+trend_copollutant_bis_bis <- bind_rows(p.value_trend_PCB_DL, 
+                                       p.value_trend_PCB_NDL, 
+                                       p.value_trend_OCP_HCB, 
+                                       p.value_trend_ΣDDT, 
+                                       p.value_trend_OCP_β_HCH, 
+                                       p.value_trend_Σchlordane, 
+                                       p.value_trend_ΣPBDE) |>
+  mutate(model = "copollutant_quart_bis_bis")
+
+
+rm(test_1, test_2, anova, 
+   p.value_trend_PCB_DL, 
+   p.value_trend_PCB_NDL, 
+   p.value_trend_OCP_HCB, 
+   p.value_trend_ΣDDT, 
+   p.value_trend_OCP_β_HCH, 
+   p.value_trend_Σchlordane, 
+   p.value_trend_ΣPBDE)
+
 trend_tests <- 
-  bind_rows(trend_base, trend_adjusted) %>%
+  bind_rows(trend_base, trend_adjusted, trend_copollutant_bis_bis) %>%
   mutate(variable = gsub("_quart_med", "", variable))
 
-
-### matanalysis (quart) ----
+### metanalysis (quart) ----
 run_clogit <- function(formula, data) {
   model <- clogit(formula, data = data)
   model_summary <- summary(model)
@@ -907,32 +1307,32 @@ run_clogit <- function(formula, data) {
     coef = coefs[, "coef"],
     se = coefs[, "se(coef)"])
 }
-POPs_group_matanalysis <- setdiff(POPs_group, "ΣPBDE")                         # we don't include ΣPBDE in the matanalysis because low levels 
-POPs_group_matanalysis_quart <- paste0(POPs_group_matanalysis, "_quart")
+POPs_group_metanalysis <- setdiff(POPs_group, "ΣPBDE")                          # we don't include ΣPBDE in the metanalysis because low levels 
+POPs_group_metanalysis_quart <- paste0(POPs_group_metanalysis, "_quart")
 
 #### Base model ----
-matanalysis_base_quart <- map_dfr(POPs_group_matanalysis_quart, function(expl) {
+metanalysis_base_quart <- map_dfr(POPs_group_metanalysis_quart, function(expl) {
   formula <- as.formula(paste("als ~", expl, "+ strata(match)"))                # base formula: matched, not ajstuded
   
   bdd_danish <- bdd |>                                                     
     filter(study == "Danish") |>                                                # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
+    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart")) 
   
   bdd_finnish_FMC <- bdd |>                                                     
     filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
+    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart")) 
   bdd_finnish_FMCF <- bdd |> 
     filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
+    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart"))
   bdd_finnish_MFH <- bdd |> 
     filter(study == "MFH") |>                                                   # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
+    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart"))
   
@@ -967,7 +1367,7 @@ matanalysis_base_quart <- map_dfr(POPs_group_matanalysis_quart, function(expl) {
 })
 
 #### Adjusted model ----
-matanalysis_adjusted_quart <- map_dfr(POPs_group_matanalysis_quart, function(expl) {
+metanalysis_adjusted_quart <- map_dfr(POPs_group_metanalysis_quart, function(expl) {
   formula_educ <- 
     as.formula(paste("als ~", expl, 
                      "+ strata(match) + marital_status_2cat + smoking_2cat + bmi + cholesterol + education"))
@@ -977,23 +1377,23 @@ matanalysis_adjusted_quart <- map_dfr(POPs_group_matanalysis_quart, function(exp
   
   bdd_danish <- bdd |>                                                     
     filter(study == "Danish") |>                                                # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
+    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific                      
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart")) 
   
   bdd_finnish_FMC <- bdd |>                                                     
     filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
+    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific                      
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart")) 
   bdd_finnish_FMCF <- bdd |> 
     filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
+    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific    
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart"))
   bdd_finnish_MFH <- bdd |> 
     filter(study == "MFH") |>                                                   # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
+    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific    
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart"))
   
@@ -1028,8 +1428,391 @@ matanalysis_adjusted_quart <- map_dfr(POPs_group_matanalysis_quart, function(exp
   return(meta_results)
 })
 
+#### Copollutant model ----
+POPs_group_matanalysis <- setdiff(POPs_group, "ΣPBDE")  
 
-matanalysis_quart <- bind_rows(matanalysis_base_quart, matanalysis_adjusted_quart) |> 
+bdd_metanalysis_danish <- bdd |>                                                     
+  filter(study == "Danish") |>                                                # creation of one dataset per finnish cohort
+  mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific                      
+                                                         labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) 
+
+bdd_metanalysis_FMC <- bdd |>                                                     
+  filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
+  mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific                      
+                                                         labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) 
+bdd_metanalysis_FMCF <- bdd |> 
+  filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
+  mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific    
+                                                         labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart"))
+bdd_metanalysis_MFH <- bdd |> 
+  filter(study == "MFH") |>                                                   # creation of one dataset per finnish cohort
+  mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific    
+                                                         labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart"))
+rm(POPs_group_matanalysis)
+
+##### danish ----
+model3_quart_PCB_DL_danish <- 
+  gam(als ~ 
+        PCB_DL_quart + 
+        s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + smoking_2cat + bmi + cholesterol + marital_status_2cat + education, 
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_danish) |>
+  summary()
+model3_quart_PCB_DL_danish <- model3_quart_PCB_DL_danish$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_PCB_NDL_danish <- 
+  gam(als ~ 
+        PCB_NDL_quart + 
+        s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + smoking_2cat + bmi + cholesterol + marital_status_2cat + education, 
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_danish) |>
+  summary()
+model3_quart_PCB_NDL_danish <- model3_quart_PCB_NDL_danish$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_HCB_danish <- 
+  gam(als ~ 
+        OCP_HCB_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + smoking_2cat + bmi + cholesterol + marital_status_2cat + education, 
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_danish) |>
+  summary()
+model3_quart_HCB_danish <- model3_quart_HCB_danish$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_ΣDDT_danish <- 
+  gam(als ~ 
+        ΣDDT_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + smoking_2cat + bmi + cholesterol + marital_status_2cat + education, 
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_danish) |>
+  summary()
+model3_quart_ΣDDT_danish <- model3_quart_ΣDDT_danish$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_β_HCH_danish <- 
+  gam(als ~ 
+        OCP_β_HCH_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) +
+        sex + baseline_age + smoking_2cat + bmi + cholesterol + marital_status_2cat + education, 
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_danish) |>
+  summary()
+model3_quart_β_HCH_danish <- model3_quart_β_HCH_danish$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_Σchlordane_danish <- 
+  gam(als ~ 
+        Σchlordane_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) +
+        sex + baseline_age + smoking_2cat + bmi + cholesterol + marital_status_2cat + education, 
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_danish) |>
+  summary()
+model3_quart_Σchlordane_danish <- model3_quart_Σchlordane_danish$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+##### FMC ----
+model3_quart_PCB_DL_FMC <- 
+  gam(als ~ 
+        PCB_DL_quart + 
+        s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat, # no education data forFMC cohort
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_FMC) |>
+  summary()
+model3_quart_PCB_DL_FMC <- model3_quart_PCB_DL_FMC$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_PCB_NDL_FMC <- 
+  gam(als ~ 
+        PCB_NDL_quart + 
+        s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat, # no education data forFMC cohort
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_FMC) |>
+  summary()
+model3_quart_PCB_NDL_FMC <- model3_quart_PCB_NDL_FMC$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_HCB_FMC <- 
+  gam(als ~ 
+        OCP_HCB_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat, # no education data forFMC cohort
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_FMC) |>
+  summary()
+model3_quart_HCB_FMC <- model3_quart_HCB_FMC$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_ΣDDT_FMC <- 
+  gam(als ~ 
+        ΣDDT_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat, # no education data forFMC cohort 
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_FMC) |>
+  summary()
+model3_quart_ΣDDT_FMC <- model3_quart_ΣDDT_FMC$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_β_HCH_FMC <- 
+  gam(als ~ 
+        OCP_β_HCH_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat, # no education data forFMC cohort
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_FMC) |>
+  summary()
+model3_quart_β_HCH_FMC <- model3_quart_β_HCH_FMC$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_Σchlordane_FMC <- 
+  gam(als ~ 
+        Σchlordane_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat, # no education data forFMC cohort
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_FMC) |>
+  summary()
+model3_quart_Σchlordane_FMC <- model3_quart_Σchlordane_FMC$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+##### FMCF ----
+model3_quart_PCB_DL_FMCF <- 
+  gam(als ~ 
+        PCB_DL_quart + 
+        s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_FMCF) |>
+  summary()
+model3_quart_PCB_DL_FMCF <- model3_quart_PCB_DL_FMCF$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_PCB_NDL_FMCF <- 
+  gam(als ~ 
+        PCB_NDL_quart + 
+        s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_FMCF) |>
+  summary()
+model3_quart_PCB_NDL_FMCF <- model3_quart_PCB_NDL_FMCF$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_HCB_FMCF <- 
+  gam(als ~ 
+        OCP_HCB_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_FMCF) |>
+  summary()
+model3_quart_HCB_FMCF <- model3_quart_HCB_FMCF$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_ΣDDT_FMCF <- 
+  gam(als ~ 
+        ΣDDT_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education, 
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_FMCF) |>
+  summary()
+model3_quart_ΣDDT_FMCF <- model3_quart_ΣDDT_FMCF$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_β_HCH_FMCF <- 
+  gam(als ~ 
+        OCP_β_HCH_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_FMCF) |>
+  summary()
+model3_quart_β_HCH_FMCF <- model3_quart_β_HCH_FMCF$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_Σchlordane_FMCF <- 
+  gam(als ~ 
+        Σchlordane_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_FMCF) |>
+  summary()
+model3_quart_Σchlordane_FMCF <- model3_quart_Σchlordane_FMCF$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+##### MFH -----
+model3_quart_PCB_DL_MFH <- 
+  gam(als ~ 
+        PCB_DL_quart + 
+        s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_MFH) |>
+  summary()
+model3_quart_PCB_DL_MFH <- model3_quart_PCB_DL_MFH$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_PCB_NDL_MFH <- 
+  gam(als ~ 
+        PCB_NDL_quart + 
+        s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_MFH) |>
+  summary()
+model3_quart_PCB_NDL_MFH <- model3_quart_PCB_NDL_MFH$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_HCB_MFH <- 
+  gam(als ~ 
+        OCP_HCB_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_MFH) |>
+  summary()
+model3_quart_HCB_MFH <- model3_quart_HCB_MFH$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_ΣDDT_MFH <- 
+  gam(als ~ 
+        ΣDDT_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education, 
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_MFH) |>
+  summary()
+model3_quart_ΣDDT_MFH <- model3_quart_ΣDDT_MFH$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_β_HCH_MFH <- 
+  gam(als ~ 
+        OCP_β_HCH_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_MFH) |>
+  summary()
+model3_quart_β_HCH_MFH <- model3_quart_β_HCH_MFH$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+model3_quart_Σchlordane_MFH <- 
+  gam(als ~ 
+        Σchlordane_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) +
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+      family = binomial, 
+      method = 'REML',
+      data = bdd_metanalysis_MFH) |>
+  summary()
+model3_quart_Σchlordane_MFH <- model3_quart_Σchlordane_MFH$p.table |>
+  as.data.frame() |>
+  rownames_to_column("explanatory") 
+
+metanalysis_copollutant_quart <- 
+  bind_rows(
+    model3_quart_PCB_DL_danish, model3_quart_PCB_NDL_danish, model3_quart_HCB_danish, model3_quart_ΣDDT_danish, model3_quart_β_HCH_danish, model3_quart_Σchlordane_danish, 
+    model3_quart_PCB_DL_FMC, model3_quart_PCB_NDL_FMC, model3_quart_HCB_FMC, model3_quart_ΣDDT_FMC, model3_quart_β_HCH_FMC, model3_quart_Σchlordane_FMC,  
+    model3_quart_PCB_DL_FMCF, model3_quart_PCB_NDL_FMCF, model3_quart_HCB_FMCF, model3_quart_ΣDDT_FMCF, model3_quart_β_HCH_FMCF, model3_quart_Σchlordane_FMCF
+    # , 
+    # model3_quart_PCB_DL_MFH, model3_quart_PCB_NDL_MFH, model3_quart_HCB_MFH, model3_quart_ΣDDT_MFH, model3_quart_β_HCH_MFH, model3_quart_Σchlordane_MFH
+  )
+
+metanalysis_copollutant_quart <- metanalysis_copollutant_quart |>
+  filter(grepl("quart", explanatory)) |>
+  mutate(
+    term = case_when(
+      grepl("_quartQ2", explanatory) ~ "Quartile 2",
+      grepl("_quartQ3", explanatory) ~ "Quartile 3",
+      grepl("_quartQ4", explanatory) ~ "Quartile 4",
+      TRUE ~ NA_character_),
+    explanatory = gsub("_quartQ2", "", explanatory), 
+    explanatory = gsub("_quartQ3", "", explanatory), 
+    explanatory = gsub("_quartQ4", "", explanatory), 
+    var = `Std. Error`^2) 
+
+metanalysis_copollutant_quart <- metanalysis_copollutant_quart |>               # run metanalyse (one per quartile per expl var)
+  group_by(explanatory, term) |> 
+  group_modify(~ {
+    rma_fit <- rma(yi = .x$Estimate, vi = .x$var, method = "DL")
+    tibble(                                                                     # results table creation 
+      OR = exp(as.numeric(rma_fit$beta)),
+      lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
+      upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
+      `p-value` = as.numeric(rma_fit$pval))
+  }) |> 
+  ungroup() |> 
+  mutate(model = "copollutant") |> 
+  relocate(model, explanatory, term)
+
+rm(model3_quart_PCB_DL_danish, model3_quart_PCB_NDL_danish, model3_quart_HCB_danish, model3_quart_ΣDDT_danish, model3_quart_β_HCH_danish, model3_quart_Σchlordane_danish, 
+   model3_quart_PCB_DL_FMC, model3_quart_PCB_NDL_FMC, model3_quart_HCB_FMC, model3_quart_ΣDDT_FMC, model3_quart_β_HCH_FMC, model3_quart_Σchlordane_FMC,  
+   model3_quart_PCB_DL_FMCF, model3_quart_PCB_NDL_FMCF, model3_quart_HCB_FMCF, model3_quart_ΣDDT_FMCF, model3_quart_β_HCH_FMCF, model3_quart_Σchlordane_FMCF, 
+   model3_quart_PCB_DL_MFH, model3_quart_PCB_NDL_MFH, model3_quart_HCB_MFH, model3_quart_ΣDDT_MFH, model3_quart_β_HCH_MFH, model3_quart_Σchlordane_MFH, 
+   bdd_metanalysis_danish, bdd_metanalysis_FMC, bdd_metanalysis_FMCF, bdd_metanalysis_MFH)
+
+metanalysis_quart <- bind_rows(metanalysis_base_quart, metanalysis_adjusted_quart, metanalysis_copollutant_quart) |> 
   mutate(explanatory = gsub("_quart", "", explanatory), 
          OR = as.numeric(sprintf("%.1f", OR)),
          lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
@@ -1046,7 +1829,7 @@ matanalysis_quart <- bind_rows(matanalysis_base_quart, matanalysis_adjusted_quar
          starts_with("p-value"), 
          lower_CI, upper_CI) 
 
-rm(matanalysis_base_quart, matanalysis_adjusted_quart, run_clogit, POPs_group_matanalysis, POPs_group_matanalysis_quart)
+rm(metanalysis_base_quart, metanalysis_adjusted_quart, metanalysis_copollutant_quart, run_clogit, POPs_group_metanalysis, POPs_group_metanalysis_quart)
 
 
 ### merging the main results ----
@@ -1061,6 +1844,7 @@ main_results <- bind_rows(model1_spline,
                           model3_spline, 
                           model3_quart, 
                           model3_quart_bis,
+                          model3_quart_bis_bis,
                           model3_quadratic, 
                           model3_cubic) %>% 
   mutate(variable = gsub("_quart", "", variable), 
@@ -1114,6 +1898,20 @@ results_quart <-
          contains("copollutant_quart")) 
 colnames(results_quart) <- gsub('_quart', '', colnames(results_quart))
 
+results_quart_bis_bis <- 
+  main_results |>
+  select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI, - p.value_raw) |>
+  filter(model %in% c('base_quart', 'adjusted_quart', 'copollutant_quart_bis_bis')) |>
+  pivot_wider(
+    names_from = model,  
+    values_from = c(OR, `95%CI`, p.value)) |>
+  select(variable, 
+         quartiles = df,
+         contains("base_quart"), 
+         contains("adjusted_quart"), 
+         contains("copollutant_quart_bis_bis")) 
+colnames(results_quart_bis_bis) <- gsub('_quart', '', colnames(results_quart_bis_bis))
+
 results_quadratic <- 
   main_results |>
   select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI, -p.value_raw) |>
@@ -1145,10 +1943,10 @@ colnames(results_cubic) <- gsub('_cubic', '', colnames(results_cubic))
 rm(model1_quart, model1_spline, model1_quadratic, model1_cubic,
    model2_quart, model2_spline, model2_quadratic, model2_cubic,
    model3_quart, model3_spline, model3_quadratic, model3_cubic,
-   model3_quart_bis, 
+   model3_quart_bis, model3_quart_bis_bis, 
    heterogeneity_base_quart, heterogeneity_base_spline,
-   heterogeneity_adjusted_spline, heterogeneity_adjusted_quart, 
-   trend_base, trend_adjusted, 
+   heterogeneity_adjusted_spline, heterogeneity_adjusted_quart, heterogeneity_copollutant_bis_bis, 
+   trend_base, trend_adjusted, trend_copollutant_bis_bis, 
    heterogeneity_tests, trend_tests)
 
 # sensitivity analyses without outliers ----
@@ -1639,6 +2437,36 @@ plot_quart_bis <- main_results %>%
                             "Adjusted model" = "adjusted_quart",
                             "Base model" = "base_quart",
                             "Copollutant model" = "copollutant_quart_bis"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
+         df = fct_relevel(df, "Quartile 4", "Quartile 3", "Quartile 2" ), 
+         variable = fct_recode(variable, 
+                               "Most\nprevalent\nPCBs" = "PCB_4",
+                               "Dioxin-like\nPCBs" = "PCB_DL",
+                               "Non-dioxin-\nlike PCBs" = "PCB_NDL",
+                               "β-HCH" = "OCP_β_HCH", 
+                               "HCB" = "OCP_HCB"), 
+         variable = fct_relevel(variable, 
+                                "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "Most\nprevalent\nPCBs", "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) %>%
+  ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(rows = dplyr::vars(variable), cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
+  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  labs(x = "POPs", y = "Odds Ratio (OR)", color = "p-value") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip()
+
+plot_quart_bis_bis <- main_results %>% 
+  filter(model %in% c('base_quart', 'adjusted_quart', 'copollutant_quart_bis_bis')) %>%
+  mutate(df = fct_recode(df, "Quartile 2" = "2", "Quartile 3" = "3", "Quartile 4" = "4"), 
+         p.value_shape = ifelse(p.value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
+         model = fct_recode(model, 
+                            "Adjusted model" = "adjusted_quart",
+                            "Base model" = "base_quart",
+                            "Copollutant model" = "copollutant_quart_bis_bis"),
          model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
          df = fct_relevel(df, "Quartile 4", "Quartile 3", "Quartile 2" ), 
          variable = fct_recode(variable, 
@@ -2759,11 +3587,12 @@ plot_copollutant_gam_outlier <- map(POPs_group_outlier_bis, function(var) {
 rm(POPs_group_outlier_bis, pollutant_labels_bis, model)
 
 ## metanalysis ----
-plot_matanalysis_quart <- matanalysis_quart %>% 
+plot_metanalysis_quart <- metanalysis_quart %>% 
   mutate(`p-value_shape` = ifelse(`p-value_raw`<0.05, "p-value<0.05", "p-value≥0.05"), 
          model = fct_recode(model, 
                             "Adjusted model" = "adjusted",
-                            "Base model" = "base"),
+                            "Base model" = "base", 
+                            "Copollutant model" = "copollutant"),
          model = fct_relevel(model, 'Base model', 'Adjusted model'), 
          term = fct_relevel(term, "Quartile 4", "Quartile 3", "Quartile 2" ), 
          explanatory = fct_recode(explanatory, 
@@ -2793,12 +3622,14 @@ results_POPs_ALS_occurrence <-
                    covar = covar, 
                    results_spline = results_spline, 
                    results_quart = results_quart, 
+                   results_quart_bis_bis = results_quart_bis_bis, 
                    results_quadratic = results_quadratic, 
                    results_cubic = results_cubic, 
                    model1_gam = model1_gam, 
                    model2_gam = model2_gam, 
-                   plot_quart = plot_quart, 
-                   plot_quart_bis = plot_quart_bis, 
+                   plot_quart = plot_quart,                                     # co-pollutant model with only the POP of interest as quartile and the other as continuous
+                   plot_quart_bis = plot_quart_bis,                             # co-pollutant model with all the POPs as quartiles
+                   plot_quart_bis_bis = plot_quart_bis_bis,                     # co-pollutant model with only the POP of interest as quartile and the other as s() in a GAM model
                    plot_base_spline = plot_base_spline, 
                    plot_base_quadratic = plot_base_quadratic, 
                    plot_base_cubic = plot_base_cubic, 
@@ -2831,19 +3662,19 @@ results_POPs_ALS_occurrence <-
                                      plot_quart_sensi_not_summed = plot_quart_sensi_not_summed, 
                                      plot_base_gam_not_summed = plot_base_gam_not_summed, 
                                      plot_adjusted_gam_not_summed = plot_adjusted_gam_not_summed), 
-       metanalysis = list(matanalysis_quart = matanalysis_quart, 
-                          plot_matanalysis_quart = plot_matanalysis_quart))
+       metanalysis = list(metanalysis_quart = metanalysis_quart, 
+                          plot_metanalysis_quart = plot_metanalysis_quart))
 
 rm(main_results, covar, results_spline, results_quart, results_quadratic, results_cubic, model1_gam, model2_gam, 
    sensitivity_results_outlier, results_spline_outliers, results_quadratic_outliers, results_cubic_outliers, 
    model1_gam_outliers, model2_gam_outliers, 
    sensitivity_results_not_summed_quart, model1_gam_not_summed, model2_gam_not_summed, model1_quart_not_summed, model2_quart_not_summed, 
-   plot_quart, plot_quart_bis, plot_quart_sensi_not_summed, 
+   plot_quart, plot_quart_bis, plot_quart_bis_bis, plot_quart_sensi_not_summed, 
    plot_base_spline, plot_base_quadratic, plot_base_cubic, plot_base_gam, 
    plot_base_spline_outlier, plot_base_quadratic_outlier, plot_base_cubic_outlier, plot_base_gam_outlier, 
    plot_adjusted_spline, plot_adjusted_quadratic, plot_adjusted_cubic, plot_adjusted_gam, 
    plot_adjusted_spline_outlier, plot_adjusted_quadratic_outlier, plot_adjusted_cubic_outlier, plot_adjusted_gam_outlier, 
    plot_base_gam_not_summed, plot_adjusted_gam_not_summed, 
    plot_copollutant_gam, plot_copollutant_gam_outlier, 
-   matanalysis_quart, plot_matanalysis_quart)
+   metanalysis_quart, plot_metanalysis_quart)
 
