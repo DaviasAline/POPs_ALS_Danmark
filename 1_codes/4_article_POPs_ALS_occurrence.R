@@ -53,6 +53,7 @@ figure_1 <- results_descriptive$danish$POPs_group_boxplot_danish_by_als
 # Figure 2 - forest plot quartiles ----
 # Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (conditional logistic regression models, sample size: 498).
 figure_2 <- results_POPs_ALS_occurrence$main$plot_quart
+figure_2_bis_bis <- results_POPs_ALS_occurrence$main$plot_quart_bis_bis
 
 # Figure 3 - gam models ----
 # Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (generalized additive mixed models, sample size: 498).
@@ -91,6 +92,10 @@ figure_3_b <- wrap_plots(
   results_POPs_ALS_occurrence$main$plot_adjusted_gam$ΣPBDE,
   results_POPs_ALS_occurrence$main$plot_copollutant_gam$ΣPBDE,
   ncol = 3, nrow = 4)
+
+# Figure 4 - metanalysis ----
+# Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort, the Finnish Mobile Clinic Health Examination Survey (FMC), its Follow-up Stage (FMCF), and the Mini-Finland Health Survey (MFH) (metanalysis, sample size: 788).
+figure_4 <- results_POPs_ALS_occurrence$metanalysis$plot_metanalysis_quart
 
 
 # Table S1 - exposure distribution ----
@@ -258,15 +263,13 @@ table_S2_bis_bis <- table_S2_bis_bis |> flextable() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
-
-
 rm(extra_rows)
 
 # Table S3 - sensitivity analyse pollutant not summed (quartiles) ----
 extra_rows <- results_POPs_ALS_occurrence$sensitivity_not_summed$sensitivity_results_not_summed_quart |>
   distinct(variable) |> 
   mutate(
-    quartiles = "1",
+    quartiles = " Quartile 1",
     "OR_base_not_summed" = '-', "95%CI_base_not_summed" = '-', "p.value_base_not_summed" = '',
     "OR_adjusted_not_summed" = '-', "95%CI_adjusted_not_summed" = '-', "p.value_adjusted_not_summed" = '')
 
@@ -286,6 +289,10 @@ table_S3 <- table_S3 |>
   mutate_if(is.numeric, as.character) |>
   bind_rows(extra_rows) |>
   mutate(
+    quartiles = fct_recode(quartiles, 
+      "Quartile 2" = "2",
+      "Quartile 3" = "3",
+      "Quartile 4" = "4"), 
     variable = gsub("OCP-", "", variable), 
     variable = gsub("_", "-", variable), 
     variable = fct_recode(variable, "Oxychlordane" = "oxychlordane", "Transnonachlor"= "transnonachlor"),
@@ -299,10 +306,9 @@ table_S3 <- table_S3 |>
          'OR ' = 'OR_adjusted_not_summed', '95% CI ' = '95%CI_adjusted_not_summed', 'p-value ' = 'p.value_adjusted_not_summed') |> 
   flextable() |>
   add_footer_lines(
-    "1POPs were summed as follows: Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; ΣPBDE corresponds to PBDEs 47, 99, 153; ΣDDT corresponds to p,p’-DDT and p,p’-DDE and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
-  2All models are matched for sex and age. Adjusted models further account for smoking, BMI, serum total cholesterol, marital status, and education. Co-pollutant models further include all chemicals, where the chemical of interest is categorized into quartiles, while the others are treated as continuous variables.
-  3Estimated risk of ALS when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
-  4CI: Confidence interval.") |>
+    "1All models are matched for sex and age. Adjusted models further account for smoking, BMI, serum total cholesterol, marital status, and education. Co-pollutant models further include all chemicals, where the chemical of interest is categorized into quartiles, while the others are treated as continuous variables.
+  2Estimated risk of ALS when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
+  3CI: Confidence interval.") |>
   add_header(
     "variable" = "Exposures", "quartiles" = "Quartiles",
     "OR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
@@ -316,6 +322,65 @@ table_S3 <- table_S3 |>
   merge_at(j = "variable", part = "header") |>
   merge_at(j = "quartiles", part = "header") |>
   font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+rm(extra_rows)
+
+# Table S4 - metanalysis ----
+# Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort, the Finnish Mobile Clinic Health Examination Survey (FMC), its Follow-up Stage (FMCF), and the Mini-Finland Health Survey (MFH) (metanalysis, sample size: 788).
+extra_rows <- results_POPs_ALS_occurrence$metanalysis$metanalysis_quart |>
+  distinct(explanatory) |> 
+  mutate(
+    term = "Quartile 1",
+      "OR_base" = '-', "95%CI_base" = '-', "p-value_base" = '',
+      "OR_adjusted" = '-', "95%CI_adjusted" = '-', "p-value_adjusted" = '',
+    "OR_copollutant" = '-', "95%CI_copollutant" = '-', "p-value_copollutant" = '')
+    
+
+table_S4 <- results_POPs_ALS_occurrence$metanalysis$metanalysis_quart |>
+  select(model, explanatory, term, OR, `95%CI`, "p-value") |>
+  pivot_wider(
+    names_from = model,  
+    values_from = c("OR", "95%CI", "p-value")) |>
+  bind_rows(extra_rows) |>
+  select(Exposures = explanatory, Quartiles = term,
+         contains("base"), 
+         contains("adjusted"), 
+         contains("copollutant")) |>
+  mutate(
+    Exposures = gsub("OCP_", "", Exposures), 
+    Exposures = fct_relevel(Exposures, "PCB_DL", "PCB_NDL", "PCB_4", "HCB", "ΣDDT", "β_HCH", "Σchlordane"),
+    Exposures = fct_recode(Exposures, 
+                          "Most prevalent PCBs" = "PCB_4",
+                          "Dioxin-like PCBs" = "PCB_DL",
+                          "Non-dioxin-like PCBs" = "PCB_NDL",
+                          "β-HCH" = "β_HCH")) |>
+  arrange(Exposures, Quartiles) 
+
+table_S4 <- table_S4 |> 
+  rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p-value_base', 
+         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p-value_adjusted', 
+         ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p-value_copollutant') |>
+  flextable() |>
+  add_footer_lines(
+  "1POPs were summed as follows: Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; ΣDDT corresponds to p,p’-DDT and p,p’-DDE and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
+  2Base and adjusted models are conditional logistic regressions matched for sex and age, and for municipality and serum thawing history (Finnish cohorts). Adjusted models further account for smoking, BMI, serum total cholesterol, marital status, and education (except for FMC cohort for which education data was not available). Co-pollutant models further include all chemicals, where the chemical of interest is categorized into quartiles, while the others are treated as smooth terms in GAMs.
+  3Estimated risk of ALS when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
+  4CI: Confidence interval.") |>
+  add_header(
+    "Exposures" = "Exposures", "Quartiles" = "Quartiles",
+    "OR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
+    "OR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", 
+    " OR " = "Co-pollutant model", " 95% CI " = "Co-pollutant model", " p-value " = "Co-pollutant model") |>
+  merge_h(part = "header") |>
+  merge_v(j = "Exposures") |>
+  theme_vanilla() |>
+  bold(j = "Exposures", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "Exposures", align = "left", part = "all") |> 
+  merge_at(j = "Exposures", part = "header") |>
+  merge_at(j = "Quartiles", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 rm(extra_rows)
@@ -394,6 +459,12 @@ table_S1 <- read_docx() |> body_add_flextable(table_S1)
 print(table_S1, target = "~/Documents/POP_ALS_2025_02_03/2_output/table_S1.docx")
 table_S2 <- read_docx() |> body_add_flextable(table_S2)
 print(table_S2, target = "~/Documents/POP_ALS_2025_02_03/2_output/table_S2.docx")
+table_S2_bis_bis <- read_docx() |> body_add_flextable(table_S2_bis_bis)
+print(table_S2_bis_bis, target = "~/Documents/POP_ALS_2025_02_03/2_output/table_S2_bis_bis.docx")
+table_S3 <- read_docx() |> body_add_flextable(table_S3)
+print(table_S3, target = "~/Documents/POP_ALS_2025_02_03/2_output/table_S3.docx")
+table_S4 <- read_docx() |> body_add_flextable(table_S4)
+print(table_S4, target = "~/Documents/POP_ALS_2025_02_03/2_output/table_S4.docx")
 
 ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/figure_1.tiff",
@@ -410,6 +481,13 @@ ggsave(
   units = "in")
 
 ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/figure_2_bis_bis.tiff",
+  figure_2_bis_bis,
+  height = 8,
+  width = 9,
+  units = "in")
+
+ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/figure_3_a.tiff",
   figure_3_a,
   height = 12,
@@ -420,6 +498,13 @@ ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/figure_3_b.tiff",
   figure_3_b,
   height = 12,
+  width = 9,
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/figure_4.tiff",
+  figure_4,
+  height = 7,
   width = 9,
   units = "in")
 

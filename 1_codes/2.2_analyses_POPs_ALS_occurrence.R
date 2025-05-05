@@ -1814,9 +1814,9 @@ rm(model3_quart_PCB_DL_danish, model3_quart_PCB_NDL_danish, model3_quart_HCB_dan
 
 metanalysis_quart <- bind_rows(metanalysis_base_quart, metanalysis_adjusted_quart, metanalysis_copollutant_quart) |> 
   mutate(explanatory = gsub("_quart", "", explanatory), 
-         OR = as.numeric(sprintf("%.1f", OR)),
-         lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
-         upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
+         OR = sprintf("%.1f", OR),
+         lower_CI = sprintf("%.1f", lower_CI),
+         upper_CI = sprintf("%.1f", upper_CI),
          `p-value_raw` = `p-value`, 
          `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")), 
          `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`), 
