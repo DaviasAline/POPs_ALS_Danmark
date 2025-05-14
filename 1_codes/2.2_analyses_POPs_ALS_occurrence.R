@@ -458,116 +458,6 @@ model3_spline <- bind_rows(
 rm(model3_spline_HCB, model3_spline_PCB_DL, model3_spline_PCB_NDL, model3_spline_ΣPBDE, model3_spline_ΣDDT, model3_spline_β_HCH, model3_spline_Σchlordane)
 
 #### quartile tranformation ----
-model3_quart_PCB_DL <- 
-  clogit(als ~ 
-           PCB_DL_quart + 
-           strata(match) + 
-           OCP_HCB + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
-           smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-         data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("PCB_DL_quart", term)) 
-
-model3_quart_PCB_NDL <- 
-  clogit(als ~ 
-           PCB_NDL_quart + 
-           strata(match) + 
-           OCP_HCB + PCB_DL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
-           smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-         data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("PCB_NDL_quart", term)) 
-
-model3_quart_HCB <- 
-  clogit(als ~ 
-           OCP_HCB_quart + 
-           strata(match) + 
-           PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
-           smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-         data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("OCP_HCB_quart", term)) 
-
-model3_quart_ΣDDT <- 
-  clogit(als ~ 
-           ΣDDT_quart + 
-           strata(match) + 
-           OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + OCP_β_HCH + Σchlordane + 
-           smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-         data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("ΣDDT_quart", term)) 
-
-model3_quart_β_HCH <- 
-  clogit(als ~ 
-           OCP_β_HCH_quart + 
-           strata(match) + 
-           OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + Σchlordane + 
-           smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-         data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("OCP_β_HCH_quart", term)) 
-
-model3_quart_Σchlordane <- 
-  clogit(als ~ 
-           Σchlordane_quart + 
-           strata(match) + 
-           OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + 
-           smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-         data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("Σchlordane_quart", term)) 
-
-model3_quart_ΣPBDE <- 
-  clogit(als ~ 
-           ΣPBDE_quart + 
-           strata(match) + 
-           OCP_HCB + PCB_DL + PCB_NDL + ΣDDT + OCP_β_HCH + Σchlordane + 
-           smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-         data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("ΣPBDE_quart", term)) 
-
-model3_quart <- bind_rows(
-  model3_quart_HCB, model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_ΣPBDE, model3_quart_ΣDDT, model3_quart_β_HCH, model3_quart_Σchlordane) |>
-  mutate(
-    df = case_when(
-      grepl("_quartQ2", term) ~ "Quartile 2",
-      grepl("_quartQ3", term) ~ "Quartile 3",
-      grepl("_quartQ4", term) ~ "Quartile 4",
-      TRUE ~ NA_character_),
-    variable = gsub("_quartQ2", "", term), 
-    variable = gsub("_quartQ3", "", variable), 
-    variable = gsub("_quartQ4", "", variable), 
-    model = "copollutant_quart", 
-    df = as.character(df),
-    OR = exp(estimate), 
-    lower_CI = exp(estimate - 1.96 * std.error), 
-    upper_CI = exp(estimate + 1.96 * std.error)) |> 
-  select(variable, model, df, OR, lower_CI, upper_CI, p.value)
-
-rm(model3_quart_HCB, model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_ΣPBDE, model3_quart_ΣDDT, model3_quart_β_HCH, model3_quart_Σchlordane)
-
-##### all the pollutants as quartiles
-model3_quart_bis <- 
-  clogit(als ~ 
-           PCB_DL_quart + 
-           strata(match) + 
-           OCP_HCB_quart + PCB_NDL_quart + ΣPBDE_quart + ΣDDT_quart + OCP_β_HCH_quart + Σchlordane_quart + 
-           smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-         data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("quart", term)) |>
-  mutate(df = str_extract(term, "Q[2-4]"), 
-         df = gsub("Q", "Quartile ", df),
-         variable = str_remove(term, "Q[2-4]"), 
-         variable = str_remove(variable, "_quart"), 
-         model = "copollutant_quart_bis", 
-         OR = exp(estimate), 
-         lower_CI = exp(estimate - 1.96 * std.error), 
-         upper_CI = exp(estimate + 1.96 * std.error)) |> 
-  select(variable, model, df, OR, lower_CI, upper_CI, p.value)
-
 ##### pollutant of interest as quartile while the others are s() transformed in a gam model 
 model3_quart_PCB_DL <- 
   gam(als ~ 
@@ -660,7 +550,7 @@ model3_quart_ΣPBDE <- model3_quart_ΣPBDE$p.table |>
   as.data.frame() |>
   rownames_to_column("variable") 
 
-model3_quart_bis_bis <- bind_rows(
+model3_quart <- bind_rows(
   model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_HCB, model3_quart_ΣDDT, model3_quart_β_HCH, model3_quart_Σchlordane, model3_quart_ΣPBDE) |>
   filter(grepl("quart", variable)) |>
   mutate(
@@ -672,7 +562,7 @@ model3_quart_bis_bis <- bind_rows(
     variable = gsub("_quartQ2", "", variable), 
     variable = gsub("_quartQ3", "", variable), 
     variable = gsub("_quartQ4", "", variable), 
-    model = "copollutant_quart_bis_bis", 
+    model = "copollutant_quart", 
     OR = exp(Estimate), 
     lower_CI = exp(Estimate - 1.96 * `Std. Error`), 
     upper_CI = exp(Estimate + 1.96 * `Std. Error`), 
@@ -1083,14 +973,14 @@ test_2 <- gam(als ~
 anova <- anova(test_1, test_2, test = "Chisq")
 p.value_heterogeneity_ΣPBDE <- tibble(variable = "ΣPBDE", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
-heterogeneity_copollutant_bis_bis <- bind_rows(p.value_heterogeneity_PCB_DL, 
+heterogeneity_copollutant <- bind_rows(p.value_heterogeneity_PCB_DL, 
                                                p.value_heterogeneity_PCB_NDL, 
                                                p.value_heterogeneity_OCP_HCB, 
                                                p.value_heterogeneity_ΣDDT, 
                                                p.value_heterogeneity_OCP_β_HCH, 
                                                p.value_heterogeneity_Σchlordane, 
                                                p.value_heterogeneity_ΣPBDE) |>
-  mutate(model = "copollutant_quart_bis_bis")
+  mutate(model = "copollutant_quart")
 
 
 rm(test_1, test_2, anova, 
@@ -1102,9 +992,8 @@ rm(test_1, test_2, anova,
    p.value_heterogeneity_Σchlordane, 
    p.value_heterogeneity_ΣPBDE)
 
-
 heterogeneity_tests <- 
-  bind_rows(heterogeneity_base_spline, heterogeneity_base_quart, heterogeneity_adjusted_spline, heterogeneity_adjusted_quart, heterogeneity_copollutant_bis_bis) %>%
+  bind_rows(heterogeneity_base_spline, heterogeneity_base_quart, heterogeneity_adjusted_spline, heterogeneity_adjusted_quart, heterogeneity_copollutant) %>%
   mutate(variable = gsub("_quart", "", variable))
 
 ### trend tests ----
@@ -1219,11 +1108,11 @@ test <- gam(als ~
   summary()
 p.value_trend_ΣPBDE <- test$p.table["ΣPBDE_quart_med", "Pr(>|z|)"]
 
-trend_copollutant_bis_bis <- 
+trend_copollutant <- 
   data.frame(variable = c("PCB_DL_quart_med", "PCB_NDL_quart_med", "OCP_HCB_quart_med", 
                           "ΣDDT_quart_med", "OCP_β_HCH_quart_med", "Σchlordane_quart_med", 
                           "ΣPBDE_quart_med" ),
-           model = "copollutant_quart_bis_bis",
+           model = "copollutant_quart",
            p.value_trend = c(p.value_trend_PCB_DL, 
                              p.value_trend_PCB_NDL, 
                              p.value_trend_OCP_HCB, 
@@ -1242,7 +1131,7 @@ rm(test,
    p.value_trend_ΣPBDE)
 
 trend_tests <- 
-  bind_rows(trend_base, trend_adjusted, trend_copollutant_bis_bis) %>%
+  bind_rows(trend_base, trend_adjusted, trend_copollutant) %>%
   mutate(variable = gsub("_quart_med", "", variable))
 
 ### metanalysis (quart) ----
@@ -1791,8 +1680,6 @@ main_results <- bind_rows(model1_spline,
                           model2_cubic,
                           model3_spline, 
                           model3_quart, 
-                          model3_quart_bis,
-                          model3_quart_bis_bis,
                           model3_quadratic, 
                           model3_cubic) %>% 
   mutate(variable = gsub("_quart", "", variable), 
@@ -1846,20 +1733,6 @@ results_quart <-
          contains("copollutant_quart")) 
 colnames(results_quart) <- gsub('_quart', '', colnames(results_quart))
 
-results_quart_bis_bis <- 
-  main_results |>
-  select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI, - p.value_raw) |>
-  filter(model %in% c('base_quart', 'adjusted_quart', 'copollutant_quart_bis_bis')) |>
-  pivot_wider(
-    names_from = model,  
-    values_from = c(OR, `95%CI`, p.value)) |>
-  select(variable, 
-         quartiles = df,
-         contains("base_quart"), 
-         contains("adjusted_quart"), 
-         contains("copollutant_quart_bis_bis")) 
-colnames(results_quart_bis_bis) <- gsub('_quart', '', colnames(results_quart_bis_bis))
-
 results_quadratic <- 
   main_results |>
   select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI, -p.value_raw) |>
@@ -1891,10 +1764,9 @@ colnames(results_cubic) <- gsub('_cubic', '', colnames(results_cubic))
 rm(model1_quart, model1_spline, model1_quadratic, model1_cubic,
    model2_quart, model2_spline, model2_quadratic, model2_cubic,
    model3_quart, model3_spline, model3_quadratic, model3_cubic,
-   model3_quart_bis, model3_quart_bis_bis, 
    heterogeneity_base_quart, heterogeneity_base_spline,
-   heterogeneity_adjusted_spline, heterogeneity_adjusted_quart, heterogeneity_copollutant_bis_bis, 
-   trend_base, trend_adjusted, trend_copollutant_bis_bis, 
+   heterogeneity_adjusted_spline, heterogeneity_adjusted_quart, heterogeneity_copollutant, 
+   trend_base, trend_adjusted, trend_copollutant, 
    heterogeneity_tests, trend_tests)
 
 # sensitivity analyses without outliers ----
@@ -2368,67 +2240,6 @@ plot_quart <- main_results %>%
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(rows = dplyr::vars(variable), cols = dplyr::vars(model), switch = "y") +  
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Odds Ratio (OR)", color = "p-value") +
-  theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
-        legend.position = "bottom", 
-        strip.text.y = element_text(hjust = 0.5)) +
-  coord_flip()
-
-
-plot_quart_bis <- main_results %>% 
-  filter(model %in% c('base_quart', 'adjusted_quart', 'copollutant_quart_bis')) %>%
-  mutate(df = fct_recode(df, "Quartile 2" = "2", "Quartile 3" = "3", "Quartile 4" = "4", "Quartile 2" = "Q2", "Quartile 3" = "Q3", "Quartile 4" = "Q4"), 
-         p.value_shape = ifelse(p.value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
-         model = fct_recode(model, 
-                            "Adjusted model" = "adjusted_quart",
-                            "Base model" = "base_quart",
-                            "Copollutant model" = "copollutant_quart_bis"),
-         model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
-         df = fct_relevel(df, "Quartile 4", "Quartile 3", "Quartile 2" ), 
-         variable = fct_recode(variable, 
-                               "Most\nprevalent\nPCBs" = "PCB_4",
-                               "Dioxin-like\nPCBs" = "PCB_DL",
-                               "Non-dioxin-\nlike PCBs" = "PCB_NDL",
-                               "β-HCH" = "OCP_β_HCH", 
-                               "HCB" = "OCP_HCB"), 
-         variable = fct_relevel(variable, 
-                                "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "Most\nprevalent\nPCBs", "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) %>%
-  ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
-  geom_pointrange(size = 0.5) + 
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(rows = dplyr::vars(variable), cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Odds Ratio (OR)", color = "p-value") +
-  theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
-        legend.position = "bottom", 
-        strip.text.y = element_text(hjust = 0.5)) +
-  coord_flip()
-
-plot_quart_bis_bis <- main_results %>% 
-  filter(model %in% c('base_quart', 'adjusted_quart', 'copollutant_quart_bis_bis')) %>%
-  mutate(df = fct_recode(df, "Quartile 2" = "2", "Quartile 3" = "3", "Quartile 4" = "4"), 
-         p.value_shape = ifelse(p.value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
-         model = fct_recode(model, 
-                            "Adjusted model" = "adjusted_quart",
-                            "Base model" = "base_quart",
-                            "Copollutant model" = "copollutant_quart_bis_bis"),
-         model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
-         df = fct_relevel(df, "Quartile 4", "Quartile 3", "Quartile 2" ), 
-         variable = fct_recode(variable, 
-                               "Most\nprevalent\nPCBs" = "PCB_4",
-                               "Dioxin-like\nPCBs" = "PCB_DL",
-                               "Non-dioxin-\nlike PCBs" = "PCB_NDL",
-                               "β-HCH" = "OCP_β_HCH", 
-                               "HCB" = "OCP_HCB"), 
-         variable = fct_relevel(variable, 
-                                "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "Most\nprevalent\nPCBs", "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) %>%
-  ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
-  geom_pointrange(size = 0.5) + 
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(rows = dplyr::vars(variable), cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
   scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
   labs(x = "POPs", y = "Odds Ratio (OR)", color = "p-value") +
   theme_lucid() +
@@ -3570,14 +3381,11 @@ results_POPs_ALS_occurrence <-
                    covar = covar, 
                    results_spline = results_spline, 
                    results_quart = results_quart, 
-                   results_quart_bis_bis = results_quart_bis_bis, 
                    results_quadratic = results_quadratic, 
                    results_cubic = results_cubic, 
                    model1_gam = model1_gam, 
                    model2_gam = model2_gam, 
-                   plot_quart = plot_quart,                                     # co-pollutant model with only the POP of interest as quartile and the other as continuous
-                   plot_quart_bis = plot_quart_bis,                             # co-pollutant model with all the POPs as quartiles
-                   plot_quart_bis_bis = plot_quart_bis_bis,                     # co-pollutant model with only the POP of interest as quartile and the other as s() in a GAM model
+                   plot_quart = plot_quart,                                     # co-pollutant model with only the POP of interest as quartile and the other as s() in a GAM model
                    plot_base_spline = plot_base_spline, 
                    plot_base_quadratic = plot_base_quadratic, 
                    plot_base_cubic = plot_base_cubic, 
@@ -3617,7 +3425,7 @@ rm(main_results, covar, results_spline, results_quart, results_quadratic, result
    sensitivity_results_outlier, results_spline_outliers, results_quadratic_outliers, results_cubic_outliers, 
    model1_gam_outliers, model2_gam_outliers, 
    sensitivity_results_not_summed_quart, model1_gam_not_summed, model2_gam_not_summed, model1_quart_not_summed, model2_quart_not_summed, 
-   plot_quart, plot_quart_bis, plot_quart_bis_bis, plot_quart_sensi_not_summed, 
+   plot_quart, plot_quart_sensi_not_summed, 
    plot_base_spline, plot_base_quadratic, plot_base_cubic, plot_base_gam, 
    plot_base_spline_outlier, plot_base_quadratic_outlier, plot_base_cubic_outlier, plot_base_gam_outlier, 
    plot_adjusted_spline, plot_adjusted_quadratic, plot_adjusted_cubic, plot_adjusted_gam, 
