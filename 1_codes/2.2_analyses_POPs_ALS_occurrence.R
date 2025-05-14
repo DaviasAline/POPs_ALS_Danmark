@@ -1116,20 +1116,18 @@ trend_base <- data.frame(variable = character(),
 
 for (var in POPs_group_quart_med) {
   
-  test_1 <- clogit(als ~ strata(match), data = bdd_danish)
-  
   formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  test_2 <- clogit(formula, data = bdd_danish)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p.value_trend <- anova$`Pr(>|Chi|)`[2]
+  test <- 
+    clogit(formula, data = bdd_danish) |>
+    summary() 
+  p.value_trend <- test$coefficients[var, "Pr(>|z|)"]
   
   trend_base <- rbind(trend_base, 
                       data.frame(variable = var,
                                  model = "base_quart",
                                  p.value_trend = p.value_trend))
 }
-rm(var, test_1, test_2, formula, anova, p.value_trend)
+rm(var, test, formula, p.value_trend)
 
 #### model 2 quartile ----
 trend_adjusted <- data.frame(variable = character(),
@@ -1139,152 +1137,102 @@ trend_adjusted <- data.frame(variable = character(),
 
 for (var in POPs_group_quart_med) {
   
-  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, data = bdd_danish)
-  
   formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
-  test_2 <- clogit(formula, data = bdd_danish)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p.value_trend <- anova$`Pr(>|Chi|)`[2]
+  test <- clogit(formula, data = bdd_danish) |> summary()
+  p.value_trend <- test$coefficients[var, "Pr(>|z|)"]
   
   trend_adjusted <- rbind(trend_adjusted, 
                           data.frame(variable = var,
                                      model = "adjusted_quart",
                                      p.value_trend = p.value_trend))
 }
-rm(var, test_1, test_2, formula, anova, p.value_trend)
+rm(var, test, formula, p.value_trend)
 
 #### model 3 quartile ----
-test_1 <- gam(als ~ 
-                s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-              family = binomial, 
-              method = 'ML',
-              data = bdd_danish)
-test_2 <- gam(als ~ 
+test <- gam(als ~ 
                 PCB_DL_quart_med + 
                 s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
-              data = bdd_danish)
+              data = bdd_danish) |>
+  summary()
+p.value_trend_PCB_DL <- test$p.table["PCB_DL_quart_med", "Pr(>|z|)"]
 
-anova <- anova(test_1, test_2, test = "Chisq")
-p.value_trend_PCB_DL <- tibble(variable = "PCB_DL", p.value_trend = anova$`Pr(>Chi)`[2])
-
-test_1 <- gam(als ~ 
-                s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-              family = binomial, 
-              method = 'ML',
-              data = bdd_danish)
-test_2 <- gam(als ~ 
+test <- gam(als ~ 
                 PCB_NDL_quart_med + 
                 s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
-              data = bdd_danish)
+              data = bdd_danish) |>
+  summary()
+p.value_trend_PCB_NDL <- test$p.table["PCB_NDL_quart_med", "Pr(>|z|)"]
 
-anova <- anova(test_1, test_2, test = "Chisq")
-p.value_trend_PCB_NDL <- tibble(variable = "PCB_NDL", p.value_trend = anova$`Pr(>Chi)`[2])
-
-test_1 <- gam(als ~ 
-                s(PCB_DL) + s(PCB_DL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-              family = binomial, 
-              method = 'ML',
-              data = bdd_danish)
-test_2 <- gam(als ~ 
+test <- gam(als ~ 
                 OCP_HCB_quart_med + 
                 s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
-              data = bdd_danish)
+              data = bdd_danish) |>
+  summary()
+p.value_trend_OCP_HCB <- test$p.table["OCP_HCB_quart_med", "Pr(>|z|)"]
 
-anova <- anova(test_1, test_2, test = "Chisq")
-p.value_trend_OCP_HCB <- tibble(variable = "OCP_HCB", p.value_trend = anova$`Pr(>Chi)`[2])
-
-test_1 <- gam(als ~ 
-                s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-              family = binomial, 
-              method = 'ML',
-              data = bdd_danish)
-test_2 <- gam(als ~ 
+test <- gam(als ~ 
                 ΣDDT_quart_med + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
-              data = bdd_danish)
+              data = bdd_danish) |>
+  summary()
+p.value_trend_ΣDDT <- test$p.table["ΣDDT_quart_med", "Pr(>|z|)"]
 
-anova <- anova(test_1, test_2, test = "Chisq")
-p.value_trend_ΣDDT <- tibble(variable = "ΣDDT", p.value_trend = anova$`Pr(>Chi)`[2])
-
-test_1 <- gam(als ~ 
-                s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-              family = binomial, 
-              method = 'ML',
-              data = bdd_danish)
-test_2 <- gam(als ~ 
+test <- gam(als ~ 
                 OCP_β_HCH_quart_med + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
-              data = bdd_danish)
+              data = bdd_danish) |>
+  summary()
+p.value_trend_OCP_β_HCH <- test$p.table["OCP_β_HCH_quart_med", "Pr(>|z|)"]
 
-anova <- anova(test_1, test_2, test = "Chisq")
-p.value_trend_OCP_β_HCH <- tibble(variable = "OCP_β_HCH", p.value_trend = anova$`Pr(>Chi)`[2])
-
-test_1 <- gam(als ~ 
-                s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-              family = binomial, 
-              method = 'ML',
-              data = bdd_danish)
-test_2 <- gam(als ~ 
+test <- gam(als ~ 
                 Σchlordane_quart_med + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
-              data = bdd_danish)
+              data = bdd_danish) |>
+  summary()
+p.value_trend_Σchlordane <- test$p.table["Σchlordane_quart_med", "Pr(>|z|)"]
 
-anova <- anova(test_1, test_2, test = "Chisq")
-p.value_trend_Σchlordane <- tibble(variable = "Σchlordane", p.value_trend = anova$`Pr(>Chi)`[2])
-
-test_1 <- gam(als ~ 
-                s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-              family = binomial, 
-              method = 'ML',
-              data = bdd_danish)
-test_2 <- gam(als ~ 
+test <- gam(als ~ 
                 ΣPBDE_quart_med + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
                 sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
-              data = bdd_danish)
+              data = bdd_danish) |>
+  summary()
+p.value_trend_ΣPBDE <- test$p.table["ΣPBDE_quart_med", "Pr(>|z|)"]
 
-anova <- anova(test_1, test_2, test = "Chisq")
-p.value_trend_ΣPBDE <- tibble(variable = "ΣPBDE", p.value_trend = anova$`Pr(>Chi)`[2])
+trend_copollutant_bis_bis <- 
+  data.frame(variable = c("PCB_DL_quart_med", "PCB_NDL_quart_med", "OCP_HCB_quart_med", 
+                          "ΣDDT_quart_med", "OCP_β_HCH_quart_med", "Σchlordane_quart_med", 
+                          "ΣPBDE_quart_med" ),
+           model = "copollutant_quart_bis_bis",
+           p.value_trend = c(p.value_trend_PCB_DL, 
+                             p.value_trend_PCB_NDL, 
+                             p.value_trend_OCP_HCB, 
+                             p.value_trend_ΣDDT, 
+                             p.value_trend_OCP_β_HCH, 
+                             p.value_trend_Σchlordane, 
+                             p.value_trend_ΣPBDE))
 
-trend_copollutant_bis_bis <- bind_rows(p.value_trend_PCB_DL, 
-                                       p.value_trend_PCB_NDL, 
-                                       p.value_trend_OCP_HCB, 
-                                       p.value_trend_ΣDDT, 
-                                       p.value_trend_OCP_β_HCH, 
-                                       p.value_trend_Σchlordane, 
-                                       p.value_trend_ΣPBDE) |>
-  mutate(model = "copollutant_quart_bis_bis")
-
-
-rm(test_1, test_2, anova, 
+rm(test, 
    p.value_trend_PCB_DL, 
    p.value_trend_PCB_NDL, 
    p.value_trend_OCP_HCB, 
