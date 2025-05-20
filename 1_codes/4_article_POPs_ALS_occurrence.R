@@ -53,7 +53,6 @@ figure_1 <- results_descriptive$danish$POPs_group_boxplot_danish_by_als
 # Figure 2 - forest plot quartiles ----
 # Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (conditional logistic regression models, sample size: 498).
 figure_2 <- results_POPs_ALS_occurrence$main$plot_quart
-figure_2_bis_bis <- results_POPs_ALS_occurrence$main$plot_quart_bis_bis
 
 # Figure 3 - gam models ----
 # Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (generalized additive mixed models, sample size: 498).
@@ -146,74 +145,6 @@ colnames(table_S2) <- gsub('_quart', '', colnames(table_S2))
 table_S2 <- table_S2 |>
   mutate_if(is.numeric, as.character) |>
   bind_rows(extra_rows) |>
-  select(-p.value_heterogeneity_copollutant, -p.value_trend_copollutant) |>
-  mutate(
-    variable = gsub("OCP_", "", variable), 
-    variable = fct_relevel(variable, "PCB_DL", "PCB_NDL", "PCB_4", "HCB", "ΣDDT", "β_HCH", "Σchlordane", "ΣPBDE" ),
-    variable = fct_recode(variable, 
-                          "Most prevalent PCBs" = "PCB_4",
-                          "Dioxin-like PCBs" = "PCB_DL",
-                          "Non-dioxin-like PCBs" = "PCB_NDL",
-                          "β-HCH" = "β_HCH")) |>
-  arrange(variable, quartiles) |>
-  group_by(variable) |>
-  mutate(p.value_heterogeneity_base = ifelse(quartiles == 'Quartile 1', p.value_heterogeneity_base[quartiles == 'Quartile 2'], ''), 
-         p.value_trend_base = ifelse(quartiles == 'Quartile 1', p.value_trend_base[quartiles == 'Quartile 2'], ''),
-         p.value_heterogeneity_adjusted = ifelse(quartiles == 'Quartile 1', p.value_heterogeneity_adjusted[quartiles == 'Quartile 2'], ''), 
-         p.value_trend_adjusted = ifelse(quartiles == 'Quartile 1', p.value_trend_adjusted[quartiles == 'Quartile 2'], '')) |>
-  ungroup() |>
-  rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base', 
-         'Heterogeneity test' = 'p.value_heterogeneity_base', 'Trend test' = 'p.value_trend_base',
-         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted', 
-         'Heterogeneity test ' = 'p.value_heterogeneity_adjusted', 'Trend test ' = 'p.value_trend_adjusted',
-         ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant')
-table_S2 <- table_S2 |> flextable() |>
-  add_footer_lines(
-  "1POPs were summed as follows: Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; ΣPBDE corresponds to PBDEs 47, 99, 153; ΣDDT corresponds to p,p’-DDT and p,p’-DDE and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
-  2All models are matched for sex and age. Adjusted models further account for smoking, BMI, serum total cholesterol, marital status, and education. Co-pollutant models further include all chemicals, where the chemical of interest is categorized into quartiles, while the others are treated as continuous variables.
-  3Estimated risk of ALS when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
-  4CI: Confidence interval.
-  5Heterogeneity tests in outcome value across POP quartiles, matched on age and sex.
-  6Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, matched on age and sex.
-  7Heterogeneity tests in outcome value across POP quartiles, matched on age and sex, and adjusted for smoking, BMI, serum total cholesterol, marital status, and education.
-  8Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, matched on age and sex, and adjusted for smoking, BMI, serum total cholesterol, marital status, and education.") |>
-  add_header(
-    "variable" = "Exposures", "quartiles" = "Quartiles",
-    "OR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", "Heterogeneity test" = 'Base Model', "Trend test" = 'Base Model',
-    "OR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", "Heterogeneity test " = 'Adjusted Model', "Trend test " = 'Adjusted Model',
-    " OR " = "Co-pollutant model", " 95% CI " = "Co-pollutant model", " p-value " = "Co-pollutant model") |>
-  merge_h(part = "header") |>
-  merge_v(j = "variable") |>
-  theme_vanilla() |>
-  bold(j = "variable", part = "body") |>
-  align(align = "center", part = "all") |>
-  align(j = "variable", align = "left", part = "all") |> 
-  merge_at(j = "variable", part = "header") |>
-  merge_at(j = "quartiles", part = "header") |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")
-
-
-table_S2_bis_bis <- 
-  results_POPs_ALS_occurrence$main$main_results |>
-  select(-lower_CI, -upper_CI, - p.value_raw) |>
-  filter(model %in% c('base_quart', 'adjusted_quart', 'copollutant_quart_bis_bis')) |>
-  pivot_wider(
-    names_from = model,  
-    values_from = c(OR, `95%CI`, p.value, p.value_heterogeneity, p.value_trend)) |>
-  select(variable, 
-         quartiles = df,
-         contains("base_quart"), 
-         contains("adjusted_quart"), 
-         contains("copollutant_quart_bis_bis")) 
-colnames(table_S2_bis_bis) <- gsub('_quart', '', colnames(table_S2_bis_bis))
-colnames(table_S2_bis_bis) <- gsub('_bis_bis', '', colnames(table_S2_bis_bis))
-
-table_S2_bis_bis <- table_S2_bis_bis |>
-  mutate_if(is.numeric, as.character) |>
-  bind_rows(extra_rows) |>
-  # select(-p.value_heterogeneity_copollutant, -p.value_trend_copollutant) |>
   mutate(
     variable = gsub("OCP_", "", variable), 
     variable = fct_relevel(variable, "PCB_DL", "PCB_NDL", "PCB_4", "HCB", "ΣDDT", "β_HCH", "Σchlordane", "ΣPBDE" ),
@@ -237,7 +168,7 @@ table_S2_bis_bis <- table_S2_bis_bis |>
          'Heterogeneity test ' = 'p.value_heterogeneity_adjusted', 'Trend test ' = 'p.value_trend_adjusted',
          ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant',
          ' Heterogeneity test ' = 'p.value_heterogeneity_copollutant', ' Trend test ' = 'p.value_trend_copollutant')
-table_S2_bis_bis <- table_S2_bis_bis |> flextable() |>
+table_S2 <- table_S2 |> flextable() |>
   add_footer_lines(
     "1POPs were summed as follows: Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; ΣPBDE corresponds to PBDEs 47, 99, 153; ΣDDT corresponds to p,p’-DDT and p,p’-DDE and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
   2All models are matched for sex and age. Adjusted models further account for smoking, BMI, serum total cholesterol, marital status, and education. Co-pollutant models further include all chemicals, where a GAM is used in which the chemical of interest is categorized into quartiles, while the other pollutants are included as smooth terms.
@@ -391,7 +322,7 @@ rm(extra_rows)
 # Figure S2 - heatmap of correlation between POP exposures ---- 
 # Pearson correlations between pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498). 
 plot.new()
-tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/figure_S2.tiff", units = "mm", width = 250, height = 250, res = 300)
+tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S2.tiff", units = "mm", width = 250, height = 250, res = 300)
 corrplot(results_descriptive$danish$POPs_heatmap_danish, 
          method = 'color', 
          type = "lower", 
@@ -451,86 +382,77 @@ figure_S5 <- wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_
 
 # Export ----
 table_1 <- read_docx() |> body_add_flextable(table_1) 
-print(table_1, target = "~/Documents/POP_ALS_2025_02_03/2_output/table_1.docx")
+print(table_1, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/table_1.docx")
 table_2 <- read_docx() |> body_add_flextable(table_2) 
-print(table_2, target = "~/Documents/POP_ALS_2025_02_03/2_output/table_2.docx")
+print(table_2, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/table_2.docx")
 
 table_S1 <- read_docx() |> body_add_flextable(table_S1)
-print(table_S1, target = "~/Documents/POP_ALS_2025_02_03/2_output/table_S1.docx")
+print(table_S1, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/table_S1.docx")
 table_S2 <- read_docx() |> body_add_flextable(table_S2)
-print(table_S2, target = "~/Documents/POP_ALS_2025_02_03/2_output/table_S2.docx")
-table_S2_bis_bis <- read_docx() |> body_add_flextable(table_S2_bis_bis)
-print(table_S2_bis_bis, target = "~/Documents/POP_ALS_2025_02_03/2_output/table_S2_bis_bis.docx")
+print(table_S2, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/table_S2.docx")
 table_S3 <- read_docx() |> body_add_flextable(table_S3)
-print(table_S3, target = "~/Documents/POP_ALS_2025_02_03/2_output/table_S3.docx")
+print(table_S3, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/table_S3.docx")
 table_S4 <- read_docx() |> body_add_flextable(table_S4)
-print(table_S4, target = "~/Documents/POP_ALS_2025_02_03/2_output/table_S4.docx")
+print(table_S4, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/table_S4.docx")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/figure_1.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_1.tiff",
   figure_1,
   height = 4,
   width = 8,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/figure_2.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_2.tiff",
   figure_2,
   height = 8,
   width = 9,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/figure_2_bis_bis.tiff",
-  figure_2_bis_bis,
-  height = 8,
-  width = 9,
-  units = "in")
-
-ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/figure_3_a.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_3_a.tiff",
   figure_3_a,
   height = 12,
   width = 9,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/figure_3_b.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_3_b.tiff",
   figure_3_b,
   height = 12,
   width = 9,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/figure_4.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_4.tiff",
   figure_4,
   height = 7,
   width = 9,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/figure_S3_a.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S3_a.tiff",
   figure_S3_a,
   height = 12,
   width = 9,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/figure_S3_b.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S3_b.tiff",
   figure_S3_b,
   height = 12,
   width = 9,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/figure_S4.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S4.tiff",
   figure_S4,
   height = 15,
   width = 9,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/figure_S5.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S5.tiff",
   figure_S5,
   height = 15,
   width = 9,

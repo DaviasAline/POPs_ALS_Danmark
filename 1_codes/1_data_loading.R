@@ -727,7 +727,7 @@ var_label(bdd_danish) <- list(
   PBDE_153 = "PBDE-153", 
   PCB_DL =  "Dioxin-like PCBs", 
   PCB_NDL = "Non dioxin-like PCBs", 
-  PCB_4 = "PCB-118,138,153,180",
+  PCB_4 = "Most prevalent PCBs",
   "myristic_acid_sat" =  "Myristic acid (%)", 
   "pentadecylic_acid_sat" = "Pentadecylic acid (%)", 
   "palmitic_acid_sat" =  "Palmitic acid (%)", 
@@ -828,7 +828,7 @@ var_label(bdd_finnish) <- list(
   PBDE_153 = "PBDE-153", 
   PCB_DL =  "Dioxin-like PCBs", 
   PCB_NDL = "Non dioxin-like PCBs", 
-  PCB_4 = "PCB-118,138,153,180",
+  PCB_4 = "Most prevalent PCBs",
   "myristic_acid_sat" =  "Myristic acid (%)", 
   "pentadecylic_acid_sat" = "Pentadecylic acid (%)", 
   "palmitic_acid_sat" =  "Palmitic acid (%)", 
@@ -934,7 +934,7 @@ var_label(bdd) <- list(
   PBDE_153 = "PBDE-153", 
   PCB_DL =  "Dioxin-like PCBs", 
   PCB_NDL = "Non dioxin-like PCBs", 
-  PCB_4 = "PCB-118,138,153,180",
+  PCB_4 = "Most prevalent PCBs",
   "myristic_acid_sat" =  "Myristic acid (%)", 
   "pentadecylic_acid_sat" = "Pentadecylic acid (%)", 
   "palmitic_acid_sat" =  "Palmitic acid (%)", 
@@ -1075,7 +1075,6 @@ explanatory_quart_labels <- c(
 )
 
 POPs_labels <- c(
-  "PCB-118,138,153,180" = "PCB_4",
   "Dioxin-like PCBs" = "PCB_DL",
   "PCB-118" = "PCB_118",
   "PCB-156" = "PCB_156",
@@ -1091,6 +1090,7 @@ POPs_labels <- c(
   "PCB-180" = "PCB_180",
   "PCB-183" = "PCB_183",
   "PCB-187" = "PCB_187",
+  "Most prevalent PCBs" = "PCB_4",
   "HCB" = "OCP_HCB",
   "ΣDDT" = "ΣDDT",
   "p,p'-DDT" = "OCP_pp_DDT",
@@ -1109,9 +1109,9 @@ POPs_labels <- c(
 
 
 POPs_group_labels <- c(
-  "PCB-118,138,153,180" = "PCB_4",
   "Dioxin-like PCBs" = "PCB_DL",
   "Non dioxin-like PCBs" = "PCB_NDL",
+  "Most prevalent PCBs" = "PCB_4",
   "HCB" = "OCP_HCB",
   "ΣDDT" = "ΣDDT",
   "β-HCH" = "OCP_β_HCH",
@@ -1119,9 +1119,9 @@ POPs_group_labels <- c(
   "ΣPBDE" = "ΣPBDE")
 
 POPs_group_quart_labels <- c(
-  "PCB-118,138,153,180" = "PCB_4_quart",
   "Dioxin-like PCBs" = "PCB_DL_quart",
   "Non dioxin-like PCBs" = "PCB_NDL_quart",
+  "Most prevalent PCBs" = "PCB_4_quart",
   "HCB" = "OCP_HCB_quart",
   "ΣDDT" = "ΣDDT_quart",
   "β-HCH" = "OCP_β_HCH_quart",

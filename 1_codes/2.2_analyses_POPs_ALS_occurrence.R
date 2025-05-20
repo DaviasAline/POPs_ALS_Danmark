@@ -982,7 +982,6 @@ heterogeneity_copollutant <- bind_rows(p.value_heterogeneity_PCB_DL,
                                                p.value_heterogeneity_ΣPBDE) |>
   mutate(model = "copollutant_quart")
 
-
 rm(test_1, test_2, anova, 
    p.value_heterogeneity_PCB_DL, 
    p.value_heterogeneity_PCB_NDL, 
@@ -993,7 +992,9 @@ rm(test_1, test_2, anova,
    p.value_heterogeneity_ΣPBDE)
 
 heterogeneity_tests <- 
-  bind_rows(heterogeneity_base_spline, heterogeneity_base_quart, heterogeneity_adjusted_spline, heterogeneity_adjusted_quart, heterogeneity_copollutant) %>%
+  bind_rows(heterogeneity_base_spline, heterogeneity_base_quart, 
+            heterogeneity_adjusted_spline, heterogeneity_adjusted_quart, 
+            heterogeneity_copollutant) %>%
   mutate(variable = gsub("_quart", "", variable))
 
 ### trend tests ----
@@ -1667,7 +1668,6 @@ metanalysis_quart <- bind_rows(metanalysis_base_quart, metanalysis_adjusted_quar
          lower_CI, upper_CI) 
 
 rm(metanalysis_base_quart, metanalysis_adjusted_quart, metanalysis_copollutant_quart, run_clogit, POPs_group_metanalysis, POPs_group_metanalysis_quart)
-
 
 ### merging the main results ----
 main_results <- bind_rows(model1_spline, 

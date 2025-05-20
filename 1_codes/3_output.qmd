@@ -817,30 +817,13 @@ grid.arrange(grobs = list(
 
 #### Quartile models
 ##### Main analysis
-In the copollutant models, the pollutant of interest is quartile while the others are continuous
+In the copollutant models, the pollutant of interest is quartile while the others are s() in a GAM model
 ```{r fig.height=9, fig.width=9}
 #| echo: false
 #| message: false
 #| warning: false
 results_POPs_ALS_occurrence$main$plot_quart
 ```
-
-In the copollutant model, all the pollutants are quartiles
-```{r fig.height=9, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_occurrence$main$plot_quart_bis
-```
-
-In the copollutant models, the pollutant of interest is quartile while the others are s() in a GAM model
-```{r fig.height=9, fig.width=9} 
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_occurrence$main$plot_quart_bis_bis
-```
-
 
 ##### Sensitivity analysis POPs not summed
 ```{r,  fig.height=15, fig.width=10}
