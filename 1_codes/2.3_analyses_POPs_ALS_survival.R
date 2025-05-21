@@ -34,20 +34,20 @@ covar_danish <- tbl_merge(tbls = list(
 rm(bdd_cases_danish, surv_obj_danish)
 
 ## Main analysis 
-## Base model sd ----
+## Cox model (sd) ----
+### Base ----
 model1_cox_sd_danish <- map_dfr(POPs_group_sd, function(expl) {
   
   bdd_cases_danish <- bdd_danish |>                                             # set the dataset
-    filter(als == 1) |>                                                         # case selection
+    filter(als == 1) |>                            
     mutate(across(all_of(POPs_group),                                           # create cohort specific scaled POPs variables 
-                  scale,
+                  ~as.numeric(scale(.x)),
                   .names = "{.col}_sd"))  
   
   surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,              # set the outcomes
                           event = bdd_cases_danish$status_death)
   
-  formula_danish <-                                                             # set the formula
-    as.formula(paste("surv_obj_danish ~", expl, "+ baseline_age + sex"))  
+  formula_danish <- as.formula(paste("surv_obj_danish ~", expl, "+ baseline_age + sex"))             # set the formulas             
   
   model_summary <- coxph(formula_danish, data = bdd_cases_danish) |> summary()  # run cox model
   coefs <- model_summary$coefficients
@@ -59,39 +59,10 @@ model1_cox_sd_danish <- map_dfr(POPs_group_sd, function(expl) {
     coef = coefs[, "coef"],
     se = coefs[, "se(coef)"], 
     `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-  
+    filter(str_starts(term, explanatory))                                       # remove the covariates results 
 })
 
-## Base model quart ----
-model1_cox_quart_danish <- map_dfr(POPs_group_quart, function(expl) {
-  
-  bdd_cases_danish <- bdd_danish |>                                             # set the datasets
-    filter(als == 1) |>                                                         # case selection
-    mutate(across(all_of(POPs_group), ~ factor(ntile(.x, 4),                    # creation of POPs quartiles (cohort specific)                        
-                                               labels = c("Q1", "Q2", "Q3", "Q4")),
-                  .names = "{.col}_quart")) 
-  
-  surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,              # set the outcomes
-                          event = bdd_cases_danish$status_death)
-  
-  formula_danish <-                                                             # creation of the formulas
-    as.formula(paste("surv_obj_danish ~", expl, "+ baseline_age + sex"))  
-  
-  model_summary <- coxph(formula_danish, data = bdd_cases_danish) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "Danish", 
-    model = "base", 
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-## Adjusted model sd ----
+### Adjusted ----
 model2_cox_sd_danish <- map_dfr(POPs_group_sd, function(expl) {
   
   bdd_cases_danish <- bdd_danish |>                                             # set the dataset
@@ -119,7 +90,69 @@ model2_cox_sd_danish <- map_dfr(POPs_group_sd, function(expl) {
     filter(str_starts(term, explanatory))                                       # remove the covariates results 
 })
 
-## Ajusted model quart ----
+### Copollutant ----
+POPs_group_sd_bis <- setdiff(POPs_group_sd, "PCB_4_sd")
+pollutant_labels_bis <- set_names(
+  c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
+    "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
+  POPs_group_sd_bis)
+
+bdd_cases_danish <- bdd_danish |>                                               # set the dataset
+  filter(als == 1) |>                            
+  mutate(across(all_of(POPs_group),                                             # create cohort specific scaled POPs variables 
+                scale,
+                .names = "{.col}_sd"))  
+
+surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,                # set the outcomes
+                        event = bdd_cases_danish$status_death)
+
+formula_danish <- as.formula(paste("surv_obj_danish ~",                         # set the formulas              
+                                   paste(c(POPs_group_sd_bis, covariates_danish), collapse = " + ")))
+
+model_summary <- 
+  coxph(formula_danish, data = bdd_cases_danish) |> summary() 
+coefs <- model_summary$coefficients
+model3_cox_sd_danish <- tibble(                                                 # creation of a table of results
+  study = "Danish", 
+  model = "copollutant", 
+  term = rownames(coefs),
+  explanatory = rownames(coefs),
+  coef = coefs[, "coef"],
+  se = coefs[, "se(coef)"], 
+  `p-value` = coefs[, "Pr(>|z|)"]) |>
+  filter(str_detect(term, "_sd"))
+rm(POPs_group_sd_bis, pollutant_labels_bis, bdd_cases_danish,surv_obj_danish, formula_danish, model_summary, coefs)
+
+## Cox model (quart) ----
+### Base ----
+model1_cox_quart_danish <- map_dfr(POPs_group_quart, function(expl) {
+  
+  bdd_cases_danish <- bdd_danish |>                                             # set the datasets
+    filter(als == 1) |>                                                         # case selection
+    mutate(across(all_of(POPs_group), ~ factor(ntile(.x, 4),                    # creation of POPs quartiles (cohort specific)                        
+                                               labels = c("Q1", "Q2", "Q3", "Q4")),
+                  .names = "{.col}_quart")) 
+  
+  surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,              # set the outcomes
+                          event = bdd_cases_danish$status_death)
+  
+  formula_danish <-                                                             # creation of the formulas
+    as.formula(paste("surv_obj_danish ~", expl, "+ baseline_age + sex"))  
+  
+  model_summary <- coxph(formula_danish, data = bdd_cases_danish) |> summary()  # run cox model
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    study = "Danish", 
+    model = "base", 
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                       # remove the covariates results
+})
+
+### Adjusted ----
 model2_cox_quart_danish <- map_dfr(POPs_group_quart, function(expl) {
   
   bdd_cases_danish <- bdd_danish |>                                             # set the dataset
@@ -148,6 +181,358 @@ model2_cox_quart_danish <- map_dfr(POPs_group_quart, function(expl) {
 })
 
 
+### Copollutant ----
+bdd_cases_danish <- bdd_danish |>                                               # set the data set 
+  filter(als == 1) |>                                                           # cases selection 
+  mutate(across(all_of(POPs), ~ factor(ntile(.x, 4),                            # create cohort and case specific quartiles POPs variables 
+                                       labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart"))
+outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
+
+model3_quart_PCB_DL <- 
+  gam(outcome ~ 
+        PCB_DL_quart + 
+        s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+      family = cox.ph(), 
+      method = 'ML',                                                            # maximum likelihood
+      data = bdd_cases_danish) |>
+  summary()
+model3_quart_PCB_DL <- model3_quart_PCB_DL$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable") 
+
+model3_quart_PCB_NDL <- 
+  gam(outcome ~ 
+        PCB_NDL_quart + 
+        s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish) |>
+  summary()
+model3_quart_PCB_NDL <- model3_quart_PCB_NDL$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable") 
+
+model3_quart_HCB <- 
+  gam(outcome ~ 
+        OCP_HCB_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish) |>
+  summary()
+model3_quart_HCB <- model3_quart_HCB$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable") 
+
+model3_quart_ΣDDT <- 
+  gam(outcome ~ 
+        ΣDDT_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish) |>
+  summary()
+model3_quart_ΣDDT <- model3_quart_ΣDDT$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable") 
+
+model3_quart_β_HCH <- 
+  gam(outcome ~ 
+        OCP_β_HCH_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
+        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish) |>
+  summary()
+model3_quart_β_HCH <- model3_quart_β_HCH$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable") 
+
+model3_quart_Σchlordane <- 
+  gam(outcome ~ 
+        Σchlordane_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
+        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish) |>
+  summary()
+model3_quart_Σchlordane <- model3_quart_Σchlordane$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable") 
+
+model3_quart_ΣPBDE <- 
+  gam(outcome ~ 
+        ΣPBDE_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish) |>
+  summary()
+model3_quart_ΣPBDE <- model3_quart_ΣPBDE$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable") 
+
+model3_cox_quart_danish <- bind_rows(
+  model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_HCB, model3_quart_ΣDDT, model3_quart_β_HCH, model3_quart_Σchlordane, model3_quart_ΣPBDE) |>
+  filter(grepl("quart", variable)) |>
+  mutate(
+    study = "Danish", 
+    model = "copollutant", 
+    term = variable,
+    explanatory = gsub("Q2", "", variable), 
+    explanatory = gsub("Q3", "", explanatory), 
+    explanatory = gsub("Q4", "", explanatory), 
+    coef = Estimate, 
+    se = `Std. Error`, 
+    `p-value` =`Pr(>|z|)`) |> 
+  select(model, term, explanatory, coef, se, `p-value`)
+
+rm(model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_HCB, model3_quart_ΣDDT, model3_quart_β_HCH, model3_quart_Σchlordane, model3_quart_ΣPBDE, 
+   outcome, bdd_cases_danish)
+
+## Cox-gam model (sd) ----
+### Base  ----
+pollutant_labels <- set_names(
+  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  POPs_group_sd)
+
+plot_base_cox_gam_danish <- map(POPs_group_sd, function(var) {
+  
+  bdd_cases_danish <- bdd_danish |>                                             # set the dataset
+    filter(als == 1) |>                                                         # case selection
+    mutate(across(all_of(POPs_group),                                           # create cohort and case specific scaled POPs variables 
+                  ~as.numeric(scale(.x)),
+                  .names = "{.col}_sd"))  
+  
+  outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
+  formula <- as.formula(paste("outcome ~ s(", var, ") + baseline_age + sex")) 
+  
+  model <- gam(formula,                                                         # run the cox-gam model
+               family = cox.ph(), 
+               method = "ML", 
+               data = bdd_cases_danish)            
+  
+  bdd_pred <- bdd_cases_danish |>                                               # création bdd avec expo + covariables ramenées à leur moyenne
+    mutate(
+      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
+      adj_sex = names(which.max(table(sex)))) |>
+    select(all_of(var), starts_with("adj_")) |>
+    rename_with(~ gsub("adj_", "", .x)) 
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred |>
+    mutate(
+      hazard_ratio = exp(pred$fit),
+      hazard_lower = exp(pred$fit - 1.96 * pred$se.fit),
+      hazard_upper = exp(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
+  x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
+  x_label <- pollutant_labels[var] 
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
+    geom_line(color = "blue", size = 1) +
+    geom_ribbon(aes(ymin = hazard_lower, ymax = hazard_upper), fill = "blue", alpha = 0.2) +
+    labs(x = var, y = "Relative hazard of death") +
+    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 1, vjust = 1.2, size = 4, color = "black") +
+    theme_minimal() + 
+    scale_y_log10(limits = c(0.1, 110)) +
+    theme(axis.text.x = element_text(color = 'white'),
+          axis.title.x = element_blank(),
+          axis.line.x = element_blank(),
+          axis.ticks.x = element_blank()) +
+    ggtitle("Base model")
+  
+  var_orig <- gsub("_sd$", "", var)
+  p2 <- bdd_cases_danish |>
+    ggplot() +
+    aes(x = "", y = .data[[var_orig]]) +
+    geom_boxplot(fill = "blue") +
+    coord_flip() +
+    ylab(x_label) + 
+    xlab("") + 
+    theme_minimal()
+  
+  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
+                           guides = 'collect') + 
+    theme_minimal()
+  p
+}) |> 
+  set_names(POPs_group)
+rm(pollutant_labels)
+
+
+### Adjusted ----
+pollutant_labels <- set_names(
+  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  POPs_group_sd)
+
+plot_adjusted_cox_gam_danish <- map(POPs_group_sd, function(var) {
+  
+  bdd_cases_danish <- bdd_danish |>                                             # set the dataset
+    filter(als == 1) |>                                                         # case selection
+    mutate(across(all_of(POPs_group),                                           # create cohort ans case specific scaled POPs variables 
+                  ~as.numeric(scale(.x)),
+                  .names = "{.col}_sd"))  
+  
+  outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
+  formula <- as.formula(paste("outcome ~ s(", var, ") + baseline_age + sex +  smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i")) 
+  
+  model <- gam(formula,                                                         # run the cox-gam model
+               family = cox.ph(), 
+               method = "ML", 
+               data = bdd_cases_danish)     
+  
+  bdd_pred <- bdd_cases_danish |>                                               # création bdd avec expo + covariables ramenées à leur moyenne
+    mutate(
+      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
+      adj_sex = names(which.max(table(sex))), 
+      adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i))), 
+      adj_bmi = mean(bmi, na.rm = TRUE),  
+      adj_cholesterol_i = mean(cholesterol_i, na.rm = TRUE), 
+      adj_marital_status_2cat_i = names(which.max(table(marital_status_2cat_i))), 
+      adj_education_i = names(which.max(table(education_i)))) |>
+    select(all_of(var), starts_with("adj_")) |>
+    rename_with(~ gsub("adj_", "", .x)) 
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred |>
+    mutate(
+      hazard_ratio = exp(pred$fit),
+      hazard_lower = exp(pred$fit - 1.96 * pred$se.fit),
+      hazard_upper = exp(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
+  x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
+  x_label <- pollutant_labels[var] 
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
+    geom_line(color = "blue", size = 1) +
+    geom_ribbon(aes(ymin = hazard_lower, ymax = hazard_upper), fill = "blue", alpha = 0.2) +
+    labs(x = var, y = "Relative hazard of death") +
+    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 1, vjust = 1.2, size = 4, color = "black") +
+    theme_minimal() + 
+    scale_y_log10(limits = c(0.1, 2000), 
+                  labels = scales::label_number(accuracy = 1)) +
+    theme(axis.text.x = element_text(color = 'white'),
+          axis.title.x = element_blank(),
+          axis.line.x = element_blank(),
+          axis.ticks.x = element_blank()) +
+    ggtitle("Adjusted model")
+  
+  var_orig <- gsub("_sd$", "", var)
+  p2 <- bdd_cases_danish |>
+    ggplot() +
+    aes(x = "", y = .data[[var_orig]]) +
+    geom_boxplot(fill = "blue") +
+    coord_flip() +
+    ylab(x_label) + 
+    xlab("") + 
+    theme_minimal()
+  
+  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
+                           guides = 'collect') + 
+    theme_minimal()
+  p
+}) |> 
+  set_names(POPs_group)
+rm(pollutant_labels)
+
+
+### Copollutant ----
+POPs_group_sd_bis <- setdiff(POPs_group_sd, "PCB_4_sd")
+pollutant_labels_bis <- set_names(
+  c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
+    "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
+  POPs_group_sd_bis)
+
+bdd_cases_danish <- bdd_danish |>                                             # set the dataset
+  filter(als == 1) |>                                                         # case selection
+  mutate(across(all_of(POPs_group),                                           # create cohort ans case specific scaled POPs variables 
+                ~as.numeric(scale(.x)),
+                .names = "{.col}_sd"))  
+outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
+
+model <- gam(outcome ~ s(PCB_DL_sd) + s(PCB_NDL_sd) + s(OCP_HCB_sd) + s(ΣDDT_sd) + 
+               s(OCP_β_HCH_sd) + s(Σchlordane_sd) + s(ΣPBDE_sd) + 
+               sex + baseline_age + 
+               smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+             family = cox.ph(), 
+             method = "ML", 
+             data = bdd_cases_danish)
+
+
+plot_copollutant_cox_gam_danish <- map(POPs_group_sd_bis, function(var) {
+  
+  bdd_pred <- bdd_cases_danish |>
+    mutate(across(all_of(covariates_danish),                                    # fixe toutes les covariables à leurs moyennes
+                  ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.))))) |>
+    mutate(across(setdiff(POPs_group_sd_bis, var), 
+                  ~ mean(., na.rm = TRUE)))|>                                   # Fixe tous les autres POPs à leur moyenne
+    select(all_of(var), all_of(covariates_danish), all_of(setdiff(POPs_group_sd_bis, var)))  
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred |>
+    mutate(
+      hazard_ratio = exp(pred$fit),
+      hazard_lower = exp(pred$fit - 1.96 * pred$se.fit),
+      hazard_upper = exp(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[rownames(model_summary$s.table) == paste0("s(", var, ")"), "edf"], nsmall = 1, digits = 1) 
+  p_value <- model_summary$s.table[rownames(model_summary$s.table) == paste0("s(", var, ")"), "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
+  x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
+  x_label <- pollutant_labels_bis[var]
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
+    geom_line(color = "blue", size = 1) +
+    geom_ribbon(aes(ymin = hazard_lower, ymax = hazard_upper), fill = "blue", alpha = 0.2) +
+    labs(x = var, y = "Relative hazard of death") +
+    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 1, vjust = 1.2, size = 4, color = "black") +
+    theme_minimal() +
+    scale_y_log10(limits = c(0.1, 2000), 
+                  labels = scales::label_number(accuracy = 1)) +
+    theme(axis.text.x = element_blank(),
+          axis.title.x = element_blank(),
+          axis.line.x = element_blank(),
+          axis.ticks.x = element_blank()) +
+    ggtitle("Co-pollutant model")
+  
+  p2 <- ggplot(bdd_pred) +
+    aes(x = "", y = .data[[var]]) +
+    geom_boxplot(fill = "blue") +
+    coord_flip() +
+    ylab(x_label) + 
+    xlab("") + 
+    theme_minimal()
+  
+  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
+                           guides = 'collect')
+  p
+}) |> set_names(POPs_group_sd_bis)
+rm(POPs_group_sd_bis, pollutant_labels_bis, model, bdd_cases_danish, outcome)
+
 # Finnish cohort ----
 run_cox <- function(formula, data) {
   model <- coxph(formula, data = data)
@@ -160,7 +545,7 @@ run_cox <- function(formula, data) {
 }
 
 ## Covar model ----
-### crude ----
+### crude 
 covar_crude_finnish <- map_dfr(c("baseline_age", "sex", "thawed", "level_urbanization", 
                            covariates_finnish), function(expl) {
   
@@ -202,8 +587,7 @@ covar_crude_finnish <- map_dfr(c("baseline_age", "sex", "thawed", "level_urbaniz
   return(meta_results)
   })
 
-
-### adjusted ----
+### adjusted 
 bdd_cases_FMC <- bdd |>                                                         # set the datasets
   filter(als == 1) |>                                                           # case selection
   filter(study == "FMC")                                                        # cohort selection
@@ -250,7 +634,8 @@ rm(bdd_cases_FMC, bdd_cases_FMCF, formula)
 covar_finnish <- bind_rows(covar_crude_finnish, covar_adjusted_finnish)
 rm(covar_crude_finnish, covar_adjusted_finnish)
 
-## Base model sd ----
+## Cox model (sd) ----
+### Base ----
 model1_cox_sd_finnish <- map_dfr(POPs_group_sd, function(expl) {
   
   bdd_cases_FMC <- bdd |>                                                       # set the datasets
@@ -299,58 +684,7 @@ model1_cox_sd_finnish <- map_dfr(POPs_group_sd, function(expl) {
   )
 })
 
-## Base model quart ----
-model1_cox_quart_finnish <- map_dfr(POPs_group_quart, function(expl) {
-  
-  bdd_cases_FMC <- bdd |>                                                       # set the datasets
-    filter(als == 1) |>                                                         # case selection
-    filter(study == "FMC") |>                                                   # cohort selection
-    mutate(across(all_of(POPs_group), ~ factor(ntile(.x, 4),                    # creation of POPs quartiles (cohort specific)                        
-                                               labels = c("Q1", "Q2", "Q3", "Q4")),
-                  .names = "{.col}_quart")) 
-  
-  bdd_cases_FMCF <- bdd |>                                                      # set the datasets
-    filter(als == 1) |>                                                         # case selection
-    filter(study == "FMCF") |>                                                  # cohort selection
-    mutate(across(all_of(POPs_group), ~ factor(ntile(.x, 4),                    # creation of POPs quartiles (cohort specific)                        
-                                               labels = c("Q1", "Q2", "Q3", "Q4")),
-                  .names = "{.col}_quart")) 
-  
-  surv_obj_FMC <- Surv(time = bdd_cases_FMC$follow_up_death,                    # set the outcomes
-                       event = bdd_cases_FMC$status_death)
-  surv_obj_FMCF <- Surv(time = bdd_cases_FMCF$follow_up_death, 
-                        event = bdd_cases_FMCF$status_death)
-  
-  formula_FMC <-                                                                # creation of the formulas
-    as.formula(paste("surv_obj_FMC ~", expl, "+ baseline_age + sex + thawed + level_urbanization"))  
-  formula_FMCF <- 
-    as.formula(paste("surv_obj_FMCF ~", expl, "+ baseline_age + sex + thawed + level_urbanization"))
-  
-  results <- list(                                                              # run of the simple cox model
-    finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
-    finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
-    bind_rows(.id = "dataset") %>%
-    mutate(var = se^2, 
-           explanatory = expl) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-  
-  meta_results <- results |>                                                    # run metanalyse (one per quartile per explanatory variable)
-    group_by(explanatory, term) |> 
-    group_modify(~ {
-      rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
-      tibble(                                                                   # results table creation 
-        HR = exp(as.numeric(rma_fit$beta)),
-        lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
-        upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-        `p-value` = as.numeric(rma_fit$pval))
-    }) |> 
-    ungroup() |> 
-    mutate(study = "Finnish", model = "base") |> 
-    relocate(model, explanatory, term)
-  return(meta_results)
-})
-
-## Adjusted model sd ----
+### Adjusted ----
 model2_cox_sd_finnish <- map_dfr(POPs_group_sd, function(expl) {
   
   bdd_cases_FMC <- bdd |>                                                       # set the datasets
@@ -401,7 +735,112 @@ model2_cox_sd_finnish <- map_dfr(POPs_group_sd, function(expl) {
   )
 })
 
-## Adjusted model quart ----
+### Copollutant ----
+POPs_group_sd_bis <- setdiff(POPs_group_sd, "PCB_4_sd")
+
+bdd_cases_FMC <- bdd |>                                                       # set the datasets
+  filter(als == 1) |>                                                         # filter to get only the cases
+  filter(study == "FMC") |>                                                   # filter to get only one cohort  
+  mutate(across(all_of(POPs_group),                                           # create cohort specific scaled POPs variables 
+                scale,
+                .names = "{.col}_sd"))  
+
+bdd_cases_FMCF <- bdd |>                                                      # set the datasets
+  filter(als == 1) |>                                                         # filter to get only the cases
+  filter(study == "FMCF") |>                                                  # filter to get only one cohort 
+  mutate(across(all_of(POPs_group),                                           # create cohort specific scaled POPs variables 
+                scale,
+                .names = "{.col}_sd"))  
+
+surv_obj_FMC <- Surv(time = bdd_cases_FMC$follow_up_death,                      # set the outcomes
+                     event = bdd_cases_FMC$status_death)
+surv_obj_FMCF <- Surv(time = bdd_cases_FMCF$follow_up_death, 
+                      event = bdd_cases_FMCF$status_death)
+
+formula_FMC <-                                                                  # creation of the formulas
+  as.formula(paste("surv_obj_FMC ~", paste(c(POPs_group_sd_bis, covariates_finnish, "baseline_age", "sex", "thawed", "level_urbanization"), collapse = "+")))  
+formula_FMCF <- 
+  as.formula(paste("surv_obj_FMCF ~", paste(c(POPs_group_sd_bis, covariates_finnish, "baseline_age", "sex", "thawed", "level_urbanization"), collapse = "+")))  
+
+results <- list(                                                                # run of the simple cox models 
+  finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
+  finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
+  bind_rows(.id = "dataset") %>%
+  mutate(var = se^2, 
+         explanatory = term) |>
+  filter(str_detect(term, "_sd"))                                               # remove the covariates results
+
+model3_cox_sd_finnish <- results |>
+  group_by(term) |> 
+  group_modify(~ {
+    rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
+    tibble(                                                                     # results table creation 
+      study = "Finnish", 
+      model = "copollutant", 
+      HR = exp(as.numeric(rma_fit$beta)),
+      lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
+      upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
+      `p-value` = as.numeric(rma_fit$pval))
+  }) |> 
+  ungroup() |>
+  mutate(explanatory = term)
+
+rm(POPs_group_sd_bis, bdd_cases_FMC, bdd_cases_FMCF, surv_obj_FMC, surv_obj_FMCF,formula_FMC, formula_FMCF, results)
+
+
+## Cox model (quart) ----
+### Base ----
+model1_cox_quart_finnish <- map_dfr(POPs_group_quart, function(expl) {
+  
+  bdd_cases_FMC <- bdd |>                                                       # set the datasets
+    filter(als == 1) |>                                                         # case selection
+    filter(study == "FMC") |>                                                   # cohort selection
+    mutate(across(all_of(POPs_group), ~ factor(ntile(.x, 4),                    # creation of POPs quartiles (cohort specific)                        
+                                               labels = c("Q1", "Q2", "Q3", "Q4")),
+                  .names = "{.col}_quart")) 
+  
+  bdd_cases_FMCF <- bdd |>                                                      # set the datasets
+    filter(als == 1) |>                                                         # case selection
+    filter(study == "FMCF") |>                                                  # cohort selection
+    mutate(across(all_of(POPs_group), ~ factor(ntile(.x, 4),                    # creation of POPs quartiles (cohort specific)                        
+                                               labels = c("Q1", "Q2", "Q3", "Q4")),
+                  .names = "{.col}_quart")) 
+  
+  surv_obj_FMC <- Surv(time = bdd_cases_FMC$follow_up_death,                    # set the outcomes
+                       event = bdd_cases_FMC$status_death)
+  surv_obj_FMCF <- Surv(time = bdd_cases_FMCF$follow_up_death, 
+                        event = bdd_cases_FMCF$status_death)
+  
+  formula_FMC <-                                                                # creation of the formulas
+    as.formula(paste("surv_obj_FMC ~", expl, "+ baseline_age + sex + thawed + level_urbanization"))  
+  formula_FMCF <- 
+    as.formula(paste("surv_obj_FMCF ~", expl, "+ baseline_age + sex + thawed + level_urbanization"))
+  
+  results <- list(                                                              # run of the simple cox model
+    finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
+    finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
+    bind_rows(.id = "dataset") %>%
+    mutate(var = se^2, 
+           explanatory = expl) |>
+    filter(str_starts(term, explanatory))                                       # remove the covariates results
+  
+  meta_results <- results |>                                                    # run metanalyse (one per quartile per explanatory variable)
+    group_by(explanatory, term) |> 
+    group_modify(~ {
+      rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
+      tibble(                                                                   # results table creation 
+        HR = exp(as.numeric(rma_fit$beta)),
+        lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
+        upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
+        `p-value` = as.numeric(rma_fit$pval))
+    }) |> 
+    ungroup() |> 
+    mutate(study = "Finnish", model = "base") |> 
+    relocate(model, explanatory, term)
+  return(meta_results)
+})
+
+### Adjusted ----
 model2_cox_quart_finnish <- map_dfr(POPs_group_quart, function(expl) {
   
   bdd_cases_FMC <- bdd |>                                                       # set the datasets
@@ -454,6 +893,56 @@ model2_cox_quart_finnish <- map_dfr(POPs_group_quart, function(expl) {
     relocate(model, explanatory, term)
   return(meta_results)
 })
+
+### Copollutant ---- 
+POPs_group_quart_bis <- setdiff(POPs_group_quart, "PCB_4_quart")
+
+bdd_cases_FMC <- bdd |>                                                         # set the datasets
+  filter(als == 1) |>                                                           # case selection
+  filter(study == "FMC") |>                                                     # cohort selection
+  mutate(across(all_of(POPs_group), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort specific)                        
+                                             labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) 
+
+bdd_cases_FMCF <- bdd |>                                                        # set the datasets
+  filter(als == 1) |>                                                           # case selection
+  filter(study == "FMCF") |>                                                    # cohort selection
+  mutate(across(all_of(POPs_group), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort specific)                        
+                                             labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) 
+
+surv_obj_FMC <- Surv(time = bdd_cases_FMC$follow_up_death,                      # set the outcomes
+                     event = bdd_cases_FMC$status_death)
+surv_obj_FMCF <- Surv(time = bdd_cases_FMCF$follow_up_death, 
+                      event = bdd_cases_FMCF$status_death)
+
+formula_FMC <-                                                                  # creation of the formulas
+  as.formula(paste("surv_obj_FMC ~", paste(c(POPs_group_quart_bis, covariates_finnish, "baseline_age", "sex", "thawed", "level_urbanization"), collapse = "+")))  
+formula_FMCF <- 
+  as.formula(paste("surv_obj_FMCF ~", paste(c(POPs_group_quart_bis, covariates_finnish, "baseline_age", "sex", "thawed", "level_urbanization"), collapse = "+")))  
+
+results <- list(                                                                # run of the simple cox models 
+  finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
+  finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
+  bind_rows(.id = "dataset") %>%
+  mutate(var = se^2) |>
+  filter(str_detect(term, "_quart"))                                            # remove the covariates results
+
+model3_cox_quart_finnish <- results |>
+  group_by(term) |> 
+  group_modify(~ {
+    rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
+    tibble(                                                                     # results table creation 
+      study = "Finnish", 
+      model = "copollutant", 
+      HR = exp(as.numeric(rma_fit$beta)),
+      lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
+      upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
+      `p-value` = as.numeric(rma_fit$pval))
+  }) |> 
+  ungroup() 
+
+rm(POPs_group_quart_bis, bdd_cases_FMC, bdd_cases_FMCF, surv_obj_FMC, surv_obj_FMCF,formula_FMC, formula_FMCF, results)
 
 
 # Metaanalysis ----
@@ -736,16 +1225,16 @@ model2_cox_quart_metanalysis <- map_dfr(POPs_group_quart, function(expl) {
 # Assemblage ----
 main_results_POPs_ALS_survival <-       
   bind_rows(
-    model1_cox_sd_danish, model2_cox_sd_danish,
-    model1_cox_quart_danish, model2_cox_quart_danish) |>
+    model1_cox_sd_danish, model2_cox_sd_danish, model3_cox_sd_danish,
+    model1_cox_quart_danish, model2_cox_quart_danish, model3_cox_quart_danish) |>
   mutate(
     HR = exp(coef),
     lower_CI = exp(coef - 1.96 * se),
     upper_CI = exp(coef + 1.96 * se)) |>
   select(study, model, explanatory, term, HR, lower_CI, upper_CI, "p-value") |>
   
-  bind_rows(model1_cox_sd_finnish, model2_cox_sd_finnish,
-            model1_cox_quart_finnish, model2_cox_quart_finnish, 
+  bind_rows(model1_cox_sd_finnish, model2_cox_sd_finnish, model3_cox_sd_finnish,
+            model1_cox_quart_finnish, model2_cox_quart_finnish, model3_cox_quart_finnish,
             model1_cox_sd_metanalysis, model2_cox_sd_metanalysis,
             model1_cox_quart_metanalysis, model2_cox_quart_metanalysis) |>
   mutate(
@@ -766,10 +1255,10 @@ main_results_POPs_ALS_survival <-
     `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
   select(study, model, explanatory, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI)
 
-rm(model1_cox_sd_finnish, model2_cox_sd_finnish,
-   model1_cox_quart_finnish, model2_cox_quart_finnish, 
-   model1_cox_sd_danish, model2_cox_sd_danish,
-   model1_cox_quart_danish, model2_cox_quart_danish, 
+rm(model1_cox_sd_danish, model2_cox_sd_danish, model3_cox_sd_danish, 
+   model1_cox_quart_danish, model2_cox_quart_danish, model3_cox_quart_danish,
+   model1_cox_sd_finnish, model2_cox_sd_finnish, model3_cox_sd_finnish, 
+   model1_cox_quart_finnish, model2_cox_quart_finnish, model3_cox_quart_finnish,  
    model1_cox_sd_metanalysis, model2_cox_sd_metanalysis,
    model1_cox_quart_metanalysis, model2_cox_quart_metanalysis)
 
@@ -784,9 +1273,10 @@ POPs_sd_ALS_table_danish <- main_results_POPs_ALS_survival |>
   select(model, explanatory, term, HR, "95% CI", "p-value") |>
   filter(term == "Continuous") |>
   pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
-  select(explanatory, contains("base"), contains("adjusted")) |>
+  select(explanatory, contains("base"), contains("adjusted"), contains("copollutant")) |>
   rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |>
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted",
+         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant") |>
   mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |> 
   flextable() |>
   add_footer_lines(
@@ -796,7 +1286,8 @@ POPs_sd_ALS_table_danish <- main_results_POPs_ALS_survival |>
   add_header(
     "explanatory" = "Exposures", 
     "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model") |>
+    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", 
+    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   theme_vanilla() |>
@@ -829,9 +1320,10 @@ POPs_quart_ALS_table_danish <-
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
   pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
-  select(explanatory, term, contains("base"), contains("adjusted")) |>
+  select(explanatory, term, contains("base"), contains("adjusted"), contains("copollutant")) |>
   rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |>
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", 
+         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant") |>
   mutate(explanatory = factor(explanatory, levels = POPs_group_labels), 
          explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
   arrange(explanatory) |>
@@ -844,7 +1336,8 @@ POPs_quart_ALS_table_danish <-
     "explanatory" = "POPs", 
     term = "Quartiles",
     "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model") |>
+    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", 
+    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   merge_v(j = "term") |>
@@ -908,6 +1401,11 @@ POPs_quart_ALS_figure_danish <- main_results_POPs_ALS_survival |>
         legend.position = "bottom", 
         strip.text.y.left = element_text(angle = 0, hjust = 0.5, vjust = 0.5)) +
   coord_flip()
+
+### figure POPs gam (sd) - als survival ----
+wrap_plots(plot_base_cox_gam_danish)
+wrap_plots(plot_adjusted_cox_gam_danish)
+wrap_plots(plot_copollutant_cox_gam_danish)
 
 ### figure cumulative incidence POPs (quart) - als survival ----
 # bdd_cases_danish <- bdd_danish |>                                               # set the datasets

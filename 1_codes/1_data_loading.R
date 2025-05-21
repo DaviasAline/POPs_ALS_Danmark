@@ -465,7 +465,7 @@ bdd_danish <- bdd_danish |>
     fatty_acids = acids_sat + pufas, 
     ratio_ω6_ω3 = pufas_ω6/pufas_ω3) |>
   mutate(across(all_of(fattyacids),
-                scale,
+                ~as.numeric(scale(.x)),
                 .names = "{.col}_sd")) |>
   mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                           
                                              labels = c("Q1", "Q2", "Q3", "Q4")),
@@ -542,7 +542,7 @@ bdd_finnish <- bdd_finnish |>
     ratio_ω6_ω3 = pufas_ω6/pufas_ω3) |>
   mutate(across(
     all_of(fattyacids),
-    scale,
+    ~as.numeric(scale(.x)),
     .names = "{.col}_sd"))|>
   mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                           
                                              labels = c("Q1", "Q2", "Q3", "Q4")),
