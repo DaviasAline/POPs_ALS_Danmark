@@ -47,58 +47,35 @@ table_2 <- results_POPs_ALS_occurrence$main$covar |>
 
 
 # Figure 1 - boxplot expo ----
-# Distribution of pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498).
+# Distribution of pre-disease POP plasma concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498).
 figure_1 <- results_descriptive$danish$POPs_group_boxplot_danish_by_als
 
 # Figure 2 - forest plot quartiles ----
-# Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (conditional logistic regression models, sample size: 498).
+# Estimated risk of ALS occurrence attributed to pre-disease POP plasma concentrations in the Danish Diet, Cancer and Health study cohort (conditional logistic regression models, sample size: 498).
 figure_2 <- results_POPs_ALS_occurrence$main$plot_quart
 
 # Figure 3 - gam models ----
-# Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (generalized additive mixed models, sample size: 498).
-figure_3_a <- wrap_plots(
-  results_POPs_ALS_occurrence$main$plot_base_gam$PCB_DL,
-  results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_DL,
-  results_POPs_ALS_occurrence$main$plot_copollutant_gam$PCB_DL,
+# Estimated risk of ALS occurrence attributed to pre-disease POP plasma concentrations in the Danish Diet, Cancer and Health study cohort (generalized additive mixed models, sample size: 498).
+figure_3 <- wrap_plots(
   
-  results_POPs_ALS_occurrence$main$plot_base_gam$PCB_NDL, 
   results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_NDL,
   results_POPs_ALS_occurrence$main$plot_copollutant_gam$PCB_NDL, 
   
-  results_POPs_ALS_occurrence$main$plot_base_gam$PCB_4, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_4, 
-  wrap_elements(grid::nullGrob()),
-  
-  results_POPs_ALS_occurrence$main$plot_base_gam$OCP_HCB,
   results_POPs_ALS_occurrence$main$plot_adjusted_gam$OCP_HCB,
   results_POPs_ALS_occurrence$main$plot_copollutant_gam$OCP_HCB, 
-  ncol = 3)
-
-figure_3_b <- wrap_plots(
-  results_POPs_ALS_occurrence$main$plot_base_gam$ΣDDT,
-  results_POPs_ALS_occurrence$main$plot_adjusted_gam$ΣDDT,
-  results_POPs_ALS_occurrence$main$plot_copollutant_gam$ΣDDT, 
   
-  results_POPs_ALS_occurrence$main$plot_base_gam$OCP_β_HCH, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_gam$OCP_β_HCH,
-  results_POPs_ALS_occurrence$main$plot_copollutant_gam$OCP_β_HCH,
-  
-  results_POPs_ALS_occurrence$main$plot_base_gam$Σchlordane,
   results_POPs_ALS_occurrence$main$plot_adjusted_gam$Σchlordane,
   results_POPs_ALS_occurrence$main$plot_copollutant_gam$Σchlordane,
   
-  results_POPs_ALS_occurrence$main$plot_base_gam$ΣPBDE,
-  results_POPs_ALS_occurrence$main$plot_adjusted_gam$ΣPBDE,
-  results_POPs_ALS_occurrence$main$plot_copollutant_gam$ΣPBDE,
-  ncol = 3, nrow = 4)
+  ncol = 2)
 
 # Figure 4 - metanalysis ----
-# Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort, the Finnish Mobile Clinic Health Examination Survey (FMC), its Follow-up Stage (FMCF), and the Mini-Finland Health Survey (MFH) (metanalysis, sample size: 788).
+# Estimated risk of ALS occurrence attributed to pre-disease POP plasma concentrations in the Danish Diet, Cancer and Health study cohort, the Finnish Mobile Clinic Health Examination Survey (FMC), its Follow-up Stage (FMCF), and the Mini-Finland Health Survey (MFH) (metanalysis, sample size: 788).
 figure_4 <- results_POPs_ALS_occurrence$metanalysis$plot_metanalysis_quart
 
 
 # Table S1 - exposure distribution ----
-# Distribution of pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498).
+# Distribution of pre-disease POP plasma concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498).
 table_S1 <- 
   results_descriptive$danish$POPs_table_danish |>
   select(-Zero.count, -"% > LOQ", -"LOQ") |>
@@ -119,7 +96,7 @@ table_S1 <-
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 # Table S2 - quartiles results ----
-# Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (conditional logistic regressions, sample size: 498).
+# Estimated risk of ALS occurrence attributed to pre-disease POP plasma concentrations in the Danish Diet, Cancer and Health study cohort (conditional logistic regressions, sample size: 498).
 extra_rows <- results_POPs_ALS_occurrence$main$results_quart |>
   distinct(variable) |> 
   mutate(
@@ -147,7 +124,7 @@ table_S2 <- table_S2 |>
   bind_rows(extra_rows) |>
   mutate(
     variable = gsub("OCP_", "", variable), 
-    variable = fct_relevel(variable, "PCB_DL", "PCB_NDL", "PCB_4", "HCB", "ΣDDT", "β_HCH", "Σchlordane", "ΣPBDE" ),
+    variable = fct_relevel(variable, "PCB_4", "PCB_DL", "PCB_NDL",  "HCB", "ΣDDT", "β_HCH", "Σchlordane", "ΣPBDE" ),
     variable = fct_recode(variable, 
                           "Most prevalent PCBs" = "PCB_4",
                           "Dioxin-like PCBs" = "PCB_DL",
@@ -258,7 +235,7 @@ table_S3 <- table_S3 |>
 rm(extra_rows)
 
 # Table S4 - metanalysis ----
-# Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort, the Finnish Mobile Clinic Health Examination Survey (FMC), its Follow-up Stage (FMCF), and the Mini-Finland Health Survey (MFH) (metanalysis, sample size: 788).
+# Estimated risk of ALS occurrence attributed to pre-disease POP concentrations in the Danish Diet, Cancer and Health study cohort, the Finnish Mobile Clinic Health Examination Survey (FMC), its Follow-up Stage (FMCF), and the Mini-Finland Health Survey (MFH) (metanalysis, sample size: 788).
 extra_rows <- results_POPs_ALS_occurrence$metanalysis$metanalysis_quart |>
   distinct(explanatory) |> 
   mutate(
@@ -316,13 +293,11 @@ table_S4 <- table_S4 |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 rm(extra_rows)
 
-# Figure S1 - DAG ----
-# Directed acyclic graph of the relationship between pre-disease POP serum concentrations and ALS occurrence.
 
-# Figure S2 - heatmap of correlation between POP exposures ---- 
-# Pearson correlations between pre-disease POP serum concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498). 
+# Figure S1 - heatmap of correlation between POP exposures ---- 
+# Pearson correlations between pre-disease POP plasma concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498). 
 plot.new()
-tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S2.tiff", units = "mm", width = 250, height = 250, res = 300)
+tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S1.tiff", units = "mm", width = 300, height = 270, res = 300)
 corrplot(results_descriptive$danish$POPs_heatmap_danish, 
          method = 'color', 
          type = "lower", 
@@ -335,50 +310,52 @@ corrplot(results_descriptive$danish$POPs_heatmap_danish,
          col = rev(COL2(diverging = "RdYlBu")))
 dev.off()
 
-
-# Figure S3 - outliers sensitivity analysis ---- 
-# Sensitivity analyses - Estimated risk of ALS occurrence attributed to pre-disease POP serum concentrations after removing extreme values in the Danish Diet, Cancer and Health study cohort (generalized additive mixed models, sample size: 498).
-figure_S3_a <- wrap_plots(
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$PCB_DL,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$PCB_DL,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$PCB_DL,
-  
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$PCB_NDL,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$PCB_NDL,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$PCB_NDL,
-  
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$PCB_4,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$PCB_4,
+# Figure S2 - gam models ----
+# Estimated risk of ALS occurrence attributed to pre-disease POP plasma concentrations in the Danish Diet, Cancer and Health study cohort (generalized additive mixed models, sample size: 498).
+figure_S2 <- wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_4, 
   wrap_elements(grid::nullGrob()),
   
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$OCP_HCB,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$OCP_HCB,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$OCP_HCB,
-  ncol = 3)
-
-figure_S3_b <- wrap_plots(
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$ΣDDT,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$ΣDDT,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$ΣDDT,
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_DL,
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$PCB_DL,
   
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$OCP_β_HCH,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$OCP_β_HCH,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$OCP_β_HCH,
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$ΣDDT,
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$ΣDDT, 
   
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$Σchlordane,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$Σchlordane,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$Σchlordane,
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$OCP_β_HCH,
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$OCP_β_HCH,
   
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$ΣPBDE,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$ΣPBDE,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$ΣPBDE,
-  ncol = 3)
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$ΣPBDE,
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$ΣPBDE,
+  ncol = 2)
 
-# Figure S4 - not summed sensitivity analysis quartiles ----
-figure_S4 <- results_POPs_ALS_occurrence$sensitivity_not_summed$plot_quart_sensi_not_summed 
-
-# Figure S5 - not summed sensitivity analysis gam ----
-figure_S5 <- wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_not_summed)
+# Figure S3 - not summed sensitivity analysis quartiles ----
+figure_S3 <- results_POPs_ALS_occurrence$sensitivity_not_summed$sensitivity_results_not_summed_quart |> 
+  filter(variable %in% c("PCB-153", "oxychlordane", "transnonachlor", "p,p'-DDE", "p,p'-DDT")) |>
+  mutate(df = fct_recode(df, "Quartile 2" = "2", "Quartile 3" = "3", "Quartile 4" = "4"), 
+         df = fct_relevel(df, "Quartile 4", "Quartile 3", "Quartile 2" ), 
+         p.value_shape = ifelse(p.value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
+         model = fct_recode(model, 
+                            "Adjusted model" = "adjusted_quart_not_summed",
+                            "Base model" = "base_quart_not_summed"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
+         variable = fct_relevel(variable, 
+                                "PCB-153", "p,p'-DDE", "p,p'-DDT", "transnonachlor", "oxychlordane"), 
+         variable = fct_recode(variable, "Oxychlordane" = "oxychlordane", "Transnonachlor" = "transnonachlor"), 
+         OR = as.numeric(as.character(OR)), 
+         lower_CI = as.numeric(as.character(lower_CI)), 
+         upper_CI = as.numeric(as.character(upper_CI))) |>
+  ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(rows = dplyr::vars(variable), cols = dplyr::vars(model), switch = "y") +  
+  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  labs(x = "POPs", y = "Odds Ratio (OR)", color = "p-value") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip()
 
 # Export ----
 table_1 <- read_docx() |> body_add_flextable(table_1) 
@@ -410,17 +387,10 @@ ggsave(
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_3_a.tiff",
-  figure_3_a,
-  height = 12,
-  width = 9,
-  units = "in")
-
-ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_3_b.tiff",
-  figure_3_b,
-  height = 12,
-  width = 9,
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_3.tiff",
+  figure_3,
+  height = 8,
+  width = 7,
   units = "in")
 
 ggsave(
@@ -431,30 +401,17 @@ ggsave(
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S3_a.tiff",
-  figure_S3_a,
-  height = 12,
-  width = 9,
-  units = "in")
-
-ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S3_b.tiff",
-  figure_S3_b,
-  height = 12,
-  width = 9,
-  units = "in")
-
-ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S4.tiff",
-  figure_S4,
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S2.tiff",
+  figure_S2,
   height = 15,
-  width = 9,
+  width = 8,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S5.tiff",
-  figure_S5,
-  height = 15,
-  width = 9,
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S3.tiff",
+  figure_S3,
+  height = 7,
+  width = 6,
   units = "in")
+
 

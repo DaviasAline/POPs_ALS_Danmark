@@ -2098,7 +2098,7 @@ rm(model1_spline_outliers,
    model2_quadratic_outliers,
    model2_cubic_outliers)
 
-## sensitivity analyses pollutants not summed ----
+# sensitivity analyses pollutants not summed ----
 ### quartiles ----
 model1_quart_not_summed <- data.frame(variable = character(),
                                       df = integer(),
@@ -2174,7 +2174,8 @@ sensitivity_results_not_summed_quart <-
   bind_rows(model1_quart_not_summed, model2_quart_not_summed) |>
   mutate(variable = gsub("_quart", "", variable), 
          variable = gsub('_', '-', variable),
-         variable = fct_recode(variable, "p,p'-DDE" = 'OCP-pp-DDE',  "p,p'-DDT" ="OCP-pp-DDT"),
+         variable = gsub('OCP-', '', variable),
+         variable = fct_recode(variable, "p,p'-DDE" = 'pp-DDE',  "p,p'-DDT" ="pp-DDT"),
          OR = format(OR, nsmall = 1, digits = 1),
          lower_CI = format(lower_CI, nsmall = 1, digits = 1),
          upper_CI =  format(upper_CI, nsmall = 1, digits = 1),
@@ -2220,8 +2221,7 @@ rm(var, formula, model, model_summary)
 ## quartiles ----
 plot_quart <- main_results |> 
   filter(model %in% c('base_quart', 'adjusted_quart', 'copollutant_quart')) |>
-  mutate(df = fct_recode(df, "Quartile 2" = "2", "Quartile 3" = "3", "Quartile 4" = "4"), 
-         p.value_shape = ifelse(p.value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
+  mutate(p.value_shape = ifelse(p.value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
          model = fct_recode(model, 
                             "Adjusted model" = "adjusted_quart",
                             "Base model" = "base_quart",
@@ -2235,7 +2235,7 @@ plot_quart <- main_results |>
                                "β-HCH" = "OCP_β_HCH", 
                                "HCB" = "OCP_HCB"), 
         variable = fct_relevel(variable, 
-                               "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "Most\nprevalent\nPCBs", "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) |>
+                               "Most\nprevalent\nPCBs", "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) |>
   ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
@@ -2531,7 +2531,7 @@ rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
 
 ### gam ----
 pollutant_labels <- set_names(
-  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group)
 
 plot_base_gam <- map(POPs_group, function(var) {
@@ -2593,7 +2593,7 @@ rm(pollutant_labels)
 
 ### gam outliers ----
 pollutant_labels <- set_names(
-  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group_outlier)
 
 plot_base_gam_outlier <- map(POPs_group_outlier, function(var) {
@@ -3013,7 +3013,7 @@ rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
 
 ### gam ----
 pollutant_labels <- set_names(
-  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group)
 
 plot_adjusted_gam <- map(POPs_group, function(var) {
@@ -3075,7 +3075,7 @@ rm(pollutant_labels)
 
 ### gam outliers ----
 pollutant_labels <- set_names(
-  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  c("Most prevalent PCBs","Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group_outlier)
 
 plot_adjusted_gam_outlier <- map(POPs_group_outlier, function(var) {
@@ -3355,7 +3355,10 @@ plot_metanalysis_quart <- metanalysis_quart |>
                                   "β-HCH" = "OCP_β_HCH", 
                                   "HCB" = "OCP_HCB"), 
          explanatory = fct_relevel(explanatory, 
-                                   "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "Most\nprevalent\nPCBs", "HCB", "ΣDDT", "β-HCH", "Σchlordane")) |>
+                                   "Most\nprevalent\nPCBs", "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "HCB", "ΣDDT", "β-HCH", "Σchlordane"), 
+         OR = as.numeric(OR), 
+         lower_CI = as.numeric(lower_CI), 
+         upper_CI = as.numeric(upper_CI)) |>
   ggplot(aes(x = term, y = OR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  

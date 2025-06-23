@@ -25,10 +25,28 @@ bdd_danish_fattyacids <-
   rename(code = CODE) |>
   mutate(code = as.character(code))
 
+bdd_danish_proteomic <- read_excel("/Volumes/shared/EOME/Weisskopf/POPs-ALS/Data/Danish EPIC data/Weisskopf_NEX_IR_MET_NPX.xlsx") |>
+  mutate(UniProt = as.factor(UniProt),                                          # what is index variable ? 90 different values 
+         Assay = as.factor(Assay), 
+         Panel = as.factor(Panel), 
+         Panel_Version = as.factor(Panel_Version), 
+         PlateID = as.factor(PlateID), 
+         QC_Warning = as.factor(QC_Warning), 
+         Normalization = as.factor(Normalization), 
+         "Olink NPX Signature Version" = as.factor("Olink NPX Signature Version"))
+
+bdd_danish_proteomic_wide <- bdd_danish_proteomic %>%
+  select(SampleID, Assay, NPX) %>%  # Keep only necessary columns
+  pivot_wider(
+    names_from = Assay,
+    values_from = NPX) |>
+  rename(code = SampleID)
+
 bdd_danish <- left_join(bdd_danish, bdd_danish_POPs, by = "code")               # merging all the different datasets for the danish data
 bdd_danish <- left_join(bdd_danish, bdd_danish_fattyacids, by = "code")
 bdd_danish <- left_join(bdd_danish, bdd_danish_lipids, by = "Barcode")
-rm(bdd_danish_POPs, bdd_danish_lipids, bdd_danish_fattyacids)
+bdd_danish <- left_join(bdd_danish, bdd_danish_proteomic_wide, by = "code")
+rm(bdd_danish_POPs, bdd_danish_lipids, bdd_danish_fattyacids, bdd_danish_proteomic_wide)
 
 # bdd_danish |> filter(saet == 72) |> View()                           
 bdd_danish <- bdd_danish %>% filter(!code %in% c("208", "209", "210"))        # we decided to remove match 72 because the controls doesn't match in term of sex and age with the case
@@ -350,12 +368,17 @@ POPs_tot <- c("PCB_4",
               "OCP_PeCB",   
               "ΣPBDE", "PBDE_47", "PBDE_99", "PBDE_153")
 
-POPs_group <- c("PCB_DL", "PCB_NDL", "PCB_4", "OCP_HCB", "ΣDDT", "OCP_β_HCH", "Σchlordane", "ΣPBDE")
+POPs_group <- c("PCB_4", "PCB_DL", "PCB_NDL", "OCP_HCB", "ΣDDT", "OCP_β_HCH", "Σchlordane", "ΣPBDE")
 POPs_group_quart <- paste0(POPs_group, "_quart")
 POPs_group_outlier <- paste0(POPs_group, "_outlier")
 POPs_group_sd <- paste0(POPs_group, "_sd")
-
 POPs_group_quart_med <- paste0(POPs_group, "_quart_med")
+
+POPs_group_finnish <- c("PCB_4", "PCB_DL", "PCB_NDL", "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", "OCP_γ_HCH", "Σchlordane", "OCP_PeCB")
+POPs_group_quart_finnish<- paste0(POPs_group_finnish, "_quart")
+POPs_group_outlier_finnish <- paste0(POPs_group_finnish, "_outlier")
+POPs_group_sd_finnish <- paste0(POPs_group_finnish, "_sd")
+POPs_group_quart_med_finnish <- paste0(POPs_group_finnish, "_quart_med")
 
 POPs_included <- bdd_danish |> select(all_of(POPs)) |> select(-OCP_PeCB, - OCP_α_HCH, -OCP_γ_HCH) |> colnames()
 POPs_included_quart <- paste0(POPs_included, "_quart")
@@ -380,6 +403,7 @@ covariates_finnish <- c("marital_status_2cat", 'smoking_2cat', 'bmi', 'cholester
 
 POPs_finnish <- ifelse(POPs %in% c("PCB_28", "PCB_52", "OCP_PeCB", "OCP_α_HCH", "OCP_γ_HCH", 
                            "OCP_oxychlordane", "PBDE_47", "PBDE_99", "PBDE_153"), paste0(POPs, "_raw"), POPs)
+proteomic <- unique(bdd_danish_proteomic$Assay) |> as.character()
 
 # variable creation ----
 ## danish data ----
@@ -397,6 +421,10 @@ bdd_danish <- bdd_danish |>
                              "<7 years of primary school", 
                              "7-10 years of primary school",
                              ">10 years of primary school"),
+    education_merged = fct_recode(education, 
+                                  "Low" = "<7 years of primary school",
+                                  "Medium" = "7-10 years of primary school",
+                                  "High" = ">10 years of primary school"), 
     als_date = as.character(als_date), 
     als_date = case_when(sample == "283" ~ "2006-10-24", 
                          sample == "300" ~ "1999-07-14",
@@ -490,6 +518,10 @@ bdd_finnish <- bdd_finnish |>
     smoking_2cat = fct_recode(smoking,                                          # metadata creation
                               "Ever" = "Current", 
                               "Ever" = "Previous"), 
+    education_merged = fct_recode(education, 
+                                  "Low" = "<7 years",
+                                  "Medium" = "7-12 years",
+                                  "High" = ">12 years"), 
     marital_status_2cat = 
       fct_recode(marital_status, 
                  "Other" = "Widowed",
@@ -635,7 +667,7 @@ rm(pred, method, bdd_danish_i, bdd_danish_ii, covar_a_imputer)
 # merged dataset ----
 bdd_danish_red <- bdd_danish |> 
   select(sample, als, study, match, 
-         all_of(covariates_danish), 
+         all_of(covariates_danish), education_merged, 
          baseline_age, death_age, diagnosis_age,  
          time_baseline_diagnosis, time_baseline_death, time_diagnosis_death,
         follow_up,  follow_up_death, status_death, 
@@ -653,7 +685,7 @@ bdd_danish_red <- bdd_danish |>
 
 bdd_finnish_red <- bdd_finnish |> 
   select(sample, als, study, match, 
-        baseline_age, sex,  smoking, bmi, cholesterol, marital_status, education, alcohol, smoking_2cat, marital_status_2cat, blod_sys, blod_dias, 
+        baseline_age, sex,  smoking, bmi, cholesterol, marital_status, education, education_merged, alcohol, smoking_2cat, marital_status_2cat, blod_sys, blod_dias, 
          baseline_age, death_age, diagnosis_age, S_Ca,  
         follow_up, follow_up_death, status_death, 
         municipality, level_urbanization, thawed, 
@@ -686,6 +718,7 @@ var_label(bdd_danish) <- list(
   alcohol = "Alcohol consumption (g/week)", 
   education = "Education", 
   education_i = "Education", 
+  education_merged = "Education", 
   bmi = "Boby mass index (kg/m²)",
   cholesterol = "Serum cholesterol (mmol/L)",
   cholesterol_i = "Serum cholesterol (mmol/L)",
@@ -694,12 +727,13 @@ var_label(bdd_danish) <- list(
   baseline_age = "Age at baseline (years)",
   diagnosis_age = "Age at ALS diagnosis (years)", 
   death_age = "Age at death (years)",
+  status_death = "Status at the end of follow-up",
   time_baseline_diagnosis = "Duration between baseline and ALS diagnosis (years)", 
   time_baseline_death = "Duration between baseline and death (years)", 
   time_diagnosis_death = "Duration between diagnosis and death (years)",
   follow_up	= "Length of follow-up from baseline to ALS diagnosis (months)", 
   follow_up_death	= "Length of follow-up from ALS diagnosis (months)", 
-  status_death	= "Status at end of follow-up from ALS diagnosis", 
+  status_death = "Status at end of the follow-up",
   OCP_PeCB = "Pentachlorobenzene (PeCB)",            
   OCP_HCB = "HCB",            
   OCP_α_HCH = "α-HCH",
@@ -790,6 +824,7 @@ var_label(bdd_finnish) <- list(
   smoking_2cat = "Smoking status", 
   alcohol = "Alcohol consumption (g/week)", 
   education = "Education", 
+  education_merged = "Education", 
   bmi = "Boby mass index (kg/m²)",
   cholesterol = "Serum cholesterol (mmol/L)",
   baseline_age = "Age at baseline",
@@ -800,7 +835,7 @@ var_label(bdd_finnish) <- list(
   time_diagnosis_death = "Duration between diagnosis and death (years)",
   follow_up	= "Length of follow-up from baseline to ALS diagnosis (months)", 
   follow_up_death	= "Length of follow-up from ALS diagnosis (months)", 
-  status_death	= "Status at end of follow-up from ALS diagnosis", 
+  status_death = "Status at end of the follow-up",
   OCP_PeCB = "Pentachlorobenzene (PeCB)",            
   OCP_HCB = "HCB",            
   OCP_α_HCH = "α-HCH",
@@ -895,6 +930,7 @@ var_label(bdd) <- list(
   smoking_2cat = "Smoking status", 
   alcohol = "Alcohol consumption (g/week)", 
   education = "Education", 
+  education_merged = "Education", 
   bmi = "Boby mass index (kg/m²)",
   cholesterol = "Serum cholesterol (mmol/L)",
   blod_sys = "Systolic blood presure (mmHg)",
@@ -906,7 +942,7 @@ var_label(bdd) <- list(
   time_diagnosis_death = "Duration between diagnosis and death (years)",
   follow_up	= "Length of follow-up from baseline to ALS diagnosis (months)", 
   follow_up_death	= "Length of follow-up from ALS diagnosis (months)", 
-  status_death	= "Status at end of follow-up from ALS diagnosis", 
+  status_death = "Status at end of the follow-up",
   OCP_PeCB = "Pentachlorobenzene (PeCB)",            
   OCP_HCB = "HCB",            
   OCP_α_HCH = "α-HCH",
@@ -1075,6 +1111,7 @@ explanatory_quart_labels <- c(
 )
 
 POPs_labels <- c(
+  "Most prevalent PCBs" = "PCB_4",
   "Dioxin-like PCBs" = "PCB_DL",
   "PCB-118" = "PCB_118",
   "PCB-156" = "PCB_156",
@@ -1090,7 +1127,6 @@ POPs_labels <- c(
   "PCB-180" = "PCB_180",
   "PCB-183" = "PCB_183",
   "PCB-187" = "PCB_187",
-  "Most prevalent PCBs" = "PCB_4",
   "HCB" = "OCP_HCB",
   "ΣDDT" = "ΣDDT",
   "p,p'-DDT" = "OCP_pp_DDT",
@@ -1109,23 +1145,25 @@ POPs_labels <- c(
 
 
 POPs_group_labels <- c(
+  "Most prevalent PCBs" = "PCB_4",
   "Dioxin-like PCBs" = "PCB_DL",
   "Non dioxin-like PCBs" = "PCB_NDL",
-  "Most prevalent PCBs" = "PCB_4",
   "HCB" = "OCP_HCB",
   "ΣDDT" = "ΣDDT",
   "β-HCH" = "OCP_β_HCH",
   "Σchlordane" = "Σchlordane",
   "ΣPBDE" = "ΣPBDE")
 
+POPs_group_sd_labels <- set_names(
+  c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  POPs_group_sd)
+
 POPs_group_quart_labels <- c(
+  "Most prevalent PCBs" = "PCB_4_quart",
   "Dioxin-like PCBs" = "PCB_DL_quart",
   "Non dioxin-like PCBs" = "PCB_NDL_quart",
-  "Most prevalent PCBs" = "PCB_4_quart",
   "HCB" = "OCP_HCB_quart",
   "ΣDDT" = "ΣDDT_quart",
   "β-HCH" = "OCP_β_HCH_quart",
   "Σchlordane" = "Σchlordane_quart",
   "ΣPBDE" = "ΣPBDE_quart")
-
-

@@ -17,9 +17,10 @@ toc-location: left
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2.5_analyses_fattyacids_ALS_survival.R")
 ```
 
-
 # Danish data description
+
 ## ALS survival
+
 ```{r}
 #| echo: false
 #| message: false
@@ -48,7 +49,7 @@ results_descriptive$danish$covar_danish |>
   gt::tab_options(table.font.size = "small")
 ```
 
-## POPs 
+## POPs
 
 ### Distribution tables
 
@@ -59,9 +60,8 @@ results_descriptive$danish$covar_danish |>
 results_descriptive$danish$POPs_table_danish  |> kable("html")
 ```
 
-
-
 ### Comparison of distribution cases/controls
+
 ```{r}
 #| echo: false
 #| message: false
@@ -71,7 +71,8 @@ results_descriptive$danish$POPs_table_danish_by_als |>
   gt::tab_options(table.font.size = "small")
 ```
 
-### Heatmap of correlation 
+### Heatmap of correlation
+
 ```{r fig.height=11, fig.width=11}
 #| echo: false
 #| message: false
@@ -87,7 +88,6 @@ corrplot(results_descriptive$danish$POPs_heatmap_danish,
          tl.cex = 1,
          col = rev(COL2(diverging = "RdYlBu")))
 ```
-
 
 ### Boxplots
 
@@ -106,7 +106,8 @@ results_descriptive$danish$POPs_boxplot_danish_by_als
 results_descriptive$danish$POPs_group_boxplot_danish_by_als
 ```
 
-POPs distribution depending on alive/deceased status at the end of the follow-up (among cases) 
+POPs distribution depending on alive/deceased status at the end of the follow-up (among cases)
+
 ```{r}
 #| echo: false
 #| message: false
@@ -114,8 +115,9 @@ POPs distribution depending on alive/deceased status at the end of the follow-up
 results_descriptive$danish$POPs_group_boxplot_danish_by_death
 ```
 
-### Detailed distribution 
-#### Summed 
+### Detailed distribution
+
+#### Summed
 
 ```{r}
 #| echo: false
@@ -195,8 +197,10 @@ boxplot(data = bdd_danish, vars = PBDEs)
 heatmap_cor(cormat = bdd_danish[PBDEs], decimal = 1)
 ```
 
-## Fatty acids 
-### Distribution tables 
+## Fatty acids
+
+### Distribution tables
+
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
@@ -216,6 +220,7 @@ results_descriptive$danish$fattyacids_table_danish_by_als |>
 ```
 
 ### Heatmap of correlation
+
 ```{r, fig.height=12, fig.width=12}
 #| echo: false
 #| message: false
@@ -233,6 +238,7 @@ corrplot(results_descriptive$danish$fattyacids_heatmap_danish,
 ```
 
 ### Boxplots
+
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
@@ -242,7 +248,9 @@ results_descriptive$danish$fattyacids_boxplot_danish_by_als
 ```
 
 ### Detailed distribution
-#### Density plots 
+
+#### Density plots
+
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
@@ -257,7 +265,9 @@ bdd_danish |>
   theme_minimal() +
   facet_wrap(~fattyacids, scales = "free", ncol = 4)
 ```
-## Heatmap POPs/Fatty acids 
+
+## Heatmap POPs/Fatty acids
+
 ```{r, fig.width=12, fig.height=12}
 #| echo: false
 #| message: false
@@ -266,6 +276,7 @@ results_descriptive$danish$POPs_fattyacids_heatmap_danish
 ```
 
 ## Multiple cholesterol variables
+
 ```{r, fig.height=5}
 #| echo: false
 #| message: false
@@ -275,7 +286,8 @@ descrip_num(data = bdd_danish, vars = c("fS_Kol", "cholesterol")) |> kable("html
 cor.test(bdd_danish$fS_Kol, bdd_danish$cholesterol)
 ```
 
-## Timing between baseline, ALS diagnosis and death 
+## Timing between baseline, ALS diagnosis and death
+
 ```{r}
 #| echo: false
 #| message: false
@@ -295,9 +307,76 @@ descrip_num(data = timing, vars = colnames(timing))  |> kable("html")
 rm(timing)
 ```
 
+## Proteomic
 
-# Finnish data description 
+### Distribution table
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_descriptive$danish$proteomic_table_danish  |> kable("html")
+```
+
+### Comparison of distribution cases/controls
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_descriptive$danish$proteomic_table_danish_by_als |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
+```
+
+### Heatmap of correlation
+
+```{r fig.height=11, fig.width=11}
+#| echo: false
+#| message: false
+#| warning: false
+corrplot(results_descriptive$danish$proteomic_heatmap_danish, 
+         method = 'color', 
+         type = "lower", 
+         tl.col = 'black',
+         order = "hclust",         # regroupement des variables selon niveau de cor
+         tl.srt = 45, 
+         # addCoef.col = "black",
+         # number.cex = 0.8,
+         # number.digits = 1,
+         tl.cex = 0.4,             # taille police des variables
+         col = rev(COL2(diverging = "RdYlBu")))
+```
+
+### Boxplots
+
+```{r, fig.width=10, fig.height=30}
+#| echo: false
+#| message: false
+#| warning: false
+results_descriptive$danish$proteomic_boxplot_danish
+```
+
+```{r, fig.width=10, fig.height=30}
+#| echo: false
+#| message: false
+#| warning: false
+results_descriptive$danish$proteomic_boxplot_danish_by_als
+```
+
+POPs distribution depending on alive/deceased status at the end of the follow-up (among cases)
+
+```{r, fig.width=10, fig.height=30}
+#| echo: false
+#| message: false
+#| warning: false
+results_descriptive$danish$proteomic_boxplot_danish_by_death
+```
+
+# Finnish data description
+
 ## ALS survival
+
 ```{r}
 #| echo: false
 #| message: false
@@ -313,7 +392,8 @@ densityplot(data = bdd_finnish, vars = "follow_up_death")
 descrip_num(data = bdd_finnish, vars = "follow_up_death")|> kable("html")
 ```
 
-## Metadata 
+## Metadata
+
 ```{r}
 #| echo: false
 #| message: false
@@ -324,14 +404,15 @@ results_descriptive$finnish$covar_finnish |>
 ```
 
 ## POPs
+
 ### Distribution tables
+
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
 results_descriptive$finnish$POPs_table_finnish |> kable("html")
 ```
-
 
 ### Comparison of distribution cases/controls
 
@@ -344,7 +425,8 @@ results_descriptive$finnish$POPs_table_finnish_by_als |>
   gt::tab_options(table.font.size = "small")
 ```
 
-### Heatmap of correlation 
+### Heatmap of correlation
+
 ```{r fig.height=11, fig.width=11}
 #| echo: false
 #| message: false
@@ -372,7 +454,8 @@ results_descriptive$finnish$POPs_boxplot_finnish_by_als
 ```
 
 ### Detailed distribution
-#### Summed 
+
+#### Summed
 
 ```{r}
 #| echo: false
@@ -452,9 +535,10 @@ boxplot(data = bdd_finnish, vars = PBDEs)
 heatmap_cor(cormat = bdd_finnish[PBDEs], decimal = 1)
 ```
 
-
 ## Fatty acids
-### Distribution tables 
+
+### Distribution tables
+
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
@@ -463,6 +547,7 @@ results_descriptive$finnish$fattyacids_table_finnish |> kable("html")
 ```
 
 ### Comparison of distribution cases/controls
+
 ```{r}
 #| echo: false
 #| message: false
@@ -473,6 +558,7 @@ results_descriptive$finnish$fattyacids_table_finnish_by_als |>
 ```
 
 ### Heatmap of correlation
+
 ```{r, fig.height=12, fig.width=12}
 #| echo: false
 #| message: false
@@ -490,6 +576,7 @@ corrplot(results_descriptive$finnish$fattyacids_heatmap_finnish,
 ```
 
 ### Boxplots
+
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
@@ -498,7 +585,8 @@ corrplot(results_descriptive$finnish$fattyacids_heatmap_finnish,
 results_descriptive$finnish$fattyacids_boxplot_finnish_by_als
 ```
 
-### Detailed distribution 
+### Detailed distribution
+
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
@@ -516,7 +604,8 @@ bdd_finnish |>
   facet_wrap(~fattyacids, scales = "free", ncol = 3L, nrow = 14L)
 ```
 
-## Heatmap POPs/Fatty acids 
+## Heatmap POPs/Fatty acids
+
 ```{r, fig.width=12, fig.height=12}
 #| echo: false
 #| message: false
@@ -525,7 +614,9 @@ results_descriptive$finnish$POPs_fattyacids_heatmap_finnish
 ```
 
 ## Multiple cholesterol variables issue
+
 Why do we have 3 cholesterol variables in the finnish data ?
+
 ```{r}
 #| echo: false
 #| message: false
@@ -550,8 +641,10 @@ corrplot(heatmap_cholesterol,
 
 ```
 
-## Timing between baseline, ALS diagnosis and death 
+## Timing between baseline, ALS diagnosis and death
+
 ### FMC
+
 ```{r}
 #| echo: false
 #| message: false
@@ -574,6 +667,7 @@ rm(timing)
 ```
 
 ### FMCF
+
 ```{r}
 #| echo: false
 #| message: false
@@ -594,6 +688,7 @@ rm(timing)
 ```
 
 ### MFH
+
 ```{r}
 #| echo: false
 #| message: false
@@ -614,34 +709,10 @@ rm(timing)
 ```
 
 # Comparison danish/finnish data
-## ALS survival
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-bdd |> 
-  filter (als == 1) |>
-  select(follow_up_death, status_death, study) |>
-  tbl_summary(by = "study") |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
 
-bdd_cases_danish <- bdd_danish |> filter(als ==1)
-bdd_cases_FMC <- bdd_finnish |> filter(als ==1) |> filter(study == "FMC")
-bdd_cases_FMCF <- bdd_finnish |> filter(als ==1) |> filter(study == "FMCF")
-bdd_cases_MFH <- bdd_finnish |> filter(als ==1) |> filter(study == "MFH")
-list(descrip_num(data  = bdd_cases_danish, vars = "follow_up_death") |> mutate(study = "Danish"), 
-     descrip_num(data  = bdd_cases_FMC, vars = "follow_up_death") |> mutate(study = "FMC"), 
-     descrip_num(data  = bdd_cases_FMCF, vars = "follow_up_death") |> mutate(study = "FMCF"), 
-     descrip_num(data  = bdd_cases_MFH, vars = "follow_up_death") |> mutate(study = "MFH")) |>
-  bind_rows() |>
-  select(study, everything()) |> 
-  kable("html")
-  
-rm(bdd_cases_danish, bdd_cases_FMC, bdd_cases_FMCF, bdd_cases_MFH)
-```
+## On the total population
+### Metadata
 
-## Metadata
 ```{r}
 #| echo: false
 #| message: false
@@ -651,7 +722,8 @@ results_descriptive$comp$covar_comp |>
   gt::tab_options(table.font.size = "small")
 ```
 
-## POPs 
+### POPs
+
 ```{r, fig.width=10, fig.height=10}
 #| echo: false
 #| message: false
@@ -662,7 +734,8 @@ results_descriptive$comp$POPs_table_comp |>
 results_descriptive$comp$POPs_boxplot_comp
 ```
 
-## Fatty acids
+### Fatty acids
+
 ```{r, fig.height=12, fig.width=12}
 #| echo: false
 #| message: false
@@ -673,9 +746,50 @@ results_descriptive$comp$fattyacids_table_comp |>
 results_descriptive$comp$fattyacids_boxplot_comp 
 ```
 
-# POPs and ALS occurence 
-## Danish cohort 
+## Among cases 
+(for ALS survival analyses)
+### Metadata 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_descriptive$comp$covar_comp_cases |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
+```
+
+### POPs 
+```{r}
+results_descriptive$comp$POPs_table_comp_cases |>
+  as_gt() |>
+  gt::tab_options(table.font.size = "small")
+
+results_descriptive$comp$POPs_boxplot_comp_cases
+```
+
+```{r, fig.width=12, fig.height=12}
+#| echo: false
+#| message: false
+#| warning: false
+#| paged-print: false
+corrplot(results_descriptive$comp$POPs_heatmap_cases, 
+         method = 'color', 
+         type = "lower", 
+         tl.col = 'black', 
+         tl.srt = 45, 
+         addCoef.col = "black",
+         number.cex = 0.8,
+         number.digits = 1,
+         tl.cex = 1,
+         col = rev(COL2(diverging = "RdYlBu")))
+```
+
+# POPs and ALS occurence
+
+## Danish cohort
+
 ### Effects of subject characteristics on ALS occurence
+
 ```{r}
 #| echo: false
 #| message: false
@@ -686,8 +800,11 @@ results_descriptive$danish$covar_danish |>
 ```
 
 ### Effects of POPs on ALS occurence
+
 #### Splines, linear quadratic and cubic models
+
 ##### dioxin like PCBs
+
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -704,6 +821,7 @@ grid.arrange(grobs = list(
 ```
 
 ##### non dioxin like PCBs
+
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -720,6 +838,7 @@ grid.arrange(grobs = list(
 ```
 
 ##### 4 most commun PCBs
+
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -736,6 +855,7 @@ grid.arrange(grobs = list(
 ```
 
 ##### HCB
+
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -752,6 +872,7 @@ grid.arrange(grobs = list(
 ```
 
 ##### ΣDDT
+
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -768,6 +889,7 @@ grid.arrange(grobs = list(
 ```
 
 ##### β-HCH
+
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -784,6 +906,7 @@ grid.arrange(grobs = list(
 ```
 
 ##### Σchlordane
+
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -800,6 +923,7 @@ grid.arrange(grobs = list(
 ```
 
 ##### ΣPBDE
+
 ```{r, fig.width=15, fig.height=3}
 #| echo: false
 #| message: false
@@ -816,8 +940,11 @@ grid.arrange(grobs = list(
 ```
 
 #### Quartile models
+
 ##### Main analysis
+
 In the copollutant models, the pollutant of interest is quartile while the others are s() in a GAM model
+
 ```{r fig.height=9, fig.width=9}
 #| echo: false
 #| message: false
@@ -826,6 +953,7 @@ results_POPs_ALS_occurrence$main$plot_quart
 ```
 
 ##### Sensitivity analysis POPs not summed
+
 ```{r,  fig.height=15, fig.width=10}
 #| echo: false
 #| message: false
@@ -833,9 +961,10 @@ results_POPs_ALS_occurrence$main$plot_quart
 results_POPs_ALS_occurrence$sensitivity_not_summed$plot_quart_sensi_not_summed
 ```
 
-
 #### GAM models
+
 ##### Base models
+
 Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive model (gam) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex and age. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a gam that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
 
 ```{r, fig.height=6, fig.width=15}
@@ -852,6 +981,7 @@ wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gam[5:8], n
 ```
 
 ##### Adjusted models
+
 Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive model (gam) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a gam that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
 
 ```{r, fig.height=6, fig.width=15}
@@ -868,6 +998,7 @@ wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gam[5:8], n
 ```
 
 ##### Copollutant model
+
 Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive model (gam) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates and all other co-pollutants are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status, education and for the other co-pollutants. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a gam that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
 
 ```{r, fig.height=6, fig.width=15}
@@ -884,6 +1015,7 @@ wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_copollutant_gam[5:7]
 ```
 
 ##### Sensitivity analysis POPs not summed
+
 ```{r, fig.height=6, fig.width=15}
 #| column: screen-inset-right
 #| echo: false
@@ -894,8 +1026,10 @@ wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_
 wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_not_summed[17:22], ncol = 4)
 ```
 
-##### Comparison of the GAM models 
+##### Comparison of the GAM models
+
 ###### dioxin like PCBs
+
 ```{r, fig.height=7, fig.width=9}
 #| echo: false
 #| message: false
@@ -911,6 +1045,7 @@ wrap_plots(
 ```
 
 ###### non dioxin like PCBs
+
 ```{r, fig.height=7, fig.width=9}
 #| echo: false
 #| message: false
@@ -926,6 +1061,7 @@ wrap_plots(
 ```
 
 ###### 4 most commun PCBs
+
 ```{r, fig.height=7, fig.width=9}
 #| echo: false
 #| message: false
@@ -939,6 +1075,7 @@ wrap_plots(
 ```
 
 ###### HCB
+
 ```{r, fig.height=7, fig.width=9}
 #| echo: false
 #| message: false
@@ -954,6 +1091,7 @@ wrap_plots(
 ```
 
 ###### ΣDDT
+
 ```{r, fig.height=7, fig.width=9}
 #| echo: false
 #| message: false
@@ -969,6 +1107,7 @@ wrap_plots(
 ```
 
 ###### β-HCH
+
 ```{r, fig.height=7, fig.width=9}
 #| echo: false
 #| message: false
@@ -984,6 +1123,7 @@ wrap_plots(
 ```
 
 ###### Σchlordane
+
 ```{r, fig.height=7, fig.width=9}
 #| echo: false
 #| message: false
@@ -999,6 +1139,7 @@ wrap_plots(
 ```
 
 ###### ΣPBDE
+
 ```{r, fig.height=7, fig.width=9}
 #| echo: false
 #| message: false
@@ -1014,6 +1155,7 @@ wrap_plots(
 ```
 
 ## Metanalysis (quartiles)
+
 ```{r fig.height=7, fig.width=6}
 #| echo: false
 #| message: false
@@ -1021,10 +1163,12 @@ wrap_plots(
 results_POPs_ALS_occurrence$metanalysis$plot_matanalysis_quart
 ```
 
+# POPs ans ALS survival
 
-# POPs ans ALS survival 
 ## Danish cohort
-### Effects of subject characteristics on ALS survival 
+
+### Effects of subject characteristics on ALS survival
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1034,8 +1178,10 @@ results_POPs_ALS_survival$danish$covar_danish |>
   gt::tab_options(table.font.size = "small")
 ```
 
-### Effects of POPs on ALS survival 
+### Effects of POPs on ALS survival
+
 #### Continuous coding (standardized)
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1051,7 +1197,8 @@ results_POPs_ALS_survival$danish$POPs_sd_ALS_table_danish |>
 results_POPs_ALS_survival$danish$POPs_sd_ALS_figure_danish
 ```
 
-#### Quartiles 
+#### Quartiles
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1067,8 +1214,51 @@ results_POPs_ALS_survival$danish$POPs_quart_ALS_table_danish |>
 results_POPs_ALS_survival$danish$POPs_quart_ALS_figure_danish
 ```
 
-## Finnish cohorts 
-### Effects of subject characteristics on ALS survival 
+#### Cox-gam
+
+```{r, fig.height=10}
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(list(results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$PCB_DL, 
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$PCB_DL, 
+                results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$PCB_DL, 
+                
+                results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$PCB_NDL, 
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$PCB_NDL, 
+                results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$PCB_NDL, 
+                
+                results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$PCB_4, 
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$PCB_4, 
+                wrap_elements(grid::nullGrob()),
+                
+                results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$OCP_HCB, 
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$OCP_HCB, 
+                results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$OCP_HCB), 
+           ncol = 3)
+
+wrap_plots(list(results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$ΣDDT, 
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$ΣDDT, 
+                results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$ΣDDT, 
+                
+                results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$OCP_β_HCH, 
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$OCP_β_HCH, 
+                results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$OCP_β_HCH, 
+                
+                results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$Σchlordane, 
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$Σchlordane, 
+                results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$Σchlordane, 
+                
+                results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$ΣPBDE, 
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$ΣPBDE, 
+                results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$ΣPBDE), 
+           ncol = 3)
+```
+
+## Finnish cohorts
+
+### Effects of subject characteristics on ALS survival
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1076,9 +1266,10 @@ results_POPs_ALS_survival$danish$POPs_quart_ALS_figure_danish
 results_POPs_ALS_survival$finnish$covar_ALS_table_finnish  |> kable("html")
 ```
 
-
 ### Effects of POPs on ALS survival
+
 #### Continuous coding (standardized)
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1094,7 +1285,8 @@ results_POPs_ALS_survival$finnish$POPs_sd_ALS_table_finnish |>
 results_POPs_ALS_survival$finnish$POPs_sd_ALS_figure_finnish
 ```
 
-#### Quartiles 
+#### Quartiles
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1111,7 +1303,9 @@ results_POPs_ALS_survival$finnish$POPs_quart_ALS_figure_finnish
 ```
 
 ## Metanalysis
+
 ### Continuous coding (standardized)
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1127,7 +1321,8 @@ results_POPs_ALS_survival$metanalysis$POPs_sd_ALS_table_metanalysis |>
 results_POPs_ALS_survival$metanalysis$POPs_sd_ALS_figure_metanalysis
 ```
 
-### Quartiles 
+### Quartiles
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1143,10 +1338,12 @@ results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_table_metanalysis |>
 results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_figure_metanalysis
 ```
 
-
 # Fatty acids and ALS occurence
+
 ## Danish cohort
-### Effects of subject characterist on ALS occurence in the Danish cohort 
+
+### Effects of subject characterist on ALS occurence in the Danish cohort
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1154,8 +1351,10 @@ results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_figure_metanalysis
 results_fattyacids_ALS_occurrence$danish$covar_als_table_danish
 ```
 
-### Effects of fatty acids on ALS occurence in the Danish cohort 
+### Effects of fatty acids on ALS occurence in the Danish cohort
+
 #### Continuous coding (standardized)
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1171,7 +1370,8 @@ results_fattyacids_ALS_occurrence$danish$fattyacids_sd_als_table_danish |>
 results_fattyacids_ALS_occurrence$danish$fattyacids_sd_als_figure_danish
 ```
 
-#### Quartiles 
+#### Quartiles
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1187,8 +1387,10 @@ results_fattyacids_ALS_occurrence$danish$fattyacids_quart_als_table_danish |>
 results_fattyacids_ALS_occurrence$danish$fattyacids_quart_als_figure_danish
 ```
 
-## Finnish cohorts 
+## Finnish cohorts
+
 ### Effects of subject characteristics on ALS occurence in the Finnish cohorts
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1196,9 +1398,10 @@ results_fattyacids_ALS_occurrence$danish$fattyacids_quart_als_figure_danish
 
 ```
 
-
 ### Effects of fatty acids on ALS occurence in the Finnish cohorts
+
 #### Continuous coding (standardized)
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1214,7 +1417,8 @@ results_fattyacids_ALS_occurrence$finnish$fattyacids_sd_als_table_finnish |>
 results_fattyacids_ALS_occurrence$finnish$fattyacids_sd_als_figure_finnish
 ```
 
-#### Quartiles 
+#### Quartiles
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1230,8 +1434,10 @@ results_fattyacids_ALS_occurrence$finnish$fattyacids_quart_als_table_finnish |>
 results_fattyacids_ALS_occurrence$finnish$fattyacids_quart_als_figure_finnish
 ```
 
-### Sensitivity Ca 
+### Sensitivity Ca
+
 #### Continuous coding (standardized)
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1248,6 +1454,7 @@ results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_figure_sensi_ca_
 ```
 
 #### Quartiles
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1262,10 +1469,12 @@ results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_table_sensi_ca_f
 results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_figure_sensi_ca_finnish
 ```
 
+# Fatty acids ans ALS survival
 
-# Fatty acids ans ALS survival 
-## Danish cohort 
-### Effects of covariates on ALS survival 
+## Danish cohort
+
+### Effects of covariates on ALS survival
+
 ```{r}
 #| echo: false
 #| message: true
@@ -1276,6 +1485,7 @@ results_fattyacids_ALS_survival$danish$covar_danish |>
 ```
 
 ### Continuous coding (standardized)
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1285,7 +1495,8 @@ results_fattyacids_ALS_survival$danish$fattyacids_sd_als_table_danish |>
 results_fattyacids_ALS_survival$danish$fattyacids_sd_als_figure_danish
 ```
 
-### Quartiles 
+### Quartiles
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1312,10 +1523,12 @@ arrange_ggsurvplots(
   nrow = 2)
 ```
 
+## Finnish cohorts
 
-## Finnish cohorts 
-### Effects of covariates on ALS survival 
+### Effects of covariates on ALS survival
+
 To be done
+
 ```{r}
 #| echo: false
 #| message: true
@@ -1323,6 +1536,7 @@ To be done
 ```
 
 ### Continuous coding (standardized)
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1332,7 +1546,8 @@ results_fattyacids_ALS_survival$finnish$fattyacids_sd_als_table_finnish |>
 results_fattyacids_ALS_survival$finnish$fattyacids_sd_als_figure_finnish
 ```
 
-### Quartiles 
+### Quartiles
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1348,7 +1563,8 @@ results_fattyacids_ALS_survival$finnish$fattyacids_quart_als_table_finnish |>
 results_fattyacids_ALS_survival$finnish$fattyacids_quart_als_figure_finnish
 ```
 
-## Comparison of the results 
+## Comparison of the results
+
 ```{r, fig.height=10}
 #| echo: false
 #| message: false
@@ -1376,4 +1592,3 @@ results_fattyacids_ALS_survival$main_analysis$main_results_fattyacids_ALS_surviv
   coord_flip()
 
 ```
-
