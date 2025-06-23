@@ -798,236 +798,239 @@ model2_cox_quart_finnish <- map_dfr(POPs_group_quart_finnish, function(expl) {
 })
 
 ### Copollutant ---- 
-# POPs_group_quart_finnish_bis <- setdiff(POPs_group_quart_finnish, c("OCP_β_HCH_quart",  "OCP_γ_HCH_quart", "PCB_4_quart"))
-# 
-# model3_quart_PCB_DL_FMC <-
-#   gam(surv_obj_FMC ~
-#         PCB_DL_quart +
-#         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-#         baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
-#       family = cox.ph(),
-#       method = 'ML',                                                            # maximum likelihood
-#       data = bdd_cases_FMC) |>
-#   summary()
-# model3_quart_PCB_DL_FMC <- model3_quart_PCB_DL_FMC$p.table |>
-#   as.data.frame() |>
-#   rownames_to_column("variable")
-# 
-# model3_quart_PCB_NDL_FMC <-
-#   gam(surv_obj_FMC ~
-#         PCB_NDL_quart +
-#         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-#         baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
-#       family = cox.ph(),
-#       method = 'ML',
-#       data = bdd_cases_FMC) |>
-#   summary()
-# model3_quart_PCB_NDL_FMC <- model3_quart_PCB_NDL_FMC$p.table |>
-#   as.data.frame() |>
-#   rownames_to_column("variable")
-# 
-# model3_quart_HCB_FMC <-
-#   gam(surv_obj_FMC ~
-#         OCP_HCB_quart +
-#         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-#         baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
-#       family = cox.ph(),
-#       method = 'ML',
-#       data = bdd_cases_FMC) |>
-#   summary()
-# model3_quart_HCB_FMC <- model3_quart_HCB_FMC$p.table |>
-#   as.data.frame() |>
-#   rownames_to_column("variable")
-# 
-# model3_quart_ΣDDT_FMC <-
-#   gam(surv_obj_FMC ~
-#         ΣDDT_quart +
-#         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-#         baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
-#       family = cox.ph(),
-#       method = 'ML',
-#       data = bdd_cases_FMC) |>
-#   summary()
-# model3_quart_ΣDDT_FMC <- model3_quart_ΣDDT_FMC$p.table |>
-#   as.data.frame() |>
-#   rownames_to_column("variable")
-# 
-# model3_quart_ΣHCH_FMC <-
-#   gam(surv_obj_FMC ~
-#         ΣHCH_quart +
-#         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(OCP_PeCB) +
-#         baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
-#       family = cox.ph(),
-#       method = 'ML',
-#       data = bdd_cases_FMC) |>
-#   summary()
-# model3_quart_ΣHCH_FMC <- model3_quart_ΣHCH_FMC$p.table |>
-#   as.data.frame() |>
-#   rownames_to_column("variable")
-# 
-# model3_quart_Σchlordane_FMC <-
-#   gam(surv_obj_FMC ~
-#         Σchlordane_quart +
-#         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(OCP_PeCB) +
-#         baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
-#       family = cox.ph(),
-#       method = 'ML',
-#       data = bdd_cases_FMC) |>
-#   summary()
-# model3_quart_Σchlordane_FMC <- model3_quart_Σchlordane_FMC$p.table |>
-#   as.data.frame() |>
-#   rownames_to_column("variable")
-# 
-# model3_quart_PeCB_FMC <-
-#   gam(surv_obj_FMC ~
-#         OCP_PeCB_quart +
-#         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) +
-#         baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
-#       family = cox.ph(),
-#       method = 'ML',
-#       data = bdd_cases_FMC) |>
-#   summary()
-# model3_quart_PeCB_FMC <- model3_quart_PeCB_FMC$p.table |>
-#   as.data.frame() |>
-#   rownames_to_column("variable")
-# 
-# model3_quart_PCB_DL_FMCF <-
-#   gam(surv_obj_FMCF ~
-#         PCB_DL_quart +
-#         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-#         baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
-#       family = cox.ph(),
-#       method = 'ML',                                                            # maximum likelihood
-#       data = bdd_cases_FMCF) |>
-#   summary()
-# model3_quart_PCB_DL_FMCF <- model3_quart_PCB_DL_FMCF$p.table |>
-#   as.data.frame() |>
-#   rownames_to_column("variable")
-# 
-# model3_quart_PCB_NDL_FMCF <-
-#   gam(surv_obj_FMCF ~
-#         PCB_NDL_quart +
-#         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-#         baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
-#       family = cox.ph(),
-#       method = 'ML',
-#       data = bdd_cases_FMCF) |>
-#   summary()
-# model3_quart_PCB_NDL_FMCF <- model3_quart_PCB_NDL_FMCF$p.table |>
-#   as.data.frame() |>
-#   rownames_to_column("variable")
-# 
-# model3_quart_HCB_FMCF <-
-#   gam(surv_obj_FMCF ~
-#         OCP_HCB_quart +
-#         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-#         baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
-#       family = cox.ph(),
-#       method = 'ML',
-#       data = bdd_cases_FMCF) |>
-#   summary()
-# model3_quart_HCB_FMCF <- model3_quart_HCB_FMCF$p.table |>
-#   as.data.frame() |>
-#   rownames_to_column("variable")
-# 
-# model3_quart_ΣDDT_FMCF <-
-#   gam(surv_obj_FMCF ~
-#         ΣDDT_quart +
-#         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-#         baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
-#       family = cox.ph(),
-#       method = 'ML',
-#       data = bdd_cases_FMCF) |>
-#   summary()
-# model3_quart_ΣDDT_FMCF <- model3_quart_ΣDDT_FMCF$p.table |>
-#   as.data.frame() |>
-#   rownames_to_column("variable")
-# 
-# model3_quart_ΣHCH_FMCF <-
-#   gam(surv_obj_FMCF ~
-#         ΣHCH_quart +
-#         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(OCP_PeCB) +
-#         baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
-#       family = cox.ph(),
-#       method = 'ML',
-#       data = bdd_cases_FMCF) |>
-#   summary()
-# model3_quart_ΣHCH_FMCF <- model3_quart_ΣHCH_FMCF$p.table |>
-#   as.data.frame() |>
-#   rownames_to_column("variable")
-# 
-# model3_quart_Σchlordane_FMCF <-
-#   gam(surv_obj_FMCF ~
-#         Σchlordane_quart +
-#         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(OCP_PeCB) +
-#         baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
-#       family = cox.ph(),
-#       method = 'ML',
-#       data = bdd_cases_FMCF) |>
-#   summary()
-# model3_quart_Σchlordane_FMCF <- model3_quart_Σchlordane_FMCF$p.table |>
-#   as.data.frame() |>
-#   rownames_to_column("variable")
-# 
-# model3_quart_PeCB_FMCF <-
-#   gam(surv_obj_FMCF ~
-#         OCP_PeCB_quart +
-#         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) +
-#         baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
-#       family = cox.ph(),
-#       method = 'ML',
-#       data = bdd_cases_FMCF) |>
-#   summary()
-# model3_quart_PeCB_FMCF <- model3_quart_PeCB_FMCF$p.table |>
-#   as.data.frame() |>
-#   rownames_to_column("variable")
-# 
-# model3_cox_quart_FMC <- bind_rows(
-#   model3_quart_PCB_DL_FMC, model3_quart_PCB_NDL_FMC, model3_quart_HCB_FMC, model3_quart_ΣDDT_FMC,
-#   model3_quart_ΣHCH_FMC, model3_quart_Σchlordane_FMC, model3_quart_PeCB_FMC) |>
-#   filter(grepl("quart", variable)) |>
-#   mutate(
-#     study = "FMC",
-#     model = "copollutant",
-#     term = variable,
-#     explanatory = gsub("Q2", "", variable),
-#     explanatory = gsub("Q3", "", explanatory),
-#     explanatory = gsub("Q4", "", explanatory),
-#     coef = Estimate,
-#     se = `Std. Error`,
-#     `p-value` =`Pr(>|z|)`) |>
-#   select(study, model, term, explanatory, coef, se, `p-value`)
-# 
-# rm(model3_quart_PCB_DL_FMC, model3_quart_PCB_NDL_FMC, model3_quart_HCB_FMC, model3_quart_ΣDDT_FMC,
-#    model3_quart_ΣHCH_FMC, model3_quart_Σchlordane_FMC, model3_quart_PeCB_FMC,
-#    outcome)
-# 
-# results <- list(                                                                # run of the simple cox models
-#   finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
-#   finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
-#   bind_rows(.id = "dataset") |>
-#   mutate(var = se^2) |>
-#   filter(str_detect(term, "_quart"))                                            # remove the covariates results
-# 
-# model3_cox_quart_finnish <- results |>
-#   group_by(term) |>
-#   group_modify(~ {
-#     rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
-#     tibble(                                                                     # results table creation
-#       study = "Finnish",
-#       model = "copollutant",
-#       HR = exp(as.numeric(rma_fit$beta)),
-#       lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
-#       upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-#       `p-value` = as.numeric(rma_fit$pval))
-#   }) |>
-#   ungroup() |>
-#   mutate(explanatory = gsub("Q2", "", term),
-#          explanatory = gsub("Q3", "", explanatory),
-#          explanatory = gsub("Q4", "", explanatory))
-# 
-# rm(POPs_group_quart_bis, formula_FMC, formula_FMCF, results)
-# 
+POPs_group_quart_finnish_bis <- setdiff(POPs_group_quart_finnish, c("OCP_β_HCH_quart",  "OCP_γ_HCH_quart", "PCB_4_quart"))
+outcome_FMC <- with(bdd_cases_FMC, cbind(follow_up_death, status_death))
+outcome_FMCF <- with(bdd_cases_FMCF, cbind(follow_up_death, status_death))
+outcome_MFH <- with(bdd_cases_MFH, cbind(follow_up_death, status_death))
+
+model3_quart_PCB_DL_FMC <-
+  gam(outcome_FMC ~
+        PCB_DL_quart +
+        s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
+        baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
+      family = cox.ph(),
+      method = 'ML',                                                            # maximum likelihood
+      data = bdd_cases_FMC) |>
+  summary()
+model3_quart_PCB_DL_FMC <- model3_quart_PCB_DL_FMC$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable")
+
+model3_quart_PCB_NDL_FMC <-
+  gam(outcome_FMC ~
+        PCB_NDL_quart +
+        s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
+        baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
+      family = cox.ph(),
+      method = 'ML',
+      data = bdd_cases_FMC) |>
+  summary()
+model3_quart_PCB_NDL_FMC <- model3_quart_PCB_NDL_FMC$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable")
+
+model3_quart_HCB_FMC <-
+  gam(outcome_FMC ~
+        OCP_HCB_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
+        baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
+      family = cox.ph(),
+      method = 'ML',
+      data = bdd_cases_FMC) |>
+  summary()
+model3_quart_HCB_FMC <- model3_quart_HCB_FMC$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable")
+
+model3_quart_ΣDDT_FMC <-
+  gam(outcome_FMC ~
+        ΣDDT_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
+        baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
+      family = cox.ph(),
+      method = 'ML',
+      data = bdd_cases_FMC) |>
+  summary()
+model3_quart_ΣDDT_FMC <- model3_quart_ΣDDT_FMC$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable")
+
+model3_quart_ΣHCH_FMC <-
+  gam(outcome_FMC ~
+        ΣHCH_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(OCP_PeCB) +
+        baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
+      family = cox.ph(),
+      method = 'ML',
+      data = bdd_cases_FMC) |>
+  summary()
+model3_quart_ΣHCH_FMC <- model3_quart_ΣHCH_FMC$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable")
+
+model3_quart_Σchlordane_FMC <-
+  gam(outcome_FMC ~
+        Σchlordane_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(OCP_PeCB) +
+        baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
+      family = cox.ph(),
+      method = 'ML',
+      data = bdd_cases_FMC) |>
+  summary()
+model3_quart_Σchlordane_FMC <- model3_quart_Σchlordane_FMC$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable")
+
+model3_quart_PeCB_FMC <-
+  gam(outcome_FMC ~
+        OCP_PeCB_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) +
+        baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
+      family = cox.ph(),
+      method = 'ML',
+      data = bdd_cases_FMC) |>
+  summary()
+model3_quart_PeCB_FMC <- model3_quart_PeCB_FMC$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable")
+
+model3_quart_PCB_DL_FMCF <-
+  gam(outcome_FMCF ~
+        PCB_DL_quart +
+        s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
+        baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
+      family = cox.ph(),
+      method = 'ML',                                                            # maximum likelihood
+      data = bdd_cases_FMCF) |>
+  summary()
+model3_quart_PCB_DL_FMCF <- model3_quart_PCB_DL_FMCF$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable")
+
+model3_quart_PCB_NDL_FMCF <-
+  gam(outcome_FMCF ~
+        PCB_NDL_quart +
+        s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
+        baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
+      family = cox.ph(),
+      method = 'ML',
+      data = bdd_cases_FMCF) |>
+  summary()
+model3_quart_PCB_NDL_FMCF <- model3_quart_PCB_NDL_FMCF$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable")
+
+model3_quart_HCB_FMCF <-
+  gam(outcome_FMCF ~
+        OCP_HCB_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
+        baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
+      family = cox.ph(),
+      method = 'ML',
+      data = bdd_cases_FMCF) |>
+  summary()
+model3_quart_HCB_FMCF <- model3_quart_HCB_FMCF$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable")
+
+model3_quart_ΣDDT_FMCF <-
+  gam(outcome_FMCF ~
+        ΣDDT_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
+        baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
+      family = cox.ph(),
+      method = 'ML',
+      data = bdd_cases_FMCF) |>
+  summary()
+model3_quart_ΣDDT_FMCF <- model3_quart_ΣDDT_FMCF$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable")
+
+model3_quart_ΣHCH_FMCF <-
+  gam(outcome_FMCF ~
+        ΣHCH_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(OCP_PeCB) +
+        baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
+      family = cox.ph(),
+      method = 'ML',
+      data = bdd_cases_FMCF) |>
+  summary()
+model3_quart_ΣHCH_FMCF <- model3_quart_ΣHCH_FMCF$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable")
+
+model3_quart_Σchlordane_FMCF <-
+  gam(outcome_FMCF ~
+        Σchlordane_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(OCP_PeCB) +
+        baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
+      family = cox.ph(),
+      method = 'ML',
+      data = bdd_cases_FMCF) |>
+  summary()
+model3_quart_Σchlordane_FMCF <- model3_quart_Σchlordane_FMCF$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable")
+
+model3_quart_PeCB_FMCF <-
+  gam(outcome_FMCF ~
+        OCP_PeCB_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) +
+        baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol,
+      family = cox.ph(),
+      method = 'ML',
+      data = bdd_cases_FMCF) |>
+  summary()
+model3_quart_PeCB_FMCF <- model3_quart_PeCB_FMCF$p.table |>
+  as.data.frame() |>
+  rownames_to_column("variable")
+
+model3_cox_quart_FMC <- bind_rows(
+  model3_quart_PCB_DL_FMC, model3_quart_PCB_NDL_FMC, model3_quart_HCB_FMC, model3_quart_ΣDDT_FMC,
+  model3_quart_ΣHCH_FMC, model3_quart_Σchlordane_FMC, model3_quart_PeCB_FMC) |>
+  filter(grepl("quart", variable)) |>
+  mutate(
+    study = "FMC",
+    model = "copollutant",
+    term = variable,
+    explanatory = gsub("Q2", "", variable),
+    explanatory = gsub("Q3", "", explanatory),
+    explanatory = gsub("Q4", "", explanatory),
+    coef = Estimate,
+    se = `Std. Error`,
+    `p-value` =`Pr(>|z|)`) |>
+  select(study, model, term, explanatory, coef, se, `p-value`)
+
+rm(model3_quart_PCB_DL_FMC, model3_quart_PCB_NDL_FMC, model3_quart_HCB_FMC, model3_quart_ΣDDT_FMC,
+   model3_quart_ΣHCH_FMC, model3_quart_Σchlordane_FMC, model3_quart_PeCB_FMC,
+   outcome)
+
+results <- list(                                                                # run of the simple cox models
+  finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
+  finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
+  bind_rows(.id = "dataset") |>
+  mutate(var = se^2) |>
+  filter(str_detect(term, "_quart"))                                            # remove the covariates results
+
+model3_cox_quart_finnish <- results |>
+  group_by(term) |>
+  group_modify(~ {
+    rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
+    tibble(                                                                     # results table creation
+      study = "Finnish",
+      model = "copollutant",
+      HR = exp(as.numeric(rma_fit$beta)),
+      lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
+      upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
+      `p-value` = as.numeric(rma_fit$pval))
+  }) |>
+  ungroup() |>
+  mutate(explanatory = gsub("Q2", "", term),
+         explanatory = gsub("Q3", "", explanatory),
+         explanatory = gsub("Q4", "", explanatory))
+
+rm(POPs_group_quart_bis, formula_FMC, formula_FMCF, results)
+
 
 # Metaanalysis ----
 ## Cox model (sd) ----
