@@ -1154,6 +1154,18 @@ POPs_group_labels <- c(
   "Σchlordane" = "Σchlordane",
   "ΣPBDE" = "ΣPBDE")
 
+POPs_group_labels_finnish <- c(
+  "Most prevalent PCBs" = "PCB_4",
+  "Dioxin-like PCBs" = "PCB_DL",
+  "Non dioxin-like PCBs" = "PCB_NDL",
+  "HCB" = "OCP_HCB",
+  "ΣDDT" = "ΣDDT",
+  "ΣHCH" = "ΣHCH", 
+  "β-HCH" = "OCP_β_HCH",
+  "γ-HCH" = "OCP_γ_HCH",
+  "Σchlordane" = "Σchlordane",
+  "PeCB" = "OCP_PeCB")
+
 POPs_group_sd_labels <- set_names(
   c("Dioxin-like PCBs","Non-dioxin-like PCBs", "Most prevalent PCBs","HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group_sd)

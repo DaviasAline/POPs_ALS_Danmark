@@ -566,7 +566,7 @@ run_cox <- function(formula, data) {
 
 ## Covar model ----
 ### crude 
-covar_crude_finnish <- map_dfr(c("baseline_age", "sex", "thawed", "level_urbanization", 
+covar_crude_finnish <- map_dfr(c("baseline_age", "sex", "level_urbanization", 
                            covariates_finnish), function(expl) {
   
   formula_FMC <- as.formula(paste("surv_obj_FMC ~", expl))                      # set the formulas
@@ -595,7 +595,7 @@ covar_crude_finnish <- map_dfr(c("baseline_age", "sex", "thawed", "level_urbaniz
   })
 
 ### adjusted 
-formula <- "Surv(follow_up_death, status_death) ~ baseline_age + sex + thawed + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol"
+formula <- "Surv(follow_up_death, status_death) ~ baseline_age + sex + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol"
 formula <- as.formula(formula)
 
 covar_adjusted_finnish <- list(                                                 # run of the simple cox models
@@ -625,8 +625,7 @@ covar_adjusted_finnish <- covar_adjusted_finnish |>                             
              "level_urbanization" = "level_urbanization4",
              "marital_status_2cat" = "marital_status_2catMarried/cohabit",
              "sex" = "sexMale",
-             "smoking_2cat" = "smoking_2catEver",
-             "thawed" = "thawed1")) |>
+             "smoking_2cat" = "smoking_2catEver")) |>
   relocate(model, variable, term) 
 
 covar_finnish <- bind_rows(covar_crude_finnish, covar_adjusted_finnish)
@@ -1295,8 +1294,8 @@ ref_rows <- covar_finnish |>
   distinct(model, variable) |>
   arrange(model, variable) |>
   mutate(
-    term = c("continuous",  "continuous", "continuous", "1", "Other","Female","Never", "0",
-             "continuous",  "continuous", "continuous", "1", "Other","Female","Never", "0"),
+    term = c("continuous",  "continuous", "continuous", "1", "Other","Male","Never",
+             "continuous",  "continuous", "continuous", "1", "Other","Male","Never"),
     HR = "-",
     "95% CI" = "-",
     `p-value` = "" ,
@@ -1313,9 +1312,8 @@ covar_ALS_table_finnish <- covar_finnish |>
                       "3" = "level_urbanization3",
                       "4" = "level_urbanization4",
                       "Married/cohabit" = "marital_status_2catMarried/cohabit",
-                      "Male" = "sexMale",
-                      "Ever" = "smoking_2catEver",
-                      "1" = "thawed1"),
+                      "Female" = "sexFemale",
+                      "Ever" = "smoking_2catEver"),
     HR = sprintf("%.1f", HR),
     lower_CI = sprintf("%.1f", lower_CI),
     upper_CI = sprintf("%.1f", upper_CI), 
@@ -1327,10 +1325,20 @@ covar_ALS_table_finnish <- covar_finnish |>
 
 covar_ALS_table_finnish <- 
   bind_rows(ref_rows, covar_ALS_table_finnish) |>
+  mutate(
+    variable = fct_recode(variable, 
+                          "Sex" = "sexFemale", 
+                          "Sex" = "sex", 
+                          "Age at baseline (years)" = "baseline_age", 
+                          "Boby mass index (kg/m²)" = "bmi", 
+                          "Marital status" = "marital_status_2cat", 
+                          "Smoking status" = "smoking_2cat", 
+                          "Serum cholesterol (mmol/L)" = "cholesterol", 
+                          "Level of urbanization" = "level_urbanization")) |>
   select(model, variable, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI) |>
   mutate(
     term = fct_relevel(term, 
-    "0", "1", "2", "3", "4", "continuous", "Never", "Ever", "Female", "Male", "Other", "Married/cohabit"), 
+    "1", "2", "3", "4", "continuous", "Never", "Ever", "Male", "Female",  "Other", "Married/cohabit"), 
     model = fct_relevel(model, "base", "adjusted"))|>
   arrange(model, variable, term) |>
   filter(!(term == "continuous" & HR == "-"))
@@ -1338,7 +1346,25 @@ covar_ALS_table_finnish <-
 covar_ALS_table_finnish <- covar_ALS_table_finnish |>
   select(-`p-value_raw`, -`p-value_shape`, -lower_CI, -upper_CI) |>
   pivot_wider(names_from = model, values_from = c(HR, `95% CI`, `p-value`)) |>
-  select(variable, term, ends_with("base"), ends_with("adjusted"))
+  select(variable, term, ends_with("base"), ends_with("adjusted")) |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |>
+  flextable() |>
+  add_header(
+    "variable" = "Characteristics", 
+    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
+    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model") |>
+  merge_h(part = "header") |>
+  merge_v(j = "variable") |>
+  theme_vanilla() |>
+  bold(j = "variable", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "variable", align = "left", part = "all") |> 
+  merge_at(j = "variable", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+  
 rm(ref_rows)
 
 ### table POPs (sd) - als survival ----
@@ -1351,7 +1377,7 @@ POPs_sd_ALS_table_finnish <- main_results_POPs_ALS_survival |>
   rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
          "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", 
          " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant") |>
-  mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |> 
+  mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |> 
   flextable() |>
   add_footer_lines(
     "1All models are adjusted for age, sex, level of urbanization and serum freeze-thaw cycles. Adjusted models further account for smoking, BMI, serum total cholesterol, marital status, and education (except for FMC study cohort). 
@@ -1394,15 +1420,12 @@ POPs_quart_ALS_table_finnish <-
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
   pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
-  select(explanatory, term, contains("base"), contains("adjusted")
-         #, contains("copollutant")
-         ) |>
+  select(explanatory, term, contains("base"), contains("adjusted"), contains("copollutant")) |>
   rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted"
-         #, " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant"
-         ) |>
-  mutate(explanatory = factor(explanatory, levels = POPs_group_labels), 
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", 
+         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant") |>
+  mutate(explanatory = factor(explanatory, levels = POPs_group_labels_finnish), 
+         explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |>
   arrange(explanatory) |>
   flextable() |>
   add_footer_lines(
@@ -1413,9 +1436,8 @@ POPs_quart_ALS_table_finnish <-
     "explanatory" = "POPs", 
     term = "Quartiles",
     "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model"
-    #,  " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model"
-    ) |>
+    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model",  
+    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   merge_v(j = "term") |>
@@ -1441,9 +1463,9 @@ POPs_sd_ALS_figure_finnish <- main_results_POPs_ALS_survival |>
                             "Adjusted model" = "adjusted",
                             "Copollutant model" = "copollutant"),
          model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
-         explanatory = factor(explanatory, levels = POPs_group_labels),
+         explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
          explanatory = fct_rev(explanatory),
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
+         explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |>
   arrange(explanatory) |> 
   ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 
@@ -1486,7 +1508,14 @@ POPs_quart_ALS_figure_finnish <- main_results_POPs_ALS_survival |>
   coord_flip()
 
 ## Metanalysis ----
-### table covariates - als survival ----
+POPs_group_labels_metanalysis <- c(
+  "Most prevalent PCBs" = "PCB_4",
+  "Dioxin-like PCBs" = "PCB_DL",
+  "Non dioxin-like PCBs" = "PCB_NDL",
+  "HCB" = "OCP_HCB",
+  "ΣDDT" = "ΣDDT",
+  "β-HCH" = "OCP_β_HCH",
+  "Σchlordane" = "Σchlordane")
 
 ### table POPs (sd) - als survival ----
 POPs_sd_ALS_table_metanalysis <- main_results_POPs_ALS_survival |>
@@ -1494,10 +1523,11 @@ POPs_sd_ALS_table_metanalysis <- main_results_POPs_ALS_survival |>
   select(model, explanatory, term, HR, "95% CI", "p-value") |>
   filter(term == "Continuous") |>
   pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
-  select(explanatory, contains("base"), contains("adjusted")) |>
+  select(explanatory, contains("base"), contains("adjusted"), contains("copollutant")) |>
   rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |>
-  mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |> 
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", 
+         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant") |>
+  mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels_metanalysis)) |> 
   flextable() |>
   add_footer_lines(
     "1Base models were all adjusted for age, sex. Finnish base models were futher adjusted for level of urbanization and serum freeze-thaw cycles. Adjusted models all further account for smoking, BMI, serum total cholesterol, marital status, and education (except for FMC study cohort). 
@@ -1506,7 +1536,8 @@ POPs_sd_ALS_table_metanalysis <- main_results_POPs_ALS_survival |>
   add_header(
     "explanatory" = "Exposures", 
     "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model") |>
+    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", 
+    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   theme_vanilla() |>
@@ -1539,11 +1570,12 @@ POPs_quart_ALS_table_metanalysis <-
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
   pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
-  select(explanatory, term, contains("base"), contains("adjusted")) |>
+  select(explanatory, term, contains("base"), contains("adjusted"), contains("copollutant")) |>
   rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |>
-  mutate(explanatory = factor(explanatory, levels = POPs_group_labels), 
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", 
+         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant") |>
+  mutate(explanatory = factor(explanatory, levels = POPs_group_labels_metanalysis), 
+         explanatory = fct_recode(explanatory, !!!POPs_group_labels_metanalysis)) |>
   arrange(explanatory) |>
   flextable() |>
   add_footer_lines(
@@ -1554,7 +1586,8 @@ POPs_quart_ALS_table_metanalysis <-
     "explanatory" = "POPs", 
     term = "Quartiles",
     "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model") |>
+    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", 
+    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   merge_v(j = "term") |>
@@ -1570,18 +1603,18 @@ POPs_quart_ALS_table_metanalysis <-
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 rm(quartile1_rows)
 
-
 ### figure POPs (sd) - als survival ----
 POPs_sd_ALS_figure_metanalysis <- main_results_POPs_ALS_survival |>
   filter(study == "Metanalysis") |>
   filter(term == "Continuous") |>
   mutate(model = fct_recode(model, 
                             "Base model" = "base",
-                            "Adjusted model" = "adjusted"),
-         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
-         explanatory = factor(explanatory, levels = POPs_group_labels),
+                            "Adjusted model" = "adjusted", 
+                            "Copollutant model" = "copollutant"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
+         explanatory = factor(explanatory, levels = POPs_group_labels_metanalysis),
          explanatory = fct_rev(explanatory),
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
+         explanatory = fct_recode(explanatory, !!!POPs_group_labels_metanalysis)) |>
   arrange(explanatory) |> 
   ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 
@@ -1601,10 +1634,11 @@ POPs_quart_ALS_figure_metanalysis <- main_results_POPs_ALS_survival |>
   filter(!term == "Continuous") |>
   mutate(model = fct_recode(model, 
                             "Base model" = "base",
-                            "Adjusted model" = "adjusted"),
-         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
-         explanatory = factor(explanatory, levels = POPs_group_labels),
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
+                            "Adjusted model" = "adjusted", 
+                            "Copollutant model" = "copollutant"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
+         explanatory = factor(explanatory, levels = POPs_group_labels_metanalysis),
+         explanatory = fct_recode(explanatory, !!!POPs_group_labels_metanalysis), 
          term = fct_rev(term)) |>
   arrange(explanatory) |> 
   ggplot(aes(x = term, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
@@ -1618,6 +1652,8 @@ POPs_quart_ALS_figure_metanalysis <- main_results_POPs_ALS_survival |>
         legend.position = "bottom", 
         strip.text.y.left = element_text(angle = 0, hjust = 0.5, vjust = 0.5)) +
   coord_flip()
+
+rm(POPs_group_labels_metanalysis)
 
 # Assemblage ----
 results_POPs_ALS_survival <- 
@@ -1639,7 +1675,6 @@ results_POPs_ALS_survival <-
          POPs_sd_ALS_figure_finnish = POPs_sd_ALS_figure_finnish, 
          POPs_quart_ALS_figure_finnish = POPs_quart_ALS_figure_finnish), 
        metanalysis = list(
-         # covar_metanalysis = covar_metanalysis, 
          POPs_sd_ALS_table_metanalysis = POPs_sd_ALS_table_metanalysis, 
          POPs_quart_ALS_table_metanalysis = POPs_quart_ALS_table_metanalysis, 
          POPs_sd_ALS_figure_metanalysis = POPs_sd_ALS_figure_metanalysis, 
@@ -1662,7 +1697,6 @@ rm(main_results_POPs_ALS_survival,
    POPs_sd_ALS_figure_finnish, 
    POPs_quart_ALS_figure_finnish, 
    
-   # covar_metanalysis,
    POPs_sd_ALS_table_metanalysis, 
    POPs_quart_ALS_table_metanalysis, 
    POPs_sd_ALS_figure_metanalysis, 
