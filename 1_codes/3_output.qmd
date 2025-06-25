@@ -794,7 +794,7 @@ corrplot(results_descriptive$comp$POPs_heatmap_cases,
 #| echo: false
 #| message: false
 #| warning: false
-results_descriptive$danish$covar_danish |>
+results_POPs_ALS_occurrence$main$covar |>
   as_gt() |>
   gt::tab_options(table.font.size = "small")
 ```
@@ -1165,6 +1165,16 @@ results_POPs_ALS_occurrence$metanalysis$plot_matanalysis_quart
 
 # POPs ans ALS survival
 
+## Subjects characteristics (among cases only)
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| paged-print: false
+results_descriptive$comp$covar_comp_cases
+```
+
+
 ## Danish cohort
 
 ### Effects of subject characteristics on ALS survival
@@ -1220,17 +1230,16 @@ results_POPs_ALS_survival$danish$POPs_quart_ALS_figure_danish
 #| echo: false
 #| message: false
 #| warning: false
-wrap_plots(list(results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$PCB_DL, 
+wrap_plots(list(results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$PCB_4, 
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$PCB_4, 
+                wrap_elements(grid::nullGrob()),
+                results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$PCB_DL, 
                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$PCB_DL, 
                 results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$PCB_DL, 
                 
                 results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$PCB_NDL, 
                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$PCB_NDL, 
                 results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$PCB_NDL, 
-                
-                results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$PCB_4, 
-                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$PCB_4, 
-                wrap_elements(grid::nullGrob()),
                 
                 results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$OCP_HCB, 
                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$OCP_HCB, 
@@ -1263,7 +1272,8 @@ wrap_plots(list(results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$ΣDDT,
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$finnish$covar_ALS_table_finnish  |> kable("html")
+results_POPs_ALS_survival$finnish$covar_ALS_table_finnish |>
+  set_table_properties(width = 1, layout = "autofit")
 ```
 
 ### Effects of POPs on ALS survival
