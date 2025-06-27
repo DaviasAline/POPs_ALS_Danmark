@@ -4,6 +4,8 @@
 
 # Data loading - package loading ----
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2.4_analyses_fattyacids_ALS_occurrence.R")
+covariates_danish <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')
+covariates_finnish <- c("marital_status_2cat", 'smoking_2cat', 'bmi', 'cholesterol')     # education removed because missing in one finnish cohort 
 
 # Danish cohort ----
 ## Covar model ----
@@ -725,4 +727,5 @@ rm(main_results_fattyacids_ALS_survival,
    fattyacids_quart_als_table_danish, 
    fattyacids_sd_als_figure_danish, 
    fattyacids_quart_als_figure_danish, 
-   survival_plots_danish)
+   survival_plots_danish, 
+   covariates_danish, covariates_finnish)

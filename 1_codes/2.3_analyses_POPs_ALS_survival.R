@@ -10,7 +10,7 @@ bdd_cases_danish <- bdd_danish |>
   filter (als == 1) |>
   filter(study == "Danish") |>
   select(study, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age,
-         bmi, marital_status_2cat_i, smoking_2cat_i, education_i, cholesterol_i, 
+         bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
          all_of(POPs_group)) |>
   mutate(across(all_of(POPs_group), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
                                              labels = c("Q1", "Q2", "Q3", "Q4")),
@@ -105,6 +105,9 @@ surv_obj_FMCF <- Surv(time = bdd_cases_FMCF$follow_up_death,
 surv_obj_MFH <- Surv(time = bdd_cases_MFH$follow_up_death,               
                         event = bdd_cases_MFH$status_death)
 
+covariates_danish <- c("sex", "diagnosis_age", "smoking_2cat_i", "bmi", "marital_status_2cat_i")
+covariates_finnish <- c("sex", "diagnosis_age", "smoking_2cat", "bmi", "marital_status_2cat")
+
 # Danish cohort ----
 ## Covar model ----
 covar_danish <- tbl_merge(tbls = list(
@@ -113,12 +116,12 @@ covar_danish <- tbl_merge(tbls = list(
     y = surv_obj_danish, 
     method = survival::coxph,  
     exponentiate = TRUE,
-    include = c("sex", "baseline_age", 
-                "bmi", "marital_status_2cat_i", "smoking_2cat_i", "education_i", "cholesterol_i")) |>
+    include = c("sex", "diagnosis_age", 
+                "bmi", "marital_status_2cat_i", "smoking_i", "education_i", "cholesterol_i")) |>
     bold_labels() |>
     bold_p(), 
   tbl_regression(
-    coxph(surv_obj_danish ~ sex + baseline_age + bmi + marital_status_2cat_i + smoking_2cat_i + education_i + cholesterol_i, data = bdd_cases_danish),
+    coxph(surv_obj_danish ~ sex + diagnosis_age + bmi + marital_status_2cat_i + smoking_i + education_i + cholesterol_i, data = bdd_cases_danish),
     exponentiate = TRUE) |>
     bold_labels() |>
     bold_p()), 
@@ -130,7 +133,7 @@ covar_danish <- tbl_merge(tbls = list(
 model1_cox_sd_danish <- map_dfr(POPs_group_sd, function(expl) {
   
   formula_danish <- 
-    as.formula(paste("surv_obj_danish ~", expl, "+ baseline_age + sex"))        # set the formulas                
+    as.formula(paste("surv_obj_danish ~", expl, "+ diagnosis_age + sex"))        # set the formulas                
   model_summary <- coxph(formula_danish, data = bdd_cases_danish) |> summary()  # run cox model
   
   coefs <- model_summary$coefficients
@@ -195,7 +198,7 @@ rm(POPs_group_sd_bis, pollutant_labels_bis, formula_danish, model_summary, coefs
 model1_cox_quart_danish <- map_dfr(POPs_group_quart, function(expl) {
   
   formula_danish <-                                                             # creation of the formulas
-    as.formula(paste("surv_obj_danish ~", expl, "+ baseline_age + sex"))  
+    as.formula(paste("surv_obj_danish ~", expl, "+ diagnosis_age + sex"))  
   
   model_summary <- coxph(formula_danish, data = bdd_cases_danish) |> summary()  # run cox model
 
@@ -238,7 +241,7 @@ model3_quart_PCB_DL <-
   gam(outcome ~ 
         PCB_DL_quart + 
         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
       method = 'ML',                                                            # maximum likelihood
       data = bdd_cases_danish) |>
@@ -251,7 +254,7 @@ model3_quart_PCB_NDL <-
   gam(outcome ~ 
         PCB_NDL_quart + 
         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
       method = 'ML',
       data = bdd_cases_danish) |>
@@ -264,7 +267,7 @@ model3_quart_HCB <-
   gam(outcome ~ 
         OCP_HCB_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
       method = 'ML',
       data = bdd_cases_danish) |>
@@ -277,7 +280,7 @@ model3_quart_ΣDDT <-
   gam(outcome ~ 
         ΣDDT_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
       method = 'ML',
       data = bdd_cases_danish) |>
@@ -290,7 +293,7 @@ model3_quart_β_HCH <-
   gam(outcome ~ 
         OCP_β_HCH_quart +
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
-        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i,  
       family = cox.ph(), 
       method = 'ML',
       data = bdd_cases_danish) |>
@@ -303,7 +306,7 @@ model3_quart_Σchlordane <-
   gam(outcome ~ 
         Σchlordane_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
-        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
       method = 'ML',
       data = bdd_cases_danish) |>
@@ -316,7 +319,7 @@ model3_quart_ΣPBDE <-
   gam(outcome ~ 
         ΣPBDE_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
       method = 'ML',
       data = bdd_cases_danish) |>
@@ -348,7 +351,7 @@ rm(model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_HCB, model3_quart_ΣD
 plot_base_cox_gam_danish <- map(POPs_group_sd, function(var) {
   
   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
-  formula <- as.formula(paste("outcome ~ s(", var, ") + baseline_age + sex")) 
+  formula <- as.formula(paste("outcome ~ s(", var, ") + diagnosis_age + sex")) 
   
   model <- gam(formula,                                                         # run the cox-gam model
                family = cox.ph(), 
@@ -357,7 +360,7 @@ plot_base_cox_gam_danish <- map(POPs_group_sd, function(var) {
   
   bdd_pred <- bdd_cases_danish |>                                               # création bdd avec expo + covariables ramenées à leur moyenne
     mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
+      adj_diagnosis_age = mean(diagnosis_age, na.rm = TRUE),
       adj_sex = names(which.max(table(sex)))) |>
     select(all_of(var), starts_with("adj_")) |>
     rename_with(~ gsub("adj_", "", .x)) 
@@ -413,7 +416,7 @@ plot_base_cox_gam_danish <- map(POPs_group_sd, function(var) {
 plot_adjusted_cox_gam_danish <- map(POPs_group_sd, function(var) {
   
   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
-  formula <- as.formula(paste("outcome ~ s(", var, ") + baseline_age + sex +  smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i")) 
+  formula <- as.formula(paste("outcome ~ s(", var, ") + diagnosis_age + sex +  smoking_2cat_i + bmi + marital_status_2cat_i")) 
   
   model <- gam(formula,                                                         # run the cox-gam model
                family = cox.ph(), 
@@ -422,13 +425,11 @@ plot_adjusted_cox_gam_danish <- map(POPs_group_sd, function(var) {
   
   bdd_pred <- bdd_cases_danish |>                                               # création bdd avec expo + covariables ramenées à leur moyenne
     mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
+      adj_diagnosis_age = mean(diagnosis_age, na.rm = TRUE),
       adj_sex = names(which.max(table(sex))), 
       adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i))), 
       adj_bmi = mean(bmi, na.rm = TRUE),  
-      adj_cholesterol_i = mean(cholesterol_i, na.rm = TRUE), 
-      adj_marital_status_2cat_i = names(which.max(table(marital_status_2cat_i))), 
-      adj_education_i = names(which.max(table(education_i)))) |>
+      adj_marital_status_2cat_i = names(which.max(table(marital_status_2cat_i)))) |>
     select(all_of(var), starts_with("adj_")) |>
     rename_with(~ gsub("adj_", "", .x)) 
   
@@ -491,8 +492,8 @@ outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
 model <- gam(outcome ~ s(PCB_DL_sd) + s(PCB_NDL_sd) + s(OCP_HCB_sd) + s(ΣDDT_sd) + 
                s(OCP_β_HCH_sd) + s(Σchlordane_sd) + s(ΣPBDE_sd) + 
-               sex + baseline_age + 
-               smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+               sex + diagnosis_age + 
+               smoking_2cat_i + bmi + marital_status_2cat_i, 
              family = cox.ph(), 
              method = "ML", 
              data = bdd_cases_danish)
@@ -566,8 +567,8 @@ run_cox <- function(formula, data) {
 
 ## Covar model ----
 ### crude 
-covar_crude_finnish <- map_dfr(c("baseline_age", "sex", "level_urbanization", 
-                           covariates_finnish), function(expl) {
+covar_crude_finnish <- map_dfr(
+  c("diagnosis_age", "sex", "level_urbanization", "smoking_2cat", "bmi", "marital_status_2cat", "cholesterol"), function(expl) {
   
   formula_FMC <- as.formula(paste("surv_obj_FMC ~", expl))                      # set the formulas
   formula_FMCF <- as.formula(paste("surv_obj_FMCF ~", expl))
@@ -595,7 +596,7 @@ covar_crude_finnish <- map_dfr(c("baseline_age", "sex", "level_urbanization",
   })
 
 ### adjusted 
-formula <- "Surv(follow_up_death, status_death) ~ baseline_age + sex + level_urbanization + marital_status_2cat + smoking_2cat + bmi + cholesterol"
+formula <- "Surv(follow_up_death, status_death) ~ diagnosis_age + sex + level_urbanization + smoking_2cat + bmi + marital_status_2cat + cholesterol"
 formula <- as.formula(formula)
 
 covar_adjusted_finnish <- list(                                                 # run of the simple cox models
@@ -624,7 +625,7 @@ covar_adjusted_finnish <- covar_adjusted_finnish |>                             
              "level_urbanization" = "level_urbanization3",
              "level_urbanization" = "level_urbanization4",
              "marital_status_2cat" = "marital_status_2catMarried/cohabit",
-             "sex" = "sexMale",
+             "sex" = "sexFemale",
              "smoking_2cat" = "smoking_2catEver")) |>
   relocate(model, variable, term) 
 
@@ -636,9 +637,9 @@ rm(formula, covar_crude_finnish, covar_adjusted_finnish)
 model1_cox_sd_finnish <- map_dfr(POPs_group_sd_finnish, function(expl) {
   
   formula_FMC <-                                                                # set the formulas
-    as.formula(paste("surv_obj_FMC ~", expl, "+ baseline_age + sex + thawed + level_urbanization"))  
+    as.formula(paste("surv_obj_FMC ~", expl, "+ diagnosis_age + sex"))  
   formula_FMCF <- 
-    as.formula(paste("surv_obj_FMCF ~", expl, "+ baseline_age + sex + thawed + level_urbanization"))
+    as.formula(paste("surv_obj_FMCF ~", expl, "+ diagnosis_age + sex"))
   
   results <- list(                                                              # run of the simple cox models 
     finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
@@ -666,11 +667,9 @@ model1_cox_sd_finnish <- map_dfr(POPs_group_sd_finnish, function(expl) {
 model2_cox_sd_finnish <- map_dfr(POPs_group_sd_finnish, function(expl) {
   
   formula_FMC <- as.formula(paste("surv_obj_FMC ~", expl, "+",                  # set the formulas              
-                                  paste(covariates_finnish, collapse = " + "), 
-                                  "+ baseline_age + sex + thawed + level_urbanization"))
+                                  paste(covariates_finnish, collapse = " + ")))
   formula_FMCF <- as.formula(paste("surv_obj_FMCF ~", expl, "+",                            
-                                   paste(covariates_finnish, collapse = " + "), 
-                                   "+ baseline_age + sex + thawed + level_urbanization + education_merged"))
+                                   paste(covariates_finnish, collapse = " + ")))
   
   results <- list(                                                              # run of the simple cox models 
     finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
@@ -698,9 +697,9 @@ model2_cox_sd_finnish <- map_dfr(POPs_group_sd_finnish, function(expl) {
 POPs_group_sd_finnish_bis <- setdiff(POPs_group_sd_finnish, c("OCP_β_HCH_sd",  "OCP_γ_HCH_sd", "PCB_4_sd"))
 
 formula_FMC <-                                                                  # creation of the formulas
-  as.formula(paste("surv_obj_FMC ~", paste(c(POPs_group_sd_finnish_bis, covariates_finnish, "baseline_age", "sex", "thawed", "level_urbanization"), collapse = "+")))  
+  as.formula(paste("surv_obj_FMC ~", paste(c(POPs_group_sd_finnish_bis, covariates_finnish), collapse = "+")))  
 formula_FMCF <- 
-  as.formula(paste("surv_obj_FMCF ~", paste(c(POPs_group_sd_finnish_bis, covariates_finnish, "baseline_age", "sex", "thawed", "level_urbanization"), collapse = "+")))  
+  as.formula(paste("surv_obj_FMCF ~", paste(c(POPs_group_sd_finnish_bis, covariates_finnish), collapse = "+")))  
 
 model3_cox_sd_finnish <- list(                                                                # run of the simple cox models 
   finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
@@ -732,9 +731,9 @@ rm(POPs_group_sd_finnish_bis, formula_FMC, formula_FMCF)
 model1_cox_quart_finnish <- map_dfr(POPs_group_quart_finnish, function(expl) {
   
   formula_FMC <-                                                                # creation of the formulas
-    as.formula(paste("surv_obj_FMC ~", expl, "+ baseline_age + sex + thawed + level_urbanization"))  
+    as.formula(paste("surv_obj_FMC ~", expl, "+ diagnosis_age + sex"))  
   formula_FMCF <- 
-    as.formula(paste("surv_obj_FMCF ~", expl, "+ baseline_age + sex + thawed + level_urbanization"))
+    as.formula(paste("surv_obj_FMCF ~", expl, "+ diagnosis_age + sex"))
   
   results <- list(                                                              # run of the simple cox model
     finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
@@ -764,11 +763,9 @@ model1_cox_quart_finnish <- map_dfr(POPs_group_quart_finnish, function(expl) {
 model2_cox_quart_finnish <- map_dfr(POPs_group_quart_finnish, function(expl) {
   
   formula_FMC <- as.formula(paste("surv_obj_FMC ~", expl, "+",                  # set the formulas              
-                                  paste(covariates_finnish, collapse = " + "), 
-                                  "+ baseline_age + sex + thawed + level_urbanization"))
+                                  paste(covariates_finnish, collapse = " + ")))
   formula_FMCF <- as.formula(paste("surv_obj_FMCF ~", expl, "+",                            
-                                   paste(covariates_finnish, collapse = " + "), 
-                                   "+ baseline_age + sex + thawed + level_urbanization + education_merged"))
+                                   paste(covariates_finnish, collapse = " + ")))
   
   results <- list(                                                              # run of the simple cox model
     finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
@@ -798,10 +795,12 @@ model2_cox_quart_finnish <- map_dfr(POPs_group_quart_finnish, function(expl) {
 ### Copollutant ---- 
 POPs_group_quart_finnish_bis <- setdiff(POPs_group_quart_finnish, c("OCP_β_HCH_quart",  "OCP_γ_HCH_quart", "PCB_4_quart"))
 
-formula_FMC <- as.formula(paste("surv_obj_FMC ~ baseline_age + sex + thawed + level_urbanization +",                  # set the formulas              
-                                paste(POPs_group_quart_finnish_bis, collapse = " + ")))
-formula_FMCF <- as.formula(paste("surv_obj_FMCF ~ baseline_age + sex + thawed + level_urbanization + education_merged +",                             
-                                 paste(POPs_group_quart_finnish_bis, collapse = " + ")))
+formula_FMC <- as.formula(paste("surv_obj_FMC ~ ",                  # set the formulas              
+                                paste(c(POPs_group_quart_finnish_bis, covariates_finnish), 
+                                      collapse = " + ")))
+formula_FMCF <- as.formula(paste("surv_obj_FMCF ~ ",                             
+                                 paste(c(POPs_group_quart_finnish_bis, covariates_finnish), 
+                                       collapse = " + ")))
 
 model3_cox_quart_finnish <- list(                                               # run of the simple cox model
   finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
@@ -840,11 +839,11 @@ POPs_group_sd_bis <- setdiff(POPs_group_sd, "ΣPBDE_sd")
 model1_cox_sd_metanalysis <- map_dfr(POPs_group_sd_bis, function(expl) {
   
   formula_danish <-                                                             # set the formulas
-    as.formula(paste("surv_obj_danish ~", expl, "+ baseline_age + sex"))  
+    as.formula(paste("surv_obj_danish ~", expl, "+ diagnosis_age + sex"))  
   formula_FMC <-                                                                
-    as.formula(paste("surv_obj_FMC ~", expl, "+ baseline_age + sex + thawed + level_urbanization"))  
+    as.formula(paste("surv_obj_FMC ~", expl, "+ diagnosis_age + sex"))  
   formula_FMCF <- 
-    as.formula(paste("surv_obj_FMCF ~", expl, "+ baseline_age + sex + thawed + level_urbanization"))
+    as.formula(paste("surv_obj_FMCF ~", expl, "+ diagnosis_age + sex"))
   
   results <- list(                                                              # run of the simple cox models 
     danish = run_cox(formula_danish, bdd_cases_danish),
@@ -873,17 +872,14 @@ model1_cox_sd_metanalysis <- map_dfr(POPs_group_sd_bis, function(expl) {
 model2_cox_sd_metanalysis <- map_dfr(POPs_group_sd_bis, function(expl) {
   
   formula_danish <-                                                             # set the formulas
-    as.formula(paste("surv_obj_danish ~", expl, 
-                     "+ baseline_age + sex + 
-                     smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))  
+    as.formula(paste("surv_obj_danish ~", expl, "+",
+                     paste(covariates_danish, collapse = "+")))  
   formula_FMC <-                                                                
-    as.formula(paste("surv_obj_FMC ~", expl, 
-                     "+ baseline_age + sex + thawed + level_urbanization + 
-                     smoking_2cat + bmi + cholesterol + marital_status_2cat"))  
+    as.formula(paste("surv_obj_FMC ~", expl,  "+",
+                     paste(covariates_finnish, collapse = "+")))  
   formula_FMCF <- 
-    as.formula(paste("surv_obj_FMCF ~", expl, 
-                     "+ baseline_age + sex + thawed + level_urbanization + 
-                     smoking_2cat + bmi + cholesterol + marital_status_2cat + education_merged"))
+    as.formula(paste("surv_obj_FMCF ~", expl,  "+",
+                     paste(covariates_finnish, collapse = "+")))
   
   results <- list(                                                              # run of the simple cox models 
     danish = run_cox(formula_danish, bdd_cases_danish),
@@ -917,12 +913,10 @@ formula_danish <-                                                               
                                               collapse = "+")))  
 formula_FMC <-                                                                  # creation of the formulas
   as.formula(paste("surv_obj_FMC ~", paste(c(POPs_group_sd_bis, 
-                                             covariates_finnish, 
-                                             "baseline_age", "sex", "thawed", "level_urbanization"), 
+                                             covariates_finnish), 
                                            collapse = "+")))  
 formula_FMCF <- 
-  as.formula(paste("surv_obj_FMCF ~", paste(c(POPs_group_sd_bis, covariates_finnish, 
-                                              "baseline_age", "sex", "thawed", "level_urbanization", "education_merged"), 
+  as.formula(paste("surv_obj_FMCF ~", paste(c(POPs_group_sd_bis, covariates_finnish), 
                                             collapse = "+")))  
 
 model3_cox_sd_metanalysis <- list(                                                                # run of the simple cox models 
@@ -959,11 +953,11 @@ POPs_group_quart_bis <- setdiff(POPs_group_quart, "ΣPBDE_quart")
 model1_cox_quart_metanalysis <- map_dfr(POPs_group_quart_bis, function(expl) {
   
   formula_danish <-                                                             # creation of the formulas
-    as.formula(paste("surv_obj_danish ~", expl, "+ baseline_age + sex")) 
+    as.formula(paste("surv_obj_danish ~", expl, "+ diagnosis_age + sex")) 
   formula_FMC <-                                                                # creation of the formulas
-    as.formula(paste("surv_obj_FMC ~", expl, "+ baseline_age + sex + thawed + level_urbanization"))  
+    as.formula(paste("surv_obj_FMC ~", expl, "+ diagnosis_age + sex"))  
   formula_FMCF <- 
-    as.formula(paste("surv_obj_FMCF ~", expl, "+ baseline_age + sex + thawed + level_urbanization"))
+    as.formula(paste("surv_obj_FMCF ~", expl, "+ diagnosis_age + sex"))
   
   results <- list(                                                              # run of the simple cox model
     danish = run_cox(formula_danish, bdd_cases_danish),
@@ -995,17 +989,14 @@ model1_cox_quart_metanalysis <- map_dfr(POPs_group_quart_bis, function(expl) {
 model2_cox_quart_metanalysis <- map_dfr(POPs_group_quart_bis, function(expl) {
   
   formula_danish <- 
-    as.formula(paste("surv_obj_danish ~", expl,                                 # set the formulas  
-                     "+ baseline_age + sex + 
-                     smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+    as.formula(paste("surv_obj_danish ~", expl, "+",                            # set the formulas 
+                      paste(covariates_danish, collapse = "+")))
   formula_FMC <- 
-    as.formula(paste("surv_obj_FMC ~", expl, 
-                     "+ baseline_age + sex + thawed + level_urbanization + 
-                     smoking_2cat + bmi + cholesterol + marital_status_2cat"))  # education not available
+    as.formula(paste("surv_obj_FMC ~", expl, "+", 
+                     paste(covariates_finnish, collapse = "+")))
   formula_FMCF <- 
-    as.formula(paste("surv_obj_FMCF ~", expl, 
-                     "+ baseline_age + sex + thawed + level_urbanization + 
-                     smoking_2cat + bmi + cholesterol + marital_status_2cat + education_merged"))
+    as.formula(paste("surv_obj_FMCF ~", expl, "+", 
+                     paste(covariates_finnish, collapse = "+")))
   
   results <- list(                                                              # run of the simple cox model
     danish = run_cox(formula_danish, bdd_cases_danish),
@@ -1037,11 +1028,11 @@ model2_cox_quart_metanalysis <- map_dfr(POPs_group_quart_bis, function(expl) {
 POPs_group_quart_bis <- setdiff(POPs_group_quart, c("PCB_4_quart", "ΣPBDE_quart"))
 
 formula_danish <- as.formula(paste("surv_obj_danish ~ ",                        # set the formulas              
-                                paste(c(covariates_danish, POPs_group_quart_bis), collapse = " + ")))
-formula_FMC <- as.formula(paste("surv_obj_FMC ~ baseline_age + sex + thawed + level_urbanization +",                               
-                                paste(POPs_group_quart_bis, collapse = " + ")))
-formula_FMCF <- as.formula(paste("surv_obj_FMCF ~ baseline_age + sex + thawed + level_urbanization + education_merged +",                             
-                                 paste(POPs_group_quart_bis, collapse = " + ")))
+                                paste(c(POPs_group_quart_bis, covariates_danish), collapse = " + ")))
+formula_FMC <- as.formula(paste("surv_obj_FMC ~ ",                               
+                                paste(c(POPs_group_quart_bis, covariates_finnish), collapse = " + ")))
+formula_FMCF <- as.formula(paste("surv_obj_FMCF ~ ",                             
+                                 paste(c(POPs_group_quart_bis, covariates_finnish), collapse = " + ")))
 
 model3_cox_quart_metanalysis <- list(                                               # run of the simple cox model
   danish = run_cox(formula_danish, bdd_cases_danish),
@@ -1132,7 +1123,7 @@ POPs_sd_ALS_table_danish <- main_results_POPs_ALS_survival |>
   mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |> 
   flextable() |>
   add_footer_lines(
-    "1All models are adjusted for age and sex. Adjusted models further account for smoking, BMI, serum total cholesterol and marital status. 
+    "1All models are adjusted for age and sex. Adjusted models further account for smoking, BMI and marital status. 
   2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease serum concentration of POPs.
   3CI: Confidence interval.") |>
   add_header(
@@ -1181,7 +1172,7 @@ POPs_quart_ALS_table_danish <-
   arrange(explanatory) |>
   flextable() |>
   add_footer_lines(
-    "1All models are adjusted for age and sex. Adjusted models further account for smoking, BMI, serum total cholesterol, marital status and education. 
+    "1All models are adjusted for age and sex. Adjusted models further account for smoking, BMI and marital status. 
   2Estimated risk of death after ALS diagnosis when pre-disease serum concentration of POPs compared to quartile 1.
   3CI: Confidence interval.") |>
   add_header(
@@ -1221,7 +1212,7 @@ POPs_sd_ALS_figure_danish <- main_results_POPs_ALS_survival |>
   ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
+  facet_grid(cols = dplyr::vars(model), switch = "y") +                         # , scales = "free_x"
   scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
   labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
@@ -1245,7 +1236,7 @@ POPs_quart_ALS_figure_danish <- main_results_POPs_ALS_survival |>
   ggplot(aes(x = term, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
+  facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y") +  
   scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
   labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
@@ -1305,7 +1296,7 @@ ref_rows <- covar_finnish |>
 covar_ALS_table_finnish <- covar_finnish |>
   mutate(
     term = fct_recode(term, 
-                      "continuous" = "baseline_age",
+                      "continuous" = "diagnosis_age",
                       "continuous" = "bmi",
                       "continuous" = "cholesterol",
                       "2" = "level_urbanization2",
@@ -1329,7 +1320,7 @@ covar_ALS_table_finnish <-
     variable = fct_recode(variable, 
                           "Sex" = "sexFemale", 
                           "Sex" = "sex", 
-                          "Age at baseline (years)" = "baseline_age", 
+                          "Age at diagnosis (years)" = "diagnosis_age", 
                           "Boby mass index (kg/m²)" = "bmi", 
                           "Marital status" = "marital_status_2cat", 
                           "Smoking status" = "smoking_2cat", 
@@ -1380,7 +1371,7 @@ POPs_sd_ALS_table_finnish <- main_results_POPs_ALS_survival |>
   mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |> 
   flextable() |>
   add_footer_lines(
-    "1All models are adjusted for age, sex, level of urbanization and serum freeze-thaw cycles. Adjusted models further account for smoking, BMI, serum total cholesterol, marital status, and education (except for FMC study cohort). 
+    "1All models are adjusted for age and sex. Adjusted models further account for smoking, BMI and marital status. 
   2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease serum concentration of POPs
   3CI: Confidence interval.") |>
   add_header(
@@ -1429,7 +1420,7 @@ POPs_quart_ALS_table_finnish <-
   arrange(explanatory) |>
   flextable() |>
   add_footer_lines(
-    "1All models are adjusted for age, sex, level of urbanization and serum freeze-thaw cycles. Adjusted models further account for smoking, BMI, serum total cholesterol, marital status, and education (except for FMC study cohort).
+    "1All models are adjusted for age and sex. Adjusted models further account for smoking, BMI and marital status.
   2Estimated risk of death after ALS diagnosis when pre-disease serum concentration of POPs compared to quartile 1.
   3CI: Confidence interval.") |>
   add_header(
@@ -1470,7 +1461,7 @@ POPs_sd_ALS_figure_finnish <- main_results_POPs_ALS_survival |>
   ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
+  facet_grid(cols = dplyr::vars(model), switch = "y") +  
   scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
   labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
@@ -1485,12 +1476,9 @@ POPs_quart_ALS_figure_finnish <- main_results_POPs_ALS_survival |>
   filter(!term == "Continuous") |>
   mutate(model = fct_recode(model, 
                             "Base model" = "base",
-                            "Adjusted model" = "adjusted"
-                            #, "Copollutant model" = "copollutant"
-                            ),
-         model = fct_relevel(model, 'Base model', 'Adjusted model'
-                             #, 'Copollutant model'
-                             ), 
+                            "Adjusted model" = "adjusted", 
+                            "Copollutant model" = "copollutant"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
          explanatory = factor(explanatory, levels = POPs_group_labels),
          explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
          term = fct_rev(term)) |>
@@ -1498,7 +1486,7 @@ POPs_quart_ALS_figure_finnish <- main_results_POPs_ALS_survival |>
   ggplot(aes(x = term, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
+  facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y") +  
   scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
   labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
@@ -1530,7 +1518,7 @@ POPs_sd_ALS_table_metanalysis <- main_results_POPs_ALS_survival |>
   mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels_metanalysis)) |> 
   flextable() |>
   add_footer_lines(
-    "1Base models were all adjusted for age, sex. Finnish base models were futher adjusted for level of urbanization and serum freeze-thaw cycles. Adjusted models all further account for smoking, BMI, serum total cholesterol, marital status, and education (except for FMC study cohort). 
+    "1Base models were all adjusted for age and sex. Adjusted models all further account for smoking, BMI and marital status. 
   2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease serum concentration of POPs.
   3CI: Confidence interval.") |>
   add_header(
@@ -1579,7 +1567,7 @@ POPs_quart_ALS_table_metanalysis <-
   arrange(explanatory) |>
   flextable() |>
   add_footer_lines(
-  "1Base models were all adjusted for age, sex. Finnish base models were futher adjusted for level of urbanization and serum freeze-thaw cycles. Adjusted models all further account for smoking, BMI, serum total cholesterol, marital status, and education (except for FMC study cohort). 
+  "1Base models were all adjusted for age and sex. Adjusted models all further account for smoking, BMI and marital status. 
   2Estimated risk of death after ALS diagnosis when pre-disease serum concentration of POPs compared to quartile 1.
   3CI: Confidence interval.") |>
   add_header(
@@ -1619,7 +1607,7 @@ POPs_sd_ALS_figure_metanalysis <- main_results_POPs_ALS_survival |>
   ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
+  facet_grid(cols = dplyr::vars(model), switch = "y") +  
   scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
   labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
@@ -1644,7 +1632,7 @@ POPs_quart_ALS_figure_metanalysis <- main_results_POPs_ALS_survival |>
   ggplot(aes(x = term, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
+  facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y") +  
   scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
   labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
@@ -1700,4 +1688,6 @@ rm(main_results_POPs_ALS_survival,
    POPs_sd_ALS_table_metanalysis, 
    POPs_quart_ALS_table_metanalysis, 
    POPs_sd_ALS_figure_metanalysis, 
-   POPs_quart_ALS_figure_metanalysis)
+   POPs_quart_ALS_figure_metanalysis, 
+   
+   covariates_danish, covariates_finnish)

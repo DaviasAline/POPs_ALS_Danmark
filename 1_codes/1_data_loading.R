@@ -398,9 +398,6 @@ explanatory_quart <- c("pufas_quart", "pufas_ω9_quart", "pufas_ω7_quart", "puf
                  "rumenic_acid_ω6_quart", "linoleic_acid_ω6_quart", "dihomo_γ_linolenic_acid_ω6_quart", "arachidonic_acid_ω6_quart", "adrenic_acid_ω6_quart",
                  "α_linolenic_acid_ω3_quart", "timnodonic_acid_ω3_quart", "clupanodonic_acid_ω3_quart", "cervonic_acid_ω3_quart") 
 
-covariates_danish <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')
-covariates_finnish <- c("marital_status_2cat", 'smoking_2cat', 'bmi', 'cholesterol')     # education removed because missing in one finnish cohort 
-
 POPs_finnish <- ifelse(POPs %in% c("PCB_28", "PCB_52", "OCP_PeCB", "OCP_α_HCH", "OCP_γ_HCH", 
                            "OCP_oxychlordane", "PBDE_47", "PBDE_99", "PBDE_153"), paste0(POPs, "_raw"), POPs)
 proteomic <- unique(bdd_danish_proteomic$Assay) |> as.character()
@@ -667,7 +664,7 @@ rm(pred, method, bdd_danish_i, bdd_danish_ii, covar_a_imputer)
 # merged dataset ----
 bdd_danish_red <- bdd_danish |> 
   select(sample, als, study, match, 
-         all_of(covariates_danish), education_merged, 
+         sex, baseline_age, smoking_2cat_i, bmi, marital_status_2cat_i, education_merged, education_i, cholesterol_i,
          baseline_age, death_age, diagnosis_age,  
          time_baseline_diagnosis, time_baseline_death, time_diagnosis_death,
         follow_up,  follow_up_death, status_death, 

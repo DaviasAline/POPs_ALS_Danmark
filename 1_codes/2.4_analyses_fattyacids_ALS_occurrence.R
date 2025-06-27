@@ -5,6 +5,8 @@
 
 # data loading - package loading ----
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2.3_analyses_POPs_ALS_survival.R")
+covariates_danish <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')
+covariates_finnish <- c("marital_status_2cat", 'smoking_2cat', 'bmi', 'cholesterol')     # education removed because missing in one finnish cohort 
 
 # Occurrence analyses ----
 ## Danish cohort ----
@@ -1025,7 +1027,7 @@ rm(main_results_fattyacids_ALS_danish,
    fattyacids_quart_als_figure_danish, 
    main_results_fattyacids_ALS_finnish, 
    descriptive_table_by_als_finnish, 
-   # covar_als_table_finnish, 
+   covar_als_table_finnish, 
    fattyacids_sd_als_table_finnish, 
    fattyacids_quart_als_table_finnish, 
    fattyacids_by_als_figure_finnish, 
@@ -1036,4 +1038,6 @@ rm(main_results_fattyacids_ALS_danish,
    fattyacids_sd_als_table_sensi_ca_finnish, 
    fattyacids_quart_als_table_sensi_ca_finnish, 
    fattyacids_sd_als_figure_sensi_ca_finnish, 
-   fattyacids_quart_als_figure_sensi_ca_finnish)
+   fattyacids_quart_als_figure_sensi_ca_finnish, 
+   
+   covariates_danish, covariates_finnish)

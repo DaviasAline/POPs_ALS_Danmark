@@ -5,6 +5,8 @@
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2.1_analyses_descriptive.R")
 
 covariates <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')
+covariates_danish <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')
+covariates_finnish <- c("marital_status_2cat", 'smoking_2cat', 'bmi', 'cholesterol')     # education removed because missing in one finnish cohort 
 
 # effects of the covariates on ALS ----
 covar <- tbl_merge(
@@ -3429,5 +3431,6 @@ rm(main_results, covar, results_spline, results_quart, results_quadratic, result
    plot_adjusted_spline_outlier, plot_adjusted_quadratic_outlier, plot_adjusted_cubic_outlier, plot_adjusted_gam_outlier, 
    plot_base_gam_not_summed, plot_adjusted_gam_not_summed, 
    plot_copollutant_gam, plot_copollutant_gam_outlier, 
-   metanalysis_quart, plot_metanalysis_quart)
+   metanalysis_quart, plot_metanalysis_quart, 
+   covariates_danish, covariates_finnish)
 
