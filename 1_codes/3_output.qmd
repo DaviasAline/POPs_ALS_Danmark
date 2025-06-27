@@ -801,144 +801,6 @@ results_POPs_ALS_occurrence$main$covar |>
 
 ### Effects of POPs on ALS occurence
 
-#### Splines, linear quadratic and cubic models
-
-##### dioxin like PCBs
-
-```{r, fig.width=15, fig.height=3}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-grid.arrange(grobs = list(
-  results_POPs_ALS_occurrence$main$plot_adjusted_spline$PCB_DL, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_spline_outlier$PCB_DL, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_quadratic$PCB_DL, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_quadratic_outlier$PCB_DL, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_cubic$PCB_DL, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_cubic_outlier$PCB_DL), 
-  ncol = 6)
-```
-
-##### non dioxin like PCBs
-
-```{r, fig.width=15, fig.height=3}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-grid.arrange(grobs = list(
-  results_POPs_ALS_occurrence$main$plot_adjusted_spline$PCB_NDL, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_spline_outlier$PCB_NDL, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_quadratic$PCB_NDL,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_quadratic_outlier$PCB_NDL, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_cubic$PCB_NDL,
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_cubic_outlier$PCB_NDL), 
-  ncol = 6)
-```
-
-##### 4 most commun PCBs
-
-```{r, fig.width=15, fig.height=3}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-grid.arrange(grobs = list(
-  results_POPs_ALS_occurrence$main$plot_adjusted_spline$PCB_4, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_spline_outlier$PCB_4,
-  results_POPs_ALS_occurrence$main$plot_adjusted_quadratic$PCB_4, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_quadratic_outlier$PCB_4, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_cubic$PCB_4, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_cubic_outlier$PCB_4), 
-  ncol = 6)
-```
-
-##### HCB
-
-```{r, fig.width=15, fig.height=3}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-grid.arrange(grobs = list(
-  results_POPs_ALS_occurrence$main$plot_adjusted_spline$OCP_HCB, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_spline_outlier$OCP_HCB,
-  results_POPs_ALS_occurrence$main$plot_adjusted_quadratic$OCP_HCB, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_quadratic_outlier$OCP_HCB, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_cubic$OCP_HCB, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_cubic_outlier$OCP_HCB), 
-  ncol = 6)
-```
-
-##### ΣDDT
-
-```{r, fig.width=15, fig.height=3}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-grid.arrange(grobs = list(
-  results_POPs_ALS_occurrence$main$plot_adjusted_spline$ΣDDT, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_spline_outlier$ΣDDT,
-  results_POPs_ALS_occurrence$main$plot_adjusted_quadratic$ΣDDT, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_quadratic_outlier$ΣDDT, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_cubic$ΣDDT, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_cubic_outlier$ΣDDT), 
-  ncol = 6)
-```
-
-##### β-HCH
-
-```{r, fig.width=15, fig.height=3}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-grid.arrange(grobs = list(
-  results_POPs_ALS_occurrence$main$plot_adjusted_spline$OCP_β_HCH, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_spline_outlier$OCP_β_HCH,
-  results_POPs_ALS_occurrence$main$plot_adjusted_quadratic$OCP_β_HCH, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_quadratic_outlier$OCP_β_HCH, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_cubic$OCP_β_HCH, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_cubic_outlier$OCP_β_HCH), 
-  ncol = 6)
-```
-
-##### Σchlordane
-
-```{r, fig.width=15, fig.height=3}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-grid.arrange(grobs = list(
-  results_POPs_ALS_occurrence$main$plot_adjusted_spline$Σchlordane, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_spline_outlier$Σchlordane,
-  results_POPs_ALS_occurrence$main$plot_adjusted_quadratic$Σchlordane, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_quadratic_outlier$Σchlordane, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_cubic$Σchlordane, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_cubic_outlier$Σchlordane), 
-  ncol = 6)
-```
-
-##### ΣPBDE
-
-```{r, fig.width=15, fig.height=3}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-grid.arrange(grobs = list(
-  results_POPs_ALS_occurrence$main$plot_adjusted_spline$ΣPBDE, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_spline_outlier$ΣPBDE,
-  results_POPs_ALS_occurrence$main$plot_adjusted_quadratic$ΣPBDE, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_quadratic_outlier$ΣPBDE, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_cubic$ΣPBDE, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_cubic_outlier$ΣPBDE), 
-  ncol = 6)
-```
-
 #### Quartile models
 
 ##### Main analysis
@@ -972,12 +834,7 @@ Relationship between POPs exposure at baseline time and ALS occurrence estimated
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gam[1:4], nrow = 1), 
-           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier[1:4], nrow = 1), 
-           nrow = 2)
-wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gam[5:8], nrow = 1), 
-           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier[5:8], nrow = 1), 
-           nrow = 2)
+wrap_plots(results_POPs_ALS_occurrence$main$plot_base_gam, nrow = 2)
 ```
 
 ##### Adjusted models
@@ -989,12 +846,7 @@ Relationship between POPs exposure at baseline time and ALS occurrence estimated
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gam[1:4], nrow = 1), 
-           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier[1:4], nrow = 1), 
-           nrow = 2)
-wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gam[5:8], nrow = 1), 
-           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier[5:8], nrow = 1), 
-           nrow = 2)
+wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gam, nrow = 2)
 ```
 
 ##### Copollutant model
@@ -1006,12 +858,7 @@ Relationship between POPs exposure at baseline time and ALS occurrence estimated
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_copollutant_gam[1:4], nrow = 1), 
-           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier[1:4], nrow = 1), 
-           nrow = 2)
-wrap_plots(wrap_plots(results_POPs_ALS_occurrence$main$plot_copollutant_gam[5:7], nrow = 1), 
-           wrap_plots(results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier[5:7], nrow = 1), 
-           nrow = 2)
+wrap_plots(results_POPs_ALS_occurrence$main$plot_copollutant_gam, nrow = 2)
 ```
 
 ##### Sensitivity analysis POPs not summed

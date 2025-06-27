@@ -32,45 +32,7 @@ covar <- tbl_merge(
 
 # main analysis ----
 ### model 1 ----
-#### spline transformation ----
-model1_spline <- data.frame(variable = character(),
-                            df = integer(),
-                            OR = numeric(),
-                            lower_CI = numeric(),
-                            upper_CI = numeric(),
-                            p_value = numeric(),
-                            stringsAsFactors = FALSE)
-
-for (var in POPs_group) {
-  
-  formula <- as.formula(paste("als ~ ns(", var, ", df=4) + strata(match)"))
-  
-  model <- clogit(formula, data = bdd_danish)
-  
-  model_summary <- tidy(model)
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  
-  model1_spline <- rbind(model1_spline, data.frame(variable = var,
-                                                   df = df_value, 
-                                                   OR = OR,
-                                                   lower_CI = lower_CI,
-                                                   upper_CI = upper_CI,
-                                                   "p-value" = p_value))
-}
-
-model1_spline <- model1_spline |> 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "base_spline") |>
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
-
-#### quartile transformation ----
+#### quartiles ----
 model1_quart <- data.frame(variable = character(),
                            df = integer(),
                            OR = numeric(),
@@ -112,85 +74,8 @@ model1_quart <- model1_quart |>
   select(variable, model, everything())
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
 
-#### quadratic transformation ----
-model1_quadratic <- data.frame(
-  variable = character(),
-  df = integer(),
-  OR = numeric(),
-  lower_CI = numeric(),
-  upper_CI = numeric(),
-  p_value = numeric(),
-  stringsAsFactors = FALSE)
 
-for (var in POPs_group) {
-  
-  formula <- as.formula(paste("als ~ poly(", var, ", degree=2) + sex + baseline_age"))
-  
-  model <- glm(formula, family = binomial, data = bdd_danish)
-  
-  model_summary <- tidy(model) |> filter(grepl("poly\\(", term))
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  
-  model1_quadratic <- rbind(model1_quadratic, data.frame(variable = var,
-                                                         df = df_value, 
-                                                         OR = OR,
-                                                         lower_CI = lower_CI,
-                                                         upper_CI = upper_CI,
-                                                         "p-value" = p_value))
-}
-
-model1_quadratic <- model1_quadratic |> 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "base_quadra") |>
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
-
-#### cubic transformation ----
-model1_cubic <- data.frame(
-  variable = character(),
-  df = integer(),
-  OR = numeric(),
-  lower_CI = numeric(),
-  upper_CI = numeric(),
-  p_value = numeric(),
-  stringsAsFactors = FALSE)
-
-for (var in POPs_group) {
-  
-  formula <- as.formula(paste("als ~ poly(", var, ", degree=3) + sex + baseline_age"))
-  
-  model <- glm(formula, family = binomial, data = bdd_danish)
-  
-  model_summary <- tidy(model) |> filter(grepl("poly\\(", term))
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  
-  model1_cubic <- rbind(model1_cubic, data.frame(variable = var,
-                                                 df = df_value, 
-                                                 OR = OR,
-                                                 lower_CI = lower_CI,
-                                                 upper_CI = upper_CI,
-                                                 "p-value" = p_value))
-}
-
-model1_cubic <- model1_cubic |> 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "base_cubic") |>
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
-
-#### gam ----
+#### gams ----
 model1_gam <- list()
 
 for (var in POPs_group) {
@@ -206,41 +91,7 @@ rm(var, formula, model, model_summary)
 ### model 2 ----
 # matched on sex and age, adjusted on for smoking_2cat_i, BMI, serum total cholesterol_i, marital status and education
 
-#### spline transformation ----
-model2_spline <- data.frame(variable = character(),
-                            df = integer(),
-                            OR = numeric(),
-                            lower_CI = numeric(),
-                            upper_CI = numeric(),
-                            p_value = numeric(),
-                            stringsAsFactors = FALSE)
-
-for (var in POPs_group) {
-  
-  formula <- as.formula(paste("als ~ ns(", var, ", df=4) + strata(match) + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
-  model <- clogit(formula, data = bdd_danish)
-  model_summary <- tidy(model) |> filter(grepl("ns\\(", term))
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  model2_spline <- rbind(model2_spline, data.frame(variable = var,
-                                                   df = df_value, 
-                                                   OR = OR,
-                                                   lower_CI = lower_CI,
-                                                   upper_CI = upper_CI,
-                                                   "p-value" = p_value))
-}
-
-model2_spline <- model2_spline |> 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "adjusted_spline") |>
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
-
-#### quartile transformation ----
+#### quartiles ----
 model2_quart <- data.frame(variable = character(),
                            df = integer(),
                            OR = numeric(),
@@ -278,79 +129,7 @@ model2_quart <- model2_quart |>
   select(variable, model, everything())
 rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
 
-#### quadratic transformation ----
-model2_quadratic <- data.frame(
-  variable = character(),
-  df = integer(),
-  OR = numeric(),
-  lower_CI = numeric(),
-  upper_CI = numeric(),
-  p_value = numeric(),
-  stringsAsFactors = FALSE)
-
-for (var in POPs_group) {
-  
-  formula <- as.formula(paste("als ~ poly(", var, ", degree=2) + sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
-  model <- glm(formula, family = binomial, data = bdd_danish)
-  model_summary <- tidy(model) |> filter(grepl("poly\\(", term))
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  model2_quadratic <- rbind(model2_quadratic, 
-                            data.frame(variable = var,
-                                       df = df_value, 
-                                       OR = OR,
-                                       lower_CI = lower_CI,
-                                       upper_CI = upper_CI,
-                                       "p-value" = p_value))
-}
-
-model2_quadratic <- model2_quadratic |> 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "adjusted_quadra") |>
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
-
-#### cubic transformation ----
-model2_cubic <- data.frame(
-  variable = character(),
-  df = integer(),
-  OR = numeric(),
-  lower_CI = numeric(),
-  upper_CI = numeric(),
-  p_value = numeric(),
-  stringsAsFactors = FALSE)
-
-for (var in POPs_group) {
-  
-  formula <- as.formula(paste("als ~ poly(", var, ", degree=3) + sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
-  model <- glm(formula, family = binomial, data = bdd_danish)
-  model_summary <- tidy(model) |> filter(grepl("poly\\(", term))
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  model2_cubic <- rbind(model2_cubic, 
-                        data.frame(variable = var,
-                                   df = df_value, 
-                                   OR = OR,
-                                   lower_CI = lower_CI,
-                                   upper_CI = upper_CI,
-                                   "p-value" = p_value))
-}
-
-model2_cubic <- model2_cubic |> 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "adjusted_cubic") |>
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
-
-#### gam ----
+#### gams ----
 model2_gam <- list()
 
 for (var in POPs_group) {
@@ -364,102 +143,7 @@ for (var in POPs_group) {
 rm(var, formula, model, model_summary)
 
 ### models 3 ----
-#### spline transformation ----
-model3_spline_HCB <- 
-  clogit(als ~ 
-           ns(OCP_HCB, df = 4) + 
-           strata(match) + 
-           PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
-           smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-         data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("OCP_HCB", term)) |>
-  mutate(df = c(1, 2, 3, 4))
-
-model3_spline_PCB_DL <- 
-  clogit(als ~ 
-           ns(PCB_DL, df = 4) + 
-           strata(match) + 
-           OCP_HCB + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
-           smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-         data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("PCB_DL", term)) |>
-  mutate(df = c(1, 2, 3, 4))
-
-model3_spline_PCB_NDL <- 
-  clogit(als ~ 
-           ns(PCB_NDL, df = 4) + 
-           strata(match) + 
-           OCP_HCB + PCB_DL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
-           smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-         data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("PCB_NDL", term)) |>
-  mutate(df = c(1, 2, 3, 4))
-
-model3_spline_ΣPBDE <- 
-  clogit(als ~ 
-           ns(ΣPBDE, df = 4) + 
-           strata(match) + 
-           OCP_HCB + PCB_DL + PCB_NDL + ΣDDT + OCP_β_HCH + Σchlordane + 
-           smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-         data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("ΣPBDE", term)) |>
-  mutate(df = c(1, 2, 3, 4))
-
-model3_spline_ΣDDT <- 
-  clogit(als ~ 
-           ns(ΣDDT, df = 4) + 
-           strata(match) + 
-           OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + OCP_β_HCH + Σchlordane +
-           smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-         data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("ΣDDT", term)) |>
-  mutate(df = c(1, 2, 3, 4))
-
-model3_spline_β_HCH <- 
-  clogit(als ~ 
-           ns(OCP_β_HCH, df = 4) + 
-           strata(match) + 
-           OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + Σchlordane +
-           smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-         data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("OCP_β_HCH", term)) |>
-  mutate(df = c(1, 2, 3, 4))
-
-model3_spline_Σchlordane <- 
-  clogit(als ~ 
-           ns(Σchlordane, df = 4) + 
-           strata(match) + 
-           OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH +
-           smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-         data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("Σchlordane", term)) |>
-  mutate(df = c(1, 2, 3, 4))
-
-model3_spline <- bind_rows(
-  model3_spline_HCB, model3_spline_PCB_DL, model3_spline_PCB_NDL, model3_spline_ΣPBDE, model3_spline_ΣDDT, model3_spline_β_HCH, model3_spline_Σchlordane) |>
-  mutate(
-    variable = gsub('ns\\(', '', term), 
-    variable = gsub(', df = 4)1', '', variable),
-    variable = gsub(', df = 4)2', '', variable),
-    variable = gsub(', df = 4)3', '', variable),
-    variable = gsub(', df = 4)4', '', variable),
-    model = "copollutant_spline", 
-    df = as.character(df),
-    OR = exp(estimate), 
-    lower_CI = exp(estimate - 1.96 * std.error), 
-    upper_CI = exp(estimate + 1.96 * std.error)) |> 
-  select(variable, model, df, OR, lower_CI, upper_CI, p.value)
-
-rm(model3_spline_HCB, model3_spline_PCB_DL, model3_spline_PCB_NDL, model3_spline_ΣPBDE, model3_spline_ΣDDT, model3_spline_β_HCH, model3_spline_Σchlordane)
-
-#### quartile tranformation ----
+#### quartiles ----
 ##### pollutant of interest as quartile while the others are s() transformed in a gam model 
 model3_quart_PCB_DL <- 
   gam(als ~ 
@@ -573,218 +257,7 @@ model3_quart <- bind_rows(
 
 rm(model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_HCB, model3_quart_ΣDDT, model3_quart_β_HCH, model3_quart_Σchlordane, model3_quart_ΣPBDE)
 
-#### quadratic tranformation ----
-model3_quadra_HCB <- 
-  glm(als ~ 
-        poly(OCP_HCB, 2) + 
-        baseline_age + sex + 
-        PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
-        smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-      family = binomial, data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("OCP_HCB", term)) |>
-  mutate(df = c(1, 2))
-
-model3_quadra_PCB_DL <- 
-  glm(als ~ 
-        poly(PCB_DL, 2) + 
-        baseline_age + sex + 
-        OCP_HCB + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
-        smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-      family = binomial, data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("PCB_DL", term)) |>
-  mutate(df = c(1, 2))
-
-model3_quadra_PCB_NDL <- 
-  glm(als ~ 
-        poly(PCB_NDL, 2) + 
-        baseline_age + sex + 
-        OCP_HCB + PCB_DL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
-        smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-      family = binomial, data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("PCB_NDL", term)) |>
-  mutate(df = c(1, 2))
-
-model3_quadra_ΣPBDE <- 
-  glm(als ~ 
-        poly(ΣPBDE, 2) + 
-        baseline_age + sex + 
-        OCP_HCB + PCB_DL + PCB_NDL + ΣDDT + OCP_β_HCH + Σchlordane + 
-        smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-      family = binomial, data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("ΣPBDE", term)) |>
-  mutate(df = c(1, 2))
-
-model3_quadra_ΣDDT <- 
-  glm(als ~ 
-        poly(ΣDDT, 2) + 
-        baseline_age + sex + 
-        OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + OCP_β_HCH + Σchlordane + 
-        smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-      family = binomial, data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("ΣDDT", term)) |>
-  mutate(df = c(1, 2))
-
-model3_quadra_β_HCH <- 
-  glm(als ~ 
-        poly(OCP_β_HCH, 2) + 
-        baseline_age + sex + 
-        OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + Σchlordane + 
-        smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-      family = binomial, data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("OCP_β_HCH", term)) |>
-  mutate(df = c(1, 2))
-
-model3_quadra_Σchlordane <- 
-  glm(als ~ 
-        poly(Σchlordane, 2) + 
-        baseline_age + sex + 
-        OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + 
-        smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-      family = binomial, data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("Σchlordane", term)) |>
-  mutate(df = c(1, 2))
-
-model3_quadratic <- bind_rows(
-  model3_quadra_HCB, model3_quadra_PCB_DL, model3_quadra_PCB_NDL, model3_quadra_ΣPBDE, model3_quadra_ΣDDT, model3_quadra_β_HCH, model3_quadra_Σchlordane) |>
-  mutate(
-    variable = gsub("poly\\(", "", term),
-    variable = gsub(", 2)1", "", variable),
-    variable = gsub(", 2)2", "", variable),
-    model = "copollutant_quadra", 
-    df = as.character(df),
-    OR = exp(estimate), 
-    lower_CI = exp(estimate - 1.96 * std.error), 
-    upper_CI = exp(estimate + 1.96 * std.error)) |> 
-  select(variable, model, df, OR, lower_CI, upper_CI, p.value)
-
-rm(model3_quadra_HCB, model3_quadra_PCB_DL, model3_quadra_PCB_NDL, model3_quadra_ΣPBDE, model3_quadra_ΣDDT, model3_quadra_β_HCH, model3_quadra_Σchlordane)
-
-#### cubic tranformation ----
-model3_cubic_HCB <- 
-  glm(als ~ 
-        poly(OCP_HCB, 3) + 
-        baseline_age + sex + 
-        PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
-        smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-      family = binomial, data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("OCP_HCB", term)) |>
-  mutate(df = c(1, 2, 3))
-
-model3_cubic_PCB_DL <- 
-  glm(als ~ 
-        poly(PCB_DL, 3) + 
-        baseline_age + sex + 
-        OCP_HCB + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
-        smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-      family = binomial, data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("PCB_DL", term))  |>
-  mutate(df = c(1, 2, 3))
-
-model3_cubic_PCB_NDL <- 
-  glm(als ~ 
-        poly(PCB_NDL, 3) + 
-        baseline_age + sex + 
-        OCP_HCB + PCB_DL + ΣPBDE + ΣDDT + OCP_β_HCH + Σchlordane + 
-        smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-      family = binomial, data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("PCB_NDL", term))  |>
-  mutate(df = c(1, 2, 3))
-
-model3_cubic_ΣPBDE <- 
-  glm(als ~ 
-        poly(ΣPBDE, 3) + 
-        baseline_age + sex + 
-        OCP_HCB + PCB_DL + PCB_NDL + ΣDDT + OCP_β_HCH + Σchlordane + 
-        smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-      family = binomial, data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("ΣPBDE", term)) |>
-  mutate(df = c(1, 2, 3))
-
-model3_cubic_ΣDDT <- 
-  glm(als ~ 
-        poly(ΣDDT, 3) + 
-        baseline_age + sex + 
-        OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + OCP_β_HCH + Σchlordane + 
-        smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-      family = binomial, data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("ΣDDT", term))  |>
-  mutate(df = c(1, 2, 3))
-
-model3_cubic_β_HCH <- 
-  glm(als ~ 
-        poly(OCP_β_HCH, 3) + 
-        baseline_age + sex + 
-        OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + Σchlordane + 
-        smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-      family = binomial, data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("OCP_β_HCH", term))  |>
-  mutate(df = c(1, 2, 3))
-
-model3_cubic_Σchlordane <- 
-  glm(als ~ 
-        poly(Σchlordane, 3) + 
-        baseline_age + sex + 
-        OCP_HCB + PCB_DL + PCB_NDL + ΣPBDE + ΣDDT + OCP_β_HCH + 
-        smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-      family = binomial, data = bdd_danish) |>
-  tidy()  |>
-  filter(grepl("Σchlordane", term))  |>
-  mutate(df = c(1, 2, 3))
-
-model3_cubic <- bind_rows(
-  model3_cubic_HCB, model3_cubic_PCB_DL, model3_cubic_PCB_NDL, model3_cubic_ΣPBDE, model3_cubic_ΣDDT, model3_cubic_β_HCH, model3_cubic_Σchlordane) |>
-  mutate(
-    variable = gsub("poly\\(", "", term),
-    variable = gsub(", 3)1", "", variable),
-    variable = gsub(", 3)2", "", variable),
-    variable = gsub(", 3)3", "", variable),
-    model = "copollutant_cubic", 
-    df = as.character(df),
-    OR = exp(estimate), 
-    lower_CI = exp(estimate - 1.96 * std.error), 
-    upper_CI = exp(estimate + 1.96 * std.error)) |> 
-  select(variable, model, df, OR, lower_CI, upper_CI, p.value)
-
-rm(model3_cubic_HCB, model3_cubic_PCB_DL, model3_cubic_PCB_NDL, model3_cubic_ΣPBDE, model3_cubic_ΣDDT, model3_cubic_β_HCH, model3_cubic_Σchlordane)
-
-
 ### heterogeneity tests ----
-#### model 1 spline ----
-heterogeneity_base_spline <- data.frame(variable = character(),
-                                        model = factor(), 
-                                        p.value_heterogeneity = numeric(), 
-                                        stringsAsFactors = FALSE)
-
-for (var in POPs_group) {
-  
-  test_1 <- clogit(als ~ strata(match), data = bdd_danish)
-  
-  formula <- as.formula(paste("als ~ ns(", var, ", df=4) + strata(match)"))
-  test_2 <- clogit(formula, data = bdd_danish)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p.value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_base_spline <- rbind(heterogeneity_base_spline, 
-                                     data.frame(variable = var,
-                                                model = "base_spline",
-                                                p.value_heterogeneity = p.value_heterogeneity))
-}
-rm(var, test_1, test_2, formula, anova, p.value_heterogeneity)
-
 #### model 1 quartile ----
 heterogeneity_base_quart <- data.frame(variable = character(),
                                        model = factor(),
@@ -805,29 +278,6 @@ for (var in POPs_group_quart) {
                                     data.frame(variable = var,
                                                model = "base_quart",
                                                p.value_heterogeneity = p.value_heterogeneity))
-}
-rm(var, test_1, test_2, formula, anova, p.value_heterogeneity)
-
-#### model 2 spline ----
-heterogeneity_adjusted_spline <- data.frame(variable = character(),
-                                            model = factor(), 
-                                            p.value_heterogeneity = numeric(), 
-                                            stringsAsFactors = FALSE)
-
-for (var in POPs_group) {
-  
-  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, data = bdd_danish)
-  
-  formula <- as.formula(paste("als ~ ns(", var, ", df=4) + strata(match) + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
-  test_2 <- clogit(formula, data = bdd_danish)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p.value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_adjusted_spline <- rbind(heterogeneity_adjusted_spline, 
-                                         data.frame(variable = var,
-                                                    model = "adjusted_spline",
-                                                    p.value_heterogeneity = p.value_heterogeneity))
 }
 rm(var, test_1, test_2, formula, anova, p.value_heterogeneity)
 
@@ -1137,7 +587,7 @@ trend_tests <-
   bind_rows(trend_base, trend_adjusted, trend_copollutant) |>
   mutate(variable = gsub("_quart_med", "", variable))
 
-### metanalysis (quart) ----
+### metanalysis (quartiles) ----
 run_clogit <- function(formula, data) {
   model <- clogit(formula, data = data)
   model_summary <- summary(model)
@@ -1162,17 +612,17 @@ metanalysis_base_quart <- map_dfr(POPs_group_metanalysis_quart, function(expl) {
   
   bdd_finnish_FMC <- bdd |>                                                     
     filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
+    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific                      
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart")) 
   bdd_finnish_FMCF <- bdd |> 
     filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
+    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific    
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart"))
   bdd_finnish_MFH <- bdd |> 
     filter(study == "MFH") |>                                                   # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific    
+    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific    
                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart"))
   
@@ -1272,24 +722,24 @@ metanalysis_adjusted_quart <- map_dfr(POPs_group_metanalysis_quart, function(exp
 POPs_group_matanalysis <- setdiff(POPs_group, "ΣPBDE")  
 
 bdd_metanalysis_danish <- bdd |>                                                     
-  filter(study == "Danish") |>                                                # creation of one dataset per finnish cohort
-  mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific                      
+  filter(study == "Danish") |>                                                  # creation of one dataset per finnish cohort
+  mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),          # creation of quartiles cohort specific                      
                                                          labels = c("Q1", "Q2", "Q3", "Q4")),
                 .names = "{.col}_quart")) 
 
 bdd_metanalysis_FMC <- bdd |>                                                     
-  filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
-  mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific                      
+  filter(study == "FMC") |>                                                     # creation of one dataset per finnish cohort
+  mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),          # creation of quartiles cohort specific                      
                                                          labels = c("Q1", "Q2", "Q3", "Q4")),
                 .names = "{.col}_quart")) 
 bdd_metanalysis_FMCF <- bdd |> 
-  filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
-  mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific    
+  filter(study == "FMCF") |>                                                    # creation of one dataset per finnish cohort
+  mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),          # creation of quartiles cohort specific    
                                                          labels = c("Q1", "Q2", "Q3", "Q4")),
                 .names = "{.col}_quart"))
 bdd_metanalysis_MFH <- bdd |> 
-  filter(study == "MFH") |>                                                   # creation of one dataset per finnish cohort
-  mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific    
+  filter(study == "MFH") |>                                                     # creation of one dataset per finnish cohort
+  mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),          # creation of quartiles cohort specific    
                                                          labels = c("Q1", "Q2", "Q3", "Q4")),
                 .names = "{.col}_quart"))
 rm(POPs_group_matanalysis)
@@ -1672,18 +1122,9 @@ metanalysis_quart <- bind_rows(metanalysis_base_quart, metanalysis_adjusted_quar
 rm(metanalysis_base_quart, metanalysis_adjusted_quart, metanalysis_copollutant_quart, run_clogit, POPs_group_metanalysis, POPs_group_metanalysis_quart)
 
 ### merging the main results ----
-main_results <- bind_rows(model1_spline, 
-                          model1_quart, 
-                          model1_quadratic,
-                          model1_cubic, 
-                          model2_spline, 
+main_results <- bind_rows(model1_quart, 
                           model2_quart,
-                          model2_quadratic,
-                          model2_cubic,
-                          model3_spline, 
-                          model3_quart, 
-                          model3_quadratic, 
-                          model3_cubic) |> 
+                          model3_quart) |> 
   mutate(variable = gsub("_quart", "", variable), 
          OR = as.numeric(sprintf("%.1f", OR)),
          lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
@@ -1707,19 +1148,6 @@ main_results <- main_results |>
     p.value_heterogeneity = ifelse(p.value_heterogeneity < 0.01, "<0.01", number(p.value_heterogeneity, accuracy = 0.01, decimal.mark = ".")), 
     p.value_trend = ifelse(p.value_trend < 0.01, "<0.01", number(p.value_trend, accuracy = 0.01, decimal.mark = ".")))
 
-results_spline <- 
-  main_results |>
-  select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI, -p.value_raw) |>
-  filter(model %in% c('base_spline', 'adjusted_spline', 'copollutant_spline')) |>
-  pivot_wider(
-    names_from = model,  
-    values_from = c(OR, `95%CI`, p.value)) |>
-  select(variable, 
-         df,
-         contains("base_spline"), 
-         contains("adjusted_spline"), 
-         contains("copollutant_spline")) 
-colnames(results_spline) <- gsub('_spline', '', colnames(results_spline))
 
 results_quart <- 
   main_results |>
@@ -1735,370 +1163,12 @@ results_quart <-
          contains("copollutant_quart")) 
 colnames(results_quart) <- gsub('_quart', '', colnames(results_quart))
 
-results_quadratic <- 
-  main_results |>
-  select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI, -p.value_raw) |>
-  filter(model %in% c('base_quadra', 'adjusted_quadra', 'copollutant_quadra')) |>
-  pivot_wider(
-    names_from = model,  
-    values_from = c(OR, `95%CI`, p.value)) |>
-  select(variable, 
-         degree = df,
-         contains("base_quadra"), 
-         contains("adjusted_quadra"), 
-         contains("copollutant_quadra")) 
-colnames(results_quadratic) <- gsub('_quadra', '', colnames(results_quadratic))
-
-results_cubic <- 
-  main_results |>
-  select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI, -p.value_raw) |>
-  filter(model %in% c('base_cubic', 'adjusted_cubic', 'copollutant_cubic')) |>
-  pivot_wider(
-    names_from = model,  
-    values_from = c(OR, `95%CI`, p.value)) |>
-  select(variable, 
-         degree = df,
-         contains("base_cubic"), 
-         contains("adjusted_cubic"), 
-         contains("copollutant_cubic")) 
-colnames(results_cubic) <- gsub('_cubic', '', colnames(results_cubic))
-
-rm(model1_quart, model1_spline, model1_quadratic, model1_cubic,
-   model2_quart, model2_spline, model2_quadratic, model2_cubic,
-   model3_quart, model3_spline, model3_quadratic, model3_cubic,
-   heterogeneity_base_quart, heterogeneity_base_spline,
-   heterogeneity_adjusted_spline, heterogeneity_adjusted_quart, heterogeneity_copollutant, 
+rm(model1_quart, 
+   model2_quart, 
+   model3_quart, 
+   heterogeneity_base_quart, heterogeneity_adjusted_quart, heterogeneity_copollutant, 
    trend_base, trend_adjusted, trend_copollutant, 
    heterogeneity_tests, trend_tests)
-
-# sensitivity analyses without outliers ----
-### model 1  ----
-# adjusted for sex and age
-
-#### spline transformation ----
-model1_spline_outliers <- data.frame(
-  variable = character(),
-  df = integer(),
-  OR = numeric(),
-  lower_CI = numeric(),
-  upper_CI = numeric(),
-  p_value = numeric(),
-  stringsAsFactors = FALSE)
-
-for (var in POPs_group_outlier) {
-  
-  formula <- as.formula(paste("als ~ ns(", var, ", df=4) + sex + baseline_age"))
-  bdd_danish_red <- bdd_danish |> filter(!is.na(.data[[var]]))
-  
-  model <- glm(formula, family = binomial, data = bdd_danish)
-  
-  model_summary <- tidy(model) |> filter(grepl("ns\\(", term))
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  
-  model1_spline_outliers <- rbind(model1_spline_outliers, data.frame(variable = var,
-                                                                   df = df_value, 
-                                                                   OR = OR,
-                                                                   lower_CI = lower_CI,
-                                                                   upper_CI = upper_CI,
-                                                                   "p-value" = p_value))
-}
-
-model1_spline_outliers <- model1_spline_outliers |> 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "base_spline") |>
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
-
-#### quadratic transformation ----
-model1_quadratic_outliers <- data.frame(
-  variable = character(),
-  df = integer(),
-  OR = numeric(),
-  lower_CI = numeric(),
-  upper_CI = numeric(),
-  p_value = numeric(),
-  stringsAsFactors = FALSE)
-
-for (var in POPs_group_outlier) {
-  
-  formula <- as.formula(paste("als ~ poly(", var, ", degree=2) + sex + baseline_age"))
-  bdd_danish_red <- bdd_danish |> filter(!is.na(.data[[var]]))
-  model <- glm(formula, family = binomial, data = bdd_danish_red)
-  
-  model_summary <- tidy(model) |> filter(grepl("poly\\(", term))
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  
-  model1_quadratic_outliers <- rbind(model1_quadratic_outliers, data.frame(variable = var,
-                                                                         df = df_value, 
-                                                                         OR = OR,
-                                                                         lower_CI = lower_CI,
-                                                                         upper_CI = upper_CI,
-                                                                         "p-value" = p_value))
-}
-
-model1_quadratic_outliers <- model1_quadratic_outliers |> 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "base_quadra") |>
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
-
-#### cubic transformation ----
-model1_cubic_outliers <- data.frame(
-  variable = character(),
-  df = integer(),
-  OR = numeric(),
-  lower_CI = numeric(),
-  upper_CI = numeric(),
-  p_value = numeric(),
-  stringsAsFactors = FALSE)
-
-for (var in POPs_group_outlier) {
-  
-  formula <- as.formula(paste("als ~ poly(", var, ", degree=3) + sex + baseline_age"))
-  bdd_danish_red <- bdd_danish |> filter(!is.na(.data[[var]]))
-  model <- glm(formula, family = binomial, data = bdd_danish_red)
-  
-  model_summary <- tidy(model) |> filter(grepl("poly\\(", term))
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  
-  model1_cubic_outliers <- rbind(model1_cubic_outliers, data.frame(variable = var,
-                                                                 df = df_value, 
-                                                                 OR = OR,
-                                                                 lower_CI = lower_CI,
-                                                                 upper_CI = upper_CI,
-                                                                 "p-value" = p_value))
-}
-
-model1_cubic_outliers <- model1_cubic_outliers |> 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "base_cubic") |>
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
-
-
-#### gam ----
-model1_gam_outliers <- list()
-
-for (var in POPs_group_outlier) {
-  
-  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
-  model_summary <- summary(model)
-  model1_gam_outliers[[var]] <- model_summary
-}
-
-rm(var, formula, model, model_summary)
-### model 2 ----
-# adjusted for sex, age, smoking_2cat_i, BMI, serum total cholesterol_i, marital status and education
-
-#### spline transformation ----
-model2_spline_outliers <- data.frame(
-  variable = character(),
-  df = integer(),
-  OR = numeric(),
-  lower_CI = numeric(),
-  upper_CI = numeric(),
-  p_value = numeric(),
-  stringsAsFactors = FALSE)
-
-for (var in POPs_group_outlier) {
-  
-  formula <- as.formula(paste("als ~ ns(", var, ", df=4) + sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
-  model <- glm(formula, family = binomial, data = bdd_danish)
-  model_summary <- tidy(model) |> filter(grepl("ns\\(", term))
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  model2_spline_outliers <- rbind(model2_spline_outliers, data.frame(variable = var,
-                                                                   df = df_value, 
-                                                                   OR = OR,
-                                                                   lower_CI = lower_CI,
-                                                                   upper_CI = upper_CI,
-                                                                   "p-value" = p_value))
-}
-
-model2_spline_outliers <- model2_spline_outliers |> 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "adjusted_spline") |>
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
-
-#### quadratic transformation ----
-model2_quadratic_outliers <- data.frame(
-  variable = character(),
-  df = integer(),
-  OR = numeric(),
-  lower_CI = numeric(),
-  upper_CI = numeric(),
-  p_value = numeric(),
-  stringsAsFactors = FALSE)
-
-for (var in POPs_group_outlier) {
-  
-  formula <- as.formula(paste("als ~ poly(", var, ", degree=2) + sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
-  bdd_danish_red <- bdd_danish |> filter(!is.na(.data[[var]]))
-  model <- glm(formula, family = binomial, data = bdd_danish_red)
-  model_summary <- tidy(model) |> filter(grepl("poly\\(", term))
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  model2_quadratic_outliers <- rbind(model2_quadratic_outliers, 
-                                    data.frame(variable = var,
-                                               df = df_value, 
-                                               OR = OR,
-                                               lower_CI = lower_CI,
-                                               upper_CI = upper_CI,
-                                               "p-value" = p_value))
-}
-
-model2_quadratic_outliers <- model2_quadratic_outliers |> 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "adjusted_quadra") |>
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
-
-#### cubic transformation ----
-model2_cubic_outliers <- data.frame(
-  variable = character(),
-  df = integer(),
-  OR = numeric(),
-  lower_CI = numeric(),
-  upper_CI = numeric(),
-  p_value = numeric(),
-  stringsAsFactors = FALSE)
-
-for (var in POPs_group_outlier) {
-  
-  formula <- as.formula(paste("als ~ poly(", var, ", degree=3) + sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
-  bdd_danish_red <- bdd_danish |> filter(!is.na(.data[[var]]))
-  model <- glm(formula, family = binomial, data = bdd_danish_red)
-  model_summary <- tidy(model) |> filter(grepl("poly\\(", term))
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  df_value <- model_summary$term
-  model2_cubic_outliers <- rbind(model2_cubic_outliers, 
-                                data.frame(variable = var,
-                                           df = df_value, 
-                                           OR = OR,
-                                           lower_CI = lower_CI,
-                                           upper_CI = upper_CI,
-                                           "p-value" = p_value))
-}
-
-model2_cubic_outliers <- model2_cubic_outliers |> 
-  mutate(
-    df = str_sub(df, start = -1), 
-    model = "adjusted_cubic") |>
-  select(variable, model, everything())
-rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var, bdd_danish_red)
-
-#### gam ----
-model2_gam_outliers <- list()
-
-for (var in POPs_group_outlier) {
-  
-  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + 
-                              smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
-  model_summary <- summary(model)
-  model2_gam_outliers[[var]] <- model_summary
-}
-
-rm(var, formula, model, model_summary)
-
-#### merging  ----
-sensitivity_results_outlier <- bind_rows(model1_spline_outliers,
-                                  model1_quadratic_outliers,
-                                 model1_cubic_outliers, 
-                                 model2_spline_outliers,
-                                model2_quadratic_outliers,
-                                 model2_cubic_outliers) |> 
-  arrange(variable) |>
-  mutate(
-    OR = as.numeric(sprintf("%.1f", OR)), 
-    lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
-    upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
-    p.value = ifelse(p.value < 0.01, "<0.01", number(p.value, accuracy = 0.01, decimal.mark = ".")),
-    "95%CI" = paste(lower_CI, ", ", upper_CI, sep = '')) |>
-  select(-starts_with("lower"), -starts_with("upper")) |>
-  select(variable, 
-         model,
-         df,
-         starts_with("OR"), 
-         starts_with("95%"), 
-         starts_with("p.value")) 
-
-results_spline_outliers <- 
-  sensitivity_results_outlier |>
-  filter(model %in% c('base_spline', 'adjusted_spline', 'copollutant_spline')) |>
-  pivot_wider(
-    names_from = model,  
-    values_from = c(OR, `95%CI`, p.value)) |>
-  select(variable, 
-         df,
-         contains("base_spline"), 
-         contains("adjusted_spline"), 
-         contains("copollutant_spline")) 
-colnames(results_spline_outliers) <- gsub('_spline', '', colnames(results_spline_outliers))
-
-results_quadratic_outliers <- 
-  sensitivity_results_outlier |>
-  filter(model %in% c('base_quadra', 'adjusted_quadra', 'copollutant_quadra')) |>
-  pivot_wider(
-    names_from = model,  
-    values_from = c(OR, `95%CI`, p.value)) |>
-  select(variable, 
-         df,
-         contains("base_quadra"), 
-         contains("adjusted_quadra"), 
-         contains("copollutant_quadra")) 
-colnames(results_quadratic_outliers) <- gsub('_quadra', '', colnames(results_quadratic_outliers))
-
-results_cubic_outliers <- 
-  sensitivity_results_outlier |>
-  filter(model %in% c('base_cubic', 'adjusted_cubic', 'copollutant_cubic')) |>
-  pivot_wider(
-    names_from = model,  
-    values_from = c(OR, `95%CI`, p.value)) |>
-  select(variable, 
-         df,
-         contains("base_cubic"), 
-         contains("adjusted_cubic"), 
-         contains("copollutant_cubic")) 
-colnames(results_cubic_outliers) <- gsub('_cubic', '', colnames(results_cubic_outliers))
-
-rm(model1_spline_outliers,
-   model1_quadratic_outliers,
-   model1_cubic_outliers, 
-   model2_spline_outliers,
-   model2_quadratic_outliers,
-   model2_cubic_outliers)
 
 # sensitivity analyses pollutants not summed ----
 ### quartiles ----
@@ -2280,256 +1350,6 @@ plot_quart_sensi_not_summed <- sensitivity_results_not_summed_quart |>
   coord_flip()
 
 ## model 1 ----
-### spline ----
-plot_base_spline <- list()
-
-for (var in POPs_group) {
-  
-  formula <- as.formula(paste0("als ~ ns(", var, ", df = 4) + strata(match)"))
-  model <- clogit(formula, data = bdd_danish)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  pred <- predict(model, newdata = new_data, type = "lp", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) + 
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) + 
-    labs(x = var, y = "Predicted probability of ALS", title = "spline") +
-    theme_minimal()
-  
-  plot_base_spline[[var]] <- plot
-}
-rm(var, formula, model, new_data, pred, plot)
-
-### spline outliers ----
-plot_base_spline_outlier <- list()
-
-for (var in POPs_group_outlier) {
-  
-  formula <- as.formula(paste0("als ~ ns(", var, ", df = 4) + ", 
-                               paste(c('sex', 'baseline_age'), collapse = " + ")))
-  
-  model <- glm(formula, family = binomial, data = bdd_danish)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in c('sex', 'baseline_age')) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "link", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS", title = 'spline without outliers') +
-    theme_minimal()
-  
-  plot_base_spline_outlier[[var]] <- plot
-}
-
-rm(var, formula, model, new_data, pred, plot, cov)
-
-
-### quadratic ----
-plot_base_quadratic <- list()
-
-for (var in POPs_group) {
-  
-  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 2) + sex + baseline_age"))
-  
-  model <- glm(formula, family = binomial, data = bdd_danish)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in c("sex", "baseline_age")) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "link", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS", title = 'linear quadratic') +
-    theme_minimal()
-  
-  plot_base_quadratic[[var]] <- plot
-}
-
-rm(var, formula, model, new_data, pred, plot, cov)
-
-### quadratic outliers ----
-plot_base_quadratic_outlier <- list()
-
-for (var in POPs_group_outlier) {
-  
-  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 2) + sex + baseline_age"))
-  
-  bdd_danish_red <- bdd_danish |> filter(!is.na(.data[[var]]))
-  model <- glm(formula, family = binomial, data = bdd_danish_red)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in c("sex", "baseline_age")) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "link", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS", title = 'linear quadratic without outliers') +
-    theme_minimal()
-  
-  plot_base_quadratic_outlier[[var]] <- plot
-}
-
-rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
-
-### cubic ----
-plot_base_cubic <- list()
-
-for (var in POPs_group) {
-  
-  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 3) + sex + baseline_age"))
-  
-  model <- glm(formula, family = binomial, data = bdd_danish)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in c("sex", "baseline_age")) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "link", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS", title = 'cubic') +
-    theme_minimal()
-  
-  plot_base_cubic[[var]] <- plot
-}
-
-rm(var, formula, model, new_data, pred, plot, cov)
-
-### cubic outliers ----
-plot_base_cubic_outlier <- list()
-
-for (var in POPs_group_outlier) {
-  
-  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 3) + sex + baseline_age"))
-  
-  bdd_danish_red <- bdd_danish |> filter(!is.na(.data[[var]]))
-  model <- glm(formula, family = binomial, data = bdd_danish_red)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in c("sex", "baseline_age")) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "link", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS", title = 'cubic without outliers') +
-    theme_minimal()
-  
-  plot_base_cubic_outlier[[var]] <- plot
-}
-rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
 
 ### gam ----
 pollutant_labels <- set_names(
@@ -2537,68 +1357,6 @@ pollutant_labels <- set_names(
   POPs_group)
 
 plot_base_gam <- map(POPs_group, function(var) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
-  
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
-  
-  bdd_pred <- bdd_danish |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_max <- max(bdd_danish[[var]], na.rm = TRUE)
-  x_label <- pollutant_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 1, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_text(color = 'white'),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Base model")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) |> 
-  set_names(POPs_group)
-rm(pollutant_labels)
-
-### gam outliers ----
-pollutant_labels <- set_names(
-  c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
-  POPs_group_outlier)
-
-plot_base_gam_outlier <- map(POPs_group_outlier, function(var) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
   
@@ -2683,8 +1441,7 @@ plot_base_gam_not_summed <- map(POPs_included, function(var) {
   
   bdd_pred <- bdd_pred |>
     mutate(
-      prob = plogis(pred$fit),
-      # plogit does exp(pred$fit) / (1 + exp(pred$fit))
+      prob = plogis(pred$fit),                                       # plogit does exp(pred$fit) / (1 + exp(pred$fit))
       prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
       prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
   
@@ -2745,342 +1502,12 @@ plot_base_gam_not_summed <- map(POPs_included, function(var) {
 rm(pollutant_labels)
 
 ## model 2 ----
-### spline ----
-plot_adjusted_spline <- list()
-
-for (var in POPs_group) {
-  
-  formula <- as.formula(paste0("als ~ ns(", var, ", df = 4) + 
-                               strata(match) + 
-                               smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
-  
-  model <- clogit(formula, data = bdd_danish)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in covariates) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "lp", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS", title = "spline") +
-    theme_minimal()
-  
-  plot_adjusted_spline[[var]] <- plot
-}
-
-rm(var, formula, model, new_data, pred, plot, cov)
-
-### spline outliers ----
-plot_adjusted_spline_outlier <- list()
-
-for (var in POPs_group_outlier) {
-  
-  formula <- as.formula(paste0("als ~ ns(", var, ", df = 4) + ", 
-                               paste(covariates, collapse = " + ")))
-  
-  model <- glm(formula, family = binomial, data = bdd_danish)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in covariates) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "link", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  
-    labs(x = var, y = "Predicted probability of ALS", title = 'spline without outliers') +
-    theme_minimal()
-  
-  plot_adjusted_spline_outlier[[var]] <- plot
-}
-
-rm(var, formula, model, new_data, pred, plot, cov)
-
-
-### quadratic  ----
-plot_adjusted_quadratic <- list()
-
-for (var in POPs_group) {
-  
-  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 2) + ", 
-                               paste(covariates, collapse = " + ")))
-  
-  model <- glm(formula, family = binomial, data = bdd_danish)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in covariates) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "link", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +                                       # Plot the estimated probability
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  # Add CI ribbon
-    labs(x = var, y = "Predicted probability of ALS", title = 'linear quadratic') +
-    theme_minimal()
-  
-  plot_adjusted_quadratic[[var]] <- plot
-}
-
-rm(var, formula, model, new_data, pred, plot, cov)
-
-### quadratic outliers ----
-plot_adjusted_quadratic_outlier <- list()
-
-for (var in POPs_group_outlier) {
-  
-  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 2) + ", 
-                               paste(covariates, collapse = " + ")))
-  bdd_danish_red <- bdd_danish |> filter(!is.na(.data[[var]]))
-  model <- glm(formula, family = binomial, data = bdd_danish_red)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in covariates) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "link", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  # Plot the estimated probability
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +  # Add CI ribbon
-    labs(x = var, y = "Predicted probability of ALS", title = 'linear quadratic without outliers') +
-    theme_minimal()
-  
-  plot_adjusted_quadratic_outlier[[var]] <- plot
-}
-
-rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
-
-### cubic ----
-plot_adjusted_cubic <- list()
-
-for (var in POPs_group) {
-  
-  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 3) + ", 
-                               paste(covariates, collapse = " + ")))
-  
-  model <- glm(formula, family = binomial, data = bdd_danish)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in covariates) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "link", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) + 
-    labs(x = var, y = "Predicted probability of ALS", title = 'cubic') +
-    theme_minimal()
-  
-  plot_adjusted_cubic[[var]] <- plot
-}
-
-rm(var, formula, model, new_data, pred, plot, cov)
-
-### cubic outliers -----
-plot_adjusted_cubic_outlier <- list()
-
-for (var in POPs_group_outlier) {
-  
-  formula <- as.formula(paste0("als ~ poly(", var, ", degree = 3) + ", 
-                               paste(covariates, collapse = " + ")))
-  
-  bdd_danish_red <- bdd_danish |> filter(!is.na(.data[[var]]))
-  model <- glm(formula, family = binomial, data = bdd_danish_red)
-  
-  new_data <- data.frame(seq(min(bdd_danish[[var]], na.rm = TRUE), 
-                             max(bdd_danish[[var]], na.rm = TRUE), 
-                             length.out = 498))
-  colnames(new_data) <- var
-  
-  new_data$match <- bdd_danish$match[1]
-  
-  for (cov in covariates) {
-    if (is.numeric(bdd_danish[[cov]])) {
-      new_data[[cov]] <- mean(bdd_danish[[cov]], na.rm = TRUE)  
-    } else {
-      new_data[[cov]] <- as.factor(names(which.max(table(bdd_danish[[cov]])))) 
-    }
-  }
-  
-  pred <- predict(model, newdata = new_data, type = "link", se.fit = TRUE)
-  new_data$upper <- pred$fit + 1.96 * pred$se.fit
-  new_data$lower <- pred$fit - 1.96 * pred$se.fit
-  
-  new_data$prob <- exp(pred$fit) / (1 + exp(pred$fit))
-  new_data$prob_lower <- exp(new_data$lower) / (1 + exp(new_data$lower))
-  new_data$prob_upper <- exp(new_data$upper) / (1 + exp(new_data$upper))
-  
-  plot <- ggplot(new_data, aes_string(x = var, y = "prob")) +
-    geom_line(color = "blue", size = 1) +  
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) + 
-    labs(x = var, y = "Predicted probability of ALS", title = 'cubic without outliers') +
-    theme_minimal()
-  
-  plot_adjusted_cubic_outlier[[var]] <- plot
-}
-
-rm(var, formula, model, new_data, pred, plot, cov, bdd_danish_red)
-
-
 ### gam ----
 pollutant_labels <- set_names(
   c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
   POPs_group)
 
 plot_adjusted_gam <- map(POPs_group, function(var) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates, collapse = ' + ')}"))
-  
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
-  
-  bdd_pred <- bdd_danish |>                                                    # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(across(all_of(covariates), 
-                  ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.))), 
-                  .names = "adj_{.col}")) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_max <- max(bdd_danish[[var]], na.rm = TRUE)
-  x_label <- pollutant_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 1, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_text(color = 'white'),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Adjusted model")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) |> 
-  set_names(POPs_group)
-rm(pollutant_labels)
-
-### gam outliers ----
-pollutant_labels <- set_names(
-  c("Most prevalent PCBs","Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
-  POPs_group_outlier)
-
-plot_adjusted_gam_outlier <- map(POPs_group_outlier, function(var) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates, collapse = ' + ')}"))
   
@@ -3270,77 +1697,6 @@ plot_copollutant_gam <- map(POPs_group_bis, function(var) {
 })|> set_names(POPs_group_bis)
 rm(POPs_group_bis, pollutant_labels_bis, model)
 
-
-### gam outliers ----
-POPs_group_outlier_bis <- setdiff(POPs_group_outlier, "PCB_4_outlier")
-pollutant_labels_bis <- set_names(
-  c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
-    "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
-  POPs_group_outlier_bis)
-
-model <- gam(als ~ s(PCB_DL_outlier) + s(PCB_NDL_outlier) + s(OCP_HCB_outlier) + s(ΣDDT_outlier) + 
-               s(OCP_β_HCH_outlier) + s(Σchlordane_outlier) + s(ΣPBDE_outlier) + 
-               sex + baseline_age + 
-               smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
-             family = binomial, 
-             method = "REML", 
-             data = bdd_danish)
-
-plot_copollutant_gam_outlier <- map(POPs_group_outlier_bis, function(var) {
-  
-  bdd_pred <- bdd_danish|>
-    mutate(across(all_of(covariates), 
-                  ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.)))))|>
-    mutate(across(setdiff(POPs_group_outlier_bis, var), 
-                  ~ mean(., na.rm = TRUE)))|>                                 # Fixe les autres POPs à leur moyenne
-    select(all_of(var), all_of(covariates), all_of(setdiff(POPs_group_outlier_bis, var)))  
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred|>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[rownames(model_summary$s.table) == paste0("s(", var, ")"), "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[rownames(model_summary$s.table) == paste0("s(", var, ")"), "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_max <- max(bdd_danish[[var]], na.rm = TRUE)
-  x_label <- pollutant_labels_bis[var]
-  
-  
-  # edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  # p_value <- model_summary$s.table[1, "p-value"]
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 1, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Co-pollutant model")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect')
-  p
-})|> set_names(POPs_group_outlier_bis)
-rm(POPs_group_outlier_bis, pollutant_labels_bis, model)
-
 ## metanalysis ----
 plot_metanalysis_quart <- metanalysis_quart |> 
   mutate(`p-value_shape` = ifelse(`p-value_raw`<0.05, "p-value<0.05", "p-value≥0.05"), 
@@ -3378,37 +1734,13 @@ plot_metanalysis_quart <- metanalysis_quart |>
 results_POPs_ALS_occurrence <- 
   list(main = list(main_results = main_results, 
                    covar = covar, 
-                   results_spline = results_spline, 
                    results_quart = results_quart, 
-                   results_quadratic = results_quadratic, 
-                   results_cubic = results_cubic, 
                    model1_gam = model1_gam, 
                    model2_gam = model2_gam, 
                    plot_quart = plot_quart,                                     # co-pollutant model with only the POP of interest as quartile and the other as s() in a GAM model
-                   plot_base_spline = plot_base_spline, 
-                   plot_base_quadratic = plot_base_quadratic, 
-                   plot_base_cubic = plot_base_cubic, 
                    plot_base_gam = plot_base_gam, 
-                   plot_adjusted_spline = plot_adjusted_spline, 
-                   plot_adjusted_quadratic = plot_adjusted_quadratic, 
-                   plot_adjusted_cubic = plot_adjusted_cubic, 
                    plot_adjusted_gam = plot_adjusted_gam, 
                    plot_copollutant_gam = plot_copollutant_gam), 
-       sensitivity_outliers = list(sensitivity_results_outlier = sensitivity_results_outlier, 
-                                   results_spline_outliers = results_spline_outliers, 
-                                   results_quadratic_outliers = results_quadratic_outliers, 
-                                   results_cubic_outliers = results_cubic_outliers, 
-                                   model1_gam_outliers = model1_gam_outliers, 
-                                   model2_gam_outliers = model2_gam_outliers, 
-                                   plot_base_spline_outlier = plot_base_spline_outlier, 
-                                   plot_base_quadratic_outlier = plot_base_quadratic_outlier, 
-                                   plot_base_cubic_outlier = plot_base_cubic_outlier, 
-                                   plot_base_gam_outlier = plot_base_gam_outlier, 
-                                   plot_adjusted_spline_outlier = plot_adjusted_spline_outlier, 
-                                   plot_adjusted_quadratic_outlier = plot_adjusted_quadratic_outlier, 
-                                   plot_adjusted_cubic_outlier = plot_adjusted_cubic_outlier, 
-                                   plot_adjusted_gam_outlier = plot_adjusted_gam_outlier, 
-                                   plot_copollutant_gam_outlier = plot_copollutant_gam_outlier), 
        sensitivity_not_summed = list(sensitivity_results_not_summed_quart = sensitivity_results_not_summed_quart, 
                                      model1_gam_not_summed = model1_gam_not_summed, 
                                      model2_gam_not_summed = model2_gam_not_summed,
@@ -3425,10 +1757,7 @@ rm(main_results, covar, results_spline, results_quart, results_quadratic, result
    model1_gam_outliers, model2_gam_outliers, 
    sensitivity_results_not_summed_quart, model1_gam_not_summed, model2_gam_not_summed, model1_quart_not_summed, model2_quart_not_summed, 
    plot_quart, plot_quart_sensi_not_summed, 
-   plot_base_spline, plot_base_quadratic, plot_base_cubic, plot_base_gam, 
-   plot_base_spline_outlier, plot_base_quadratic_outlier, plot_base_cubic_outlier, plot_base_gam_outlier, 
-   plot_adjusted_spline, plot_adjusted_quadratic, plot_adjusted_cubic, plot_adjusted_gam, 
-   plot_adjusted_spline_outlier, plot_adjusted_quadratic_outlier, plot_adjusted_cubic_outlier, plot_adjusted_gam_outlier, 
+   plot_base_gam, plot_adjusted_gam, 
    plot_base_gam_not_summed, plot_adjusted_gam_not_summed, 
    plot_copollutant_gam, plot_copollutant_gam_outlier, 
    metanalysis_quart, plot_metanalysis_quart, 
