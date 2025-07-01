@@ -824,41 +824,53 @@ results_POPs_ALS_occurrence$sensitivity_not_summed$plot_quart_sensi_not_summed
 ```
 
 #### GAM models
+Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive model (gam) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. All models were adjusted for sex and age. Adjusted models further account for serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a gam that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
 
-##### Base models
+###### dioxin like PCBs
 
-Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive model (gam) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex and age. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a gam that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
-
-```{r, fig.height=6, fig.width=15}
+```{r, fig.height=3.5, fig.width=9}
 #| echo: false
 #| message: false
 #| warning: false
-#| column: screen-inset-right
-wrap_plots(results_POPs_ALS_occurrence$main$plot_base_gam, nrow = 2)
-```
-
-##### Adjusted models
-
-Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive model (gam) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a gam that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
-
-```{r, fig.height=6, fig.width=15}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-wrap_plots(results_POPs_ALS_occurrence$main$plot_adjusted_gam, nrow = 2)
-```
-
-##### Copollutant model
-
-Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive model (gam) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates and all other co-pollutants are at their respective means. The light blue represents the 95% confidence intervals. Analyses were adjusted for sex, age, serum cholesterol, BMI, smoking status, marital status, education and for the other co-pollutants. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a gam that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
-
-```{r, fig.height=6, fig.width=15}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-wrap_plots(results_POPs_ALS_occurrence$main$plot_copollutant_gam, nrow = 2)
+wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_base_gam$PCB_DL, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_DL, 
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$PCB_DL, 
+  nrow = 1)
+wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_base_gam$PCB_NDL, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_NDL, 
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$PCB_NDL, 
+  nrow = 1)
+wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_base_gam$PCB_4, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_4,  
+  nrow = 1)
+wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_base_gam$OCP_HCB, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$OCP_HCB, 
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$OCP_HCB, 
+  nrow = 1)
+wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_base_gam$ΣDDT, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$ΣDDT, 
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$ΣDDT, 
+  nrow = 1)
+wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_base_gam$OCP_β_HCH, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$OCP_β_HCH, 
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$OCP_β_HCH, 
+  nrow = 1)
+wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_base_gam$Σchlordane, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$Σchlordane, 
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$Σchlordane, 
+  nrow = 1)
+wrap_plots(
+  results_POPs_ALS_occurrence$main$plot_base_gam$ΣPBDE, 
+  results_POPs_ALS_occurrence$main$plot_adjusted_gam$ΣPBDE, 
+  results_POPs_ALS_occurrence$main$plot_copollutant_gam$ΣPBDE, 
+  nrow = 1)
 ```
 
 ##### Sensitivity analysis POPs not summed
@@ -873,133 +885,6 @@ wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_
 wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_not_summed[17:22], ncol = 4)
 ```
 
-##### Comparison of the GAM models
-
-###### dioxin like PCBs
-
-```{r, fig.height=7, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
-wrap_plots(
-  results_POPs_ALS_occurrence$main$plot_base_gam$PCB_DL, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_DL, 
-  results_POPs_ALS_occurrence$main$plot_copollutant_gam$PCB_DL, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$PCB_DL, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$PCB_DL, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$PCB_DL,
-  nrow = 2)
-```
-
-###### non dioxin like PCBs
-
-```{r, fig.height=7, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
-wrap_plots(
-  results_POPs_ALS_occurrence$main$plot_base_gam$PCB_NDL, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_NDL, 
-  results_POPs_ALS_occurrence$main$plot_copollutant_gam$PCB_NDL, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$PCB_NDL, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$PCB_NDL, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$PCB_NDL,
-  nrow = 2)
-```
-
-###### 4 most commun PCBs
-
-```{r, fig.height=7, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
-wrap_plots(
-  results_POPs_ALS_occurrence$main$plot_base_gam$PCB_4, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_4,  
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$PCB_4, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$PCB_4,
-  nrow = 2)
-```
-
-###### HCB
-
-```{r, fig.height=7, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
-wrap_plots(
-  results_POPs_ALS_occurrence$main$plot_base_gam$OCP_HCB, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_gam$OCP_HCB, 
-  results_POPs_ALS_occurrence$main$plot_copollutant_gam$OCP_HCB, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$OCP_HCB, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$OCP_HCB, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$OCP_HCB,
-  nrow = 2)
-```
-
-###### ΣDDT
-
-```{r, fig.height=7, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
-wrap_plots(
-  results_POPs_ALS_occurrence$main$plot_base_gam$ΣDDT, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_gam$ΣDDT, 
-  results_POPs_ALS_occurrence$main$plot_copollutant_gam$ΣDDT, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$ΣDDT, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$ΣDDT, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$ΣDDT,
-  nrow = 2)
-```
-
-###### β-HCH
-
-```{r, fig.height=7, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
-wrap_plots(
-  results_POPs_ALS_occurrence$main$plot_base_gam$OCP_β_HCH, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_gam$OCP_β_HCH, 
-  results_POPs_ALS_occurrence$main$plot_copollutant_gam$OCP_β_HCH, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$OCP_β_HCH, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$OCP_β_HCH, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$OCP_β_HCH,
-  nrow = 2)
-```
-
-###### Σchlordane
-
-```{r, fig.height=7, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
-wrap_plots(
-  results_POPs_ALS_occurrence$main$plot_base_gam$Σchlordane, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_gam$Σchlordane, 
-  results_POPs_ALS_occurrence$main$plot_copollutant_gam$Σchlordane, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$Σchlordane, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$Σchlordane, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$Σchlordane,
-  nrow = 2)
-```
-
-###### ΣPBDE
-
-```{r, fig.height=7, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
-wrap_plots(
-  results_POPs_ALS_occurrence$main$plot_base_gam$ΣPBDE, 
-  results_POPs_ALS_occurrence$main$plot_adjusted_gam$ΣPBDE, 
-  results_POPs_ALS_occurrence$main$plot_copollutant_gam$ΣPBDE, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_base_gam_outlier$ΣPBDE, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_adjusted_gam_outlier$ΣPBDE, 
-  results_POPs_ALS_occurrence$sensitivity_outliers$plot_copollutant_gam_outlier$ΣPBDE,
-  nrow = 2)
-```
 
 ## Metanalysis (quartiles)
 
@@ -1007,7 +892,7 @@ wrap_plots(
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_occurrence$metanalysis$plot_matanalysis_quart
+results_POPs_ALS_occurrence$metanalysis$plot_metanalysis_quart
 ```
 
 # POPs ans ALS survival

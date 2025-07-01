@@ -25,7 +25,10 @@ bdd_cases_danish <- bdd_danish |>
   replace_with_median(ΣDDT, ΣDDT_quart) |>
   replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
   replace_with_median(Σchlordane, Σchlordane_quart) |>
-  replace_with_median(ΣPBDE, ΣPBDE_quart) 
+  replace_with_median(ΣPBDE, ΣPBDE_quart) |>
+  mutate(sex = fct_relevel(sex, "Male", "Female"), 
+         smoking_2cat_i = fct_relevel(smoking_2cat_i, "Ever", "Never"), 
+         marital_status_2cat_i = fct_relevel(marital_status_2cat_i, "Married/cohabit", "Other"))
 
 bdd_cases_FMC <- bdd_finnish |>
   filter (als == 1) |>
@@ -48,7 +51,10 @@ bdd_cases_FMC <- bdd_finnish |>
   replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
   replace_with_median(OCP_γ_HCH, OCP_γ_HCH_quart) |>
   replace_with_median(Σchlordane, Σchlordane_quart) |>
-  replace_with_median(OCP_PeCB, OCP_PeCB_quart) 
+  replace_with_median(OCP_PeCB, OCP_PeCB_quart) |>
+  mutate(sex = fct_relevel(sex, "Male", "Female"), 
+         smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
 
 bdd_cases_FMCF <- bdd_finnish |>
   filter (als == 1) |>
@@ -71,7 +77,10 @@ bdd_cases_FMCF <- bdd_finnish |>
   replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
   replace_with_median(OCP_γ_HCH, OCP_γ_HCH_quart) |>
   replace_with_median(Σchlordane, Σchlordane_quart) |>
-  replace_with_median(OCP_PeCB, OCP_PeCB_quart) 
+  replace_with_median(OCP_PeCB, OCP_PeCB_quart) |>
+  mutate(sex = fct_relevel(sex, "Male", "Female"), 
+         smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
 
 bdd_cases_MFH <- bdd_finnish |>
   filter (als == 1) |>
@@ -94,7 +103,10 @@ bdd_cases_MFH <- bdd_finnish |>
   replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
   replace_with_median(OCP_γ_HCH, OCP_γ_HCH_quart) |>
   replace_with_median(Σchlordane, Σchlordane_quart) |>
-  replace_with_median(OCP_PeCB, OCP_PeCB_quart) 
+  replace_with_median(OCP_PeCB, OCP_PeCB_quart) |>
+  mutate(sex = fct_relevel(sex, "Male", "Female"), 
+         smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
 
 surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,                # set the outcomes
                         event = bdd_cases_danish$status_death)
@@ -133,7 +145,7 @@ covar_danish <- tbl_merge(tbls = list(
 model1_cox_sd_danish <- map_dfr(POPs_group_sd, function(expl) {
   
   formula_danish <- 
-    as.formula(paste("surv_obj_danish ~", expl, "+ diagnosis_age + sex"))        # set the formulas                
+    as.formula(paste("surv_obj_danish ~", expl, "+ diagnosis_age + sex"))       # set the formulas                
   model_summary <- coxph(formula_danish, data = bdd_cases_danish) |> summary()  # run cox model
   
   coefs <- model_summary$coefficients
@@ -176,7 +188,7 @@ pollutant_labels_bis <- set_names(
   POPs_group_sd_bis)
 
 formula_danish <-                                                               # set the formulas  
-  as.formula(paste("surv_obj_danish ~",   
+  as.formula(paste("Surv(follow_up_death, status_death) ~",   
                    paste(c(POPs_group_sd_bis, covariates_danish), collapse = " + ")))
 
 model_summary <- 
@@ -346,6 +358,105 @@ model3_cox_quart_danish <- bind_rows(
 rm(model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_HCB, model3_quart_ΣDDT, model3_quart_β_HCH, model3_quart_Σchlordane, model3_quart_ΣPBDE, 
    outcome)
 
+### Heterogeneity tests ----
+heterogeneity_base_quart <- data.frame(explanatory = character(),
+                                       model = factor(),
+                                       p.value_heterogeneity = numeric(), 
+                                       stringsAsFactors = FALSE)
+
+for (expl in POPs_group_quart) {
+  
+  formula_raw <- as.formula("surv_obj_danish ~ diagnosis_age + sex")
+  model_raw <- coxph(formula_raw, data = bdd_cases_danish) 
+  
+  formula <- as.formula(paste("surv_obj_danish ~", expl, "+ diagnosis_age + sex"))  
+  model <- coxph(formula, data = bdd_cases_danish)  
+  
+  anova <- anova(model_raw, model, test = "LR")
+  p.value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
+  
+  heterogeneity_base_quart <- rbind(heterogeneity_base_quart, 
+                                    data.frame(explanatory = expl,
+                                               model = "base",
+                                               p.value_heterogeneity = p.value_heterogeneity))
+}
+rm(expl, formula_raw, model_raw, formula, model, anova, p.value_heterogeneity)
+
+heterogeneity_adjusted_quart <- data.frame(explanatory = character(),
+                                           model = factor(),
+                                           p.value_heterogeneity = numeric(), 
+                                           stringsAsFactors = FALSE)
+
+for (expl in POPs_group_quart) {
+  
+  formula_raw <- as.formula(paste("surv_obj_danish ~ ", paste(covariates_danish, collapse = "+")))
+  model_raw <- coxph(formula_raw, data = bdd_cases_danish) 
+  
+  formula <- as.formula(paste("surv_obj_danish ~", expl, "+ ", paste(covariates_danish, collapse = "+")))  
+  model <- coxph(formula, data = bdd_cases_danish)  
+  
+  anova <- anova(model_raw, model, test = "LR")
+  p.value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
+  
+  heterogeneity_adjusted_quart <- rbind(heterogeneity_adjusted_quart, 
+                                        data.frame(explanatory = expl,
+                                                   model = "adjusted",
+                                                   p.value_heterogeneity = p.value_heterogeneity))
+}
+rm(expl, formula_raw, model_raw, formula, model, anova, p.value_heterogeneity)
+
+heterogeneity_tests <- 
+  bind_rows(heterogeneity_base_quart, 
+            heterogeneity_adjusted_quart) |>
+  mutate(explanatory = gsub("_quart", "", explanatory), 
+         study = "Danish")
+
+### Trend tests ----
+trend_base <- data.frame(explanatory = character(),
+                         model = factor(), 
+                         p.value_trend = numeric(), 
+                         stringsAsFactors = FALSE)
+
+for (expl in POPs_group_quart_med) {
+  
+  formula <- as.formula(paste("surv_obj_danish ~", expl, "+ diagnosis_age + sex"))  
+  model <- coxph(formula, data = bdd_cases_danish) |> summary()
+  p.value_trend <- model$coefficients[expl, "Pr(>|z|)"]
+  
+  trend_base <- rbind(trend_base, 
+                      data.frame(explanatory = expl,
+                                 model = "base",
+                                 p.value_trend = p.value_trend))
+}
+rm(expl, model, formula, p.value_trend)
+
+trend_adjusted <- data.frame(explanatory = character(),
+                             model = factor(), 
+                             p.value_trend = numeric(), 
+                             stringsAsFactors = FALSE)
+
+for (expl in POPs_group_quart_med) {
+  
+  formula <- as.formula(paste("surv_obj_danish ~", expl, "+ ", paste(covariates_danish, collapse = "+")))  
+  model <- coxph(formula, data = bdd_cases_danish) |> summary()
+  p.value_trend <- model$coefficients[expl, "Pr(>|z|)"]
+  
+  trend_adjusted <- rbind(trend_adjusted, 
+                          data.frame(explanatory = expl,
+                                     model = "adjusted",
+                                     p.value_trend = p.value_trend))
+}
+rm(expl, model, formula, p.value_trend)
+
+trend_tests <- 
+  bind_rows(trend_base, trend_adjusted) |>
+  mutate(explanatory = gsub("_quart_med", "", explanatory), 
+         study = "Danish")
+
+rm(heterogeneity_base_quart, heterogeneity_adjusted_quart, 
+   trend_base, trend_adjusted)
+
+
 ## Cox-gam model (sd) ----
 ### Base  ----
 plot_base_cox_gam_danish <- map(POPs_group_sd, function(var) {
@@ -387,7 +498,7 @@ plot_base_cox_gam_danish <- map(POPs_group_sd, function(var) {
     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
              hjust = 1, vjust = 1.2, size = 4, color = "black") +
     theme_minimal() + 
-    scale_y_log10(limits = c(0.1, 110)) +
+    scale_y_log10(limits = c(10, 15000)) +
     theme(axis.text.x = element_text(color = 'white'),
           axis.title.x = element_blank(),
           axis.line.x = element_blank(),
@@ -416,7 +527,7 @@ plot_base_cox_gam_danish <- map(POPs_group_sd, function(var) {
 plot_adjusted_cox_gam_danish <- map(POPs_group_sd, function(var) {
   
   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
-  formula <- as.formula(paste("outcome ~ s(", var, ") + diagnosis_age + sex +  smoking_2cat_i + bmi + marital_status_2cat_i")) 
+  formula <- as.formula(paste("outcome ~ s(", var, ") + ", paste(covariates_danish, collapse = "+"))) 
   
   model <- gam(formula,                                                         # run the cox-gam model
                family = cox.ph(), 
@@ -455,7 +566,7 @@ plot_adjusted_cox_gam_danish <- map(POPs_group_sd, function(var) {
     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
              hjust = 1, vjust = 1.2, size = 4, color = "black") +
     theme_minimal() + 
-    scale_y_log10(limits = c(0.1, 2000), 
+    scale_y_log10(limits = c(100, 100000),
                   labels = scales::label_number(accuracy = 1)) +
     theme(axis.text.x = element_text(color = 'white'),
           axis.title.x = element_blank(),
@@ -624,9 +735,9 @@ covar_adjusted_finnish <- covar_adjusted_finnish |>                             
              "level_urbanization" = "level_urbanization2",
              "level_urbanization" = "level_urbanization3",
              "level_urbanization" = "level_urbanization4",
-             "marital_status_2cat" = "marital_status_2catMarried/cohabit",
+             "marital_status_2cat" = "marital_status_2catOther",
              "sex" = "sexFemale",
-             "smoking_2cat" = "smoking_2catEver")) |>
+             "smoking_2cat" = "smoking_2catNever")) |>
   relocate(model, variable, term) 
 
 covar_finnish <- bind_rows(covar_crude_finnish, covar_adjusted_finnish)
@@ -1097,13 +1208,28 @@ main_results_POPs_ALS_survival <-
     `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
   select(study, model, explanatory, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI)
 
+main_results_POPs_ALS_survival <- 
+  left_join(main_results_POPs_ALS_survival, heterogeneity_tests, 
+            by = c("explanatory", "model", "study")) |>
+  mutate(p.value_heterogeneity = ifelse(term == "Continuous", NA, p.value_heterogeneity), 
+         p.value_heterogeneity = ifelse(p.value_heterogeneity < 0.01, "<0.01", number(p.value_heterogeneity, accuracy = 0.01, decimal.mark = ".")), 
+         p.value_heterogeneity = ifelse(p.value_heterogeneity == "1.00", ">0.99", p.value_heterogeneity)) 
+
+main_results_POPs_ALS_survival <- 
+  left_join(main_results_POPs_ALS_survival, trend_tests, 
+            by = c("explanatory", "model", "study")) |>
+  mutate(p.value_trend = ifelse(term == "Continuous", NA, p.value_trend), 
+         p.value_trend = ifelse(p.value_trend < 0.01, "<0.01", number(p.value_trend, accuracy = 0.01, decimal.mark = ".")), 
+         p.value_trend = ifelse(p.value_trend == "1.00", ">0.99", p.value_trend)) 
+
 rm(model1_cox_sd_danish, model2_cox_sd_danish, model3_cox_sd_danish, 
    model1_cox_quart_danish, model2_cox_quart_danish, model3_cox_quart_danish,
    model1_cox_sd_finnish, model2_cox_sd_finnish, model3_cox_sd_finnish, 
    model1_cox_quart_finnish, model2_cox_quart_finnish, model3_cox_quart_finnish,  
    model1_cox_sd_metanalysis, model2_cox_sd_metanalysis, model3_cox_sd_metanalysis, 
    model1_cox_quart_metanalysis, model2_cox_quart_metanalysis, model3_cox_quart_metanalysis, 
-   bdd_cases_danish, bdd_cases_FMC, bdd_cases_FMCF, bdd_cases_MFH)
+   bdd_cases_danish, bdd_cases_FMC, bdd_cases_FMCF, bdd_cases_MFH, 
+   heterogeneity_tests, trend_tests)
 
 # Tables and figures ----
 ## Danish ----
@@ -1227,8 +1353,9 @@ POPs_quart_ALS_figure_danish <- main_results_POPs_ALS_survival |>
   filter(!term == "Continuous") |>
   mutate(model = fct_recode(model, 
                             "Base model" = "base",
-                            "Adjusted model" = "adjusted"),
-         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
+                            "Adjusted model" = "adjusted", 
+                            "Copollutant model" = "copollutant"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
          explanatory = factor(explanatory, levels = POPs_group_labels),
          explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
          term = fct_rev(term)) |>
@@ -1285,8 +1412,8 @@ ref_rows <- covar_finnish |>
   distinct(model, variable) |>
   arrange(model, variable) |>
   mutate(
-    term = c("continuous",  "continuous", "continuous", "1", "Other","Male","Never",
-             "continuous",  "continuous", "continuous", "1", "Other","Male","Never"),
+    term = c("continuous",  "continuous", "continuous", "1", "Married/cohabit","Male","Ever",
+             "continuous",  "continuous", "continuous", "1", "Married/cohabit","Male","Ever"),
     HR = "-",
     "95% CI" = "-",
     `p-value` = "" ,
@@ -1302,9 +1429,9 @@ covar_ALS_table_finnish <- covar_finnish |>
                       "2" = "level_urbanization2",
                       "3" = "level_urbanization3",
                       "4" = "level_urbanization4",
-                      "Married/cohabit" = "marital_status_2catMarried/cohabit",
+                      "Other" = "marital_status_2catOther",
                       "Female" = "sexFemale",
-                      "Ever" = "smoking_2catEver"),
+                      "Never" = "smoking_2catNever"),
     HR = sprintf("%.1f", HR),
     lower_CI = sprintf("%.1f", lower_CI),
     upper_CI = sprintf("%.1f", upper_CI), 
@@ -1318,7 +1445,6 @@ covar_ALS_table_finnish <-
   bind_rows(ref_rows, covar_ALS_table_finnish) |>
   mutate(
     variable = fct_recode(variable, 
-                          "Sex" = "sexFemale", 
                           "Sex" = "sex", 
                           "Age at diagnosis (years)" = "diagnosis_age", 
                           "Boby mass index (kg/m²)" = "bmi", 
@@ -1329,7 +1455,7 @@ covar_ALS_table_finnish <-
   select(model, variable, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI) |>
   mutate(
     term = fct_relevel(term, 
-    "1", "2", "3", "4", "continuous", "Never", "Ever", "Male", "Female",  "Other", "Married/cohabit"), 
+    "1", "2", "3", "4", "continuous", "Ever", "Never", "Male", "Female", "Married/cohabit",  "Other"), 
     model = fct_relevel(model, "base", "adjusted"))|>
   arrange(model, variable, term) |>
   filter(!(term == "continuous" & HR == "-"))
@@ -1479,8 +1605,8 @@ POPs_quart_ALS_figure_finnish <- main_results_POPs_ALS_survival |>
                             "Adjusted model" = "adjusted", 
                             "Copollutant model" = "copollutant"),
          model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
-         explanatory = factor(explanatory, levels = POPs_group_labels),
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
+         explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
+         explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish), 
          term = fct_rev(term)) |>
   arrange(explanatory) |> 
   ggplot(aes(x = term, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +

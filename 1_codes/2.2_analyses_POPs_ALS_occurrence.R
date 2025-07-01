@@ -444,8 +444,8 @@ rm(test_1, test_2, anova,
    p.value_heterogeneity_ΣPBDE)
 
 heterogeneity_tests <- 
-  bind_rows(heterogeneity_base_spline, heterogeneity_base_quart, 
-            heterogeneity_adjusted_spline, heterogeneity_adjusted_quart, 
+  bind_rows(heterogeneity_base_quart, 
+            heterogeneity_adjusted_quart, 
             heterogeneity_copollutant) |>
   mutate(variable = gsub("_quart", "", variable))
 
@@ -1271,7 +1271,7 @@ for (var in POPs_included) {
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
   model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
-  model1_gam_outliers[[var]] <- model_summary
+  model1_gam_not_summed[[var]] <- model_summary
 }
 
 rm(var, formula, model, model_summary)
@@ -1284,7 +1284,7 @@ for (var in POPs_included) {
                               smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
   model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
-  model2_gam_outliers[[var]] <- model_summary
+  model2_gam_not_summed[[var]] <- model_summary
 }
 
 rm(var, formula, model, model_summary)
@@ -1350,7 +1350,6 @@ plot_quart_sensi_not_summed <- sensitivity_results_not_summed_quart |>
   coord_flip()
 
 ## model 1 ----
-
 ### gam ----
 pollutant_labels <- set_names(
   c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
@@ -1752,14 +1751,12 @@ results_POPs_ALS_occurrence <-
        metanalysis = list(metanalysis_quart = metanalysis_quart, 
                           plot_metanalysis_quart = plot_metanalysis_quart))
 
-rm(main_results, covar, results_spline, results_quart, results_quadratic, results_cubic, model1_gam, model2_gam, 
-   sensitivity_results_outlier, results_spline_outliers, results_quadratic_outliers, results_cubic_outliers, 
-   model1_gam_outliers, model2_gam_outliers, 
+rm(main_results, covar, results_quart, model1_gam, model2_gam, 
    sensitivity_results_not_summed_quart, model1_gam_not_summed, model2_gam_not_summed, model1_quart_not_summed, model2_quart_not_summed, 
    plot_quart, plot_quart_sensi_not_summed, 
    plot_base_gam, plot_adjusted_gam, 
    plot_base_gam_not_summed, plot_adjusted_gam_not_summed, 
-   plot_copollutant_gam, plot_copollutant_gam_outlier, 
+   plot_copollutant_gam, 
    metanalysis_quart, plot_metanalysis_quart, 
    covariates_danish, covariates_finnish)
 
