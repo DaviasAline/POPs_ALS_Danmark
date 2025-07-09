@@ -47,6 +47,7 @@ library(tidyr)
 library(flextable)
 library(metafor)
 library(qgcomp)
+library(gWQS)
 
 ## Tableau descriptif variables numériques
 descrip_num <- function(data, vars) {                                           
