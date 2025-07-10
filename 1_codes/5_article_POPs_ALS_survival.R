@@ -152,15 +152,17 @@ rm(quartile1_rows)
 # Table S3 - POPs - ALS survival among the Danish cohort (qgcomp) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (quantile g-computation model; n = 166).
 table_S3 <- results_POPs_ALS_survival$danish$POPs_ALS_qgcomp_table_danish |>
+  select(-study, -model) |>
   flextable() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  merge_at(i = 1, j = 1, part = "header") |>  
-  merge_at(i = 1, j = 2, part = "header")  |>
-  add_footer_lines("pg/ml.
-                   POPs were summed as follows: Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; ΣDDT corresponds to p,p’-DDT and p,p’-DDE; Σchlordane corresponds to trans-nonanchlor and oxychlordane and finally ΣPBDE corresponds to PBDEs 47, 99, 153.")
-
+  align(align = "center", part = "all") |>
+  add_footer_lines(
+  "1Estimated risk of ALS death associated with an increase in quantiles across all pollutants of the mixture. Pollutants included in the mixture were dioxin-like PCBs (sum of PCBs 118 and 156); non-dioxin-like PCBs (sum of PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187); HCB; ΣDDT (sum of p,p’-DDT and p,p’-DDE); β-HCH; Σchlordane (sum of trans-nonanchlor and oxychlordane) and finally ΣPBDE (sum of PBDEs 47, 99, 153).
+  2CI: Confidence interval.") |>
+  font(fontname = "Calibri", part = "footer") |>     
+  fontsize(size = 10, part = "footer")    
 
 # Table S4 - POPs - ALS survival among the Finnish cohorts ----
 # Association between pre-diagnostic POP concentrations and survival among ALS cases from the FMC and the FMCF Finnish cohorts (metanalysis of cox models by exposure quartiles, n = 86).
@@ -172,29 +174,26 @@ quartile1_rows <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_
     HR = "-",
     "95% CI" = "-",
     `p-value` = "", 
-    "p.value_heterogeneity" = '', 
-    "p.value_trend" = '')
+    "p.value_heterogeneity" = '')
 
 table_S4 <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_survival |>
   filter(study == "Finnish") |>
   filter(!term == "Continuous") |>
-  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity", "p.value_trend") |>
+  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity") |>
   mutate(across(everything(), as.character))
 
 table_S4 <- 
   bind_rows(quartile1_rows, table_S4) |>
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity", "p.value_trend")) |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity")) |>
   select(explanatory, term, contains("base"), contains("adjusted")) |>
   group_by(explanatory) |>
   mutate(p.value_heterogeneity_base = ifelse(term == 'quartile 1', p.value_heterogeneity_base[term == 'quartile 2'], ''), 
-         p.value_trend_base = ifelse(term == 'quartile 1', p.value_trend_base[term == 'quartile 2'], ''),
-         p.value_heterogeneity_adjusted = ifelse(term == 'quartile 1', p.value_heterogeneity_adjusted[term == 'quartile 2'], ''), 
-         p.value_trend_adjusted = ifelse(term == 'quartile 1', p.value_trend_adjusted[term == 'quartile 2'], '')) |>
+         p.value_heterogeneity_adjusted = ifelse(term == 'quartile 1', p.value_heterogeneity_adjusted[term == 'quartile 2'], '')) |>
   ungroup() |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Heterogeneity test" = "p.value_heterogeneity_base", "Trend test" = "p.value_trend_base",
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted",  "Heterogeneity test " = "p.value_heterogeneity_adjusted", "Trend test " = "p.value_trend_adjusted") |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Hetero-geneity test" = "p.value_heterogeneity_base", 
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted",  "Hetero-geneity test " = "p.value_heterogeneity_adjusted") |>
   mutate(explanatory = factor(explanatory, levels = POPs_group_labels_finnish), 
          explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |>
   arrange(explanatory) |>
@@ -205,14 +204,12 @@ table_S4 <-
   3Estimated risk of ALS death when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
   4CI: Confidence interval.
   5Heterogeneity tests in outcome value across POP quartiles, adjusted for sex and age at diagnosis.
-  6Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, adjusted for sex and age at diagnosis.
-  7Heterogeneity tests in outcome value across POP quartiles, adjusted for sex, age at diagnosis, smoking, BMI and marital status.
-  8Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
+  6Heterogeneity tests in outcome value across POP quartiles, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
   add_header(
     "explanatory" = "Exposures", 
     term = "Quartiles",
-    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model",  "Heterogeneity test" = "Base model",  "Trend test" = "Base model",
-    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model",  "Heterogeneity test " = "Adjusted model",  "Trend test " = "Adjusted model") |>
+    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model",  "Heterogeneity test" = "Base model",  
+    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model",  "Heterogeneity test " = "Adjusted model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   merge_v(j = "term") |>
@@ -232,14 +229,17 @@ rm(quartile1_rows)
 # Table S5 - POPs - ALS survival among the Finnish cohorts (qgcomp) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the FMC and the FMCF Finnish cohorts (quantile g-computation model; n = 86).
 table_S5 <- results_POPs_ALS_survival$finnish$POPs_ALS_qgcomp_table_finnish |>
+  select(-study, -model) |>
   flextable() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  merge_at(i = 1, j = 1, part = "header") |>  
-  merge_at(i = 1, j = 2, part = "header")  |>
-  add_footer_lines("pg/ml.
-                   POPs were summed as follows: most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; ΣDDT corresponds to p,p’-DDT and p,p’-DDE , and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.")
+  padding(padding.top = 0, padding.bottom = 0, part = "all")  |>
+  align(align = "center", part = "all") |>
+  add_footer_lines(
+  "1Estimated risk of ALS death associated with an increase in quantiles across all pollutants of the mixture. Pollutants included in the mixture were dioxin-like PCBs (sum of PCBs 118 and 156); non-dioxin-like PCBs (sum of PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187); HCB, ΣDDT (sum of p,p’-DDT and p,p’-DDE); ΣHCH (sum of β-HCH and γ-HCH); Σchlordane (sum of trans-nonanchlor and oxychlordane) and finally PeCB.
+  2CI: Confidence interval.") |>
+  font(fontname = "Calibri", part = "footer") |>     
+  fontsize(size = 10, part = "footer")   
 
 # Figure S1 - heatmap of correlation between POP exposures ---- 
 # Pearson correlations between pre-disease POP plasma concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498). 

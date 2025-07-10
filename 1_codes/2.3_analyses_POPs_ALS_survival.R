@@ -809,8 +809,8 @@ model1_cox_sd_finnish <- map_dfr(POPs_group_sd_finnish, function(expl) {
     HR = exp(as.numeric(rma_fit$beta)),
     lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
     upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-    `p-value` = as.numeric(rma_fit$pval)
-    
+    `p-value` = as.numeric(rma_fit$pval),
+    p.value_heterogeneity = as.numeric(rma_fit$QEp)
   )
 })
 
@@ -839,7 +839,8 @@ model2_cox_sd_finnish <- map_dfr(POPs_group_sd_finnish, function(expl) {
     HR = exp(as.numeric(rma_fit$beta)),
     lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
     upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-    `p-value` = as.numeric(rma_fit$pval)
+    `p-value` = as.numeric(rma_fit$pval),
+    p.value_heterogeneity = as.numeric(rma_fit$QEp)
     
   )
 })
@@ -870,7 +871,8 @@ model3_cox_sd_finnish <- model3_cox_sd_finnish |>
       HR = exp(as.numeric(rma_fit$beta)),
       lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
       upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-      `p-value` = as.numeric(rma_fit$pval))
+      `p-value` = as.numeric(rma_fit$pval),
+    p.value_heterogeneity = as.numeric(rma_fit$QEp))
   }) |> 
   ungroup() |>
   mutate(explanatory = term)
@@ -902,7 +904,8 @@ model1_cox_quart_finnish <- map_dfr(POPs_group_quart_finnish, function(expl) {
         HR = exp(as.numeric(rma_fit$beta)),
         lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
         upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-        `p-value` = as.numeric(rma_fit$pval))
+        `p-value` = as.numeric(rma_fit$pval),
+        p.value_heterogeneity = as.numeric(rma_fit$QEp))
     }) |> 
     ungroup() |> 
     mutate(study = "Finnish", model = "base") |> 
@@ -935,7 +938,8 @@ model2_cox_quart_finnish <- map_dfr(POPs_group_quart_finnish, function(expl) {
         HR = exp(as.numeric(rma_fit$beta)),
         lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
         upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-        `p-value` = as.numeric(rma_fit$pval))
+        `p-value` = as.numeric(rma_fit$pval),
+        p.value_heterogeneity = as.numeric(rma_fit$QEp))
     }) |> 
     ungroup() |> 
     mutate(model = "adjusted") |> 
@@ -971,7 +975,8 @@ model3_cox_quart_finnish <- model3_cox_quart_finnish |>                         
       HR = exp(as.numeric(rma_fit$beta)),
       lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
       upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-      `p-value` = as.numeric(rma_fit$pval))
+      `p-value` = as.numeric(rma_fit$pval),
+      p.value_heterogeneity = as.numeric(rma_fit$QEp))
   }) |> 
   ungroup() |> 
   mutate(
@@ -1068,7 +1073,8 @@ model1_cox_sd_metanalysis <- map_dfr(POPs_group_sd_bis, function(expl) {
     HR = exp(as.numeric(rma_fit$beta)),
     lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
     upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-    `p-value` = as.numeric(rma_fit$pval)
+    `p-value` = as.numeric(rma_fit$pval),
+    p.value_heterogeneity = as.numeric(rma_fit$QEp)
     
   )
 })
@@ -1104,7 +1110,8 @@ model2_cox_sd_metanalysis <- map_dfr(POPs_group_sd_bis, function(expl) {
     HR = exp(as.numeric(rma_fit$beta)),
     lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
     upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-    `p-value` = as.numeric(rma_fit$pval)
+    `p-value` = as.numeric(rma_fit$pval),
+    p.value_heterogeneity = as.numeric(rma_fit$QEp)
     
   )
 })
@@ -1143,7 +1150,8 @@ model3_cox_sd_metanalysis <- model3_cox_sd_metanalysis |>
       HR = exp(as.numeric(rma_fit$beta)),
       lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
       upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-      `p-value` = as.numeric(rma_fit$pval))
+      `p-value` = as.numeric(rma_fit$pval),
+      p.value_heterogeneity = as.numeric(rma_fit$QEp))
   }) |> 
   ungroup() |>
   mutate(explanatory = term)
@@ -1181,7 +1189,8 @@ model1_cox_quart_metanalysis <- map_dfr(POPs_group_quart_bis, function(expl) {
         HR = exp(as.numeric(rma_fit$beta)),
         lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
         upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-        `p-value` = as.numeric(rma_fit$pval))
+        `p-value` = as.numeric(rma_fit$pval),
+        p.value_heterogeneity = as.numeric(rma_fit$QEp))
     }) |> 
     ungroup() |> 
     mutate(study = "Metanalysis", 
@@ -1221,7 +1230,8 @@ model2_cox_quart_metanalysis <- map_dfr(POPs_group_quart_bis, function(expl) {
         HR = exp(as.numeric(rma_fit$beta)),
         lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
         upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-        `p-value` = as.numeric(rma_fit$pval))
+        `p-value` = as.numeric(rma_fit$pval),
+        p.value_heterogeneity = as.numeric(rma_fit$QEp))
     }) |> 
     ungroup() |> 
     mutate(model = "adjusted") |> 
@@ -1258,7 +1268,8 @@ model3_cox_quart_metanalysis <- model3_cox_quart_metanalysis |>                 
       HR = exp(as.numeric(rma_fit$beta)),
       lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
       upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-      `p-value` = as.numeric(rma_fit$pval))
+      `p-value` = as.numeric(rma_fit$pval),
+      p.value_heterogeneity = as.numeric(rma_fit$QEp))
   }) |> 
   ungroup() |> 
   mutate(
@@ -1300,14 +1311,16 @@ main_results_POPs_ALS_survival <-
     `p-value_shape` = ifelse(`p-value_raw`<0.05, "p-value<0.05", "p-value≥0.05"), 
     `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")), 
     `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
-  select(study, model, explanatory, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI)
+  select(study, model, explanatory, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI, "p.value_heterogeneity")
 
 main_results_POPs_ALS_survival <- 
   left_join(main_results_POPs_ALS_survival, heterogeneity_tests, 
             by = c("explanatory", "model", "study")) |>
-  mutate(p.value_heterogeneity = ifelse(term == "Continuous", NA, p.value_heterogeneity), 
+  mutate(p.value_heterogeneity = ifelse(is.na(p.value_heterogeneity.x), p.value_heterogeneity.y, p.value_heterogeneity.x), 
+         p.value_heterogeneity = ifelse(term == "Continuous" & study == "Danish", NA, p.value_heterogeneity), 
          p.value_heterogeneity = ifelse(p.value_heterogeneity < 0.01, "<0.01", number(p.value_heterogeneity, accuracy = 0.01, decimal.mark = ".")), 
-         p.value_heterogeneity = ifelse(p.value_heterogeneity == "1.00", ">0.99", p.value_heterogeneity)) 
+         p.value_heterogeneity = ifelse(p.value_heterogeneity == "1.00", ">0.99", p.value_heterogeneity)) |>
+  select(-p.value_heterogeneity.x, -p.value_heterogeneity.y)
 
 main_results_POPs_ALS_survival <- 
   left_join(main_results_POPs_ALS_survival, trend_tests, 
@@ -1625,13 +1638,13 @@ rm(ref_rows)
 ### table POPs (sd) - als survival ----
 POPs_sd_ALS_table_finnish <- main_results_POPs_ALS_survival |>
   filter(study == "Finnish") |>
-  select(model, explanatory, term, HR, "95% CI", "p-value") |>
+  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity") |>
   filter(term == "Continuous") |>
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity")) |>
   select(explanatory, contains("base"), contains("adjusted"), contains("copollutant")) |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", 
-         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant") |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Hetero-geneity test" = "p.value_heterogeneity_base",
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "Hetero-geneity test " = "p.value_heterogeneity_adjusted",
+         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant", " Hetero-geneity test " = "p.value_heterogeneity_copollutant") |>
   mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |> 
   flextable() |>
   add_footer_lines(
@@ -1640,9 +1653,9 @@ POPs_sd_ALS_table_finnish <- main_results_POPs_ALS_survival |>
   3CI: Confidence interval.") |>
   add_header(
     "explanatory" = "Exposures", 
-    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", 
-    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model") |>
+    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", "Hetero-geneity test" = "Base Model", 
+    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", "Hetero-geneity test " = "Adjusted Model", 
+    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model", " Hetero-geneity test " = "Copollutant Model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   theme_vanilla() |>
@@ -1662,23 +1675,24 @@ quartile1_rows <- main_results_POPs_ALS_survival |>
     term = "quartile 1",
     HR = "-",
     "95% CI" = "-",
-    `p-value` = "")
+    `p-value` = "", 
+    "p.value_heterogeneity" = "")
 
 POPs_quart_ALS_table_finnish <- main_results_POPs_ALS_survival |>
   filter(study == "Finnish") |>
   filter(!term == "Continuous") |>
-  select(model, explanatory, term, HR, "95% CI", "p-value") |>
+  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity") |>
   mutate(across(everything(), as.character))
 
 POPs_quart_ALS_table_finnish <- 
   bind_rows(quartile1_rows, POPs_quart_ALS_table_finnish) |>
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity")) |>
   select(explanatory, term, contains("base"), contains("adjusted"), contains("copollutant")) |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", 
-         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant") |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Hetero-geneity test" = "p.value_heterogeneity_base",
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "Hetero-geneity test " = "p.value_heterogeneity_adjusted",
+         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant", " Hetero-geneity test " = "p.value_heterogeneity_copollutant") |>
   mutate(explanatory = factor(explanatory, levels = POPs_group_labels_finnish), 
          explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |>
   arrange(explanatory) |>
@@ -1690,9 +1704,9 @@ POPs_quart_ALS_table_finnish <-
   add_header(
     "explanatory" = "POPs", 
     term = "Quartiles",
-    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model",  
-    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model") |>
+    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", "Hetero-geneity test" = "Base Model",
+    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model",  "Hetero-geneity test " = "Adjusted Model",
+    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model", " Hetero-geneity test " = "Copollutant Model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   merge_v(j = "term") |>
@@ -1819,13 +1833,13 @@ POPs_group_labels_metanalysis <- c(
 ### table POPs (sd) - als survival ----
 POPs_sd_ALS_table_metanalysis <- main_results_POPs_ALS_survival |>
   filter(study == "Metanalysis") |>
-  select(model, explanatory, term, HR, "95% CI", "p-value") |>
+  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity") |>
   filter(term == "Continuous") |>
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity")) |>
   select(explanatory, contains("base"), contains("adjusted"), contains("copollutant")) |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", 
-         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant") |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Hetero-geneity test" = "p.value_heterogeneity_base",
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "Hetero-geneity test " = "p.value_heterogeneity_adjusted",
+         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant", " Hetero-geneity test " = "p.value_heterogeneity_copollutant") |>
   mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels_metanalysis)) |> 
   flextable() |>
   add_footer_lines(
@@ -1834,9 +1848,9 @@ POPs_sd_ALS_table_metanalysis <- main_results_POPs_ALS_survival |>
   3CI: Confidence interval.") |>
   add_header(
     "explanatory" = "Exposures", 
-    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", 
-    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model") |>
+    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", "Hetero-geneity test" = "Base Model", 
+    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", "Hetero-geneity test " = "Adjusted Model", 
+    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model", " Hetero-geneity test " = "Copollutant Model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   theme_vanilla() |>
@@ -1856,23 +1870,24 @@ quartile1_rows <- main_results_POPs_ALS_survival |>
     term = "quartile 1",
     HR = "-",
     "95% CI" = "-",
-    `p-value` = "")
+    `p-value` = "", 
+    "p.value_heterogeneity" = "")
 
 POPs_quart_ALS_table_metanalysis <- main_results_POPs_ALS_survival |>
   filter(study == "Metanalysis") |>
   filter(!term == "Continuous") |>
-  select(model, explanatory, term, HR, "95% CI", "p-value") |>
+  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity") |>
   mutate(across(everything(), as.character))
 
 POPs_quart_ALS_table_metanalysis <- 
   bind_rows(quartile1_rows, POPs_quart_ALS_table_metanalysis) |>
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity")) |>
   select(explanatory, term, contains("base"), contains("adjusted"), contains("copollutant")) |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", 
-         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant") |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Hetero-geneity test" = "p.value_heterogeneity_base",
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "Hetero-geneity test " = "p.value_heterogeneity_adjusted",
+         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant", " Hetero-geneity test " = "p.value_heterogeneity_copollutant") |>
   mutate(explanatory = factor(explanatory, levels = POPs_group_labels_metanalysis), 
          explanatory = fct_recode(explanatory, !!!POPs_group_labels_metanalysis)) |>
   arrange(explanatory) |>
@@ -1884,9 +1899,9 @@ POPs_quart_ALS_table_metanalysis <-
   add_header(
     "explanatory" = "POPs", 
     term = "Quartiles",
-    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", 
-    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model") |>
+    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", "Hetero-geneity test" = "Base Model", 
+    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", "Hetero-geneity test " = "Adjusted Model", 
+    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model", " Hetero-geneity test " = "Copollutant Model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   merge_v(j = "term") |>
