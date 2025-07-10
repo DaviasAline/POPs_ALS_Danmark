@@ -571,11 +571,14 @@ covar_comp_cases <- bdd |>
   mutate(status_death = as.character(status_death), 
          status_death = fct_recode(status_death, 
                                    "Alive" = "0",
-                                   "Deceased" = "1")) |>
+                                   "Deceased" = "1"), 
+         sex = fct_relevel(sex, "Male", "Female"), 
+         smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other")) |>
   select(
     study, baseline_age, diagnosis_age, death_age, 
     follow_up_death, status_death,
-    sex, marital_status_2cat, education_merged, alcohol, smoking, bmi, cholesterol)|>
+    sex, marital_status_2cat, education_merged, alcohol, smoking_2cat, bmi, cholesterol)|>
   tbl_summary(by = study, 
               missing = "no", 
               label = list(status_death ~ "Status at end of the follow-up"), 

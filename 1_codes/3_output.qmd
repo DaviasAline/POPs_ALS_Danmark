@@ -711,6 +711,7 @@ rm(timing)
 # Comparison danish/finnish data
 
 ## On the total population
+
 ### Metadata
 
 ```{r}
@@ -746,9 +747,10 @@ results_descriptive$comp$fattyacids_table_comp |>
 results_descriptive$comp$fattyacids_boxplot_comp 
 ```
 
-## Among cases 
-(for ALS survival analyses)
-### Metadata 
+## Among cases
+
+(for ALS survival analyses) \### Metadata
+
 ```{r}
 #| echo: false
 #| message: false
@@ -758,7 +760,8 @@ results_descriptive$comp$covar_comp_cases |>
   gt::tab_options(table.font.size = "small")
 ```
 
-### POPs 
+### POPs
+
 ```{r}
 results_descriptive$comp$POPs_table_comp_cases |>
   as_gt() |>
@@ -824,6 +827,7 @@ results_POPs_ALS_occurrence$sensitivity_not_summed$plot_quart_sensi_not_summed
 ```
 
 #### GAM models
+
 Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive model (gam) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. All models were adjusted for sex and age. Adjusted models further account for serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a gam that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
 
 ###### dioxin like PCBs
@@ -885,7 +889,6 @@ wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_
 wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_not_summed[17:22], ncol = 4)
 ```
 
-
 ## Metanalysis (quartiles)
 
 ```{r fig.height=7, fig.width=6}
@@ -898,6 +901,7 @@ results_POPs_ALS_occurrence$metanalysis$plot_metanalysis_quart
 # POPs ans ALS survival
 
 ## Subjects characteristics (among cases only)
+
 ```{r}
 #| echo: false
 #| message: false
@@ -905,7 +909,6 @@ results_POPs_ALS_occurrence$metanalysis$plot_metanalysis_quart
 #| paged-print: false
 results_descriptive$comp$covar_comp_cases
 ```
-
 
 ## Danish cohort
 
@@ -996,6 +999,15 @@ wrap_plots(list(results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$ΣDDT,
            ncol = 3)
 ```
 
+#### q-gcomp analysis 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$danish$POPs_ALS_qgcomp_table_danish |> kable("html")
+results_POPs_ALS_survival$danish$plot_qgcomp_danish
+```
+
 ## Finnish cohorts
 
 ### Effects of subject characteristics on ALS survival
@@ -1042,6 +1054,15 @@ results_POPs_ALS_survival$finnish$POPs_quart_ALS_table_finnish |>
 #| message: false
 #| warning: false
 results_POPs_ALS_survival$finnish$POPs_quart_ALS_figure_finnish
+```
+
+#### q-gcomp analysis 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$finnish$POPs_ALS_qgcomp_table_finnish |> kable("html")
+results_POPs_ALS_survival$finnish$plot_qgcomp_finnish
 ```
 
 ## Metanalysis
