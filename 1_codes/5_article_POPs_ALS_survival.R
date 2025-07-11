@@ -122,7 +122,7 @@ table_S2 <-
   flextable() |>
   add_footer_lines(
   "1POPs were summed as follows: most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; ΣDDT corresponds to p,p’-DDT and p,p’-DDE, Σchlordane corresponds to trans-nonanchlor and oxychlordane and finally ΣPBDE corresponds to PBDEs 47, 99, 153.
-  2All models are matched for sex and age at diagnosis. Adjusted models further account for smoking, BMI and marital status.
+  2All models are adjusted for sex and age at diagnosis. Adjusted models further account for smoking, BMI and marital status.
   3Estimated risk of ALS death when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
   4CI: Confidence interval.
   5Heterogeneity tests in outcome value across POP quartiles, adjusted for sex and age at diagnosis.
@@ -188,10 +188,6 @@ table_S4 <-
   arrange(explanatory, term) |>
   pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity")) |>
   select(explanatory, term, contains("base"), contains("adjusted")) |>
-  group_by(explanatory) |>
-  mutate(p.value_heterogeneity_base = ifelse(term == 'quartile 1', p.value_heterogeneity_base[term == 'quartile 2'], ''), 
-         p.value_heterogeneity_adjusted = ifelse(term == 'quartile 1', p.value_heterogeneity_adjusted[term == 'quartile 2'], '')) |>
-  ungroup() |>
   rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Hetero-geneity test" = "p.value_heterogeneity_base", 
          "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted",  "Hetero-geneity test " = "p.value_heterogeneity_adjusted") |>
   mutate(explanatory = factor(explanatory, levels = POPs_group_labels_finnish), 
@@ -200,7 +196,7 @@ table_S4 <-
   flextable() |>
   add_footer_lines(
     "1POPs were summed as follows: most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; ΣDDT corresponds to p,p’-DDT and p,p’-DDE , and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
-  2All models are matched for sex and age at diagnosis. Adjusted models further account for smoking, BMI and marital status.
+  2All models are adjusted for sex and age at diagnosis. Adjusted models further account for smoking, BMI and marital status.
   3Estimated risk of ALS death when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
   4CI: Confidence interval.
   5Heterogeneity tests in outcome value across POP quartiles, adjusted for sex and age at diagnosis.
@@ -208,8 +204,8 @@ table_S4 <-
   add_header(
     "explanatory" = "Exposures", 
     term = "Quartiles",
-    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model",  "Heterogeneity test" = "Base model",  
-    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model",  "Heterogeneity test " = "Adjusted model") |>
+    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model",  "Hetero-geneity test" = "Base model",  
+    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model",  "Hetero-geneity test " = "Adjusted model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   merge_v(j = "term") |>

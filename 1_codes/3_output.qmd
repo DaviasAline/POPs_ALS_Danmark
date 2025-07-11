@@ -1101,6 +1101,18 @@ results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_table_metanalysis |>
 results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_figure_metanalysis
 ```
 
+## Sensitivity analyses 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi1$plot_justif
+results_POPs_ALS_survival$sensi1$sensi1_table
+
+```
+
+
+
 # Fatty acids and ALS occurence
 
 ## Danish cohort
