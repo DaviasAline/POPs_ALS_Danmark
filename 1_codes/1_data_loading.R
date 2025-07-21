@@ -35,12 +35,18 @@ bdd_danish_proteomic <- read_excel("/Volumes/shared/EOME/Weisskopf/POPs-ALS/Data
          Normalization = as.factor(Normalization), 
          "Olink NPX Signature Version" = as.factor("Olink NPX Signature Version"))
 
-bdd_danish_proteomic_wide <- bdd_danish_proteomic %>%
-  select(SampleID, Assay, NPX) %>%  # Keep only necessary columns
+bdd_danish_proteomic_wide <- bdd_danish_proteomic|>
+  mutate(Assay_bis = case_when(
+    Panel == "Olink Target 96 Immune Response" ~ paste0("proteomic_immun_res_", Assay),
+    Panel == "Olink Target 96 Metabolism" ~ paste0("proteomic_metabolism_", Assay),
+    Panel == "Olink Target 96 Neuro Exploratory" ~ paste0("proteomic_neuro_explo_", Assay))) |> 
+  select(SampleID, Assay_bis, NPX)|>  # Keep only necessary columns
   pivot_wider(
-    names_from = Assay,
+    names_from = Assay_bis,
     values_from = NPX) |>
   rename(code = SampleID)
+
+bdd_danish_EV <- read_excel("/Volumes/shared/EOME/Weisskopf/POPs-ALS/Data/Danish EPIC data/20250527 MACSPLEX all log10FC values.xlsx")
 
 bdd_danish <- left_join(bdd_danish, bdd_danish_POPs, by = "code")               # merging all the different datasets for the danish data
 bdd_danish <- left_join(bdd_danish, bdd_danish_fattyacids, by = "code")
@@ -49,16 +55,16 @@ bdd_danish <- left_join(bdd_danish, bdd_danish_proteomic_wide, by = "code")
 rm(bdd_danish_POPs, bdd_danish_lipids, bdd_danish_fattyacids, bdd_danish_proteomic_wide)
 
 # bdd_danish |> filter(saet == 72) |> View()                           
-bdd_danish <- bdd_danish %>% filter(!code %in% c("208", "209", "210"))        # we decided to remove match 72 because the controls doesn't match in term of sex and age with the case
+bdd_danish <- bdd_danish|> filter(!code %in% c("208", "209", "210"))        # we decided to remove match 72 because the controls doesn't match in term of sex and age with the case
 
 bdd_danish_loq <- 
   read_excel("/Volumes/shared/EOME/Weisskopf/POPs-ALS/Data/Danish EPIC data/2024_ALS-Denmark-POP-Final-Results.xlsx", 
              sheet = "Results-blank-subtracted", 
-             range = "D1:AB3") %>% 
-  t() %>%
-  as.data.frame() %>%
-  rownames_to_column("LOQ") %>%
-  select(variable = V2, "% > LOQ" = V1, LOQ) %>%
+             range = "D1:AB3")|> 
+  t()|>
+  as.data.frame()|>
+  rownames_to_column("LOQ")|>
+  select(variable = V2, "% > LOQ" = V1, LOQ)|>
   mutate(
     LOQ = gsub("\\.\\.\\..*", "", LOQ), 
     LOQ =  as.numeric(LOQ), 
@@ -400,7 +406,7 @@ explanatory_quart <- c("pufas_quart", "pufas_ω9_quart", "pufas_ω7_quart", "puf
 
 POPs_finnish <- ifelse(POPs %in% c("PCB_28", "PCB_52", "OCP_PeCB", "OCP_α_HCH", "OCP_γ_HCH", 
                            "OCP_oxychlordane", "PBDE_47", "PBDE_99", "PBDE_153"), paste0(POPs, "_raw"), POPs)
-proteomic <- unique(bdd_danish_proteomic$Assay) |> as.character()
+proteomic <- bdd_danish |> select(contains("proteomic_")) |> colnames()
 
 # variable creation ----
 ## danish data ----
@@ -461,7 +467,7 @@ bdd_danish <- bdd_danish |>
     ΣPBDE = PBDE_47 + PBDE_99 + PBDE_153, 
     ΣDDT = OCP_pp_DDT + OCP_pp_DDE,  
     ΣHCH = OCP_β_HCH + OCP_γ_HCH, 
-    Σchlordane = OCP_transnonachlor + OCP_oxychlordane) %>% # alpha HCH, gamma HCH exluded, beta HCH studied alone
+    Σchlordane = OCP_transnonachlor + OCP_oxychlordane)|> # alpha HCH, gamma HCH exluded, beta HCH studied alone
   mutate(
     across(c("PCB_DL", 
              "PCB_NDL", 
@@ -470,7 +476,7 @@ bdd_danish <- bdd_danish |>
              "ΣDDT", 
              "ΣHCH", 
              "Σchlordane"), ~ factor(ntile(.x, 4), labels = c("Q1", "Q2", "Q3", "Q4")),
-           .names = "{.col}_quart")) %>%
+           .names = "{.col}_quart"))|>
   mutate(across(all_of(POPs_group), ~ {
     Q1 <- quantile(., 0.25, na.rm = TRUE)
     Q3 <- quantile(., 0.75, na.rm = TRUE)
@@ -496,16 +502,16 @@ bdd_danish <- bdd_danish |>
                                              labels = c("Q1", "Q2", "Q3", "Q4")),
                 .names = "{.col}_quart"))
 
-bdd_danish <- bdd_danish %>%
-  replace_with_median(OCP_HCB, OCP_HCB_quart) %>%
-  replace_with_median(PCB_DL, PCB_DL_quart) %>%
-  replace_with_median(PCB_NDL, PCB_NDL_quart) %>%
-  replace_with_median(PCB_4, PCB_4_quart) %>%
-  replace_with_median(ΣPBDE, ΣPBDE_quart) %>%
-  replace_with_median(ΣDDT, ΣDDT_quart) %>%
-  replace_with_median(ΣHCH, ΣHCH_quart) %>%
-  replace_with_median(Σchlordane, Σchlordane_quart) %>%
-  replace_with_median(OCP_PeCB, OCP_PeCB_quart) %>%
+bdd_danish <- bdd_danish|>
+  replace_with_median(OCP_HCB, OCP_HCB_quart)|>
+  replace_with_median(PCB_DL, PCB_DL_quart)|>
+  replace_with_median(PCB_NDL, PCB_NDL_quart)|>
+  replace_with_median(PCB_4, PCB_4_quart)|>
+  replace_with_median(ΣPBDE, ΣPBDE_quart)|>
+  replace_with_median(ΣDDT, ΣDDT_quart)|>
+  replace_with_median(ΣHCH, ΣHCH_quart)|>
+  replace_with_median(Σchlordane, Σchlordane_quart)|>
+  replace_with_median(OCP_PeCB, OCP_PeCB_quart)|>
   replace_with_median(OCP_β_HCH, OCP_β_HCH_quart)
 
 
@@ -540,7 +546,7 @@ bdd_finnish <- bdd_finnish |>
     ΣPBDE = PBDE_47_raw + PBDE_99_raw + PBDE_153_raw, 
     ΣDDT = OCP_pp_DDT + OCP_pp_DDE,  
     ΣHCH = OCP_β_HCH + OCP_γ_HCH_raw, 
-    Σchlordane = OCP_transnonachlor + OCP_oxychlordane_raw) %>% # alpha HCH, gamma HCH exluded, beta HCH studied alone
+    Σchlordane = OCP_transnonachlor + OCP_oxychlordane_raw)|> # alpha HCH, gamma HCH exluded, beta HCH studied alone
   mutate(
     across(c("PCB_DL", 
              "PCB_NDL", 
@@ -577,27 +583,27 @@ bdd_finnish <- bdd_finnish |>
                                              labels = c("Q1", "Q2", "Q3", "Q4")),
                 .names = "{.col}_quart"))
     
-bdd_finnish <- bdd_finnish %>%
-      replace_with_median(OCP_HCB, OCP_HCB_quart) %>%
-      replace_with_median(PCB_DL, PCB_DL_quart) %>%
-      replace_with_median(PCB_NDL, PCB_NDL_quart) %>%
-      replace_with_median(PCB_4, PCB_4_quart) %>%
-      replace_with_median(ΣPBDE, ΣPBDE_quart) %>%
-      replace_with_median(ΣDDT, ΣDDT_quart) %>%
-      replace_with_median(ΣHCH, ΣHCH_quart) %>%
-      replace_with_median(Σchlordane, Σchlordane_quart) %>%
-      replace_with_median(OCP_PeCB_raw, OCP_PeCB_raw_quart) %>%
-      replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) %>%
+bdd_finnish <- bdd_finnish|>
+      replace_with_median(OCP_HCB, OCP_HCB_quart)|>
+      replace_with_median(PCB_DL, PCB_DL_quart)|>
+      replace_with_median(PCB_NDL, PCB_NDL_quart)|>
+      replace_with_median(PCB_4, PCB_4_quart)|>
+      replace_with_median(ΣPBDE, ΣPBDE_quart)|>
+      replace_with_median(ΣDDT, ΣDDT_quart)|>
+      replace_with_median(ΣHCH, ΣHCH_quart)|>
+      replace_with_median(Σchlordane, Σchlordane_quart)|>
+      replace_with_median(OCP_PeCB_raw, OCP_PeCB_raw_quart)|>
+      replace_with_median(OCP_β_HCH, OCP_β_HCH_quart)|>
       replace_with_median(OCP_γ_HCH_raw, OCP_γ_HCH_raw_quart)
     
 
 # missing values imputation (covariates) ----
 ## danish data ----
-covar_a_imputer <- bdd_danish %>% 
-  select(marital_status_2cat, smoking, smoking_2cat, cholesterol, education) %>%
+covar_a_imputer <- bdd_danish|> 
+  select(marital_status_2cat, smoking, smoking_2cat, cholesterol, education)|>
   colnames()
 
-bdd_danish_i <- bdd_danish %>%
+bdd_danish_i <- bdd_danish|>
   select(sample, all_of(POPs), all_of(fattyacids), 
          "sex", "baseline_age", "smoking", "smoking_2cat", "bmi", "cholesterol", 
          "marital_status_2cat", "education", als) 
@@ -613,32 +619,32 @@ pred <- quickpred(bdd_danish_i, mincor = 0.2, minpuc = 0.4)
 bdd_danish_ii <- mice(bdd_danish_i, m=1, meth = method, pred = pred, seed = 11111)
 
 bdd_danish_ii <- 
-  complete(bdd_danish_ii) %>% 
+  complete(bdd_danish_ii)|> 
   as.data.frame() 
 
 tbl_merge(tbls = list(
   visu_na_i = 
-    bdd_danish_ii %>% 
-    select(all_of(covar_a_imputer)) %>%
-    is.na() %>%
-    as.data.frame() %>%
+    bdd_danish_ii|> 
+    select(all_of(covar_a_imputer))|>
+    is.na()|>
+    as.data.frame()|>
     tbl_summary(
       missing = "no",
-      statistic = list(everything() ~ "{n} / {N} ({p}%)")) %>%
+      statistic = list(everything() ~ "{n} / {N} ({p}%)"))|>
     bold_labels(), 
   visu_na = 
-    bdd_danish %>% 
-    select(all_of(covar_a_imputer)) %>%
-    is.na() %>%
-    as.data.frame() %>%
+    bdd_danish|> 
+    select(all_of(covar_a_imputer))|>
+    is.na()|>
+    as.data.frame()|>
     tbl_summary(
       missing = "no",
-      statistic = list(everything() ~ "{n} / {N} ({p}%)")) %>%
+      statistic = list(everything() ~ "{n} / {N} ({p}%)"))|>
     bold_labels()), 
           tab_spanner = c("**Imputed**", "**Not imputed**"))
 
 bdd_danish_ii <- 
-  bdd_danish_ii %>% 
+  bdd_danish_ii|> 
   select(sample, 
          marital_status_2cat_i = marital_status_2cat, 
          education_i = education, 
@@ -646,13 +652,13 @@ bdd_danish_ii <-
          smoking_2cat_i = smoking_2cat, 
          cholesterol_i = cholesterol)
 
-bdd_danish <- bdd_danish_ii %>%
+bdd_danish <- bdd_danish_ii|>
   select("sample",
          "marital_status_2cat_i", 
          "education_i", 
          "smoking_i", 
          "smoking_2cat_i", 
-         "cholesterol_i") %>%
+         "cholesterol_i")|>
   left_join(bdd_danish, by = "sample")
 
 rm(pred, method, bdd_danish_i, bdd_danish_ii, covar_a_imputer)

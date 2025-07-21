@@ -987,6 +987,9 @@ model3_cox_quart_finnish <- model3_cox_quart_finnish |>                         
 
 rm(POPs_group_quart_finnish_bis, formula_FMC, formula_FMCF)
 
+## Investigation d'autres modeles pour les cohortes finnish ----
+
+
 
 ## Q-gcomp analysis ---- 
 POPs_group_finnish_bis <-                                                 # remove the 4 most abundant PCB because they are already NDL-PCB
@@ -1424,7 +1427,7 @@ plot_baseline_follow_up <-
   labs(x = "Age at baseline (years)", 
        y = "Duration between baseline and diagnosis (months)")
 
-plot_justif <- plot_layout((plot_baseline_age + plot_follow_up + plot_diagnosis_age)/plot_baseline_follow_up)
+plot_justif <- (plot_baseline_age + plot_follow_up + plot_diagnosis_age)/plot_baseline_follow_up + plot_layout()
 
 ## analysis ----
 model2_cox_quart_sensi1 <- map_dfr(POPs_group_quart_bis, function(expl) {

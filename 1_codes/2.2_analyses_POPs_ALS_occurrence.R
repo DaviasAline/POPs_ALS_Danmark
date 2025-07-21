@@ -257,6 +257,22 @@ model3_quart <- bind_rows(
 
 rm(model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_HCB, model3_quart_ΣDDT, model3_quart_β_HCH, model3_quart_Σchlordane, model3_quart_ΣPBDE)
 
+#### qgcomp ----
+POPs_group_bis <- setdiff(POPs_group, "PCB_4")
+set.seed(1996)
+test <- 
+  qgcomp.glm.boot(
+    f = as.formula(paste("als ~", paste(c(POPs_group_bis, covariates_danish), collapse = " + "))),
+    expnms = POPs_group_bis,                                                    # pollutants of interest
+    data = bdd_danish, 
+    family = binomial(), 
+    q = 4, 
+    B = 1000,                                                                   # nb of boostrap
+    seed = 1996, 
+    rr = FALSE)                                                                 # rr=FALSE to allow estimation of ORs when using qgcomp.glm.boot
+rm(POPs_group_bis)
+test$pos.weights
+
 ### heterogeneity tests ----
 #### model 1 quartile ----
 heterogeneity_base_quart <- data.frame(variable = character(),
@@ -648,7 +664,8 @@ metanalysis_base_quart <- map_dfr(POPs_group_metanalysis_quart, function(expl) {
         OR = exp(as.numeric(rma_fit$beta)),
         lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
         upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-        `p-value` = as.numeric(rma_fit$pval))
+        `p-value` = as.numeric(rma_fit$pval), 
+        p.value_heterogeneity = as.numeric(rma_fit$QEp))
     }) |> 
     ungroup() |> 
     mutate(model = "base") |> 
@@ -710,7 +727,8 @@ metanalysis_adjusted_quart <- map_dfr(POPs_group_metanalysis_quart, function(exp
         OR = exp(as.numeric(rma_fit$beta)),
         lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
         upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-        `p-value` = as.numeric(rma_fit$pval))
+        `p-value` = as.numeric(rma_fit$pval),
+        p.value_heterogeneity = as.numeric(rma_fit$QEp))
     }) |> 
     ungroup() |> 
     mutate(model = "adjusted") |> 
@@ -1090,7 +1108,8 @@ metanalysis_copollutant_quart <- metanalysis_copollutant_quart |>               
       OR = exp(as.numeric(rma_fit$beta)),
       lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
       upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-      `p-value` = as.numeric(rma_fit$pval))
+      `p-value` = as.numeric(rma_fit$pval),
+      p.value_heterogeneity = as.numeric(rma_fit$QEp))
   }) |> 
   ungroup() |> 
   mutate(model = "copollutant") |> 
@@ -1110,7 +1129,8 @@ metanalysis_quart <- bind_rows(metanalysis_base_quart, metanalysis_adjusted_quar
          `p-value_raw` = `p-value`, 
          `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")), 
          `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`), 
-         "95%CI" = paste(lower_CI, ", ", upper_CI, sep = '')) |>
+         "95%CI" = paste(lower_CI, ", ", upper_CI, sep = ''),
+         p.value_heterogeneity = sprintf("%.1f", p.value_heterogeneity)) |>
   select(model,
          explanatory, 
          term,

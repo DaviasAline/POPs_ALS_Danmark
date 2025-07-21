@@ -999,7 +999,8 @@ wrap_plots(list(results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$ΣDDT,
            ncol = 3)
 ```
 
-#### q-gcomp analysis 
+#### q-gcomp analysis
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1056,7 +1057,8 @@ results_POPs_ALS_survival$finnish$POPs_quart_ALS_table_finnish |>
 results_POPs_ALS_survival$finnish$POPs_quart_ALS_figure_finnish
 ```
 
-#### q-gcomp analysis 
+#### q-gcomp analysis
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1101,17 +1103,22 @@ results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_table_metanalysis |>
 results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_figure_metanalysis
 ```
 
-## Sensitivity analyses 
+## Sensitivity analyses
+
+```{r, fig.height=8}
+#| column: screen-inset-right
+#| echo: false
+#| message: false
+#| warning: false
+print(results_POPs_ALS_survival$sensi1$plot_justif)
+```
+
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi1$plot_justif
 results_POPs_ALS_survival$sensi1$sensi1_table
-
 ```
-
-
 
 # Fatty acids and ALS occurence
 
