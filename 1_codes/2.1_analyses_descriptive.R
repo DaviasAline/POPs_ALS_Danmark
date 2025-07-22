@@ -212,17 +212,19 @@ proteomic_table_danish_by_als <- bdd_danish |>
 proteomic_boxplot_danish <- bdd_danish |>
   select(all_of(proteomic)) |>
   pivot_longer(cols = everything(), names_to = "Proteomic", values_to = "values") |>
-  # mutate(POPs = factor(POPs, levels = POPs_labels), 
-  #        POPs = fct_recode(POPs, !!!POPs_labels), 
-  #        POPs = fct_rev(POPs)) |>
-  # arrange(POPs) |>
+  mutate(proteomic_group = 
+           case_when(grepl("proteomic_immun_res_", Proteomic) ~ "Immunne response", 
+                     grepl("proteomic_neuro_explo_", Proteomic) ~ "Neurology", 
+                     grepl("proteomic_metabolism_", Proteomic) ~ "Metabolism"),
+         Proteomic = fct_recode(Proteomic, !!!proteomic_labels)) |>
+  arrange(Proteomic) |>
   ggplot() +
-  aes(x = Proteomic, y = values) +
+  aes(x = Proteomic, y = values, color = proteomic_group) +
   geom_boxplot() +
   scale_fill_hue(direction = 1) +
   # scale_y_continuous(trans = "log", 
   #                    labels = number_format(accuracy = 1)) +
-  labs(x = "Proteomic", y = "Pre-disease plasma concentrations (unit?)") +
+  labs(x = "Proteomic", y = "Pre-disease plasma concentrations (unit?)", color = "Proteomic group") +
   coord_flip() +
   theme_lucid()
 
@@ -404,8 +406,6 @@ POPs_group_boxplot_finnish_by_als <- bdd |>
   labs(x = "POPs", y = "Pre-disease serum concentrations (pg/ml)", fill = "ALS") +
   coord_flip() +
   theme_lucid()
-
-
 
 POPs_heatmap_finnish <- bdd |>
   filter(!study %in% c("Danish")) |>

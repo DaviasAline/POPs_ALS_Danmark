@@ -359,6 +359,7 @@ rm(model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_HCB, model3_quart_ΣD
    outcome)
 
 ### Heterogeneity tests ----
+#### base ----
 heterogeneity_base_quart <- data.frame(explanatory = character(),
                                        model = factor(),
                                        p.value_heterogeneity = numeric(), 
@@ -382,6 +383,7 @@ for (expl in POPs_group_quart) {
 }
 rm(expl, formula_raw, model_raw, formula, model, anova, p.value_heterogeneity)
 
+#### adjusted ----
 heterogeneity_adjusted_quart <- data.frame(explanatory = character(),
                                            model = factor(),
                                            p.value_heterogeneity = numeric(), 
@@ -405,13 +407,191 @@ for (expl in POPs_group_quart) {
 }
 rm(expl, formula_raw, model_raw, formula, model, anova, p.value_heterogeneity)
 
+#### copollutant ----
+outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
+
+model3_quart_PCB_DL_full <- 
+  gam(outcome ~ 
+        PCB_DL_quart + 
+        s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',                                                            # maximum likelihood
+      data = bdd_cases_danish) 
+
+model3_quart_PCB_DL_raw <- 
+  gam(outcome ~ 
+        #PCB_DL_quart + 
+        s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',                                                            # maximum likelihood
+      data = bdd_cases_danish) 
+
+anova <- anova(model3_quart_PCB_DL_raw, model3_quart_PCB_DL_full, test = "Chisq")
+p.value_heterogeneity_PCB_DL <- tibble(explanatory = "PCB_DL_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+model3_quart_PCB_NDL_full <- 
+  gam(outcome ~ 
+        PCB_NDL_quart + 
+        s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish)
+
+model3_quart_PCB_NDL_raw <- 
+  gam(outcome ~ 
+        #PCB_NDL_quart + 
+        s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish)
+
+anova <- anova(model3_quart_PCB_NDL_raw, model3_quart_PCB_NDL_full, test = "Chisq")
+p.value_heterogeneity_PCB_NDL <- tibble(explanatory = "PCB_NDL_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+model3_quart_HCB_full <- 
+  gam(outcome ~ 
+        OCP_HCB_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish)
+
+model3_quart_HCB_raw <- 
+  gam(outcome ~ 
+        #OCP_HCB_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish)
+
+anova <- anova(model3_quart_HCB_raw, model3_quart_HCB_full, test = "Chisq")
+p.value_heterogeneity_HCB <- tibble(explanatory = "OCP_HCB_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+
+model3_quart_ΣDDT_full <- 
+  gam(outcome ~ 
+        ΣDDT_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish) 
+
+model3_quart_ΣDDT_raw <- 
+  gam(outcome ~ 
+        #ΣDDT_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish) 
+
+anova <- anova(model3_quart_ΣDDT_raw, model3_quart_ΣDDT_full, test = "Chisq")
+p.value_heterogeneity_ΣDDT <- tibble(explanatory = "ΣDDT_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+model3_quart_β_HCH_full <- 
+  gam(outcome ~ 
+        OCP_β_HCH_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i,  
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish) 
+
+model3_quart_β_HCH_raw <- 
+  gam(outcome ~ 
+        #OCP_β_HCH_quart +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i,  
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish) 
+
+anova <- anova(model3_quart_β_HCH_raw, model3_quart_β_HCH_full, test = "Chisq")
+p.value_heterogeneity_β_HCH <- tibble(explanatory = "OCP_β_HCH_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+model3_quart_Σchlordane_full <- 
+  gam(outcome ~ 
+        Σchlordane_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish)
+
+model3_quart_Σchlordane_raw <- 
+  gam(outcome ~ 
+        #Σchlordane_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish)
+
+anova <- anova(model3_quart_Σchlordane_raw, model3_quart_Σchlordane_full, test = "Chisq")
+p.value_heterogeneity_Σchlordane <- tibble(explanatory = "Σchlordane_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+model3_quart_ΣPBDE_full <- 
+  gam(outcome ~ 
+        ΣPBDE_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish) 
+
+model3_quart_ΣPBDE_raw <- 
+  gam(outcome ~ 
+        #ΣPBDE_quart + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish) 
+
+anova <- anova(model3_quart_ΣPBDE_raw, model3_quart_ΣPBDE_full, test = "Chisq")
+p.value_heterogeneity_ΣPBDE <- tibble(explanatory = "ΣPBDE_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+heterogeneity_copollutant_quart <- bind_rows(p.value_heterogeneity_PCB_DL, 
+                                       p.value_heterogeneity_PCB_NDL, 
+                                       p.value_heterogeneity_HCB, 
+                                       p.value_heterogeneity_ΣDDT, 
+                                       p.value_heterogeneity_β_HCH, 
+                                       p.value_heterogeneity_Σchlordane, 
+                                       p.value_heterogeneity_ΣPBDE) |>
+  mutate(model = "copollutant")
+
+rm(anova, outcome, 
+   model3_quart_PCB_DL_full, model3_quart_PCB_DL_raw, 
+   model3_quart_PCB_NDL_full, model3_quart_PCB_NDL_raw, 
+   model3_quart_HCB_full, model3_quart_HCB_raw, 
+   model3_quart_ΣDDT_full, model3_quart_ΣDDT_raw, 
+   model3_quart_β_HCH_full, model3_quart_β_HCH_raw, 
+   model3_quart_Σchlordane_full, model3_quart_Σchlordane_raw, 
+   model3_quart_ΣPBDE_full, model3_quart_ΣPBDE_raw,
+   p.value_heterogeneity_PCB_DL, 
+   p.value_heterogeneity_PCB_NDL, 
+   p.value_heterogeneity_HCB, 
+   p.value_heterogeneity_ΣDDT, 
+   p.value_heterogeneity_β_HCH, 
+   p.value_heterogeneity_Σchlordane, 
+   p.value_heterogeneity_ΣPBDE)
+
 heterogeneity_tests <- 
   bind_rows(heterogeneity_base_quart, 
-            heterogeneity_adjusted_quart) |>
+            heterogeneity_adjusted_quart, 
+            heterogeneity_copollutant_quart) |>
   mutate(explanatory = gsub("_quart", "", explanatory), 
          study = "Danish")
 
 ### Trend tests ----
+#### base ----
 trend_base <- data.frame(explanatory = character(),
                          model = factor(), 
                          p.value_trend = numeric(), 
@@ -430,6 +610,7 @@ for (expl in POPs_group_quart_med) {
 }
 rm(expl, model, formula, p.value_trend)
 
+#### adjusted ----
 trend_adjusted <- data.frame(explanatory = character(),
                              model = factor(), 
                              p.value_trend = numeric(), 
@@ -448,13 +629,123 @@ for (expl in POPs_group_quart_med) {
 }
 rm(expl, model, formula, p.value_trend)
 
+#### copollutant ----
+outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
+
+model3_quart_PCB_DL_trend <- 
+  gam(outcome ~ 
+        PCB_DL_quart_med + 
+        s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',                                                            # maximum likelihood
+      data = bdd_cases_danish) |> 
+  summary()
+p.value_trend_PCB_DL <- model3_quart_PCB_DL_trend$p.table["PCB_DL_quart_med", "Pr(>|z|)"]
+
+model3_quart_PCB_NDL_trend <- 
+  gam(outcome ~ 
+        PCB_NDL_quart_med + 
+        s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish)|> 
+  summary()
+p.value_trend_PCB_NDL <- model3_quart_PCB_NDL_trend$p.table["PCB_NDL_quart_med", "Pr(>|z|)"]
+
+model3_quart_HCB_trend <- 
+  gam(outcome ~ 
+        OCP_HCB_quart_med + 
+        s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish)|> 
+  summary()
+p.value_trend_HCB <- model3_quart_HCB_trend$p.table["OCP_HCB_quart_med", "Pr(>|z|)"]
+
+model3_quart_ΣDDT_trend <- 
+  gam(outcome ~ 
+        ΣDDT_quart_med + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish) |> 
+  summary()
+p.value_trend_ΣDDT <- model3_quart_ΣDDT_trend$p.table["ΣDDT_quart_med", "Pr(>|z|)"]
+
+model3_quart_β_HCH_trend <- 
+  gam(outcome ~ 
+        OCP_β_HCH_quart_med +
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i,  
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish) |> 
+  summary()
+p.value_trend_β_HCH <- model3_quart_β_HCH_trend$p.table["OCP_β_HCH_quart_med", "Pr(>|z|)"]
+
+model3_quart_Σchlordane_trend <- 
+  gam(outcome ~ 
+        Σchlordane_quart_med + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish) |> 
+  summary()
+p.value_trend_Σchlordane <- model3_quart_Σchlordane_trend$p.table["Σchlordane_quart_med", "Pr(>|z|)"]
+
+model3_quart_ΣPBDE_trend <- 
+  gam(outcome ~ 
+        ΣPBDE_quart_med + 
+        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish) |> 
+  summary()
+p.value_trend_ΣPBDE <- model3_quart_ΣPBDE_trend$p.table["ΣPBDE_quart_med", "Pr(>|z|)"]
+
+trend_copollutant <- 
+  data.frame(explanatory = c("PCB_DL_quart_med", "PCB_NDL_quart_med", "OCP_HCB_quart_med", 
+                             "ΣDDT_quart_med", "OCP_β_HCH_quart_med", "Σchlordane_quart_med", 
+                             "ΣPBDE_quart_med" ),
+             model = "copollutant",
+             p.value_trend = c(p.value_trend_PCB_DL, 
+                               p.value_trend_PCB_NDL, 
+                               p.value_trend_HCB, 
+                               p.value_trend_ΣDDT, 
+                               p.value_trend_β_HCH, 
+                               p.value_trend_Σchlordane, 
+                               p.value_trend_ΣPBDE))
+
+rm(outcome, 
+   model3_quart_PCB_DL_trend,
+   model3_quart_PCB_NDL_trend, 
+   model3_quart_HCB_trend, 
+   model3_quart_ΣDDT_trend, 
+   model3_quart_β_HCH_trend,
+   model3_quart_Σchlordane_trend, 
+   model3_quart_ΣPBDE_trend, 
+   
+   p.value_trend_PCB_DL, 
+   p.value_trend_PCB_NDL, 
+   p.value_trend_HCB, 
+   p.value_trend_ΣDDT, 
+   p.value_trend_β_HCH, 
+   p.value_trend_Σchlordane, 
+   p.value_trend_ΣPBDE)
+
 trend_tests <- 
-  bind_rows(trend_base, trend_adjusted) |>
+  bind_rows(trend_base, trend_adjusted, trend_copollutant) |>
   mutate(explanatory = gsub("_quart_med", "", explanatory), 
          study = "Danish")
 
-rm(heterogeneity_base_quart, heterogeneity_adjusted_quart, 
-   trend_base, trend_adjusted)
+rm(heterogeneity_base_quart, heterogeneity_adjusted_quart, heterogeneity_copollutant_quart,
+   trend_base, trend_adjusted, trend_copollutant)
 
 
 ## Cox-gam model (sd) ----
@@ -683,9 +974,9 @@ qgcomp_boot_danish <-
     seed = 1996,
     parallel = TRUE,                                                            # shorter run time
     parplan = TRUE)                                                             # shorter run time
-print(qgcomp_boot_danish)
-qgcomp_boot_danish$pos.weights                                                  # NULL because the model is not significant 
-qgcomp_boot_danish$neg.weights                                                  # NULL because the model is not significant 
+# print(qgcomp_boot_danish)
+# qgcomp_boot_danish$pos.weights                                                  # NULL because the model is not significant 
+# qgcomp_boot_danish$neg.weights                                                  # NULL because the model is not significant 
 # plot(qgcomp_boot_danish)
 
 # run the code without bootsrapping just to get weights even if the mixture is not significant 
@@ -698,9 +989,9 @@ qgcomp_noboot_danish <-
     bdd_cases_danish[, c(POPs_group_bis, covariates_danish, 'follow_up_death', 'status_death')],
     q = 4,                                                                      # number of quantiles
     expnms = POPs_group_bis)                                                 # exposures of interest
-print(qgcomp_noboot_danish)
-qgcomp_noboot_danish$pos.weights
-qgcomp_noboot_danish$neg.weights
+# print(qgcomp_noboot_danish)
+# qgcomp_noboot_danish$pos.weights
+# qgcomp_noboot_danish$neg.weights
 # plot(qgcomp_noboot_danish, suppressprint = TRUE)
 rm(formula_danish, POPs_group_bis)
 
@@ -1022,9 +1313,9 @@ qgcomp_boot_finnish <-
     seed = 1996,
     parallel = TRUE,                                                            # shorter run time
     parplan = TRUE)                                                             # shorter run time
-print(qgcomp_boot_finnish)
-qgcomp_boot_finnish$pos.weights                                                  # NULL because the model is not significant 
-qgcomp_boot_finnish$neg.weights                                                  # NULL because the model is not significant 
+# print(qgcomp_boot_finnish)
+# qgcomp_boot_finnish$pos.weights                                                  # NULL because the model is not significant 
+# qgcomp_boot_finnish$neg.weights                                                  # NULL because the model is not significant 
 # plot(qgcomp_boot_finnish)
 
 # run the code without bootsrapping just to get weights even if the mixture is not significant 
@@ -1037,9 +1328,9 @@ qgcomp_noboot_finnish <-
     bdd_cases_finnish[, c(POPs_group_finnish_bis, covariates_finnish, 'follow_up_death', 'status_death', "study")],
     q = 4,                                                                      # number of quantiles
     expnms = POPs_group_finnish_bis)                                                 # exposures of interest
-print(qgcomp_noboot_finnish)
-qgcomp_noboot_finnish$pos.weights
-qgcomp_noboot_finnish$neg.weights
+# print(qgcomp_noboot_finnish)
+# qgcomp_noboot_finnish$pos.weights
+# qgcomp_noboot_finnish$neg.weights
 # plot(qgcomp_noboot_finnish, suppressprint = TRUE)
 
 rm(formula_finnish, bdd_cases_finnish, POPs_group_finnish_bis)
@@ -1398,6 +1689,7 @@ plot_follow_up <- ggplot(bdd_cases_tot, aes(x = "", y = follow_up)) +
   geom_jitter(aes(color = study), width = 0.2, alpha = 0.6, size = 1.8) +
   scale_color_brewer(palette = "Dark2") +
   theme_minimal() +
+  theme(legend.position = "none") +
   labs(x = NULL, y = "Follow-up (months)", title = "Distribution of the duration between baseline and diagnosis")
 
 plot_baseline_age <- ggplot(bdd_cases_tot, aes(x = "", y = baseline_age)) +
@@ -1406,6 +1698,7 @@ plot_baseline_age <- ggplot(bdd_cases_tot, aes(x = "", y = baseline_age)) +
   geom_jitter(aes(color = study), width = 0.2, alpha = 0.6, size = 1.8) +
   scale_color_brewer(palette = "Dark2") +
   theme_minimal() +
+  theme(legend.position = "none") +
   labs(x = NULL, y = "Age at baseline (years)", title = "Distribution of the subjects age at baseline")
 
 plot_diagnosis_age <- ggplot(bdd_cases_tot, aes(x = "", y = diagnosis_age)) +
@@ -1725,37 +2018,52 @@ quartile1_rows <- main_results_POPs_ALS_survival |>
     term = "quartile 1",
     HR = "-",
     "95% CI" = "-",
-    `p-value` = "")
+    `p-value` = "", 
+    "p.value_heterogeneity" = '', 
+    "p.value_trend" = '')
 
 POPs_quart_ALS_table_danish <- main_results_POPs_ALS_survival |>
   filter(study == "Danish") |>
   filter(!term == "Continuous") |>
-  select(model, explanatory, term, HR, "95% CI", "p-value") |>
+  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity", "p.value_trend") |>
   mutate(across(everything(), as.character))
 
 POPs_quart_ALS_table_danish <- 
   bind_rows(quartile1_rows, POPs_quart_ALS_table_danish) |>
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity", "p.value_trend")) |>
   select(explanatory, term, contains("base"), contains("adjusted"), contains("copollutant")) |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", 
-         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant") |>
+  group_by(explanatory) |>
+  mutate(p.value_heterogeneity_base = ifelse(term == 'quartile 1', p.value_heterogeneity_base[term == 'quartile 2'], ''), 
+         p.value_trend_base = ifelse(term == 'quartile 1', p.value_trend_base[term == 'quartile 2'], ''),
+         p.value_heterogeneity_adjusted = ifelse(term == 'quartile 1', p.value_heterogeneity_adjusted[term == 'quartile 2'], ''), 
+         p.value_trend_adjusted = ifelse(term == 'quartile 1', p.value_trend_adjusted[term == 'quartile 2'], ''),
+         p.value_heterogeneity_copollutant = ifelse(term == 'quartile 1', p.value_heterogeneity_copollutant[term == 'quartile 2'], ''), 
+         p.value_trend_copollutant = ifelse(term == 'quartile 1', p.value_trend_copollutant[term == 'quartile 2'], '')) |>
+  ungroup() |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Heterogeneity test" = "p.value_heterogeneity_base", "Trend test" = "p.value_trend_base",
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted",  "Heterogeneity test " = "p.value_heterogeneity_adjusted", "Trend test " = "p.value_trend_adjusted",
+         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant",  " Heterogeneity test " = "p.value_heterogeneity_copollutant", " Trend test " = "p.value_trend_copollutant") |>
   mutate(explanatory = factor(explanatory, levels = POPs_group_labels), 
          explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
   arrange(explanatory) |>
   flextable() |>
   add_footer_lines(
-    "1All models are adjusted for age and sex. Adjusted models further account for smoking, BMI and marital status. 
-  2Estimated risk of death after ALS diagnosis when pre-disease serum concentration of POPs compared to quartile 1.
-  3CI: Confidence interval.") |>
+    "1POPs were summed as follows: most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; ΣDDT corresponds to p,p’-DDT and p,p’-DDE, Σchlordane corresponds to trans-nonanchlor and oxychlordane and finally ΣPBDE corresponds to PBDEs 47, 99, 153.
+  2All models are adjusted for sex and age at diagnosis. Adjusted models further account for smoking, BMI and marital status.
+  3Estimated risk of ALS death when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
+  4CI: Confidence interval.
+  5Heterogeneity tests in outcome value across POP quartiles, adjusted for sex and age at diagnosis.
+  6Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, adjusted for sex and age at diagnosis.
+  7Heterogeneity tests in outcome value across POP quartiles, adjusted for sex, age at diagnosis, smoking, BMI and marital status.
+  8Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
   add_header(
-    "explanatory" = "POPs", 
+    "explanatory" = "Exposures", 
     term = "Quartiles",
-    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", 
-    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model") |>
+    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model",  "Heterogeneity test" = "Base model",  "Trend test" = "Base model",
+    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model",  "Heterogeneity test " = "Adjusted model",  "Trend test " = "Adjusted model", 
+    " HR " = "Copollutant model", " 95% CI " = "Copollutant model", " p-value " = "Copollutant model",  " Heterogeneity test " = "Copollutant model",  " Trend test " = "Copollutant model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   merge_v(j = "term") |>
@@ -1770,7 +2078,6 @@ POPs_quart_ALS_table_danish <-
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 rm(quartile1_rows)
-
 
 ### figure POPs (sd) - als survival ----
 POPs_sd_ALS_figure_danish <- main_results_POPs_ALS_survival |>
@@ -1822,7 +2129,7 @@ POPs_quart_ALS_figure_danish <- main_results_POPs_ALS_survival |>
   coord_flip()
 
 
-### table POPs (sd) - ALS survival (qgcomp analysis) ----
+### table POPs - ALS survival (qgcomp analysis) ----
 POPs_group_bis <- setdiff(POPs_group, "PCB_4")                                  # remove the 4 most abundant PCB because they are already NDL-PCB
 pollutant_labels_bis <- set_names(
   c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
@@ -1847,8 +2154,8 @@ POPs_ALS_qgcomp_table_danish <-                                                 
     `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
   select(study, model, HR, `95% CI`, `p-value`)
 
-### figure POPs (sd) - ALS survival (qgcomp analysis) ----
-plot_qgcomp_danish <- 
+### figure POPs - ALS survival (qgcomp analysis) ----
+POPs_ALS_qgcomp_figure_danish <- 
   tibble(
     pollutant = c(names(qgcomp_noboot_danish$pos.weights), names(qgcomp_noboot_danish$neg.weights)),
     weight = c(qgcomp_noboot_danish$pos.weights, - qgcomp_noboot_danish$neg.weights)) |>
@@ -1980,13 +2287,13 @@ rm(ref_rows)
 ### table POPs (sd) - als survival ----
 POPs_sd_ALS_table_finnish <- main_results_POPs_ALS_survival |>
   filter(study == "Finnish") |>
-  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity") |>
+  select(model, explanatory, term, HR, "95% CI", "p-value") |>
   filter(term == "Continuous") |>
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity")) |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
   select(explanatory, contains("base"), contains("adjusted"), contains("copollutant")) |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Hetero-geneity test" = "p.value_heterogeneity_base",
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "Hetero-geneity test " = "p.value_heterogeneity_adjusted",
-         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant", " Hetero-geneity test " = "p.value_heterogeneity_copollutant") |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base",
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", 
+         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant") |>
   mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |> 
   flextable() |>
   add_footer_lines(
@@ -1995,9 +2302,9 @@ POPs_sd_ALS_table_finnish <- main_results_POPs_ALS_survival |>
   3CI: Confidence interval.") |>
   add_header(
     "explanatory" = "Exposures", 
-    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", "Hetero-geneity test" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", "Hetero-geneity test " = "Adjusted Model", 
-    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model", " Hetero-geneity test " = "Copollutant Model") |>
+    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
+    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", 
+    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   theme_vanilla() |>
@@ -2143,7 +2450,7 @@ POPs_ALS_qgcomp_table_finnish <-                                                
   select(study, model, HR, `95% CI`, `p-value`)
 
 ### figure POPs (sd) - ALS survival (qgcomp analysis) ----
-plot_qgcomp_finnish <- 
+POPs_ALS_qgcomp_figure_finnish <- 
   tibble(
     pollutant = c(names(qgcomp_noboot_finnish$pos.weights), names(qgcomp_noboot_finnish$neg.weights)),
     weight = c(qgcomp_noboot_finnish$pos.weights, - qgcomp_noboot_finnish$neg.weights)) |>
@@ -2173,13 +2480,13 @@ POPs_group_labels_metanalysis <- c(
 ### table POPs (sd) - als survival ----
 POPs_sd_ALS_table_metanalysis <- main_results_POPs_ALS_survival |>
   filter(study == "Metanalysis") |>
-  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity") |>
+  select(model, explanatory, term, HR, "95% CI", "p-value") |>
   filter(term == "Continuous") |>
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity")) |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
   select(explanatory, contains("base"), contains("adjusted"), contains("copollutant")) |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Hetero-geneity test" = "p.value_heterogeneity_base",
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "Hetero-geneity test " = "p.value_heterogeneity_adjusted",
-         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant", " Hetero-geneity test " = "p.value_heterogeneity_copollutant") |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", 
+         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant") |>
   mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels_metanalysis)) |> 
   flextable() |>
   add_footer_lines(
@@ -2188,9 +2495,9 @@ POPs_sd_ALS_table_metanalysis <- main_results_POPs_ALS_survival |>
   3CI: Confidence interval.") |>
   add_header(
     "explanatory" = "Exposures", 
-    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", "Hetero-geneity test" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", "Hetero-geneity test " = "Adjusted Model", 
-    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model", " Hetero-geneity test " = "Copollutant Model") |>
+    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
+    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model",
+    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   theme_vanilla() |>
@@ -2322,7 +2629,7 @@ results_POPs_ALS_survival <-
          plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish, 
          plot_copollutant_cox_gam_danish = plot_copollutant_cox_gam_danish, 
          POPs_ALS_qgcomp_table_danish = POPs_ALS_qgcomp_table_danish,
-         plot_qgcomp_danish = plot_qgcomp_danish), 
+         POPs_ALS_qgcomp_figure_danish = POPs_ALS_qgcomp_figure_danish), 
        finnish = list(
          covar_finnish = covar_finnish, 
          covar_ALS_table_finnish = covar_ALS_table_finnish,
@@ -2331,7 +2638,7 @@ results_POPs_ALS_survival <-
          POPs_sd_ALS_figure_finnish = POPs_sd_ALS_figure_finnish, 
          POPs_quart_ALS_figure_finnish = POPs_quart_ALS_figure_finnish, 
          POPs_ALS_qgcomp_table_finnish = POPs_ALS_qgcomp_table_finnish, 
-         plot_qgcomp_finnish = plot_qgcomp_finnish), 
+         POPs_ALS_qgcomp_figure_finnish = POPs_ALS_qgcomp_figure_finnish), 
        metanalysis = list(
          POPs_sd_ALS_table_metanalysis = POPs_sd_ALS_table_metanalysis, 
          POPs_quart_ALS_table_metanalysis = POPs_quart_ALS_table_metanalysis, 
@@ -2352,7 +2659,7 @@ rm(main_results_POPs_ALS_survival,
    plot_adjusted_cox_gam_danish, 
    plot_copollutant_cox_gam_danish,
    POPs_ALS_qgcomp_table_danish, 
-   plot_qgcomp_danish,
+   POPs_ALS_qgcomp_figure_danish,
    
    covar_finnish,
    covar_ALS_table_finnish, 
@@ -2361,7 +2668,7 @@ rm(main_results_POPs_ALS_survival,
    POPs_sd_ALS_figure_finnish, 
    POPs_quart_ALS_figure_finnish,
    POPs_ALS_qgcomp_table_finnish,
-   plot_qgcomp_finnish, 
+   POPs_ALS_qgcomp_figure_finnish, 
    
    POPs_sd_ALS_table_metanalysis, 
    POPs_quart_ALS_table_metanalysis, 

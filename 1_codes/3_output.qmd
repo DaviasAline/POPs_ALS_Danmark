@@ -33,7 +33,12 @@ bdd_danish |>
   theme_bw() +
   stat_overlay_normal_density(color = "red", linetype = "dashed") +
   theme(axis.title = element_blank())
-descrip_num(data = bdd_danish, vars = "follow_up_death") |> kable("html")
+descrip_num(data = bdd_danish, vars = "follow_up_death") |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ## Metadata
@@ -45,8 +50,11 @@ Not imputed for missing data
 #| message: false
 #| warning: false
 results_descriptive$danish$covar_danish |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ## POPs
@@ -57,7 +65,12 @@ results_descriptive$danish$covar_danish |>
 #| echo: false
 #| message: false
 #| warning: false
-results_descriptive$danish$POPs_table_danish  |> kable("html")
+results_descriptive$danish$POPs_table_danish |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ### Comparison of distribution cases/controls
@@ -66,9 +79,12 @@ results_descriptive$danish$POPs_table_danish  |> kable("html")
 #| echo: false
 #| message: false
 #| warning: false
-results_descriptive$danish$POPs_table_danish_by_als |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+results_descriptive$danish$POPs_table_danish_by_als|>
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ### Heatmap of correlation
@@ -201,11 +217,16 @@ heatmap_cor(cormat = bdd_danish[PBDEs], decimal = 1)
 
 ### Distribution tables
 
-```{r, fig.height=10, fig.width=10}
+```{r}
 #| echo: false
 #| message: false
 #| warning: false
-results_descriptive$danish$fattyacids_table_danish |> kable("html")
+results_descriptive$danish$fattyacids_table_danish|>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ### Comparison of distribution cases/controls
@@ -215,8 +236,11 @@ results_descriptive$danish$fattyacids_table_danish |> kable("html")
 #| message: false
 #| warning: false
 results_descriptive$danish$fattyacids_table_danish_by_als |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ### Heatmap of correlation
@@ -282,7 +306,12 @@ results_descriptive$danish$POPs_fattyacids_heatmap_danish
 #| message: false
 #| warning: false
 boxplot(data = bdd_danish, vars = c("fS_Kol", "cholesterol"))
-descrip_num(data = bdd_danish, vars = c("fS_Kol", "cholesterol")) |> kable("html")
+descrip_num(data = bdd_danish, vars = c("fS_Kol", "cholesterol")) |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 cor.test(bdd_danish$fS_Kol, bdd_danish$cholesterol)
 ```
 
@@ -299,11 +328,19 @@ timing <- bdd |>
          time_baseline_diagnosis, time_baseline_death, time_diagnosis_death)
 
 timing |> 
-  tbl_summary() |> 
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  tbl_summary() |>
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 
-descrip_num(data = timing, vars = colnames(timing))  |> kable("html")
+descrip_num(data = timing, vars = colnames(timing))   |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 rm(timing)
 ```
 
@@ -315,7 +352,12 @@ rm(timing)
 #| echo: false
 #| message: false
 #| warning: false
-results_descriptive$danish$proteomic_table_danish  |> kable("html")
+results_descriptive$danish$proteomic_table_danish  |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ### Comparison of distribution cases/controls
@@ -324,9 +366,12 @@ results_descriptive$danish$proteomic_table_danish  |> kable("html")
 #| echo: false
 #| message: false
 #| warning: false
-results_descriptive$danish$proteomic_table_danish_by_als |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+results_descriptive$danish$proteomic_table_danish_by_als|>
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ### Heatmap of correlation
@@ -385,11 +430,19 @@ bdd_finnish |>
   filter(als == 1) |>
   select(follow_up_death, status_death, study) |>
   tbl_summary(by = "study") |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 
 densityplot(data = bdd_finnish, vars = "follow_up_death") 
-descrip_num(data = bdd_finnish, vars = "follow_up_death")|> kable("html")
+descrip_num(data = bdd_finnish, vars = "follow_up_death") |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ## Metadata
@@ -399,8 +452,11 @@ descrip_num(data = bdd_finnish, vars = "follow_up_death")|> kable("html")
 #| message: false
 #| warning: false
 results_descriptive$finnish$covar_finnish |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ## POPs
@@ -411,7 +467,12 @@ results_descriptive$finnish$covar_finnish |>
 #| echo: false
 #| message: false
 #| warning: false
-results_descriptive$finnish$POPs_table_finnish |> kable("html")
+results_descriptive$finnish$POPs_table_finnish |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ### Comparison of distribution cases/controls
@@ -421,8 +482,11 @@ results_descriptive$finnish$POPs_table_finnish |> kable("html")
 #| message: false
 #| warning: false
 results_descriptive$finnish$POPs_table_finnish_by_als |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ### Heatmap of correlation
@@ -539,11 +603,16 @@ heatmap_cor(cormat = bdd_finnish[PBDEs], decimal = 1)
 
 ### Distribution tables
 
-```{r, fig.height=10, fig.width=10}
+```{r}
 #| echo: false
 #| message: false
 #| warning: false
-results_descriptive$finnish$fattyacids_table_finnish |> kable("html")
+results_descriptive$finnish$fattyacids_table_finnish |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ### Comparison of distribution cases/controls
@@ -553,8 +622,11 @@ results_descriptive$finnish$fattyacids_table_finnish |> kable("html")
 #| message: false
 #| warning: false
 results_descriptive$finnish$fattyacids_table_finnish_by_als |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ### Heatmap of correlation
@@ -617,12 +689,16 @@ results_descriptive$finnish$POPs_fattyacids_heatmap_finnish
 
 Why do we have 3 cholesterol variables in the finnish data ?
 
-```{r}
+```{r, fig.height=4}
 #| echo: false
 #| message: false
 #| warning: false
 boxplot(data = bdd_finnish, vars = c("fS_Kol", "chol", "cholesterol"))
-descrip_num(data = bdd_finnish, vars = c("fS_Kol", "chol", "cholesterol")) |> kable("html")
+descrip_num(data = bdd_finnish, vars = c("fS_Kol", "chol", "cholesterol")) |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") 
 heatmap_cholesterol <- bdd_finnish |> select("fS_Kol", "chol", "cholesterol")
 heatmap_cholesterol <- cor(heatmap_cholesterol, 
                     use = "pairwise.complete.obs", 
@@ -659,10 +735,18 @@ timing <- bdd |>
 
 timing |> 
   tbl_summary() |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 
-descrip_num(data = timing, vars = colnames(timing)) |>  kable("html")
+descrip_num(data = timing, vars = colnames(timing)) |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 rm(timing)
 ```
 
@@ -680,10 +764,19 @@ timing <- bdd |>
 
 timing |> 
   tbl_summary() |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+   set_table_properties(align = "left")|>
+  set_table_properties(align = "left")
 
-descrip_num(data = timing, vars = colnames(timing)) |>   kable("html")
+descrip_num(data = timing, vars = colnames(timing)) |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 rm(timing)
 ```
 
@@ -701,10 +794,18 @@ timing <- bdd |>
 
 timing |> 
   tbl_summary() |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 
-descrip_num(data = timing, vars = colnames(timing)) |> kable("html")
+descrip_num(data = timing, vars = colnames(timing)) |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 rm(timing)
 ```
 
@@ -719,8 +820,11 @@ rm(timing)
 #| message: false
 #| warning: false
 results_descriptive$comp$covar_comp |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ### POPs
@@ -730,8 +834,11 @@ results_descriptive$comp$covar_comp |>
 #| message: false
 #| warning: false
 results_descriptive$comp$POPs_table_comp |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 results_descriptive$comp$POPs_boxplot_comp
 ```
 
@@ -742,30 +849,43 @@ results_descriptive$comp$POPs_boxplot_comp
 #| message: false
 #| warning: false
 results_descriptive$comp$fattyacids_table_comp |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 results_descriptive$comp$fattyacids_boxplot_comp 
 ```
 
 ## Among cases
 
-(for ALS survival analyses) \### Metadata
+(for ALS survival analyses) 
+### Metadata
 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
 results_descriptive$comp$covar_comp_cases |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ### POPs
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 results_descriptive$comp$POPs_table_comp_cases |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 
 results_descriptive$comp$POPs_boxplot_comp_cases
 ```
@@ -798,8 +918,11 @@ corrplot(results_descriptive$comp$POPs_heatmap_cases,
 #| message: false
 #| warning: false
 results_POPs_ALS_occurrence$main$covar |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ### Effects of POPs on ALS occurence
@@ -816,6 +939,106 @@ In the copollutant models, the pollutant of interest is quartile while the other
 #| warning: false
 results_POPs_ALS_occurrence$main$plot_quart
 ```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+extra_rows <- results_POPs_ALS_occurrence$main$results_quart |>
+  distinct(variable) |> 
+  mutate(
+    quartiles = "Quartile 1",
+    "OR_base" = '-', "95%CI_base" = '-', "p.value_base" = '', "p.value_heterogeneity_base" = '', "p.value_trend_base" = '',
+    "OR_adjusted" = '-', "95%CI_adjusted" = '-', "p.value_adjusted" = '', , "p.value_heterogeneity_adjusted" = '', "p.value_trend_adjusted" = '',
+    "OR_copollutant" = '-', "95%CI_copollutant" ='-', "p.value_copollutant" = '', , "p.value_heterogeneity_copollutant" = '', "p.value_trend_copollutant" = '')
+
+table_S2 <- 
+  results_POPs_ALS_occurrence$main$main_results |>
+  select(-lower_CI, -upper_CI, - p.value_raw) |>
+  filter(model %in% c('base_quart', 'adjusted_quart', 'copollutant_quart')) |>
+  pivot_wider(
+    names_from = model,  
+    values_from = c(OR, `95%CI`, p.value, p.value_heterogeneity, p.value_trend)) |>
+  select(variable, 
+         quartiles = df,
+         contains("base_quart"), 
+         contains("adjusted_quart"), 
+         contains("copollutant_quart")) 
+colnames(table_S2) <- gsub('_quart', '', colnames(table_S2))
+
+table_S2 <- table_S2 |>
+  mutate_if(is.numeric, as.character) |>
+  bind_rows(extra_rows) |>
+  mutate(
+    variable = gsub("OCP_", "", variable), 
+    variable = fct_relevel(variable, "PCB_4", "PCB_DL", "PCB_NDL",  "HCB", "ΣDDT", "β_HCH", "Σchlordane", "ΣPBDE" ),
+    variable = fct_recode(variable, 
+                          "Most prevalent PCBs" = "PCB_4",
+                          "Dioxin-like PCBs" = "PCB_DL",
+                          "Non-dioxin-like PCBs" = "PCB_NDL",
+                          "β-HCH" = "β_HCH")) |>
+  arrange(variable, quartiles) |>
+  group_by(variable) |>
+  mutate(p.value_heterogeneity_base = ifelse(quartiles == 'Quartile 1', p.value_heterogeneity_base[quartiles == 'Quartile 2'], ''), 
+         p.value_trend_base = ifelse(quartiles == 'Quartile 1', p.value_trend_base[quartiles == 'Quartile 2'], ''),
+         p.value_heterogeneity_adjusted = ifelse(quartiles == 'Quartile 1', p.value_heterogeneity_adjusted[quartiles == 'Quartile 2'], ''), 
+         p.value_trend_adjusted = ifelse(quartiles == 'Quartile 1', p.value_trend_adjusted[quartiles == 'Quartile 2'], ''), 
+         p.value_heterogeneity_copollutant = ifelse(quartiles == 'Quartile 1', p.value_heterogeneity_copollutant[quartiles == 'Quartile 2'], ''), 
+         p.value_trend_copollutant = ifelse(quartiles == 'Quartile 1', p.value_trend_copollutant[quartiles == 'Quartile 2'], '')) |>
+  ungroup() |>
+  rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p.value_base', 
+         'Heterogeneity test' = 'p.value_heterogeneity_base', 'Trend test' = 'p.value_trend_base',
+         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p.value_adjusted', 
+         'Heterogeneity test ' = 'p.value_heterogeneity_adjusted', 'Trend test ' = 'p.value_trend_adjusted',
+         ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant',
+         ' Heterogeneity test ' = 'p.value_heterogeneity_copollutant', ' Trend test ' = 'p.value_trend_copollutant')
+table_S2 <- table_S2 |> flextable() |>
+  add_footer_lines(
+    "1POPs were summed as follows: Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; ΣPBDE corresponds to PBDEs 47, 99, 153; ΣDDT corresponds to p,p’-DDT and p,p’-DDE and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
+  2All models are matched for sex and age. Adjusted models further account for smoking, BMI, serum total cholesterol, marital status, and education. Co-pollutant models further include all chemicals, where a GAM is used in which the chemical of interest is categorized into quartiles, while the other pollutants are included as smooth terms.
+  3Estimated risk of ALS when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
+  4CI: Confidence interval.
+  5Heterogeneity tests in outcome value across POP quartiles, matched on age and sex.
+  6Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, matched on age and sex.
+  7Heterogeneity tests in outcome value across POP quartiles, matched on age and sex, and adjusted for smoking, BMI, serum total cholesterol, marital status, and education.
+  8Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, matched on age and sex, and adjusted for smoking, BMI, serum total cholesterol, marital status, and education.") |>
+  add_header(
+    "variable" = "Exposures", "quartiles" = "Quartiles",
+    "OR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", "Heterogeneity test" = 'Base Model', "Trend test" = 'Base Model',
+    "OR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", "Heterogeneity test " = 'Adjusted Model', "Trend test " = 'Adjusted Model',
+    " OR " = "Co-pollutant model", " 95% CI " = "Co-pollutant model", " p-value " = "Co-pollutant model", " Heterogeneity test " = 'Co-pollutant model', " Trend test " = 'Co-pollutant model') |>
+  merge_h(part = "header") |>
+  merge_v(j = "variable") |>
+  theme_vanilla() |>
+  bold(j = "variable", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "variable", align = "left", part = "all") |> 
+  merge_at(j = "variable", part = "header") |>
+  merge_at(j = "quartiles", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")|>
+  set_table_properties(align = "left")
+
+table_S2
+rm(extra_rows, table_S2)
+```
+
+
+##### q-gcomp analysis 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_occurrence$main$POPs_ALS_qgcomp_table_danish |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
+results_POPs_ALS_occurrence$main$POPs_ALS_qgcomp_figure_danish
+```
+
 
 ##### Sensitivity analysis POPs not summed
 
@@ -849,6 +1072,7 @@ wrap_plots(
 wrap_plots(
   results_POPs_ALS_occurrence$main$plot_base_gam$PCB_4, 
   results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_4,  
+  wrap_elements(grid::nullGrob()),
   nrow = 1)
 wrap_plots(
   results_POPs_ALS_occurrence$main$plot_base_gam$OCP_HCB, 
@@ -891,12 +1115,78 @@ wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_
 
 ## Metanalysis (quartiles)
 
-```{r fig.height=7, fig.width=6}
+```{r fig.height=9, fig.width=9}
 #| echo: false
 #| message: false
 #| warning: false
 results_POPs_ALS_occurrence$metanalysis$plot_metanalysis_quart
 ```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+extra_rows <- results_POPs_ALS_occurrence$metanalysis$metanalysis_quart |>
+  distinct(explanatory) |> 
+  mutate(
+    term = "Quartile 1",
+      "OR_base" = '-', "95%CI_base" = '-', "p-value_base" = '', "p-value_heterogeneity_base" = "", 
+      "OR_adjusted" = '-', "95%CI_adjusted" = '-', "p-value_adjusted" = '', "p-value_heterogeneity_adjusted" = "", 
+    "OR_copollutant" = '-', "95%CI_copollutant" = '-', "p-value_copollutant" = '', "p-value_heterogeneity_copollutant" = "")
+    
+
+table_S4 <- results_POPs_ALS_occurrence$metanalysis$metanalysis_quart |>
+  select(model, explanatory, term, OR, `95%CI`, "p-value", 'p-value_heterogeneity') |>
+  pivot_wider(
+    names_from = model,  
+    values_from = c("OR", "95%CI", "p-value", 'p-value_heterogeneity')) |>
+  bind_rows(extra_rows) |>
+  select(Exposures = explanatory, Quartiles = term,
+         contains("base"), 
+         contains("adjusted"), 
+         contains("copollutant")) |>
+  mutate(
+    Exposures = gsub("OCP_", "", Exposures), 
+    Exposures = fct_relevel(Exposures, "PCB_4", "PCB_DL", "PCB_NDL", "HCB", "ΣDDT", "β_HCH", "Σchlordane"),
+    Exposures = fct_recode(Exposures, 
+                          "Most prevalent PCBs" = "PCB_4",
+                          "Dioxin-like PCBs" = "PCB_DL",
+                          "Non-dioxin-like PCBs" = "PCB_NDL",
+                          "β-HCH" = "β_HCH")) |>
+  arrange(Exposures, Quartiles) 
+
+table_S4 <- table_S4 |> 
+  rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p-value_base', "Hetero-geneity test" = "p-value_heterogeneity_base",
+         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p-value_adjusted', "Hetero-geneity test " = "p-value_heterogeneity_adjusted",
+         ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p-value_copollutant', " Hetero-geneity test " = "p-value_heterogeneity_copollutant") |>
+  flextable() |>
+  add_footer_lines(
+  "1POPs were summed as follows: Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; ΣDDT corresponds to p,p’-DDT and p,p’-DDE and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
+  2Base and adjusted models are conditional logistic regressions matched for sex and age, and for municipality and serum thawing history (Finnish cohorts). Adjusted models further account for smoking, BMI, serum total cholesterol, marital status, and education (except for FMC cohort for which education data was not available). Co-pollutant models further include all chemicals, where the chemical of interest is categorized into quartiles, while the others are treated as smooth terms in GAMs.
+  3Estimated risk of ALS when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
+  4CI: Confidence interval.
+  5P-value of between-study heterogeneity (Cochran’s Q test).") |>
+  add_header(
+    "Exposures" = "Exposures", "Quartiles" = "Quartiles",
+    "OR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", "Hetero-geneity test" = "Base model",
+    "OR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", "Hetero-geneity test " = "Adjusted model",
+    " OR " = "Co-pollutant model", " 95% CI " = "Co-pollutant model", " p-value " = "Co-pollutant model", " Hetero-geneity test " = "Copollutant model") |>
+  merge_h(part = "header") |>
+  merge_v(j = "Exposures") |>
+  theme_vanilla() |>
+  bold(j = "Exposures", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "Exposures", align = "left", part = "all") |> 
+  merge_at(j = "Exposures", part = "header") |>
+  merge_at(j = "Quartiles", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")|>
+  set_table_properties(align = "left")
+table_S4
+rm(extra_rows, table_S4)
+```
+
 
 # POPs ans ALS survival
 
@@ -907,7 +1197,12 @@ results_POPs_ALS_occurrence$metanalysis$plot_metanalysis_quart
 #| message: false
 #| warning: false
 #| paged-print: false
-results_descriptive$comp$covar_comp_cases
+results_descriptive$comp$covar_comp_cases |>
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ## Danish cohort
@@ -918,9 +1213,12 @@ results_descriptive$comp$covar_comp_cases
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$danish$covar_danish |> 
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+results_POPs_ALS_survival$danish$covar_danish |>
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ### Effects of POPs on ALS survival
@@ -931,8 +1229,8 @@ results_POPs_ALS_survival$danish$covar_danish |>
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$danish$POPs_sd_ALS_table_danish |>
-  set_table_properties(width = 1, layout = "autofit")
+results_POPs_ALS_survival$danish$POPs_sd_ALS_table_danish  |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r}
@@ -949,10 +1247,10 @@ results_POPs_ALS_survival$danish$POPs_sd_ALS_figure_danish
 #| message: false
 #| warning: false
 results_POPs_ALS_survival$danish$POPs_quart_ALS_table_danish |>
-  set_table_properties(width = 1, layout = "autofit")
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-```{r, fig.height=7}
+```{r fig.height=9, fig.width=9}
 #| echo: false
 #| message: false
 #| warning: false
@@ -961,7 +1259,7 @@ results_POPs_ALS_survival$danish$POPs_quart_ALS_figure_danish
 
 #### Cox-gam
 
-```{r, fig.height=10}
+```{r fig.height=9, fig.width=9}
 #| echo: false
 #| message: false
 #| warning: false
@@ -1005,8 +1303,13 @@ wrap_plots(list(results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$ΣDDT,
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$danish$POPs_ALS_qgcomp_table_danish |> kable("html")
-results_POPs_ALS_survival$danish$plot_qgcomp_danish
+results_POPs_ALS_survival$danish$POPs_ALS_qgcomp_table_danish  |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
+results_POPs_ALS_survival$danish$POPs_ALS_qgcomp_figure_danish
 ```
 
 ## Finnish cohorts
@@ -1018,7 +1321,7 @@ results_POPs_ALS_survival$danish$plot_qgcomp_danish
 #| message: false
 #| warning: false
 results_POPs_ALS_survival$finnish$covar_ALS_table_finnish |>
-  set_table_properties(width = 1, layout = "autofit")
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ### Effects of POPs on ALS survival
@@ -1030,7 +1333,7 @@ results_POPs_ALS_survival$finnish$covar_ALS_table_finnish |>
 #| message: false
 #| warning: false
 results_POPs_ALS_survival$finnish$POPs_sd_ALS_table_finnish |>
-  set_table_properties(width = 1, layout = "autofit")
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r}
@@ -1047,10 +1350,10 @@ results_POPs_ALS_survival$finnish$POPs_sd_ALS_figure_finnish
 #| message: false
 #| warning: false
 results_POPs_ALS_survival$finnish$POPs_quart_ALS_table_finnish |>
-  set_table_properties(width = 1, layout = "autofit")
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-```{r, fig.height=7}
+```{r, fig.height=9, fig.width=9}
 #| echo: false
 #| message: false
 #| warning: false
@@ -1063,8 +1366,13 @@ results_POPs_ALS_survival$finnish$POPs_quart_ALS_figure_finnish
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$finnish$POPs_ALS_qgcomp_table_finnish |> kable("html")
-results_POPs_ALS_survival$finnish$plot_qgcomp_finnish
+results_POPs_ALS_survival$finnish$POPs_ALS_qgcomp_table_finnish  |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
+results_POPs_ALS_survival$finnish$POPs_ALS_qgcomp_figure_finnish
 ```
 
 ## Metanalysis
@@ -1076,7 +1384,7 @@ results_POPs_ALS_survival$finnish$plot_qgcomp_finnish
 #| message: false
 #| warning: false
 results_POPs_ALS_survival$metanalysis$POPs_sd_ALS_table_metanalysis |>
-  set_table_properties(width = 1, layout = "autofit")
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r}
@@ -1093,10 +1401,10 @@ results_POPs_ALS_survival$metanalysis$POPs_sd_ALS_figure_metanalysis
 #| message: false
 #| warning: false
 results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_table_metanalysis |>
-  set_table_properties(width = 1, layout = "autofit")
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-```{r, fig.height=7}
+```{r, fig.height=9, fig.width=9}
 #| echo: false
 #| message: false
 #| warning: false
@@ -1105,8 +1413,7 @@ results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_figure_metanalysis
 
 ## Sensitivity analyses
 
-```{r, fig.height=8}
-#| column: screen-inset-right
+```{r, fig.height=12, fig.width=12}
 #| echo: false
 #| message: false
 #| warning: false
@@ -1130,7 +1437,8 @@ results_POPs_ALS_survival$sensi1$sensi1_table
 #| echo: false
 #| message: false
 #| warning: false
-results_fattyacids_ALS_occurrence$danish$covar_als_table_danish
+results_fattyacids_ALS_occurrence$danish$covar_als_table_danish  |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ### Effects of fatty acids on ALS occurence in the Danish cohort
@@ -1142,7 +1450,7 @@ results_fattyacids_ALS_occurrence$danish$covar_als_table_danish
 #| message: false
 #| warning: false
 results_fattyacids_ALS_occurrence$danish$fattyacids_sd_als_table_danish |>
-  set_table_properties(width = 1, layout = "autofit")
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r}
@@ -1159,7 +1467,7 @@ results_fattyacids_ALS_occurrence$danish$fattyacids_sd_als_figure_danish
 #| message: false
 #| warning: false
 results_fattyacids_ALS_occurrence$danish$fattyacids_quart_als_table_danish |>
-  set_table_properties(width = 1, layout = "autofit")
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r, fig.height=12}
@@ -1189,7 +1497,7 @@ results_fattyacids_ALS_occurrence$danish$fattyacids_quart_als_figure_danish
 #| message: false
 #| warning: false
 results_fattyacids_ALS_occurrence$finnish$fattyacids_sd_als_table_finnish |>
-  set_table_properties(width = 1, layout = "autofit")
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r}
@@ -1206,7 +1514,7 @@ results_fattyacids_ALS_occurrence$finnish$fattyacids_sd_als_figure_finnish
 #| message: false
 #| warning: false
 results_fattyacids_ALS_occurrence$finnish$fattyacids_quart_als_table_finnish |>
-  set_table_properties(width = 1, layout = "autofit")
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r, fig.height=12}
@@ -1224,15 +1532,8 @@ results_fattyacids_ALS_occurrence$finnish$fattyacids_quart_als_figure_finnish
 #| echo: false
 #| message: false
 #| warning: false
-results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_table_sensi_ca_finnish 
-results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_figure_sensi_ca_finnish
-```
-
-```{r, fig.height=10}
-#| echo: false
-#| message: false
-#| warning: false
-results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_figure_sensi_ca_finnish
+results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_sd_als_table_sensi_ca_finnish 
+results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_sd_als_figure_sensi_ca_finnish
 ```
 
 #### Quartiles
@@ -1262,8 +1563,11 @@ results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_figure_sensi_ca_
 #| message: true
 #| warning: false
 results_fattyacids_ALS_survival$danish$covar_danish |>
-  as_gt() |>
-  gt::tab_options(table.font.size = "small")
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 ### Continuous coding (standardized)
@@ -1273,7 +1577,7 @@ results_fattyacids_ALS_survival$danish$covar_danish |>
 #| message: false
 #| warning: false
 results_fattyacids_ALS_survival$danish$fattyacids_sd_als_table_danish |>
-  set_table_properties(width = 1, layout = "autofit")
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 results_fattyacids_ALS_survival$danish$fattyacids_sd_als_figure_danish
 ```
 
@@ -1284,7 +1588,7 @@ results_fattyacids_ALS_survival$danish$fattyacids_sd_als_figure_danish
 #| message: false
 #| warning: false
 results_fattyacids_ALS_survival$danish$fattyacids_quart_als_table_danish |>
-  set_table_properties(width = 1, layout = "autofit")
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r, fig.height=12}
@@ -1324,7 +1628,7 @@ To be done
 #| message: false
 #| warning: false
 results_fattyacids_ALS_survival$finnish$fattyacids_sd_als_table_finnish |>
-  set_table_properties(width = 1, layout = "autofit")
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 results_fattyacids_ALS_survival$finnish$fattyacids_sd_als_figure_finnish
 ```
 
@@ -1335,7 +1639,7 @@ results_fattyacids_ALS_survival$finnish$fattyacids_sd_als_figure_finnish
 #| message: false
 #| warning: false
 results_fattyacids_ALS_survival$finnish$fattyacids_quart_als_table_finnish |>
-  set_table_properties(width = 1, layout = "autofit")
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r, fig.height=12}

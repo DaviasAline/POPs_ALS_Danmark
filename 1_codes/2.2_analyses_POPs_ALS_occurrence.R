@@ -260,7 +260,7 @@ rm(model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_HCB, model3_quart_ΣD
 #### qgcomp ----
 POPs_group_bis <- setdiff(POPs_group, "PCB_4")
 set.seed(1996)
-test <- 
+qgcomp_boot_danish <- 
   qgcomp.glm.boot(
     f = as.formula(paste("als ~", paste(c(POPs_group_bis, covariates_danish), collapse = " + "))),
     expnms = POPs_group_bis,                                                    # pollutants of interest
@@ -270,8 +270,15 @@ test <-
     B = 1000,                                                                   # nb of boostrap
     seed = 1996, 
     rr = FALSE)                                                                 # rr=FALSE to allow estimation of ORs when using qgcomp.glm.boot
+#qgcomp_boot_danish$pos.weights
+
+qgcomp_noboot_danish <-                                                         
+  qgcomp.glm.noboot(
+    f = as.formula(paste("als ~", paste(c(POPs_group_bis, covariates_danish), collapse = " + "))),                                                   # formula
+    data = bdd_danish, 
+    q = 4,                                                                      # number of quantiles
+    expnms = POPs_group_bis)   
 rm(POPs_group_bis)
-test$pos.weights
 
 ### heterogeneity tests ----
 #### model 1 quartile ----
@@ -1130,7 +1137,8 @@ metanalysis_quart <- bind_rows(metanalysis_base_quart, metanalysis_adjusted_quar
          `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")), 
          `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`), 
          "95%CI" = paste(lower_CI, ", ", upper_CI, sep = ''),
-         p.value_heterogeneity = sprintf("%.1f", p.value_heterogeneity)) |>
+         `p-value_heterogeneity` = ifelse(p.value_heterogeneity < 0.01, "<0.01", number(p.value_heterogeneity, accuracy = 0.01, decimal.mark = ".")), 
+         `p-value_heterogeneity` = ifelse(`p-value_heterogeneity` == "1.00", ">0.99", `p-value_heterogeneity`)) |>
   select(model,
          explanatory, 
          term,
@@ -1716,6 +1724,49 @@ plot_copollutant_gam <- map(POPs_group_bis, function(var) {
 })|> set_names(POPs_group_bis)
 rm(POPs_group_bis, pollutant_labels_bis, model)
 
+
+### table POPs - ALS occurence (qgcomp analysis) ----
+POPs_group_bis <- setdiff(POPs_group, "PCB_4")                                  # remove the 4 most abundant PCB because they are already NDL-PCB
+pollutant_labels_bis <- set_names(
+  c("Dioxin-like PCBs", "Non-dioxin-like PCBs",
+    "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"),
+  POPs_group_bis)
+qgcomp_boot_danish
+p <- summary(qgcomp_boot_danish)
+POPs_ALS_qgcomp_table_danish <-                                                 # overall results
+  tibble(
+    study = "Danish",
+    model = "copollutant",
+    OR = exp(p$coefficients["psi1", "Estimate"]),
+    lower_CI = exp(p$coefficients["psi1", "Lower CI"]),
+    upper_CI = exp(p$coefficients["psi1", "Upper CI"]),
+    p_value = p$coefficients["psi1", "Pr(>|z|)"] ) |>
+  mutate(
+    OR = sprintf("%.1f", OR),
+    lower_CI = sprintf("%.2f", lower_CI),
+    upper_CI = sprintf("%.2f", upper_CI),
+    `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
+    `p-value` = ifelse(p_value < 0.01, "<0.01", number(p_value, accuracy = 0.01, decimal.mark = ".")),
+    `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
+  select(study, model, OR, `95% CI`, `p-value`)
+
+### figure POPs - ALS occurence (qgcomp analysis) ----
+POPs_ALS_qgcomp_figure_danish <-
+  tibble(
+    pollutant = c(names(qgcomp_noboot_danish$pos.weights), names(qgcomp_noboot_danish$neg.weights)),
+    weight = c(qgcomp_noboot_danish$pos.weights, - qgcomp_noboot_danish$neg.weights)) |>
+  mutate(
+    pollutant_label = pollutant_labels_bis[pollutant] %||% pollutant,
+    pollutant_label = factor(pollutant_label, levels = rev(pollutant_labels_bis))) |>
+  ggplot(
+    aes(x = weight, y = pollutant_label, fill = weight > 0)) +
+  geom_col(show.legend = FALSE) +
+  labs(y = "Exposures", x = "       Negative weights                             Positive weights") +
+  scale_fill_manual(values = c("TRUE" = "tomato", "FALSE" = "steelblue")) +
+  theme_lucid()
+
+rm(qgcomp_boot_danish, qgcomp_noboot_danish, p, POPs_group_bis, pollutant_labels_bis)
+
 ## metanalysis ----
 plot_metanalysis_quart <- metanalysis_quart |> 
   mutate(`p-value_shape` = ifelse(`p-value_raw`<0.05, "p-value<0.05", "p-value≥0.05"), 
@@ -1759,7 +1810,9 @@ results_POPs_ALS_occurrence <-
                    plot_quart = plot_quart,                                     # co-pollutant model with only the POP of interest as quartile and the other as s() in a GAM model
                    plot_base_gam = plot_base_gam, 
                    plot_adjusted_gam = plot_adjusted_gam, 
-                   plot_copollutant_gam = plot_copollutant_gam), 
+                   plot_copollutant_gam = plot_copollutant_gam, 
+                   POPs_ALS_qgcomp_table_danish = POPs_ALS_qgcomp_table_danish, 
+                   POPs_ALS_qgcomp_figure_danish = POPs_ALS_qgcomp_figure_danish), 
        sensitivity_not_summed = list(sensitivity_results_not_summed_quart = sensitivity_results_not_summed_quart, 
                                      model1_gam_not_summed = model1_gam_not_summed, 
                                      model2_gam_not_summed = model2_gam_not_summed,
@@ -1778,5 +1831,7 @@ rm(main_results, covar, results_quart, model1_gam, model2_gam,
    plot_base_gam_not_summed, plot_adjusted_gam_not_summed, 
    plot_copollutant_gam, 
    metanalysis_quart, plot_metanalysis_quart, 
-   covariates_danish, covariates_finnish)
+   covariates_danish, covariates_finnish, 
+   POPs_ALS_qgcomp_table_danish, 
+   POPs_ALS_qgcomp_figure_danish)
 

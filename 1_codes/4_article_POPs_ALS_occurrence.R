@@ -240,16 +240,16 @@ extra_rows <- results_POPs_ALS_occurrence$metanalysis$metanalysis_quart |>
   distinct(explanatory) |> 
   mutate(
     term = "Quartile 1",
-      "OR_base" = '-', "95%CI_base" = '-', "p-value_base" = '',
-      "OR_adjusted" = '-', "95%CI_adjusted" = '-', "p-value_adjusted" = '',
-    "OR_copollutant" = '-', "95%CI_copollutant" = '-', "p-value_copollutant" = '')
-    
+    "OR_base" = '-', "95%CI_base" = '-', "p-value_base" = '', "p-value_heterogeneity_base" = "", 
+    "OR_adjusted" = '-', "95%CI_adjusted" = '-', "p-value_adjusted" = '', "p-value_heterogeneity_adjusted" = "", 
+    "OR_copollutant" = '-', "95%CI_copollutant" = '-', "p-value_copollutant" = '', "p-value_heterogeneity_copollutant" = "")
+
 
 table_S4 <- results_POPs_ALS_occurrence$metanalysis$metanalysis_quart |>
-  select(model, explanatory, term, OR, `95%CI`, "p-value") |>
+  select(model, explanatory, term, OR, `95%CI`, "p-value", 'p-value_heterogeneity') |>
   pivot_wider(
     names_from = model,  
-    values_from = c("OR", "95%CI", "p-value")) |>
+    values_from = c("OR", "95%CI", "p-value", 'p-value_heterogeneity')) |>
   bind_rows(extra_rows) |>
   select(Exposures = explanatory, Quartiles = term,
          contains("base"), 
@@ -257,29 +257,30 @@ table_S4 <- results_POPs_ALS_occurrence$metanalysis$metanalysis_quart |>
          contains("copollutant")) |>
   mutate(
     Exposures = gsub("OCP_", "", Exposures), 
-    Exposures = fct_relevel(Exposures, "PCB_DL", "PCB_NDL", "PCB_4", "HCB", "ΣDDT", "β_HCH", "Σchlordane"),
+    Exposures = fct_relevel(Exposures,"PCB_4", "PCB_DL", "PCB_NDL",  "HCB", "ΣDDT", "β_HCH", "Σchlordane"),
     Exposures = fct_recode(Exposures, 
-                          "Most prevalent PCBs" = "PCB_4",
-                          "Dioxin-like PCBs" = "PCB_DL",
-                          "Non-dioxin-like PCBs" = "PCB_NDL",
-                          "β-HCH" = "β_HCH")) |>
+                           "Most prevalent PCBs" = "PCB_4",
+                           "Dioxin-like PCBs" = "PCB_DL",
+                           "Non-dioxin-like PCBs" = "PCB_NDL",
+                           "β-HCH" = "β_HCH")) |>
   arrange(Exposures, Quartiles) 
 
 table_S4 <- table_S4 |> 
-  rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p-value_base', 
-         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p-value_adjusted', 
-         ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p-value_copollutant') |>
+  rename('OR' = 'OR_base', '95% CI' = '95%CI_base', 'p-value' = 'p-value_base', "Hetero-geneity test" = "p-value_heterogeneity_base",
+         'OR ' = 'OR_adjusted', '95% CI ' = '95%CI_adjusted', 'p-value ' = 'p-value_adjusted', "Hetero-geneity test " = "p-value_heterogeneity_adjusted",
+         ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p-value_copollutant', " Hetero-geneity test " = "p-value_heterogeneity_copollutant") |>
   flextable() |>
   add_footer_lines(
-  "1POPs were summed as follows: Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; ΣDDT corresponds to p,p’-DDT and p,p’-DDE and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
+    "1POPs were summed as follows: Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; ΣDDT corresponds to p,p’-DDT and p,p’-DDE and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
   2Base and adjusted models are conditional logistic regressions matched for sex and age, and for municipality and serum thawing history (Finnish cohorts). Adjusted models further account for smoking, BMI, serum total cholesterol, marital status, and education (except for FMC cohort for which education data was not available). Co-pollutant models further include all chemicals, where the chemical of interest is categorized into quartiles, while the others are treated as smooth terms in GAMs.
   3Estimated risk of ALS when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
-  4CI: Confidence interval.") |>
+  4CI: Confidence interval.
+  5P-value of between-study heterogeneity (Cochran’s Q test).") |>
   add_header(
     "Exposures" = "Exposures", "Quartiles" = "Quartiles",
-    "OR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "OR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", 
-    " OR " = "Co-pollutant model", " 95% CI " = "Co-pollutant model", " p-value " = "Co-pollutant model") |>
+    "OR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", "Hetero-geneity test" = "Base model",
+    "OR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", "Hetero-geneity test " = "Adjusted model",
+    " OR " = "Co-pollutant model", " 95% CI " = "Co-pollutant model", " p-value " = "Co-pollutant model", " Hetero-geneity test " = "Copollutant model") |>
   merge_h(part = "header") |>
   merge_v(j = "Exposures") |>
   theme_vanilla() |>

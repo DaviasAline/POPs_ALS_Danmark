@@ -815,6 +815,15 @@ var_label(bdd_danish) <- list(
   "pufas_sd" = "Unsaturated acids (%)"
   )
 
+proteomic_labels <- setNames(
+  object = gsub(
+    pattern = "^proteomic_(immun_res|neuro_explo|metabolism)_",
+    replacement = "",
+    x = proteomic),
+  nm = proteomic)
+var_label(bdd_danish)[names(proteomic_labels)] <- proteomic_labels
+rm(proteomic_labels)
+
 var_label(bdd_finnish) <- list(
   sample = "Identifcation", 
   match = "match", 
@@ -1024,7 +1033,7 @@ var_label(bdd) <- list(
   "pufas_sd" = "Unsaturated acids (%)", 
   "ratio_ω6_ω3_sd" = "ω6/ω3 ratio (%)")
 
-
+# label vectors ----
 fattyacids_labels <- c(
   "Unsaturated acids (%)" = "pufas", 
   "ω9 unsaturated acids (%)" = "pufas_ω9", 
@@ -1110,8 +1119,7 @@ explanatory_quart_labels <- c(
   α_linolenic_acid_ω3_quart = "α-linolenic acid (ALA) ω3",
   timnodonic_acid_ω3_quart = "timnodonic acid (EPA) ω3",
   clupanodonic_acid_ω3_quart = "clupanodonic acid (DPA) ω3",
-  cervonic_acid_ω3_quart = "cervonic acid (DHA) ω3"
-)
+  cervonic_acid_ω3_quart = "cervonic acid (DHA) ω3")
 
 POPs_labels <- c(
   "Most prevalent PCBs" = "PCB_4",
@@ -1182,3 +1190,11 @@ POPs_group_quart_labels <- c(
   "β-HCH" = "OCP_β_HCH_quart",
   "Σchlordane" = "Σchlordane_quart",
   "ΣPBDE" = "ΣPBDE_quart")
+
+
+proteomic_labels <- setNames(
+  nm = proteomic,
+  object = gsub(
+    pattern = "^proteomic_(immun_res|neuro_explo|metabolism)_",
+    replacement = "",
+    x = proteomic))
