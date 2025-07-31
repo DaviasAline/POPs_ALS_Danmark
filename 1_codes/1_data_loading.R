@@ -133,7 +133,8 @@ bdd_danish <- bdd_danish |>
          Batch, n, X12, 
          birth_date = fsdato, baseline_date = mdato,                            # important dates
          als_date = als_ddat, death_date = DEATH_DATE,                          
-         sex, marital_status = civil,                                           # important metadata
+         sex, 
+         marital_status = civil,                                           # important metadata
          high_educ = HQJ_SKO, medium_educ = MEL_SKO, low_educ = LAV_SKO,        # education                          
          alcohol = alko, smoking = rygning,                                     # alcohol and smoking 
          bmi, heart_blood_clot = S25A01N, brain_blood_clot = S25C01N,           # important health information 
@@ -670,7 +671,7 @@ rm(pred, method, bdd_danish_i, bdd_danish_ii, covar_a_imputer)
 # merged dataset ----
 bdd_danish_red <- bdd_danish |> 
   select(sample, als, study, match, 
-         sex, baseline_age, smoking_2cat_i, bmi, marital_status_2cat_i, education_merged, education_i, cholesterol_i,
+         sex, baseline_age, smoking_2cat_i, bmi, marital_status_2cat_i, education_merged, education_i, cholesterol_i, fS_Kol,
          baseline_age, death_age, diagnosis_age,  
          time_baseline_diagnosis, time_baseline_death, time_diagnosis_death,
         follow_up,  follow_up_death, status_death, 
@@ -689,7 +690,7 @@ bdd_danish_red <- bdd_danish |>
 bdd_finnish_red <- bdd_finnish |> 
   select(sample, als, study, match, 
         baseline_age, sex,  smoking, bmi, cholesterol, marital_status, education, education_merged, alcohol, smoking_2cat, marital_status_2cat, blod_sys, blod_dias, 
-         baseline_age, death_age, diagnosis_age, S_Ca,  
+         baseline_age, death_age, diagnosis_age, S_Ca, fS_Kol, 
         follow_up, follow_up_death, status_death, 
         municipality, level_urbanization, thawed, 
         time_baseline_diagnosis, time_baseline_death, time_diagnosis_death,
@@ -723,6 +724,7 @@ var_label(bdd_danish) <- list(
   education_i = "Education", 
   education_merged = "Education", 
   bmi = "Body mass index (kg/m²)",
+  fS_Kol = "Serum cholesterol (mmol/L)",
   cholesterol = "Serum cholesterol (mmol/L)",
   cholesterol_i = "Serum cholesterol (mmol/L)",
   blod_sys = "Systolic blood presure (mmHg)",
@@ -839,9 +841,10 @@ var_label(bdd_finnish) <- list(
   education_merged = "Education", 
   bmi = "Body mass index (kg/m²)",
   cholesterol = "Serum cholesterol (mmol/L)",
-  baseline_age = "Age at baseline",
-  diagnosis_age = "Age at ALS diagnosis", 
-  death_age = "Age at death",
+  fS_Kol = "Serum cholesterol (mmol/L)",
+  baseline_age = "Age at baseline (years)",
+  diagnosis_age = "Age at ALS diagnosis (years)", 
+  death_age = "Age at death (years)",
   time_baseline_diagnosis = "Duration between baseline and ALS diagnosis (years)", 
   time_baseline_death = "Duration between baseline and death (years)", 
   time_diagnosis_death = "Duration between diagnosis and death (years)",
@@ -933,7 +936,9 @@ var_label(bdd) <- list(
   study = "Cohort",
   match = "match", 
   sex = "Sex", 
-  baseline_age = "Age at baseline",
+  baseline_age = "Age at baseline (years)",
+  diagnosis_age = "Age at ALS diagnosis (years)", 
+  death_age = "Age at death (years)",
   marital_status = "Marital status",
   marital_status_2cat = "Marital status", 
   municipality = "Municipality",
@@ -944,11 +949,10 @@ var_label(bdd) <- list(
   education = "Education", 
   education_merged = "Education", 
   bmi = "Body mass index (kg/m²)",
+  fS_Kol = "Serum cholesterol (mmol/L)",
   cholesterol = "Serum cholesterol (mmol/L)",
   blod_sys = "Systolic blood presure (mmHg)",
   blod_dias = "Diastolic blood presure (mmHg)",
-  diagnosis_age = "Age at ALS diagnosis", 
-  death_age = "Age at death",
   time_baseline_diagnosis = "Duration between baseline and ALS diagnosis (years)", 
   time_baseline_death = "Duration between baseline and death (years)", 
   time_diagnosis_death = "Duration between diagnosis and death (years)",
@@ -1032,6 +1036,7 @@ var_label(bdd) <- list(
   "pufas_ω3_sd" = "ω3 unsaturated acids (%)", 
   "pufas_sd" = "Unsaturated acids (%)", 
   "ratio_ω6_ω3_sd" = "ω6/ω3 ratio (%)")
+
 
 # label vectors ----
 fattyacids_labels <- c(
@@ -1122,6 +1127,33 @@ explanatory_quart_labels <- c(
   cervonic_acid_ω3_quart = "cervonic acid (DHA) ω3")
 
 POPs_labels <- c(
+  "PCB-118" = "PCB_118",
+  "PCB-156" = "PCB_156",
+  "PCB-28" = "PCB_28",
+  "PCB-52" = "PCB_52",
+  "PCB-74" = "PCB_74",
+  "PCB-99" = "PCB_99",
+  "PCB-101" = "PCB_101",
+  "PCB-138" = "PCB_138",
+  "PCB-153" = "PCB_153",
+  "PCB-170" = "PCB_170",
+  "PCB-180" = "PCB_180",
+  "PCB-183" = "PCB_183",
+  "PCB-187" = "PCB_187",
+  "HCB" = "OCP_HCB",
+  "p,p'-DDT" = "OCP_pp_DDT",
+  "p,p'-DDE" = "OCP_pp_DDE",
+  "α-HCH" = "OCP_α_HCH",
+  "β-HCH" = "OCP_β_HCH",
+  "γ-HCH" = "OCP_γ_HCH",
+  "Oxychlordane" = "OCP_oxychlordane",
+  "Transnonachlor" = "OCP_transnonachlor",
+  "Pentachlorobenzene (PeCB)" = "OCP_PeCB",
+  "PBDE-47" = "PBDE_47",
+  "PBDE-99" = "PBDE_99",
+  "PBDE-153" = "PBDE_153")
+
+POPs_tot_labels <- c(
   "Most prevalent PCBs" = "PCB_4",
   "Dioxin-like PCBs" = "PCB_DL",
   "PCB-118" = "PCB_118",

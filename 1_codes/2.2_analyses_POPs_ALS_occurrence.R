@@ -4,9 +4,9 @@
 # data loading - package loading ----
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2.1_analyses_descriptive.R")
 
-covariates <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')
-covariates_danish <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')
-covariates_finnish <- c("marital_status_2cat", 'smoking_2cat', 'bmi', 'cholesterol')     # education removed because missing in one finnish cohort 
+covariates <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'fS_Kol', 'marital_status_2cat_i', 'education_i')
+covariates_danish <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'fS_Kol', 'marital_status_2cat_i', 'education_i')
+covariates_finnish <- c("marital_status_2cat", 'smoking_2cat', 'bmi', 'fS_Kol')     # education removed because missing in one finnish cohort 
 
 # effects of the covariates on ALS ----
 covar <- tbl_merge(
@@ -22,7 +22,7 @@ covar <- tbl_merge(
     pvalue_fun = custom_pvalue_fun)|>
   bold_labels(), 
   tbl_2 = clogit(als ~ sex + baseline_age +
-           smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+           smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
          data = bdd_danish) |>
   tbl_regression(exponentiate = TRUE, 
                  estimate_fun = label_number(accuracy = .1, decimal.mark = "."),
@@ -89,7 +89,7 @@ for (var in POPs_group) {
 rm(var, formula, model, model_summary)
 
 ### model 2 ----
-# matched on sex and age, adjusted on for smoking_2cat_i, BMI, serum total cholesterol_i, marital status and education
+# matched on sex and age, adjusted on for smoking_2cat_i, BMI, serum total fS_Kol, marital status and education
 
 #### quartiles ----
 model2_quart <- data.frame(variable = character(),
@@ -102,7 +102,7 @@ model2_quart <- data.frame(variable = character(),
 
 for (var in POPs_group_quart) {
   
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i"))
   model <- clogit(formula, data = bdd_danish)
   model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
   OR <- exp(model_summary$estimate)
@@ -134,7 +134,7 @@ model2_gam <- list()
 
 for (var in POPs_group) {
   
-  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i"))
   model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
   model2_gam[[var]] <- model_summary
@@ -149,7 +149,7 @@ model3_quart_PCB_DL <-
   gam(als ~ 
         PCB_DL_quart + 
         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+        sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
       family = binomial, 
       method = 'REML',
       data = bdd_danish) |>
@@ -162,7 +162,7 @@ model3_quart_PCB_NDL <-
   gam(als ~ 
         PCB_NDL_quart + 
         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+        sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
       family = binomial, 
       method = 'REML',
       data = bdd_danish) |>
@@ -175,7 +175,7 @@ model3_quart_HCB <-
   gam(als ~ 
         OCP_HCB_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+        sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
       family = binomial, 
       method = 'REML',
       data = bdd_danish) |>
@@ -188,7 +188,7 @@ model3_quart_ΣDDT <-
   gam(als ~ 
         ΣDDT_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+        sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
       family = binomial, 
       method = 'REML',
       data = bdd_danish) |>
@@ -201,7 +201,7 @@ model3_quart_β_HCH <-
   gam(als ~ 
         OCP_β_HCH_quart +
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
-        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+        sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
       family = binomial, 
       method = 'REML',
       data = bdd_danish) |>
@@ -214,7 +214,7 @@ model3_quart_Σchlordane <-
   gam(als ~ 
         Σchlordane_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
-        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+        sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
       family = binomial, 
       method = 'REML',
       data = bdd_danish) |>
@@ -227,7 +227,7 @@ model3_quart_ΣPBDE <-
   gam(als ~ 
         ΣPBDE_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+        sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
       family = binomial, 
       method = 'REML',
       data = bdd_danish) |>
@@ -312,9 +312,9 @@ heterogeneity_adjusted_quart <- data.frame(variable = character(),
 
 for (var in POPs_group_quart) {
   
-  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, data = bdd_danish)
+  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, data = bdd_danish)
   
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i"))
   test_2 <- clogit(formula, data = bdd_danish)
   
   anova <- anova(test_1, test_2, test = "LR")
@@ -331,14 +331,14 @@ rm(var, test_1, test_2, formula, anova, p.value_heterogeneity)
 #### model 3 quartile ----
 test_1 <- gam(als ~ 
                 s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
 test_2 <- gam(als ~ 
                 PCB_DL_quart + 
                 s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
@@ -348,14 +348,14 @@ p.value_heterogeneity_PCB_DL <- tibble(variable = "PCB_DL", p.value_heterogeneit
 
 test_1 <- gam(als ~ 
                 s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
 test_2 <- gam(als ~ 
                 PCB_NDL_quart + 
                 s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
@@ -365,14 +365,14 @@ p.value_heterogeneity_PCB_NDL <- tibble(variable = "PCB_NDL", p.value_heterogene
 
 test_1 <- gam(als ~ 
                 s(PCB_DL) + s(PCB_DL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
 test_2 <- gam(als ~ 
                 OCP_HCB_quart + 
                 s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
@@ -382,14 +382,14 @@ p.value_heterogeneity_OCP_HCB <- tibble(variable = "OCP_HCB", p.value_heterogene
 
 test_1 <- gam(als ~ 
                 s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
 test_2 <- gam(als ~ 
                 ΣDDT_quart + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
@@ -399,14 +399,14 @@ p.value_heterogeneity_ΣDDT <- tibble(variable = "ΣDDT", p.value_heterogeneity 
 
 test_1 <- gam(als ~ 
                 s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
 test_2 <- gam(als ~ 
                 OCP_β_HCH_quart + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
@@ -416,14 +416,14 @@ p.value_heterogeneity_OCP_β_HCH <- tibble(variable = "OCP_β_HCH", p.value_hete
 
 test_1 <- gam(als ~ 
                 s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
 test_2 <- gam(als ~ 
                 Σchlordane_quart + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
@@ -433,14 +433,14 @@ p.value_heterogeneity_Σchlordane <- tibble(variable = "Σchlordane", p.value_he
 
 test_1 <- gam(als ~ 
                 s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
 test_2 <- gam(als ~ 
                 ΣPBDE_quart + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
@@ -502,7 +502,7 @@ trend_adjusted <- data.frame(variable = character(),
 
 for (var in POPs_group_quart_med) {
   
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i"))
   test <- clogit(formula, data = bdd_danish) |> summary()
   p.value_trend <- test$coefficients[var, "Pr(>|z|)"]
   
@@ -517,7 +517,7 @@ rm(var, test, formula, p.value_trend)
 test <- gam(als ~ 
                 PCB_DL_quart_med + 
                 s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish) |>
@@ -527,7 +527,7 @@ p.value_trend_PCB_DL <- test$p.table["PCB_DL_quart_med", "Pr(>|z|)"]
 test <- gam(als ~ 
                 PCB_NDL_quart_med + 
                 s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish) |>
@@ -537,7 +537,7 @@ p.value_trend_PCB_NDL <- test$p.table["PCB_NDL_quart_med", "Pr(>|z|)"]
 test <- gam(als ~ 
                 OCP_HCB_quart_med + 
                 s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish) |>
@@ -547,7 +547,7 @@ p.value_trend_OCP_HCB <- test$p.table["OCP_HCB_quart_med", "Pr(>|z|)"]
 test <- gam(als ~ 
                 ΣDDT_quart_med + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish) |>
@@ -557,7 +557,7 @@ p.value_trend_ΣDDT <- test$p.table["ΣDDT_quart_med", "Pr(>|z|)"]
 test <- gam(als ~ 
                 OCP_β_HCH_quart_med + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish) |>
@@ -567,7 +567,7 @@ p.value_trend_OCP_β_HCH <- test$p.table["OCP_β_HCH_quart_med", "Pr(>|z|)"]
 test <- gam(als ~ 
                 Σchlordane_quart_med + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish) |>
@@ -577,7 +577,7 @@ p.value_trend_Σchlordane <- test$p.table["Σchlordane_quart_med", "Pr(>|z|)"]
 test <- gam(als ~ 
                 ΣPBDE_quart_med + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-                sex + baseline_age + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+                sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish) |>
@@ -684,10 +684,10 @@ metanalysis_base_quart <- map_dfr(POPs_group_metanalysis_quart, function(expl) {
 metanalysis_adjusted_quart <- map_dfr(POPs_group_metanalysis_quart, function(expl) {
   formula_educ <- 
     as.formula(paste("als ~", expl, 
-                     "+ strata(match) + marital_status_2cat + smoking_2cat + bmi + cholesterol + education"))
+                     "+ strata(match) + marital_status_2cat + smoking_2cat + bmi + fS_Kol + education"))
   formula_no_educ <- 
     as.formula(paste("als ~", expl,                                             # education mot available in one finnish cohort
-                     "+ strata(match) + marital_status_2cat + smoking_2cat + bmi + cholesterol")) 
+                     "+ strata(match) + marital_status_2cat + smoking_2cat + bmi + fS_Kol")) 
   
   bdd_danish <- bdd |>                                                     
     filter(study == "Danish") |>                                                # creation of one dataset per finnish cohort
@@ -714,8 +714,10 @@ metanalysis_adjusted_quart <- map_dfr(POPs_group_metanalysis_quart, function(exp
   results <- list(                                                              # run of the simple conditional logistic regression
     danish = run_clogit(formula_educ, bdd_danish),
     finnish_FMC = run_clogit(formula_no_educ, bdd_finnish_FMC),                 # no education data for this cohort 
-    finnish_FMCF = run_clogit(formula_educ, bdd_finnish_FMCF), 
-    finnish_MFH = run_clogit(formula_educ, bdd_finnish_MFH)) |>
+    finnish_FMCF = run_clogit(formula_educ, bdd_finnish_FMCF)
+    # , 
+    # finnish_MFH = run_clogit(formula_educ, bdd_finnish_MFH)
+    ) |>
     bind_rows(.id = "dataset") |>
     mutate(var = se^2, 
            explanatory = expl,
@@ -774,7 +776,7 @@ model3_quart_PCB_DL_danish <-
   gam(als ~ 
         PCB_DL_quart + 
         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + smoking_2cat + bmi + cholesterol + marital_status_2cat + education, 
+        sex + baseline_age + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education, 
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_danish) |>
@@ -787,7 +789,7 @@ model3_quart_PCB_NDL_danish <-
   gam(als ~ 
         PCB_NDL_quart + 
         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + smoking_2cat + bmi + cholesterol + marital_status_2cat + education, 
+        sex + baseline_age + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education, 
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_danish) |>
@@ -800,7 +802,7 @@ model3_quart_HCB_danish <-
   gam(als ~ 
         OCP_HCB_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + smoking_2cat + bmi + cholesterol + marital_status_2cat + education, 
+        sex + baseline_age + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education, 
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_danish) |>
@@ -813,7 +815,7 @@ model3_quart_ΣDDT_danish <-
   gam(als ~ 
         ΣDDT_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + smoking_2cat + bmi + cholesterol + marital_status_2cat + education, 
+        sex + baseline_age + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education, 
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_danish) |>
@@ -826,7 +828,7 @@ model3_quart_β_HCH_danish <-
   gam(als ~ 
         OCP_β_HCH_quart +
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) +
-        sex + baseline_age + smoking_2cat + bmi + cholesterol + marital_status_2cat + education, 
+        sex + baseline_age + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education, 
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_danish) |>
@@ -839,7 +841,7 @@ model3_quart_Σchlordane_danish <-
   gam(als ~ 
         Σchlordane_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) +
-        sex + baseline_age + smoking_2cat + bmi + cholesterol + marital_status_2cat + education, 
+        sex + baseline_age + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education, 
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_danish) |>
@@ -853,7 +855,7 @@ model3_quart_PCB_DL_FMC <-
   gam(als ~ 
         PCB_DL_quart + 
         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat, # no education data forFMC cohort
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat, # no education data forFMC cohort
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_FMC) |>
@@ -866,7 +868,7 @@ model3_quart_PCB_NDL_FMC <-
   gam(als ~ 
         PCB_NDL_quart + 
         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat, # no education data forFMC cohort
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat, # no education data forFMC cohort
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_FMC) |>
@@ -879,7 +881,7 @@ model3_quart_HCB_FMC <-
   gam(als ~ 
         OCP_HCB_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat, # no education data forFMC cohort
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat, # no education data forFMC cohort
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_FMC) |>
@@ -892,7 +894,7 @@ model3_quart_ΣDDT_FMC <-
   gam(als ~ 
         ΣDDT_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat, # no education data forFMC cohort 
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat, # no education data forFMC cohort 
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_FMC) |>
@@ -905,7 +907,7 @@ model3_quart_β_HCH_FMC <-
   gam(als ~ 
         OCP_β_HCH_quart +
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat, # no education data forFMC cohort
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat, # no education data forFMC cohort
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_FMC) |>
@@ -918,7 +920,7 @@ model3_quart_Σchlordane_FMC <-
   gam(als ~ 
         Σchlordane_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat, # no education data forFMC cohort
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat, # no education data forFMC cohort
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_FMC) |>
@@ -932,7 +934,7 @@ model3_quart_PCB_DL_FMCF <-
   gam(als ~ 
         PCB_DL_quart + 
         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_FMCF) |>
@@ -945,7 +947,7 @@ model3_quart_PCB_NDL_FMCF <-
   gam(als ~ 
         PCB_NDL_quart + 
         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_FMCF) |>
@@ -958,7 +960,7 @@ model3_quart_HCB_FMCF <-
   gam(als ~ 
         OCP_HCB_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_FMCF) |>
@@ -971,7 +973,7 @@ model3_quart_ΣDDT_FMCF <-
   gam(als ~ 
         ΣDDT_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education, 
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education, 
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_FMCF) |>
@@ -984,7 +986,7 @@ model3_quart_β_HCH_FMCF <-
   gam(als ~ 
         OCP_β_HCH_quart +
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_FMCF) |>
@@ -997,7 +999,7 @@ model3_quart_Σchlordane_FMCF <-
   gam(als ~ 
         Σchlordane_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_FMCF) |>
@@ -1011,7 +1013,7 @@ model3_quart_PCB_DL_MFH <-
   gam(als ~ 
         PCB_DL_quart + 
         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_MFH) |>
@@ -1024,7 +1026,7 @@ model3_quart_PCB_NDL_MFH <-
   gam(als ~ 
         PCB_NDL_quart + 
         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_MFH) |>
@@ -1037,7 +1039,7 @@ model3_quart_HCB_MFH <-
   gam(als ~ 
         OCP_HCB_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_MFH) |>
@@ -1050,7 +1052,7 @@ model3_quart_ΣDDT_MFH <-
   gam(als ~ 
         ΣDDT_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education, 
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education, 
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_MFH) |>
@@ -1063,7 +1065,7 @@ model3_quart_β_HCH_MFH <-
   gam(als ~ 
         OCP_β_HCH_quart +
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_MFH) |>
@@ -1076,7 +1078,7 @@ model3_quart_Σchlordane_MFH <-
   gam(als ~ 
         Σchlordane_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) +
-        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + cholesterol + marital_status_2cat + education,
+        sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
       family = binomial, 
       method = 'REML',
       data = bdd_metanalysis_MFH) |>
@@ -1247,7 +1249,7 @@ model2_quart_not_summed <- data.frame(variable = character(),
 
 for (var in POPs_included_quart) {
   
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i"))
   model <- clogit(formula, data = bdd_danish)
   model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
   OR <- exp(model_summary$estimate)
@@ -1309,7 +1311,7 @@ model2_gam_not_summed <- list()
 for (var in POPs_included) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + 
-                              smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+                              smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i"))
   model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
   model2_gam_not_summed[[var]] <- model_summary
@@ -1407,15 +1409,15 @@ plot_base_gam <- map(POPs_group, function(var) {
   edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
   p_value <- model_summary$s.table[1, "p-value"]
   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_max <- max(bdd_danish[[var]], na.rm = TRUE)
+  x_min <- min(bdd_danish[[var]], na.rm = TRUE)
   x_label <- pollutant_labels[var] 
   
   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
     geom_line(color = "blue", size = 1) +
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
     labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 1, vjust = 1.2, size = 4, color = "black") +
+    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 0, vjust = 1.2, size = 4, color = "black") +
     theme_minimal() +
     scale_y_continuous(limits = c(0, 1)) +  
     theme(axis.text.x = element_text(color = 'white'),
@@ -1479,7 +1481,7 @@ plot_base_gam_not_summed <- map(POPs_included, function(var) {
   p_value <- model_summary$s.table[1, "p-value"]
   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =
                                                             2, digits = 2))
-  x_max <- max(bdd_danish[[var]], na.rm = TRUE)
+  x_min <- min(bdd_danish[[var]], na.rm = TRUE)
   x_label <- pollutant_labels[var]
   
   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
@@ -1490,7 +1492,7 @@ plot_base_gam_not_summed <- map(POPs_included, function(var) {
     labs(x = var, y = "Predicted probability of ALS") +
     annotate(
       "text",
-      x = x_max,
+      x = x_min,
       y = Inf,
       label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
       hjust = 1,
@@ -1558,15 +1560,15 @@ plot_adjusted_gam <- map(POPs_group, function(var) {
   edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
   p_value <- model_summary$s.table[1, "p-value"]
   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_max <- max(bdd_danish[[var]], na.rm = TRUE)
+  x_min <- min(bdd_danish[[var]], na.rm = TRUE)
   x_label <- pollutant_labels[var] 
   
   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
     geom_line(color = "blue", size = 1) +
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
     labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 1, vjust = 1.2, size = 4, color = "black") +
+    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 0, vjust = 1.2, size = 4, color = "black") +
     theme_minimal() +
     scale_y_continuous(limits = c(0, 1)) +  
     theme(axis.text.x = element_text(color = 'white'),
@@ -1600,12 +1602,12 @@ pollutant_labels <- set_names(c(POPs_included_labels, POPs_included))
 plot_adjusted_gam_not_summed <- map(POPs_included, function(var) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age + 
-                              smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
+                              smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i"))
   
   model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
   
   bdd_pred <- bdd_danish |>                                                    # création bdd avec covariables ramenées à leur moyenne
-    mutate(across(all_of(c("sex", "baseline_age", 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')), 
+    mutate(across(all_of(c("sex", "baseline_age", 'smoking_2cat_i', 'bmi', 'fS_Kol', 'marital_status_2cat_i', 'education_i')), 
                   ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.))), 
                   .names = "adj_{.col}")) |>
     select(all_of(var), starts_with("adj_")) |>
@@ -1622,15 +1624,15 @@ plot_adjusted_gam_not_summed <- map(POPs_included, function(var) {
   edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
   p_value <- model_summary$s.table[1, "p-value"]
   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_max <- max(bdd_danish[[var]], na.rm = TRUE)
+  x_min <- min(bdd_danish[[var]], na.rm = TRUE)
   x_label <- pollutant_labels[var] 
   
   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
     geom_line(color = "blue", size = 1) +
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
     labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 1, vjust = 1.2, size = 4, color = "black") +
+    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 0, vjust = 1.2, size = 4, color = "black") +
     theme_minimal() +
     scale_y_continuous(limits = c(0, 1)) +  
     theme(axis.text.x = element_text(color = 'white'),
@@ -1667,7 +1669,7 @@ pollutant_labels_bis <- set_names(
 model <- gam(als ~ s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + 
                s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) + 
                sex + baseline_age + 
-               smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i, 
+               smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
              family = binomial, 
              method = "REML", 
              data = bdd_danish)
@@ -1693,15 +1695,15 @@ plot_copollutant_gam <- map(POPs_group_bis, function(var) {
   edf <- format(model_summary$s.table[rownames(model_summary$s.table) == paste0("s(", var, ")"), "edf"], nsmall = 1, digits = 1) 
   p_value <- model_summary$s.table[rownames(model_summary$s.table) == paste0("s(", var, ")"), "p-value"]
   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_max <- max(bdd_danish[[var]], na.rm = TRUE)
+  x_min <- min(bdd_danish[[var]], na.rm = TRUE)
   x_label <- pollutant_labels_bis[var]
   
   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
     geom_line(color = "blue", size = 1) +
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
     labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 1, vjust = 1.2, size = 4, color = "black") +
+    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 0, vjust = 1.2, size = 4, color = "black") +
     theme_minimal() +
     scale_y_continuous(limits = c(0, 1)) +  
     theme(axis.text.x = element_blank(),

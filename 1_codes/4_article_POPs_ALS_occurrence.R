@@ -7,44 +7,32 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/2.2_analyses_POPs_ALS_occurrence.
 
 # Table 1 - description of the subjects ----
 # Description of the subject characteristics of the Danish Diet, Cancer and Health study cohort (sample size: 498).
-table_1 <- bdd_danish |>
+table_1 <- bdd |>
+  filter(study == "Danish") |>
   mutate(
     als = as.character(als),
     als = fct_recode(als, "Controls" = "0", "Cases" = "1"),
-    als = fct_relevel(als, "Cases", "Controls")) |>
+    als = fct_relevel(als, "Cases", "Controls"),
+    follow_up = follow_up/12) |>
   select(
-    als, baseline_age, diagnosis_age, death_age, 
-    sex, marital_status_2cat, education, alcohol, smoking_2cat, bmi, cholesterol) |>
+    als, baseline_age, diagnosis_age, follow_up, death_age, 
+    sex, marital_status_2cat, education_merged, alcohol, smoking_2cat, bmi, fS_Kol) |>
   tbl_summary(by = als, 
               missing = 'no', 
               digits = list(baseline_age ~ 0, 
                             diagnosis_age ~ 0, 
+                            follow_up ~ 0, 
                             death_age ~ 0, 
                             bmi ~ 1, 
-                            cholesterol ~ 1)) |>
+                            fS_Kol ~ 1)) |>
   bold_labels() |>
-  add_p(include = -diagnosis_age) |>
+  add_p(include = -c('diagnosis_age', 'follow_up')) |>
   add_overall() |>
   add_n() |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  merge_at(i = 1, j = 1, part = "header") |>  
-  merge_at(i = 1, j = 2, part = "header")  
-
-# Table 2 - effect of covariates on ALS occurence ----
-# Estimated risk of ALS occurrence attributed to subject characteristics in the Danish Diet, Cancer and Health study cohort (logistic regression models, sample size: 498). 
-table_2 <- results_POPs_ALS_occurrence$main$covar |> 
-  as_flex_table()|>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")  |>
-  add_footer_lines(
-    "1Estimated risk of ALS when the characteristic is increasing by one unit, or compared to the reference category.
-  2CI: Confidence interval.
-  3Estimated risk of ALS when the characteristic is increasing by one unit, or compared to the reference category; adjusted for all the variables in the table.")
-
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 # Figure 1 - boxplot expo ----
 # Distribution of pre-disease POP plasma concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498).
@@ -278,9 +266,9 @@ table_S4 <- table_S4 |>
   5P-value of between-study heterogeneity (Cochran’s Q test).") |>
   add_header(
     "Exposures" = "Exposures", "Quartiles" = "Quartiles",
-    "OR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", "Hetero-geneity test" = "Base model",
-    "OR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", "Hetero-geneity test " = "Adjusted model",
-    " OR " = "Co-pollutant model", " 95% CI " = "Co-pollutant model", " p-value " = "Co-pollutant model", " Hetero-geneity test " = "Copollutant model") |>
+    "OR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", "Hetero-geneity test" = "Base model",
+    "OR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model", "Hetero-geneity test " = "Adjusted model",
+    " OR " = "Copollutant model", " 95% CI " = "Copollutant model", " p-value " = "Copollutant model", " Hetero-geneity test " = "Copollutant model") |>
   merge_h(part = "header") |>
   merge_v(j = "Exposures") |>
   theme_vanilla() |>
@@ -294,12 +282,23 @@ table_S4 <- table_S4 |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 rm(extra_rows)
 
-
 # Figure S1 - heatmap of correlation between POP exposures ---- 
 # Pearson correlations between pre-disease POP plasma concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498). 
 plot.new()
-tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S1.tiff", units = "mm", width = 300, height = 270, res = 300)
+tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S1a.tiff", units = "mm", width = 300, height = 270, res = 300)
 corrplot(results_descriptive$danish$POPs_heatmap_danish, 
+         method = 'color', 
+         type = "lower", 
+         tl.col = 'black', 
+         tl.srt = 45, 
+         addCoef.col = "black",
+         number.cex = 0.8,
+         number.digits = 1,
+         tl.cex = 1,
+         col = rev(COL2(diverging = "RdYlBu"))) 
+dev.off()
+tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S1b.tiff", units = "mm", width = 130, height = 120, res = 300)
+corrplot(results_descriptive$danish$POPs_heatmap_danish_group, 
          method = 'color', 
          type = "lower", 
          tl.col = 'black', 
@@ -361,8 +360,6 @@ figure_S3 <- results_POPs_ALS_occurrence$sensitivity_not_summed$sensitivity_resu
 # Export ----
 table_1 <- read_docx() |> body_add_flextable(table_1) 
 print(table_1, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/table_1.docx")
-table_2 <- read_docx() |> body_add_flextable(table_2) 
-print(table_2, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/table_2.docx")
 
 table_S1 <- read_docx() |> body_add_flextable(table_S1)
 print(table_S1, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/table_S1.docx")
@@ -414,5 +411,3 @@ ggsave(
   height = 7,
   width = 6,
   units = "in")
-
-

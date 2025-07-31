@@ -20,8 +20,8 @@ covar_danish <- bdd_danish|>
 ## POPs ----
 POPs_table_danish <- descrip_num(data = bdd_danish, vars = POPs_tot)
 POPs_table_danish <- left_join(POPs_table_danish, bdd_danish_loq, by = "variable") |>
-  mutate(variable = factor(variable, levels = POPs_labels), 
-         variable = fct_recode(variable, !!!POPs_labels)) |>
+  mutate(variable = factor(variable, levels = POPs_tot_labels), 
+         variable = fct_recode(variable, !!!POPs_tot_labels)) |>
   arrange(variable) 
 
 POPs_table_danish_by_als <- bdd_danish |>
@@ -39,8 +39,8 @@ POPs_table_danish_by_als <- bdd_danish |>
 POPs_boxplot_danish <- bdd_danish |>
   select(all_of(POPs_tot)) |>
   pivot_longer(cols = everything(), names_to = "POPs", values_to = "values") |>
-  mutate(POPs = factor(POPs, levels = POPs_labels), 
-         POPs = fct_recode(POPs, !!!POPs_labels), 
+  mutate(POPs = factor(POPs, levels = POPs_tot_labels), 
+         POPs = fct_recode(POPs, !!!POPs_tot_labels), 
          POPs = fct_rev(POPs)) |>
   arrange(POPs) |>
   ggplot() +
@@ -56,8 +56,8 @@ POPs_boxplot_danish <- bdd_danish |>
 POPs_boxplot_danish_by_als <- bdd_danish |>
   select(als, all_of(POPs_tot)) |>
   pivot_longer(cols = -als, names_to = "POPs", values_to = "values") |>
-  mutate(POPs = factor(POPs, levels = POPs_labels), 
-         POPs = fct_recode(POPs, !!!POPs_labels), 
+  mutate(POPs = factor(POPs, levels = POPs_tot_labels), 
+         POPs = fct_recode(POPs, !!!POPs_tot_labels), 
          POPs = fct_rev(POPs),
     als = as.character(als), 
     als = fct_recode(als, 
@@ -120,14 +120,29 @@ POPs_group_boxplot_danish_by_death <- bdd_danish |>
   coord_flip() +
   theme_lucid()
 
+POPs_group_bis <- setdiff(POPs_group, "PCB_4")
+pollutant_labels_bis <- set_names(
+  POPs_group_bis,
+  c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
+    "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"))
 
-POPs_heatmap_danish <- bdd_danish |> 
-  select(all_of(POPs_tot)) |>
+POPs_heatmap_danish_group <- 
+  bdd_danish |> 
+  select(all_of(POPs_group_bis)) |>
+  rename(!!!pollutant_labels_bis) 
+POPs_heatmap_danish_group <- 
+  cor(POPs_heatmap_danish_group, 
+      use = "pairwise.complete.obs", 
+      method = "pearson")
+
+POPs_heatmap_danish <- 
+  bdd_danish |> 
+  select(all_of(POPs)) |>
   rename(!!!POPs_labels) 
-
-POPs_heatmap_danish <- cor(POPs_heatmap_danish, 
-                           use = "pairwise.complete.obs", 
-                           method = "pearson")
+POPs_heatmap_danish <- 
+  cor(POPs_heatmap_danish, 
+      use = "pairwise.complete.obs", 
+      method = "pearson")
 
 ## fatty acids ----
 fattyacids_table_danish <- 
@@ -232,8 +247,8 @@ proteomic_boxplot_danish_by_als <- bdd_danish |>
   select(als, all_of(proteomic)) |>
   pivot_longer(cols = -als, names_to = "Proteomic", values_to = "values") |>
   mutate(
-    # POPs = factor(POPs, levels = POPs_labels), 
-    # POPs = fct_recode(POPs, !!!POPs_labels), 
+    # POPs = factor(POPs, levels = POPs_tot_labels), 
+    # POPs = fct_recode(POPs, !!!POPs_tot_labels), 
     # POPs = fct_rev(POPs),
     als = as.character(als), 
     als = fct_recode(als, 
@@ -301,12 +316,13 @@ proteomic_boxplot_danish_by_death <- bdd_danish |>
 
 proteomic_heatmap_danish <- bdd_danish |> 
   select(all_of(proteomic)) 
-# |> rename(!!!POPs_labels) 
+# |> rename(!!!POPs_tot_labels) 
 
 proteomic_heatmap_danish <- cor(proteomic_heatmap_danish, 
                                 use = "pairwise.complete.obs", 
                                 method = "pearson")
 
+### EV ----
 
 # finnish data ----
 ## metadata ----
@@ -325,8 +341,8 @@ covar_finnish <- bdd_finnish |>
 ## POPs ----
 POPs_table_finnish <- bdd |> filter(!study %in% "Danish") 
 POPs_table_finnish <- descrip_num(data = POPs_table_finnish, vars = POPs_tot) |> 
-  mutate(variable = factor(variable, levels = POPs_labels), 
-         variable = fct_recode(variable, !!!POPs_labels)) |>
+  mutate(variable = factor(variable, levels = POPs_tot_labels), 
+         variable = fct_recode(variable, !!!POPs_tot_labels)) |>
   arrange(variable) 
 
 POPs_table_finnish_by_als <- bdd |>
@@ -346,8 +362,8 @@ POPs_boxplot_finnish <- bdd |>
   filter(study %in% c("FMC", "FMCF", "MFH")) |>
   select(all_of(POPs_tot)) |>
   pivot_longer(cols = everything(), names_to = "POPs", values_to = "values") |>
-  mutate(POPs = factor(POPs, levels = POPs_labels), 
-         POPs = fct_recode(POPs, !!!POPs_labels), 
+  mutate(POPs = factor(POPs, levels = POPs_tot_labels), 
+         POPs = fct_recode(POPs, !!!POPs_tot_labels), 
          POPs = fct_rev(POPs)) |>
   arrange(POPs) |>
   ggplot() +
@@ -364,8 +380,8 @@ POPs_boxplot_finnish_by_als <- bdd |>
   filter(study %in% c("FMC", "FMCF", "MFH")) |>
   select(als, all_of(POPs), all_of(POPs_group)) |>
   pivot_longer(cols = -als, names_to = "POPs", values_to = "values") |>
-  mutate(POPs = factor(POPs, levels = POPs_labels), 
-         POPs = fct_recode(POPs, !!!POPs_labels), 
+  mutate(POPs = factor(POPs, levels = POPs_tot_labels), 
+         POPs = fct_recode(POPs, !!!POPs_tot_labels), 
          POPs = fct_rev(POPs),
     als = as.character(als), 
     als = fct_recode(als, 
@@ -410,7 +426,7 @@ POPs_group_boxplot_finnish_by_als <- bdd |>
 POPs_heatmap_finnish <- bdd |>
   filter(!study %in% c("Danish")) |>
   select(all_of(POPs_tot)) |>
-  rename(!!!POPs_labels) |>
+  rename(!!!POPs_tot_labels) |>
   select(-"α-HCH")
 
 POPs_heatmap_finnish <- cor(POPs_heatmap_finnish, 
@@ -501,8 +517,8 @@ POPs_table_comp <- bdd |>
 POPs_boxplot_comp <- bdd |>
   select(study, all_of(POPs_tot)) |>
   pivot_longer(cols = -study, names_to = "POPs", values_to = "values") |>
-  mutate(POPs = factor(POPs, levels = POPs_labels), 
-         POPs = fct_recode(POPs, !!!POPs_labels), 
+  mutate(POPs = factor(POPs, levels = POPs_tot_labels), 
+         POPs = fct_recode(POPs, !!!POPs_tot_labels), 
          POPs = fct_rev(POPs)) |>
   arrange(POPs) |>
   ggplot() +
@@ -635,7 +651,7 @@ rm(POPs_group_bis, POPs_group_labels_bis)
 POPs_heatmap_cases <- bdd |>
   filter(als == 1) |>
   select(all_of(POPs_tot)) |>
-  rename(!!!POPs_labels) 
+  rename(!!!POPs_tot_labels) 
 
 POPs_heatmap_cases <- cor(POPs_heatmap_cases, 
                            use = "pairwise.complete.obs", 
@@ -653,6 +669,7 @@ results_descriptive <- list(
     POPs_group_boxplot_danish_by_als = POPs_group_boxplot_danish_by_als,
     POPs_group_boxplot_danish_by_death = POPs_group_boxplot_danish_by_death,    # among cases
     POPs_heatmap_danish = POPs_heatmap_danish,
+    POPs_heatmap_danish_group = POPs_heatmap_danish_group,
     
     fattyacids_table_danish = fattyacids_table_danish,
     fattyacids_table_danish_by_als = fattyacids_table_danish_by_als,

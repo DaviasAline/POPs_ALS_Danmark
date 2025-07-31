@@ -859,8 +859,7 @@ results_descriptive$comp$fattyacids_boxplot_comp
 
 ## Among cases
 
-(for ALS survival analyses) 
-### Metadata
+(for ALS survival analyses) \### Metadata
 
 ```{r}
 #| echo: false
@@ -1024,8 +1023,8 @@ table_S2
 rm(extra_rows, table_S2)
 ```
 
+##### q-gcomp analysis
 
-##### q-gcomp analysis 
 ```{r}
 #| echo: false
 #| message: false
@@ -1038,7 +1037,6 @@ results_POPs_ALS_occurrence$main$POPs_ALS_qgcomp_table_danish |>
   set_table_properties(align = "left")
 results_POPs_ALS_occurrence$main$POPs_ALS_qgcomp_figure_danish
 ```
-
 
 ##### Sensitivity analysis POPs not summed
 
@@ -1168,9 +1166,9 @@ table_S4 <- table_S4 |>
   5P-value of between-study heterogeneity (Cochran’s Q test).") |>
   add_header(
     "Exposures" = "Exposures", "Quartiles" = "Quartiles",
-    "OR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", "Hetero-geneity test" = "Base model",
-    "OR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", "Hetero-geneity test " = "Adjusted model",
-    " OR " = "Co-pollutant model", " 95% CI " = "Co-pollutant model", " p-value " = "Co-pollutant model", " Hetero-geneity test " = "Copollutant model") |>
+    "OR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", "Hetero-geneity test" = "Base model",
+    "OR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model", "Hetero-geneity test " = "Adjusted model",
+    " OR " = "Copollutant model", " 95% CI " = "Copollutant model", " p-value " = "Copollutant model", " Hetero-geneity test " = "Copollutant model") |>
   merge_h(part = "header") |>
   merge_v(j = "Exposures") |>
   theme_vanilla() |>
@@ -1186,7 +1184,6 @@ table_S4 <- table_S4 |>
 table_S4
 rm(extra_rows, table_S4)
 ```
-
 
 # POPs ans ALS survival
 
@@ -1375,6 +1372,22 @@ results_POPs_ALS_survival$finnish$POPs_ALS_qgcomp_table_finnish  |>
 results_POPs_ALS_survival$finnish$POPs_ALS_qgcomp_figure_finnish
 ```
 
+### Investigation of alternative Finnish models 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$finnish$investigation_finnish_models$investigation_finnish_models_table
+```
+
+```{r, fig.height=12, fig.width=12}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$finnish$investigation_finnish_models$investigation_finnish_models_figure
+```
+
+
 ## Metanalysis
 
 ### Continuous coding (standardized)
@@ -1424,7 +1437,47 @@ print(results_POPs_ALS_survival$sensi1$plot_justif)
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi1$sensi1_table
+results_POPs_ALS_survival$sensi1$sample_size_check
+```
+
+results not adjusted on the cohort
+```{r, fig.width=12, fig.height=6}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_not_adjusted
+```
+
+results adjusted on the cohort
+```{r, fig.width=12, fig.height=6}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_adjusted
+```
+
+Cohorte as an interaction term 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$finnish$investigation_finnish_models$table_interaction
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+corrplot(results_POPs_ALS_survival$sensi1$POPs_heatmap_cases_group, 
+         method = 'color', 
+         type = "lower", 
+         tl.col = 'black', 
+         tl.srt = 45, 
+         addCoef.col = "black",
+         number.cex = 0.8,
+         number.digits = 1,
+         tl.cex = 1,
+         col = rev(COL2(diverging = "RdYlBu")))
 ```
 
 # Fatty acids and ALS occurence
