@@ -720,6 +720,7 @@ rm(
   POPs_group_boxplot_danish_by_als, 
   POPs_group_boxplot_danish_by_death, 
   POPs_heatmap_danish, 
+  POPs_heatmap_danish_group, 
   fattyacids_table_danish,
   fattyacids_table_danish_by_als,
   fattyacids_boxplot_danish,

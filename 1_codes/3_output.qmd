@@ -1251,6 +1251,7 @@ results_POPs_ALS_survival$danish$cheking_model3_cox_sd_danish
 #| echo: false
 #| message: false
 #| warning: false
+#| column: screen-inset-right
 results_POPs_ALS_survival$danish$POPs_quart_ALS_table_danish |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
@@ -1264,7 +1265,7 @@ results_POPs_ALS_survival$danish$POPs_quart_ALS_figure_danish
 
 #### Cox-gam
 
-```{r fig.height=9, fig.width=9}
+```{r fig.height=11, fig.width=9}
 #| echo: false
 #| message: false
 #| warning: false
@@ -1331,8 +1332,24 @@ results_POPs_ALS_survival$finnish$covar_ALS_table_finnish |>
 
 ### Effects of POPs on ALS survival
 
-#### Continuous coding (standardized)
+#### Continuous coding (standardized) - raw analysis not adjusted on cohort
 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$finnish$POPs_sd_ALS_table_finnish_raw |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$finnish$POPs_sd_ALS_figure_finnish_raw
+```
+
+#### Continuous coding (standardized) - meta-analaysis
 ```{r}
 #| echo: false
 #| message: false
@@ -1348,20 +1365,23 @@ results_POPs_ALS_survival$finnish$POPs_sd_ALS_table_finnish |>
 results_POPs_ALS_survival$finnish$POPs_sd_ALS_figure_finnish
 ```
 
-#### Quartiles
-
+#### Quartiles - meta-analaysis
+data not shown (instable)
 ```{r}
-#| echo: false
+#| eval: false
 #| message: false
 #| warning: false
+#| column: screen-inset-right
+#| include: false
 results_POPs_ALS_survival$finnish$POPs_quart_ALS_table_finnish |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-```{r, fig.height=9, fig.width=9}
-#| echo: false
+```{r fig.height=9, fig.width=9}
+#| eval: false
 #| message: false
 #| warning: false
+#| include: false
 results_POPs_ALS_survival$finnish$POPs_quart_ALS_figure_finnish
 ```
 
@@ -1380,22 +1400,6 @@ results_POPs_ALS_survival$finnish$POPs_ALS_qgcomp_table_finnish  |>
 results_POPs_ALS_survival$finnish$POPs_ALS_qgcomp_figure_finnish
 ```
 
-### Investigation of alternative Finnish models 
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$finnish$investigation_finnish_models$investigation_finnish_models_table
-```
-
-```{r, fig.height=12, fig.width=12}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$finnish$investigation_finnish_models$investigation_finnish_models_figure
-```
-
-
 ## Metanalysis
 
 ### Continuous coding (standardized)
@@ -1404,6 +1408,7 @@ results_POPs_ALS_survival$finnish$investigation_finnish_models$investigation_fin
 #| echo: false
 #| message: false
 #| warning: false
+#| column: screen-inset-right
 results_POPs_ALS_survival$metanalysis$POPs_sd_ALS_table_metanalysis |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
@@ -1421,6 +1426,7 @@ results_POPs_ALS_survival$metanalysis$POPs_sd_ALS_figure_metanalysis
 #| echo: false
 #| message: false
 #| warning: false
+#| column: screen-inset-right
 results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_table_metanalysis |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
@@ -1432,13 +1438,30 @@ results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_table_metanalysis |>
 results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_figure_metanalysis
 ```
 
-## Sensitivity analyses
+## Sensitivity analyses 1
 
 ```{r, fig.height=12, fig.width=12}
 #| echo: false
 #| message: false
 #| warning: false
 print(results_POPs_ALS_survival$sensi1$plot_justif)
+```
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+corrplot(results_POPs_ALS_survival$sensi1$cor_test_sensi1, 
+         method = 'color', 
+         type = "lower", 
+         tl.col = 'black', 
+         tl.srt = 45, 
+         addCoef.col = "black",
+         number.cex = 0.8,
+         number.digits = 1,
+         tl.cex = 1,
+         col = rev(COL2(diverging = "RdYlBu")))
 ```
 
 ```{r}
@@ -1448,38 +1471,31 @@ print(results_POPs_ALS_survival$sensi1$plot_justif)
 results_POPs_ALS_survival$sensi1$sample_size_check
 ```
 
-results not adjusted on the cohort
-```{r, fig.width=12, fig.height=5}
+results not adjusted on the cohort 
+```{r, fig.width=8}
 #| echo: false
 #| message: false
 #| warning: false
 results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_not_adjusted
 ```
 
-results adjusted on the cohort
-```{r, fig.width=12, fig.height=5}
+results adjusted on the cohort (4 categories)
+```{r}
 #| echo: false
 #| message: false
 #| warning: false
 results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_adjusted
 ```
 
-results adjusted on the cohort (2 cat danish or finnish)
-```{r, fig.width=12, fig.height=5}
+results adjusted on the cohort (2 categories danish or finnish)
+```{r}
 #| echo: false
 #| message: false
 #| warning: false
 results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_adjusted_2cat
 ```
 
-Cohorte as an interaction term 
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$finnish$investigation_finnish_models$table_interaction
-```
-
+Correlation among standardized POPs among Danish ALS cases 
 ```{r}
 #| echo: false
 #| message: false
@@ -1494,6 +1510,17 @@ corrplot(results_POPs_ALS_survival$sensi1$POPs_heatmap_cases_group,
          number.digits = 1,
          tl.cex = 1,
          col = rev(COL2(diverging = "RdYlBu")))
+```
+
+## Sensitivity analyses 2 
+```{r, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_orange
+results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_purple
+results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_green
 ```
 
 # Fatty acids and ALS occurence
