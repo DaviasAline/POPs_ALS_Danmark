@@ -48,6 +48,8 @@ library(flextable)
 library(metafor)
 library(qgcomp)
 library(gWQS)
+library(glmnet)
+library(performance)
 
 ## Tableau descriptif variables numériques
 descrip_num <- function(data, vars) {                                           

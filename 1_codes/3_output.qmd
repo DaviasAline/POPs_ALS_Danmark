@@ -1051,8 +1051,7 @@ results_POPs_ALS_occurrence$sensitivity_not_summed$plot_quart_sensi_not_summed
 
 Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive model (gam) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. All models were adjusted for sex and age. Adjusted models further account for serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a gam that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
 
-###### dioxin like PCBs
-
+##### Main analyses
 ```{r, fig.height=3.5, fig.width=9}
 #| echo: false
 #| message: false
@@ -1236,6 +1235,15 @@ results_POPs_ALS_survival$danish$POPs_sd_ALS_table_danish  |>
 #| warning: false
 results_POPs_ALS_survival$danish$POPs_sd_ALS_figure_danish
 ```
+
+Checking for the copollutant model 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$danish$cheking_model3_cox_sd_danish
+```
+
 
 #### Quartiles
 
@@ -1441,7 +1449,7 @@ results_POPs_ALS_survival$sensi1$sample_size_check
 ```
 
 results not adjusted on the cohort
-```{r, fig.width=12, fig.height=6}
+```{r, fig.width=12, fig.height=5}
 #| echo: false
 #| message: false
 #| warning: false
@@ -1449,11 +1457,19 @@ results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_not_adjusted
 ```
 
 results adjusted on the cohort
-```{r, fig.width=12, fig.height=6}
+```{r, fig.width=12, fig.height=5}
 #| echo: false
 #| message: false
 #| warning: false
 results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_adjusted
+```
+
+results adjusted on the cohort (2 cat danish or finnish)
+```{r, fig.width=12, fig.height=5}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_adjusted_2cat
 ```
 
 Cohorte as an interaction term 

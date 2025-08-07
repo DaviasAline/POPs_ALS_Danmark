@@ -331,7 +331,8 @@ results_slide_2_b <-
 rm(bdd_cases_danish, POPs_group_bis, pollutant_labels_bis)
 
 ## c ----
-results_slide_2_c <-results_POPs_ALS_survival$danish$POPs_ALS_qgcomp_figure_danish
+results_slide_2_c <-results_POPs_ALS_survival$danish$POPs_ALS_qgcomp_figure_danish +
+  labs(y = "Exposures", x = "Negative weights         Positive weights") 
 
 # export ----
 ggsave(
@@ -367,6 +368,6 @@ ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/ISEE_2025/results_slide_2_c.tiff",
   results_slide_2_c,
   dpi = 300, 
-  height = 5,
-  width = 6,
+  height = 3,
+  width = 5,
   units = "in")

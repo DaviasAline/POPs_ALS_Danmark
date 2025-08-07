@@ -203,7 +203,12 @@ model3_cox_sd_danish <- tibble(                                                 
   se = coefs[, "se(coef)"], 
   `p-value` = coefs[, "Pr(>|z|)"]) |>
   filter(str_detect(term, "_sd"))
-rm(POPs_group_sd_bis, pollutant_labels_bis, formula_danish, model_summary, coefs)
+
+model <- coxph(formula_danish, data = bdd_cases_danish) 
+cheking_model3_cox_sd_danish <- check_model(model, residual_type = "normal")
+
+rm(POPs_group_sd_bis, pollutant_labels_bis, formula_danish, model_summary, model, coefs)
+
 
 ## Cox model (quart) ----
 ### Base ----
@@ -1281,7 +1286,64 @@ rm(POPs_group_quart_finnish_bis, formula_FMC, formula_FMCF)
 ## Investigation d'autres modeles pour les cohortes finnish ----
 # essaie d'autres modeles pour les finnish cohorts 
 ### essai resultats brutes par cohorte ----
-#### base ----
+#### base sd ----
+model1_cox_sd_finnish_raw <- map_dfr(POPs_group_sd_finnish, function(expl) {
+  
+  # Création des formules pour chaque cohorte
+  formula_FMC <- as.formula(paste("surv_obj_FMC ~", expl, "+ diagnosis_age + sex"))
+  formula_FMCF <- as.formula(paste("surv_obj_FMCF ~", expl, "+ diagnosis_age + sex"))
+  formula_MFH <- as.formula(paste("surv_obj_MFH ~", expl, "+ diagnosis_age + sex"))
+  
+  # Modèles de Cox
+  model_summary_FMC <- coxph(formula_FMC, data = bdd_cases_FMC) |> summary()
+  model_summary_FMCF <- coxph(formula_FMCF, data = bdd_cases_FMCF) |> summary()
+  model_summary_MFH <- coxph(formula_MFH, data = bdd_cases_MFH) |> summary()
+  
+  # Résultats FMC
+  coefs_FMC <- model_summary_FMC$coefficients
+  tibble_FMC <-
+    tibble(
+      study = "FMC",
+      model = "base",
+      term = rownames(coefs_FMC),
+      explanatory = expl,
+      coef = coefs_FMC[, "coef"],
+      se = coefs_FMC[, "se(coef)"],
+      `p-value` = coefs_FMC[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, expl))
+  
+  # Résultats FMCF
+  coefs_FMCF <- model_summary_FMCF$coefficients
+  tibble_FMCF <-
+    tibble(
+      study = "FMCF",
+      model = "base",
+      term = rownames(coefs_FMCF),
+      explanatory = expl,
+      coef = coefs_FMCF[, "coef"],
+      se = coefs_FMCF[, "se(coef)"],
+      `p-value` = coefs_FMCF[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, expl))
+  
+  # Résultats MFH
+  coefs_MFH <- model_summary_MFH$coefficients
+  tibble_MFH <-
+    tibble(
+      study = "MFH",
+      model = "base",
+      term = rownames(coefs_MFH),
+      explanatory = expl,
+      coef = coefs_MFH[, "coef"],
+      se = coefs_MFH[, "se(coef)"],
+      `p-value` = coefs_MFH[, "Pr(>|z|)"]) |> 
+    filter(str_starts(term, expl))
+  
+  # Combinaison des résultats
+  bind_rows(tibble_FMC, tibble_FMCF, tibble_MFH)
+})
+
+
+#### base quart ----
 model1_cox_quart_finnish_raw <- map_dfr(POPs_group_quart_finnish, function(expl) {
   
   # Création des formules pour chaque cohorte
@@ -1337,7 +1399,61 @@ model1_cox_quart_finnish_raw <- map_dfr(POPs_group_quart_finnish, function(expl)
   bind_rows(tibble_FMC, tibble_FMCF, tibble_MFH)
 })
 
-#### adjusted ----
+#### adjusted sd----
+model2_cox_sd_finnish_raw <- map_dfr(POPs_group_sd_finnish, function(expl) {
+  
+  # Création des formules pour chaque cohorte
+  formula_FMC <- as.formula(paste("surv_obj_FMC ~", expl, "+", paste(covariates_finnish, collapse = "+")))
+  formula_FMCF <- as.formula(paste("surv_obj_FMCF ~", expl, "+", paste(covariates_finnish, collapse = "+")))
+  formula_MFH <- as.formula(paste("surv_obj_MFH ~", expl, "+", paste(covariates_finnish, collapse = "+")))
+  
+  # Modèles de Cox
+  model_summary_FMC <- coxph(formula_FMC, data = bdd_cases_FMC) |> summary()
+  model_summary_FMCF <- coxph(formula_FMCF, data = bdd_cases_FMCF) |> summary()
+  model_summary_MFH <- coxph(formula_MFH, data = bdd_cases_MFH) |> summary()
+  
+  # Résultats FMC
+  coefs_FMC <- model_summary_FMC$coefficients
+  tibble_FMC <- tibble(
+    study = "FMC", 
+    model = "adjusted", 
+    term = rownames(coefs_FMC),
+    explanatory = expl, 
+    coef = coefs_FMC[, "coef"],
+    se = coefs_FMC[, "se(coef)"], 
+    `p-value` = coefs_FMC[, "Pr(>|z|)"]) |> 
+    filter(str_starts(term, expl))
+  
+  # Résultats FMCF
+  coefs_FMCF <- model_summary_FMCF$coefficients
+  tibble_FMCF <- tibble(
+    study = "FMCF", 
+    model = "adjusted", 
+    term = rownames(coefs_FMCF),
+    explanatory = expl, 
+    coef = coefs_FMCF[, "coef"],
+    se = coefs_FMCF[, "se(coef)"], 
+    `p-value` = coefs_FMCF[, "Pr(>|z|)"]) |> 
+    filter(str_starts(term, expl))
+  
+  # Résultats MFH
+  coefs_MFH <- model_summary_MFH$coefficients
+  tibble_MFH <- tibble(
+    study = "MFH", 
+    model = "adjusted", 
+    term = rownames(coefs_MFH),
+    explanatory = expl, 
+    coef = coefs_MFH[, "coef"],
+    se = coefs_MFH[, "se(coef)"], 
+    `p-value` = coefs_MFH[, "Pr(>|z|)"]) |> 
+    filter(str_starts(term, expl))
+  
+  # Combinaison des résultats
+  bind_rows(tibble_FMC, tibble_FMCF, tibble_MFH)
+})
+
+
+#### adjusted quart ----
 model2_cox_quart_finnish_raw <- map_dfr(POPs_group_quart_finnish, function(expl) {
   
   # Création des formules pour chaque cohorte
@@ -1420,7 +1536,28 @@ bdd_cases_finnish <- bdd_finnish |>
 surv_obj_finnish <- Surv(time = bdd_cases_finnish$follow_up_death,                # set the outcomes
                          event = bdd_cases_finnish$status_death)
 
-#### base ----
+#### base sd ----
+model1_cox_sd_finnish_adj_study <- map_dfr(POPs_group_sd_finnish, function(expl) {
+  
+  formula_finnish <-                                                             # creation of the formulas
+    as.formula(paste("surv_obj_finnish ~", expl, "+ diagnosis_age + sex + study"))  
+  
+  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()  # run cox model
+  
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    study = "Total", 
+    model = "base", 
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                      # remove the covariates results
+})
+
+
+#### base quart ----
 model1_cox_quart_finnish_adj_study <- map_dfr(POPs_group_quart_finnish, function(expl) {
   
   formula_finnish <-                                                             # creation of the formulas
@@ -1440,7 +1577,27 @@ model1_cox_quart_finnish_adj_study <- map_dfr(POPs_group_quart_finnish, function
     filter(str_starts(term, explanatory))                                      # remove the covariates results
 })
 
-#### adjusted ----
+#### adjusted sd ----
+model2_cox_sd_finnish_adj_study <- map_dfr(POPs_group_sd_finnish, function(expl) {
+  
+  formula_finnish <-                                                             # creation of the formulas
+    as.formula(paste("surv_obj_finnish ~", expl, "+ diagnosis_age + sex + study"))  
+  
+  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()  # run cox model
+  
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    study = "Total", 
+    model = "base", 
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                      # remove the covariates results
+})
+
+#### adjusted quart ----
 model2_cox_quart_finnish_adj_study <- map_dfr(POPs_group_quart_finnish, function(expl) {
   
   formula_finnish <- as.formula(paste("surv_obj_finnish ~", expl, "+ study +",            # set the formulas              
@@ -1463,7 +1620,9 @@ model2_cox_quart_finnish_adj_study <- map_dfr(POPs_group_quart_finnish, function
 investigation_finnish_models <-       
   bind_rows(
     model1_cox_quart_finnish_raw, model2_cox_quart_finnish_raw, 
-    model1_cox_quart_finnish_adj_study, model2_cox_quart_finnish_adj_study) |>
+    model1_cox_quart_finnish_adj_study, model2_cox_quart_finnish_adj_study, 
+    model1_cox_sd_finnish_raw, model2_cox_sd_finnish_raw, 
+    model1_cox_sd_finnish_adj_study, model2_cox_sd_finnish_adj_study) |>
   mutate(
     HR = exp(coef),
     lower_CI = exp(coef - 1.96 * se),
@@ -1497,7 +1656,7 @@ investigation_finnish_models <-
 #     `p-value` = "")
 
 investigation_finnish_models_table <- investigation_finnish_models |>
-  filter(!term == "Continuous") |>
+  filter(term == "Continuous") |>
   select(study, model, explanatory, term, HR, "95% CI", `p-value`) |>
   mutate(across(everything(), as.character))
 
@@ -1568,8 +1727,11 @@ investigation_finnish_models_figure <- investigation_finnish_models |>
         strip.text.y.left = element_text(angle = 0, hjust = 0.5, vjust = 0.5)) +
   coord_flip()
 
-rm(model1_cox_quart_finnish_raw, model2_cox_quart_finnish_raw, bdd_cases_finnish, 
-   surv_obj_finnish, model1_cox_quart_finnish_adj_study, model2_cox_quart_finnish_adj_study)
+rm(model1_cox_quart_finnish_raw, model2_cox_quart_finnish_raw,
+   model1_cox_quart_finnish_adj_study, model2_cox_quart_finnish_adj_study,
+   model1_cox_sd_finnish_raw, model2_cox_sd_finnish_raw,
+   model1_cox_sd_finnish_adj_study, model2_cox_sd_finnish_adj_study,
+   bdd_cases_finnish, surv_obj_finnish)
 
 ## Q-gcomp analysis ---- 
 POPs_group_finnish_bis <-                                                 # remove the 4 most abundant PCB because they are already NDL-PCB
@@ -1949,7 +2111,11 @@ bdd_cases_tot <- bdd |>
   replace_with_median(Σchlordane, Σchlordane_quart) |>
   mutate(sex = fct_relevel(sex, "Male", "Female"), 
          smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"), 
+         study_2cat = fct_recode(study, 
+                                 "Finnish" = "FMC",
+                                 "Finnish" = "FMCF",
+                                 "Finnish" = "MFH"))
 
 bdd_cases_tot_sauf_MFH <- bdd |>
   filter (als == 1) |>
@@ -1971,7 +2137,10 @@ bdd_cases_tot_sauf_MFH <- bdd |>
   replace_with_median(Σchlordane, Σchlordane_quart) |>
   mutate(sex = fct_relevel(sex, "Male", "Female"), 
          smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"), 
+         study_2cat = fct_recode(study, 
+                                 "Finnish" = "FMC",
+                                 "Finnish" = "FMCF"))
 
 bdd_cases_red_purple <- bdd |>
   filter (als == 1) |>
@@ -1994,7 +2163,11 @@ bdd_cases_red_purple <- bdd |>
   replace_with_median(Σchlordane, Σchlordane_quart) |>
   mutate(sex = fct_relevel(sex, "Male", "Female"), 
          smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"), 
+         study_2cat = fct_recode(study, 
+                                 "Finnish" = "FMC",
+                                 "Finnish" = "FMCF",
+                                 "Finnish" = "MFH"))
 
 bdd_cases_red_green <- bdd |>
   filter (als == 1) |>
@@ -2017,7 +2190,11 @@ bdd_cases_red_green <- bdd |>
   replace_with_median(Σchlordane, Σchlordane_quart) |>
   mutate(sex = fct_relevel(sex, "Male", "Female"), 
          smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"), 
+         study_2cat = fct_recode(study, 
+                                 "Finnish" = "FMC",
+                                 "Finnish" = "FMCF",
+                                 "Finnish" = "MFH"))
 
 bdd_cases_red_orange <- bdd |>
   filter (als == 1) |>
@@ -2040,7 +2217,11 @@ bdd_cases_red_orange <- bdd |>
   replace_with_median(Σchlordane, Σchlordane_quart) |>
   mutate(sex = fct_relevel(sex, "Male", "Female"), 
          smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"), 
+         study_2cat = fct_recode(study, 
+                                 "Finnish" = "FMC",
+                                 "Finnish" = "FMCF",
+                                 "Finnish" = "MFH"))
 
 surv_obj_tot <- Surv(time = bdd_cases_tot$follow_up_death,                      # set the outcomes
                      event = bdd_cases_tot$status_death)
@@ -2064,6 +2245,19 @@ sample_size_check <-
          bdd_cases_red_purple |> select(study) |> tbl_summary(),
          bdd_cases_red_green |> select(study) |> tbl_summary(),
          bdd_cases_red_orange |> select(study) |> tbl_summary()), 
+    tab_spanner = c('**All subjects**', 
+                    '**All subjects except MFH**', 
+                    '**follow up < 300 months**', 
+                    '**baseline age > 45 years**', 
+                    '**follow up < 350 months and baseline age > 40 years**'))
+
+sample_size_check_2cat <- 
+  tbl_merge(
+    list(bdd_cases_tot |> select(study_2cat) |> tbl_summary(),
+         bdd_cases_tot_sauf_MFH |> select(study_2cat) |> tbl_summary(),
+         bdd_cases_red_purple |> select(study_2cat) |> tbl_summary(),
+         bdd_cases_red_green |> select(study_2cat) |> tbl_summary(),
+         bdd_cases_red_orange |> select(study_2cat) |> tbl_summary()), 
     tab_spanner = c('**All subjects**', 
                     '**All subjects except MFH**', 
                     '**follow up < 300 months**', 
@@ -2227,6 +2421,102 @@ model2_cox_sd_sensi1_red_orange <- map_dfr(POPs_group_sd_bis, function(expl) {
     filter(str_starts(term, explanatory))                                       # remove the covariates results
 })
 
+### with adjustment for study (2 cat) ----
+model2_cox_sd_sensi0 <- map_dfr(POPs_group_sd_bis, function(expl) {
+  
+  formula <- as.formula(paste("surv_obj_tot ~", expl, "+ study_2cat +",            # set the formulas              
+                              paste(covariates_finnish, collapse = " + ")))
+  
+  model_summary <- coxph(formula, data = bdd_cases_tot) |> summary()  # run cox model
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    study = "sensi1_tot", 
+    model = "adjusted", 
+    cohort_adj = "adjusted (2 cat)",
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                       # remove the covariates results
+})
+
+model2_cox_sd_sensi0_sauf_MFH <- map_dfr(POPs_group_sd_bis, function(expl) {
+  
+  formula <- as.formula(paste("surv_obj_tot_sauf_MFH ~", expl, "+ study_2cat +",            # set the formulas              
+                              paste(covariates_finnish, collapse = " + ")))
+  
+  model_summary <- coxph(formula, data = bdd_cases_tot_sauf_MFH) |> summary()  # run cox model
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    study = "sensi1_tot_sauf_MFH", 
+    model = "adjusted", 
+    cohort_adj = "adjusted (2 cat)",
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                       # remove the covariates results
+})
+
+model2_cox_sd_sensi0_red_purple <- map_dfr(POPs_group_sd_bis, function(expl) {
+  
+  formula <- as.formula(paste("surv_obj_red_purple ~", expl, "+ study_2cat +",            # set the formulas              
+                              paste(covariates_finnish, collapse = " + ")))
+  
+  model_summary <- coxph(formula, data = bdd_cases_red_purple) |> summary()  # run cox model
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    study = "sensi1_red_purple", 
+    model = "adjusted", 
+    cohort_adj = "adjusted (2 cat)",
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                       # remove the covariates results
+})
+
+model2_cox_sd_sensi0_red_green <- map_dfr(POPs_group_sd_bis, function(expl) {
+  
+  formula <- as.formula(paste("surv_obj_red_green ~", expl, "+ study_2cat +",            # set the formulas              
+                              paste(covariates_finnish, collapse = " + ")))
+  
+  model_summary <- coxph(formula, data = bdd_cases_red_green) |> summary()  # run cox model
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    study = "sensi1_red_green", 
+    model = "adjusted", 
+    cohort_adj = "adjusted (2 cat)",
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                       # remove the covariates results
+})
+
+model2_cox_sd_sensi0_red_orange <- map_dfr(POPs_group_sd_bis, function(expl) {
+  
+  formula <- as.formula(paste("surv_obj_red_orange ~", expl, "+ study_2cat +",            # set the formulas              
+                              paste(covariates_finnish, collapse = " + ")))
+  
+  model_summary <- coxph(formula, data = bdd_cases_red_orange) |> summary()  # run cox model
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    study = "sensi1_red_orange", 
+    model = "adjusted", 
+    cohort_adj = "adjusted (2 cat)",
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                       # remove the covariates results
+})
+
 
 ### without adjustment for study ----
 model2_cox_sd_sensi2 <- map_dfr(POPs_group_sd_bis, function(expl) {
@@ -2349,11 +2639,19 @@ model2_cox_sd_sensi1_interac <- map_dfr(POPs_group_sd_bis, function(expl) {
 results_sensi1 <-       
   bind_rows(
     model2_cox_sd_danish, # Danish main analysis
+    
+    model2_cox_sd_sensi0, 
+    model2_cox_sd_sensi0_sauf_MFH, 
+    model2_cox_sd_sensi0_red_purple, 
+    model2_cox_sd_sensi0_red_green, 
+    model2_cox_sd_sensi0_red_orange, 
+    
     model2_cox_sd_sensi1, 
     model2_cox_sd_sensi1_sauf_MFH, 
     model2_cox_sd_sensi1_red_purple, 
     model2_cox_sd_sensi1_red_green, 
     model2_cox_sd_sensi1_red_orange, 
+    
     model2_cox_sd_sensi2, 
     model2_cox_sd_sensi2_sauf_MFH, 
     model2_cox_sd_sensi2_red_purple, 
@@ -2420,17 +2718,20 @@ results_sensi1 <-
 POPs_sd_ALS_figure_sensi1_not_adjusted <- 
   results_sensi1 |>
   filter(!explanatory == 'ΣPBDE') |>
+  filter(study %in% c("Danish", "sensi_tot", "sensi1_red_orange")) |>
   mutate(
     study =  fct_relevel(study, 
-                         "Danish",
-                         "sensi1_tot", "sensi1_tot_sauf_MFH", "sensi1_red_purple", "sensi1_red_green", "sensi1_red_orange"), 
+                         "Danish", "sensi1_tot", "sensi1_red_orange"
+                         # "sensi1_tot_sauf_MFH", "sensi1_red_purple", "sensi1_red_green", 
+                         ), 
     study = fct_recode(study, 
                        "Danish (n=166)" = "Danish",
-                       "Restricted to \nfollow up < 300 months \n(n=204)" = "sensi1_red_green",
-                       "Restricted to \nbaseline age > 45 years \n(n=207)" = "sensi1_red_orange",
-                       "Restricted to \nfollow up < 350 months and \nbaseline age > 40 years \n(n=208)" = "sensi1_red_purple",
                        "All cohorts (n=263)" = "sensi1_tot", 
-                       "All cohorts expect MFH (n=252)" = "sensi1_tot_sauf_MFH"),
+                       "Restricted to \nfollow up < 350 months and \nbaseline age > 40 years \n(n=208)" = "sensi1_red_orange"
+                       # "Restricted to \nfollow up < 300 months \n(n=204)" = "sensi1_red_purple",
+                       # "Restricted to \nbaseline age > 45 years \n(n=207)" = "sensi1_red_green",
+                       # "All cohorts expect MFH (n=252)" = "sensi1_tot_sauf_MFH"
+                       ),
     explanatory = factor(explanatory, levels = POPs_group_labels),
     explanatory = fct_rev(explanatory),
     explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
@@ -2454,23 +2755,63 @@ POPs_sd_ALS_figure_sensi1_not_adjusted <-
 POPs_sd_ALS_figure_sensi1_adjusted <- 
   results_sensi1 |>
   filter(!explanatory == 'ΣPBDE') |>
+  filter(study %in% c("Danish", "sensi_tot", "sensi1_red_orange")) |>
   mutate(
     study =  fct_relevel(study, 
-                         "Danish",
-                         "sensi1_tot", "sensi1_tot_sauf_MFH", "sensi1_red_purple", "sensi1_red_green", "sensi1_red_orange"), 
+                         "Danish", "sensi1_tot", "sensi1_red_orange"
+                         # "sensi1_tot_sauf_MFH", "sensi1_red_purple", "sensi1_red_green", 
+    ), 
     study = fct_recode(study, 
                        "Danish (n=166)" = "Danish",
-                       "All cohorts expect \nMFH (n=252)" = "sensi1_tot_sauf_MFH",
-                       "Restricted to \nfollow up < 300 months \n(n=204)" = "sensi1_red_green",
-                       "Restricted to \nbaseline age > 45 years \n(n=207)" = "sensi1_red_orange",
-                       "Restricted to \nfollow up < 350 months and \nbaseline age > 40 years \n(n=208)" = "sensi1_red_purple",
-                       "All cohorts (n=263)" = "sensi1_tot"),
+                       "All cohorts (n=263)" = "sensi1_tot", 
+                       "Restricted to \nfollow up < 350 months and \nbaseline age > 40 years \n(n=208)" = "sensi1_red_orange"
+                       # "Restricted to \nfollow up < 300 months \n(n=204)" = "sensi1_red_purple",
+                       # "Restricted to \nbaseline age > 45 years \n(n=207)" = "sensi1_red_green",
+                       # "All cohorts expect MFH (n=252)" = "sensi1_tot_sauf_MFH"
+    ),
     explanatory = factor(explanatory, levels = POPs_group_labels),
     explanatory = fct_rev(explanatory),
     explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
     cohort_adj = ifelse(is.na(cohort_adj), "adjusted", cohort_adj), 
     cohort_adj = factor(cohort_adj, levels = c("adjusted", "not adjusted"))) |>
   filter(cohort_adj == "adjusted") |>
+  arrange(explanatory) |> 
+  ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
+  
+  geom_pointrange(position = position_dodge(width = 0.5), size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +                        # , scales = "free_x"
+  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip() +
+  facet_grid(~study)
+
+POPs_sd_ALS_figure_sensi1_adjusted_2cat <- 
+  results_sensi1 |>
+  filter(!explanatory == 'ΣPBDE') |>
+  filter(study %in% c("Danish", "sensi_tot", "sensi1_red_orange")) |>
+  mutate(
+    study =  fct_relevel(study, 
+                         "Danish", "sensi1_tot", "sensi1_red_orange"
+                         # "sensi1_tot_sauf_MFH", "sensi1_red_purple", "sensi1_red_green", 
+    ), 
+    study = fct_recode(study, 
+                       "Danish (n=166)" = "Danish",
+                       "All cohorts (n=263)" = "sensi1_tot", 
+                       "Restricted to \nfollow up < 350 months and \nbaseline age > 40 years \n(n=208)" = "sensi1_red_orange"
+                       # "Restricted to \nfollow up < 300 months \n(n=204)" = "sensi1_red_purple",
+                       # "Restricted to \nbaseline age > 45 years \n(n=207)" = "sensi1_red_green",
+                       # "All cohorts expect MFH (n=252)" = "sensi1_tot_sauf_MFH"
+    ),
+    explanatory = factor(explanatory, levels = POPs_group_labels),
+    explanatory = fct_rev(explanatory),
+    explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
+    cohort_adj = ifelse(is.na(cohort_adj), "adjusted (2 cat)", cohort_adj), 
+    cohort_adj = factor(cohort_adj, levels = c("adjusted (2 cat)", "not adjusted"))) |>
+  filter(cohort_adj == "adjusted (2 cat)") |>
   arrange(explanatory) |> 
   ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   
@@ -2661,6 +3002,7 @@ rm(POPs_group_labels_bis)
 rm(POPs_group_bis, POPs_group_quart_bis, POPs_group_sd_bis, bdd_cases_tot, 
    bdd_cases_red_purple, bdd_cases_red_green, bdd_cases_red_orange, 
    surv_obj_tot, surv_obj_red_purple, surv_obj_red_green, surv_obj_red_orange, 
+   model2_cox_sd_sensi0, model2_cox_sd_sensi0_red_purple, model2_cox_sd_sensi0_red_green, model2_cox_sd_sensi0_red_orange, 
    model2_cox_sd_sensi1, model2_cox_sd_sensi1_red_purple, model2_cox_sd_sensi1_red_green, model2_cox_sd_sensi1_red_orange, 
    model2_cox_sd_sensi2, model2_cox_sd_sensi2_red_purple, model2_cox_sd_sensi2_red_green, model2_cox_sd_sensi2_red_orange
    
@@ -3398,6 +3740,7 @@ results_POPs_ALS_survival <-
          POPs_sd_ALS_table_danish = POPs_sd_ALS_table_danish, 
          POPs_quart_ALS_table_danish = POPs_quart_ALS_table_danish, 
          POPs_sd_ALS_figure_danish = POPs_sd_ALS_figure_danish, 
+         cheking_model3_cox_sd_danish = cheking_model3_cox_sd_danish, 
          POPs_quart_ALS_figure_danish = POPs_quart_ALS_figure_danish, 
          plot_base_cox_gam_danish = plot_base_cox_gam_danish, 
          plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish, 
@@ -3429,11 +3772,13 @@ results_POPs_ALS_survival <-
          POPs_heatmap_cases_group = POPs_heatmap_cases_group, 
          # sensi1_table = sensi1_table, 
          POPs_sd_ALS_figure_sensi1_not_adjusted = POPs_sd_ALS_figure_sensi1_not_adjusted, 
-         POPs_sd_ALS_figure_sensi1_adjusted = POPs_sd_ALS_figure_sensi1_adjusted))
+         POPs_sd_ALS_figure_sensi1_adjusted = POPs_sd_ALS_figure_sensi1_adjusted, 
+         POPs_sd_ALS_figure_sensi1_adjusted_2cat = POPs_sd_ALS_figure_sensi1_adjusted_2cat))
 
 rm(main_results_POPs_ALS_survival, 
    covar_danish,
    POPs_sd_ALS_table_danish, 
+   cheking_model3_cox_sd_danish, 
    POPs_quart_ALS_table_danish, 
    POPs_sd_ALS_figure_danish, 
    POPs_quart_ALS_figure_danish, 
@@ -3467,5 +3812,5 @@ rm(main_results_POPs_ALS_survival,
    
    plot_justif, results_sensi1, sample_size_check, POPs_heatmap_cases_group,
    #sensi1_table, 
-   POPs_sd_ALS_figure_sensi1_not_adjusted, POPs_sd_ALS_figure_sensi1_adjusted, 
+   POPs_sd_ALS_figure_sensi1_not_adjusted, POPs_sd_ALS_figure_sensi1_adjusted, POPs_sd_ALS_figure_sensi1_adjusted_2cat,
    model2_cox_sd_danish)
