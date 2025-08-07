@@ -2844,6 +2844,169 @@ POPs_sd_ALS_figure_sensi2_finnish_green <-
   coord_flip() +
   facet_grid( ~ box_adj)
 
+# sensitivity analysis 3 - age at baseline as interaction term in the finnish cohort ----
+sensi3_interac_baseline_age <- map_dfr(POPs_group_sd_finnish, function(expl) {
+  
+  formula_finnish <-                                                             # set the formulas
+    as.formula(paste("surv_obj_finnish ~", expl, "*baseline_age +",  
+                     paste(covariates_finnish, collapse = " + ")))
+  
+  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()  # run cox model
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    study = "Finnish", 
+    model = "adjusted", 
+    study_design = "interac baseline age continuous", 
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                       # remove the covariates results 
+})
+
+sensi3_interac_follow_up <- map_dfr(POPs_group_sd_finnish, function(expl) {
+  
+  formula_finnish <-                                                             # set the formulas
+    as.formula(paste("surv_obj_finnish ~", expl, "*follow_up +",  
+                     paste(covariates_finnish, collapse = " + ")))
+  
+  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()  # run cox model
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    study = "Finnish", 
+    model = "adjusted", 
+    study_design = "interac follow up continuous", 
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                       # remove the covariates results 
+})
+
+sensi3_interac_box_orange <- map_dfr(POPs_group_sd_finnish, function(expl) {
+  
+  formula_finnish <-                                                             # set the formulas
+    as.formula(paste("surv_obj_finnish ~", expl, "*box_orange +",  
+                     paste(covariates_finnish, collapse = " + ")))
+  
+  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()  # run cox model
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    study = "Finnish", 
+    model = "adjusted", 
+    study_design = "interac orange", 
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                       # remove the covariates results 
+})
+
+sensi3_interac_box_purple <- map_dfr(POPs_group_sd_finnish, function(expl) {
+  
+  formula_finnish <-                                                             # set the formulas
+    as.formula(paste("surv_obj_finnish ~", expl, "*box_purple +",  
+                     paste(covariates_finnish, collapse = " + ")))
+  
+  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()  # run cox model
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    study = "Finnish", 
+    model = "adjusted", 
+    study_design = "interac purple", 
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                       # remove the covariates results 
+})
+
+
+sensi3_interac_box_green <- map_dfr(POPs_group_sd_finnish, function(expl) {
+  
+  formula_finnish <-                                                             # set the formulas
+    as.formula(paste("surv_obj_finnish ~", expl, "*box_green +",  
+                     paste(covariates_finnish, collapse = " + ")))
+  
+  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()  # run cox model
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    study = "Finnish", 
+    model = "adjusted", 
+    study_design = "interac green", 
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                       # remove the covariates results 
+})
+
+results_sensi3 <-
+  bind_rows(
+    sensi3_interac_baseline_age,
+    sensi3_interac_follow_up,
+    sensi3_interac_box_orange,
+    sensi3_interac_box_purple,
+    sensi3_interac_box_green) |>
+  mutate(
+    HR = exp(coef),
+    lower_CI = exp(coef - 1.96 * se),
+    upper_CI = exp(coef + 1.96 * se)) |>
+  mutate(
+    explanatory = gsub("_sd", "", explanatory),
+    HR = as.numeric(sprintf("%.1f", HR)),
+    lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
+    upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
+    `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
+    `p-value_raw` = `p-value`,
+    `p-value_shape` = ifelse(`p-value_raw` < 0.05, "p-value<0.05", "p-value≥0.05"),
+    `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")),
+    `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
+  select(
+    study, model, study_design, explanatory, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`,
+    lower_CI,  upper_CI)
+
+rm(
+  sensi3_interac_baseline_age,
+  sensi3_interac_follow_up,
+  sensi3_interac_box_orange,
+  sensi3_interac_box_purple,
+  sensi3_interac_box_green)
+
+
+POPs_sd_ALS_figure_sensi3 <-
+  results_sensi3 |>
+  mutate(
+    explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
+    explanatory = fct_rev(explanatory),
+    explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |>
+  arrange(explanatory) |>
+  ggplot(aes(
+    x = explanatory,
+    y = HR,
+    ymin = lower_CI,
+    ymax = upper_CI,
+    color = `p-value_shape`)) +
+  geom_pointrange(position = position_dodge(width = 0.5), size = 0.5) +
+  geom_hline(yintercept = 1,
+             linetype = "dashed",
+             color = "black") +                        # , scales = "free_x"
+  scale_color_manual(values = c(
+    "p-value<0.05" = "red",
+    "p-value≥0.05" = "black")) +
+  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
+  theme_lucid() +
+  theme(
+    strip.text = element_text(face = "bold"),
+    legend.position = "bottom",
+    strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip() +
+  facet_grid( ~ study_design)
   
 # Tables and figures ----
 ## Danish ----
