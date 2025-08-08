@@ -2450,8 +2450,7 @@ rm(POPs_group_bis, POPs_group_quart_bis, POPs_group_sd_bis, bdd_cases_tot,
    model2_cox_sd_sensi0, model2_cox_sd_sensi0_red_purple, model2_cox_sd_sensi0_red_green, model2_cox_sd_sensi0_red_orange, 
    model2_cox_sd_sensi1, model2_cox_sd_sensi1_red_purple, model2_cox_sd_sensi1_red_green, model2_cox_sd_sensi1_red_orange, 
    model2_cox_sd_sensi2, model2_cox_sd_sensi2_red_purple, model2_cox_sd_sensi2_red_green, model2_cox_sd_sensi2_red_orange, 
-   model2_cox_sd_sensi0_sauf_MFH, model2_cox_sd_sensi1_interac, model2_cox_sd_sensi1_sauf_MFH, model2_cox_sd_sensi2_sauf_MFH
-   )
+   model2_cox_sd_sensi0_sauf_MFH, model2_cox_sd_sensi1_interac, model2_cox_sd_sensi1_sauf_MFH, model2_cox_sd_sensi2_sauf_MFH)
 
 POPs_group_bis <- setdiff(POPs_group_sd, c("PCB_4_sd", 'ΣPBDE_sd'))
 pollutant_labels_bis <- set_names(
@@ -2844,14 +2843,14 @@ POPs_sd_ALS_figure_sensi2_finnish_green <-
   coord_flip() +
   facet_grid( ~ box_adj)
 
-# sensitivity analysis 3 - age at baseline as interaction term in the finnish cohort ----
+# Sensitivity analysis 3 - age at baseline as interaction term in the finnish cohort ----
 sensi3_interac_baseline_age <- map_dfr(POPs_group_sd_finnish, function(expl) {
   
   formula_finnish <-                                                             # set the formulas
     as.formula(paste("surv_obj_finnish ~", expl, "*baseline_age +",  
                      paste(covariates_finnish, collapse = " + ")))
   
-  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()  # run cox model
+  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()# run cox model
   coefs <- model_summary$coefficients
   tibble(                                                                       # creation of a table of results
     study = "Finnish", 
@@ -2862,7 +2861,7 @@ sensi3_interac_baseline_age <- map_dfr(POPs_group_sd_finnish, function(expl) {
     coef = coefs[, "coef"],
     se = coefs[, "se(coef)"], 
     `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results 
+    filter(str_starts(term, explanatory) | term == "baseline_age")              # remove the covariates results 
 })
 
 sensi3_interac_follow_up <- map_dfr(POPs_group_sd_finnish, function(expl) {
@@ -2871,7 +2870,7 @@ sensi3_interac_follow_up <- map_dfr(POPs_group_sd_finnish, function(expl) {
     as.formula(paste("surv_obj_finnish ~", expl, "*follow_up +",  
                      paste(covariates_finnish, collapse = " + ")))
   
-  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()  # run cox model
+  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()# run cox model
   coefs <- model_summary$coefficients
   tibble(                                                                       # creation of a table of results
     study = "Finnish", 
@@ -2882,7 +2881,7 @@ sensi3_interac_follow_up <- map_dfr(POPs_group_sd_finnish, function(expl) {
     coef = coefs[, "coef"],
     se = coefs[, "se(coef)"], 
     `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results 
+    filter(str_starts(term, explanatory) | term == "follow_up")                 # remove the covariates results 
 })
 
 sensi3_interac_box_orange <- map_dfr(POPs_group_sd_finnish, function(expl) {
@@ -2891,7 +2890,7 @@ sensi3_interac_box_orange <- map_dfr(POPs_group_sd_finnish, function(expl) {
     as.formula(paste("surv_obj_finnish ~", expl, "*box_orange +",  
                      paste(covariates_finnish, collapse = " + ")))
   
-  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()  # run cox model
+  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()# run cox model
   coefs <- model_summary$coefficients
   tibble(                                                                       # creation of a table of results
     study = "Finnish", 
@@ -2902,7 +2901,7 @@ sensi3_interac_box_orange <- map_dfr(POPs_group_sd_finnish, function(expl) {
     coef = coefs[, "coef"],
     se = coefs[, "se(coef)"], 
     `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results 
+    filter(str_starts(term, explanatory) | term == "box_orangeout")             # remove the covariates results 
 })
 
 sensi3_interac_box_purple <- map_dfr(POPs_group_sd_finnish, function(expl) {
@@ -2911,7 +2910,7 @@ sensi3_interac_box_purple <- map_dfr(POPs_group_sd_finnish, function(expl) {
     as.formula(paste("surv_obj_finnish ~", expl, "*box_purple +",  
                      paste(covariates_finnish, collapse = " + ")))
   
-  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()  # run cox model
+  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()# run cox model
   coefs <- model_summary$coefficients
   tibble(                                                                       # creation of a table of results
     study = "Finnish", 
@@ -2922,7 +2921,7 @@ sensi3_interac_box_purple <- map_dfr(POPs_group_sd_finnish, function(expl) {
     coef = coefs[, "coef"],
     se = coefs[, "se(coef)"], 
     `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results 
+    filter(str_starts(term, explanatory) | term == "box_purpleout")             # remove the covariates results 
 })
 
 
@@ -2932,7 +2931,7 @@ sensi3_interac_box_green <- map_dfr(POPs_group_sd_finnish, function(expl) {
     as.formula(paste("surv_obj_finnish ~", expl, "*box_green +",  
                      paste(covariates_finnish, collapse = " + ")))
   
-  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()  # run cox model
+  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()# run cox model
   coefs <- model_summary$coefficients
   tibble(                                                                       # creation of a table of results
     study = "Finnish", 
@@ -2943,7 +2942,7 @@ sensi3_interac_box_green <- map_dfr(POPs_group_sd_finnish, function(expl) {
     coef = coefs[, "coef"],
     se = coefs[, "se(coef)"], 
     `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results 
+    filter(str_starts(term, explanatory) | term == "box_greenout")              # remove the covariates results 
 })
 
 results_sensi3 <-
@@ -2971,20 +2970,197 @@ results_sensi3 <-
     study, model, study_design, explanatory, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`,
     lower_CI,  upper_CI)
 
-rm(
-  sensi3_interac_baseline_age,
+rm(sensi3_interac_baseline_age,
   sensi3_interac_follow_up,
   sensi3_interac_box_orange,
   sensi3_interac_box_purple,
   sensi3_interac_box_green)
 
-
-POPs_sd_ALS_figure_sensi3 <-
+POPs_sd_ALS_table_sensi3 <- 
   results_sensi3 |>
+  filter(study == "Finnish") |>
+  select(study_design, explanatory, term, HR, "95% CI", "p-value_raw") |>
+  mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish), 
+         term = term |>
+           str_replace_all(c(
+             "baseline_age" = "Baseline age",
+             "follow_up" = "Follow-up",
+             "box_orangeout" = "Out of the orange box",
+             "box_purpleout" = "Out of the purple box",
+             "box_greenout" = "Out of the green box", 
+             "_sd" = "")) |>
+           str_replace_all(setNames(names(POPs_group_labels_finnish), POPs_group_labels_finnish)), 
+         study_design = fct_recode(study_design, 
+                                   "Interaction with baseline age (continuous)" = "interac baseline age continuous",
+                                   "Interaction with follow up (continuous)" = "interac follow up continuous",
+                                   "Interaction with baseline age (categorical)" = "interac green",
+                                   "Interaction with both baseline age and follow-up duration (categorical)" = "interac orange",
+                                   "Interaction with follow-up (categorical)" = "interac purple"), 
+         `p-value` = if_else(sprintf("%.2f", `p-value_raw`) == "0.00", "<0.01", sprintf("%.2f", `p-value_raw`))) |> 
+  flextable(col_keys = c("study_design", "explanatory", "term",  "HR", "95% CI", "p-value")) |>
+  add_footer_lines(
+    "1All models are adjusted for age at diagnosis, sex, smoking, BMI and marital status. 
+  2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease plasma concentration of POPs.
+  3CI: Confidence interval.") |>
+  add_header(
+    "study_design" = "Study design",
+    "explanatory" = "Exposures", 
+    "term" = "Term") |>
+  merge_h(part = "header") |>
+  merge_v(j = "explanatory") |>
+  merge_v(j = "study_design") |>
+  theme_vanilla() |>
+  bold(j = "explanatory", part = "body") |>
+  bold(j = "study_design", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  merge_at(j = "term", part = "header") |>
+  merge_at(j = "study_design", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")|> 
+  color(i = ~ `p-value_raw` < 0.05, color = "red", part = "body")
+
+# Sensitivity analysis 4 - effects of survival duration among the Danish population ----
+## justification ----
+bdd_cases_tot |>
+  select(study_2cat, follow_up_death) |>
+  tbl_summary(by = study_2cat)
+
+plot_follow_up_death <- ggplot(bdd_cases_tot, aes(x = "", y = follow_up_death)) +
+  geom_violin(fill = "gray90", color = "gray50", width = 1) +
+  geom_boxplot(width = 0.1, outlier.shape = NA, fill = NA, color = "black") +
+  geom_jitter(aes(color = study), width = 0.2, alpha = 0.6, size = 1.8) +
+  scale_color_brewer(palette = "Dark2") +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        plot.title = element_text(hjust = 0.5)) +
+  labs(x = NULL, y = "Follow-up from diagnosis to death or end of study (months)", title = "Distribution of the duration\nbetween diagnosis and death\nor end fo the study")
+
+plot_diagnosis_age <- ggplot(bdd_cases_tot, aes(x = "", y = diagnosis_age)) +
+  geom_violin(fill = "gray90", color = "gray50", width = 1) +
+  geom_boxplot(width = 0.1, outlier.shape = NA, fill = NA, color = "black") +
+  geom_jitter(aes(color = study), width = 0.2, alpha = 0.6, size = 1.8) +
+  scale_color_brewer(palette = "Dark2") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(x = NULL, y = "Age at diagnosis (years)", title = "Distribution of the subjects \nage at diagnosis")
+
+plot_diagnosis_follow_up_death <- 
+  ggplot(bdd_cases_tot) +
+  aes(x = diagnosis_age, y = follow_up_death, colour = study) +
+  geom_point(alpha = 0.6) +
+  scale_color_brewer(palette = "Dark2") +
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  geom_rect(aes(xmin = 43, xmax = 93, ymin = 0, ymax = 24),
+            fill = NA, color = "darkorchid", linetype = "dashed", linewidth = 1) +
+  annotate("text", x = 45, y = 24, label = "n=85 (51%)",
+           hjust = 0, vjust = -0.5, size = 5, color = "darkorchid") +
+  
+  labs(x = "Age at diagnosis (years)", 
+       y = "Duration between diagnosis and \ndeath or end of study (months)")
+
+plot_justif_sensi4 <- (plot_follow_up_death + plot_diagnosis_age)/plot_diagnosis_follow_up_death
+
+rm(plot_follow_up_death, plot_diagnosis_age, plot_diagnosis_follow_up_death)
+
+bdd_cases_danish <- 
+  bdd_cases_danish |>
+  mutate(follow_up_death_cat = ifelse(follow_up_death>23, "survival ≥ 24 months", "survival <  24 months"))
+
+bdd_cases_danish |> select(follow_up_death_cat) |> tbl_summary()
+
+model2_cox_sd_danish_sensi4_in <- map_dfr(POPs_group_sd, function(expl) {
+  
+  bdd_cases_danish <- 
+    bdd_cases_danish |> 
+    mutate(follow_up_death_cat = ifelse(follow_up_death>23, "survival ≥ 24 months", "survival <  24 months")) |>
+    filter(follow_up_death_cat == "survival <  24 months")
+  
+  surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,                # set the outcomes
+                          event = bdd_cases_danish$status_death)
+  
+  formula_danish <-                                                             # set the formulas
+    as.formula(paste("surv_obj_danish ~", expl, "+",  
+                     paste(covariates_danish, collapse = " + ")))
+  
+  model_summary <- coxph(formula_danish, data = bdd_cases_danish) |> summary()  # run cox model
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    study = "Danish", 
+    model = "adjusted", 
+    study_design = "stratified to survival duration <  24 months (n=85, 51%)",
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                       # remove the covariates results 
+})
+
+
+model2_cox_sd_danish_sensi4_out <- map_dfr(POPs_group_sd, function(expl) {
+  
+  bdd_cases_danish <- 
+    bdd_cases_danish |> 
+    mutate(follow_up_death_cat = ifelse(follow_up_death>23, "survival ≥ 24 months", "survival <  24 months")) |>
+    filter(follow_up_death_cat == "survival ≥ 24 months")
+  
+  surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,                # set the outcomes
+                          event = bdd_cases_danish$status_death)
+  
+  formula_danish <-                                                             # set the formulas
+    as.formula(paste("surv_obj_danish ~", expl, "+",  
+                     paste(covariates_danish, collapse = " + ")))
+  
+  model_summary <- coxph(formula_danish, data = bdd_cases_danish) |> summary()  # run cox model
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    study = "Danish", 
+    model = "adjusted", 
+    study_design = "stratified to survival duration  ≥ 24 months (n=81, 49%)",
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                       # remove the covariates results 
+})
+
+
+results_sensi4 <-
+  bind_rows(
+    model2_cox_sd_danish_sensi4_in,
+    model2_cox_sd_danish_sensi4_out) |>
   mutate(
-    explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
+    HR = exp(coef),
+    lower_CI = exp(coef - 1.96 * se),
+    upper_CI = exp(coef + 1.96 * se)) |>
+  mutate(
+    explanatory = gsub("_sd", "", explanatory),
+    HR = as.numeric(sprintf("%.1f", HR)),
+    lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
+    upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
+    `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
+    `p-value_raw` = `p-value`,
+    `p-value_shape` = ifelse(`p-value_raw` < 0.05, "p-value<0.05", "p-value≥0.05"),
+    `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")),
+    `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
+  select(
+    study, model, study_design, explanatory, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`,
+    lower_CI,  upper_CI)
+
+rm(model2_cox_sd_danish_sensi4_in,
+  model2_cox_sd_danish_sensi4_out)
+
+POPs_sd_ALS_figure_sensi4_danish <-
+  results_sensi4 |>
+  mutate(
+    explanatory = factor(explanatory, levels = POPs_group_labels),
     explanatory = fct_rev(explanatory),
-    explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |>
+    explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
   arrange(explanatory) |>
   ggplot(aes(
     x = explanatory,
@@ -3007,7 +3183,7 @@ POPs_sd_ALS_figure_sensi3 <-
     strip.text.y = element_text(hjust = 0.5)) +
   coord_flip() +
   facet_grid( ~ study_design)
-  
+
 # Tables and figures ----
 ## Danish ----
 ### table covariates - als survival ----
@@ -3761,7 +3937,13 @@ results_POPs_ALS_survival <-
          results_sensi2 = results_sensi2, 
          POPs_sd_ALS_figure_sensi2_finnish_orange = POPs_sd_ALS_figure_sensi2_finnish_orange, 
          POPs_sd_ALS_figure_sensi2_finnish_purple = POPs_sd_ALS_figure_sensi2_finnish_purple, 
-         POPs_sd_ALS_figure_sensi2_finnish_green = POPs_sd_ALS_figure_sensi2_finnish_green))
+         POPs_sd_ALS_figure_sensi2_finnish_green = POPs_sd_ALS_figure_sensi2_finnish_green), 
+       sensi3 = list(
+         results_sensi3 = results_sensi3, 
+         POPs_sd_ALS_table_sensi3 = POPs_sd_ALS_table_sensi3), 
+       sensi4 = list(
+         results_sensi4 = results_sensi4, 
+         POPs_sd_ALS_figure_sensi4_danish = POPs_sd_ALS_figure_sensi4_danish))
 
 rm(bdd_cases_danish, 
    bdd_cases_finnish, 
@@ -3809,4 +3991,10 @@ rm(bdd_cases_danish,
    results_sensi2, 
    POPs_sd_ALS_figure_sensi2_finnish_orange, 
    POPs_sd_ALS_figure_sensi2_finnish_purple, 
-   POPs_sd_ALS_figure_sensi2_finnish_green)
+   POPs_sd_ALS_figure_sensi2_finnish_green, 
+   
+   results_sensi3, 
+   POPs_sd_ALS_table_sensi3, 
+   
+   results_sensi4, 
+   POPs_sd_ALS_figure_sensi4_danish)

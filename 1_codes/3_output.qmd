@@ -1523,6 +1523,14 @@ results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_purple
 results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_green
 ```
 
+## Sensitivity analyses 3
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi3$POPs_sd_ALS_table_sensi3
+```
+
 # Fatty acids and ALS occurence
 
 ## Danish cohort
