@@ -1512,7 +1512,7 @@ corrplot(results_POPs_ALS_survival$sensi1$POPs_heatmap_cases_group,
          col = rev(COL2(diverging = "RdYlBu")))
 ```
 
-## Sensitivity analyses 2 
+## Sensitivity analyses 2 - effects of baseline age, follow-up duration among the Finnish population (stratified and adjusted analyses)
 ```{r, fig.width=10}
 #| echo: false
 #| message: false
@@ -1523,12 +1523,20 @@ results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_purple
 results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_green
 ```
 
-## Sensitivity analyses 3
+## Sensitivity analyses 3  - effects of baseline age, follow-up duration among the Finnish population (interaction anayses)
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
 results_POPs_ALS_survival$sensi3$POPs_sd_ALS_table_sensi3
+```
+
+## Sensitivity analyses 4 - effects of survival duration among the Danish population 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi4$POPs_sd_ALS_figure_sensi4_danish
 ```
 
 # Fatty acids and ALS occurence
