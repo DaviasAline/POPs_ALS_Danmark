@@ -2444,7 +2444,7 @@ POPs_sd_ALS_figure_sensi1_adjusted_2cat <-
   facet_grid(~study)
 
 
-rm(POPs_group_bis, POPs_group_quart_bis, POPs_group_sd_bis, bdd_cases_tot, 
+rm(POPs_group_bis, POPs_group_quart_bis, POPs_group_sd_bis,  
    bdd_cases_red_purple, bdd_cases_red_green, bdd_cases_red_orange, bdd_cases_tot_sauf_MFH,
    surv_obj_tot, surv_obj_red_purple, surv_obj_red_green, surv_obj_red_orange, surv_obj_tot_sauf_MFH, 
    model2_cox_sd_sensi0, model2_cox_sd_sensi0_red_purple, model2_cox_sd_sensi0_red_green, model2_cox_sd_sensi0_red_orange, 
@@ -3072,6 +3072,7 @@ bdd_cases_danish <-
 
 bdd_cases_danish |> select(follow_up_death_cat) |> tbl_summary()
 
+## analysis ----
 model2_cox_sd_danish_sensi4_in <- map_dfr(POPs_group_sd, function(expl) {
   
   bdd_cases_danish <- 
@@ -3091,7 +3092,7 @@ model2_cox_sd_danish_sensi4_in <- map_dfr(POPs_group_sd, function(expl) {
   tibble(                                                                       # creation of a table of results
     study = "Danish", 
     model = "adjusted", 
-    study_design = "stratified to survival duration <  24 months (n=85, 51%)",
+    study_design = "stratified to survival duration\n<  24 months (n=85, 51%)",
     term = rownames(coefs),
     explanatory = expl, 
     coef = coefs[, "coef"],
@@ -3120,7 +3121,7 @@ model2_cox_sd_danish_sensi4_out <- map_dfr(POPs_group_sd, function(expl) {
   tibble(                                                                       # creation of a table of results
     study = "Danish", 
     model = "adjusted", 
-    study_design = "stratified to survival duration  ≥ 24 months (n=81, 49%)",
+    study_design = "stratified to survival duration\n≥ 24 months (n=81, 49%)",
     term = rownames(coefs),
     explanatory = expl, 
     coef = coefs[, "coef"],
@@ -3155,6 +3156,7 @@ results_sensi4 <-
 rm(model2_cox_sd_danish_sensi4_in,
   model2_cox_sd_danish_sensi4_out)
 
+## figure ----
 POPs_sd_ALS_figure_sensi4_danish <-
   results_sensi4 |>
   mutate(
@@ -3183,6 +3185,168 @@ POPs_sd_ALS_figure_sensi4_danish <-
     strip.text.y = element_text(hjust = 0.5)) +
   coord_flip() +
   facet_grid( ~ study_design)
+
+# Sensitivity analysis 5 - LASSO POPs selection ----
+## data prep ----
+bdd_cases_danish_bis <- bdd_danish |>
+  filter (als == 1) |>
+  filter(follow_up_death>0) |>
+  filter(study == "Danish") |>
+  select(study, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age,
+         bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
+         all_of(POPs_group)) |>
+  mutate(across(all_of(POPs_group), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
+                                             labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) |>
+  mutate(across(all_of(POPs_group),                                             # create cohort and cases specific scaled POPs variables 
+                ~as.numeric(scale(.x)),
+                .names = "{.col}_sd"))  |>
+  replace_with_median(PCB_4, PCB_4_quart) |>
+  replace_with_median(PCB_DL, PCB_DL_quart) |>
+  replace_with_median(PCB_NDL, PCB_NDL_quart) |>
+  replace_with_median(OCP_HCB, OCP_HCB_quart) |>
+  replace_with_median(ΣDDT, ΣDDT_quart) |>
+  replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
+  replace_with_median(Σchlordane, Σchlordane_quart) |>
+  replace_with_median(ΣPBDE, ΣPBDE_quart) |>
+  mutate(sex = fct_relevel(sex, "Male", "Female"), 
+         smoking_2cat_i = fct_relevel(smoking_2cat_i, "Ever", "Never"), 
+         marital_status_2cat_i = fct_relevel(marital_status_2cat_i, "Married/cohabit", "Other"))
+
+POPs_group_bis <- setdiff(POPs_group, "PCB_4")     
+
+X_matrix <- model.matrix(~ ., data = bdd_cases_danish_bis[, c(covariates_danish, POPs_group_bis)])[, -1] 
+
+penalty_factor <-                                                               # création d'un penalty factor pour forcer le modele lasso à inclure les covariables dans le modele 
+  ifelse(colnames(X_matrix) %in% 
+           colnames(model.matrix(~ ., data = bdd_cases_danish_bis[, covariates_danish])[, -1]), 
+         0, 1)
+
+## analysis ----
+set.seed(1996)
+cv_fit_covar_forced <- cv.glmnet(                                               # lasso + cross validation to choose the lamda parameter
+  x = X_matrix,                                                                 # matrice of explanatory variables 
+  y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
+  family = "cox",                                                               # cox regression 
+  standardize = TRUE,                                                           # standardize is a logical flag for x variable standardization prior to fitting the model sequence. The coefficients are always returned on the original scale. 
+  alpha = 1,                                                                    # alpha is for the elastic net mixing parameter 𝛼, with range 𝛼∈[0,1]. 𝛼=1 is lasso regression (default) and 𝛼=0 is ridge regression.
+  type.measure = "C",
+  nfolds = 5,                                                                   # number of folds for the cross validation process. Default is 10. I chose 5 because sample size is small
+  penalty.factor = penalty_factor)                                              # pre-set penalty factor because we want to force the model to select at least the covariates
+
+set.seed(1996)
+cv_fit <- cv.glmnet(                                                            # lasso + cross validation to choose the best lambda parameter
+  x = X_matrix,                                                                 # matrice of explanatory variables 
+  y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
+  family = "cox",                                                               # cox regression 
+  standardize = TRUE,                                                           # standardize is a logical flag for x variable standardization prior to fitting the model sequence. The coefficients are always returned on the original scale.
+  alpha = 1,                                                                    # alpha is for the elastic net mixing parameter 𝛼, with range 𝛼∈[0,1]. 𝛼=1 is lasso regression (default) and 𝛼=0 is ridge regression.
+  type.measure = "C",
+  nfolds = 5,                                                                   # number of folds for the cross validation process. Default is 10. I chose 5 because sample size is small
+  # penalty.factor = penalty_factor                                             # pre-set penalty factor because we want to force the model to select at least the covariates
+)
+plot(cv_fit)
+coef(cv_fit, s = "lambda.min")  
+coef(cv_fit, s = "lambda.1se")  
+
+plot(cv_fit_covar_forced)
+coef(cv_fit_covar_forced, s = "lambda.min")  
+coef(cv_fit_covar_forced, s = "lambda.1se")
+rm(bdd_cases_danish_bis, POPs_group_bis, X_matrix, penalty_factor)
+
+## new copollutant models with selected POPs ----
+POPs_group_sd_bis <- c("OCP_HCB_sd", "OCP_β_HCH_sd", "Σchlordane_sd", "ΣPBDE_sd")  # selected POPs by LASSO                    
+pollutant_labels_bis <- set_names(c("HCB", "β-HCH", "Σchlordane", "ΣPBDE"), POPs_group_sd_bis)
+
+formula_danish <-                                                               # set the formulas  
+  as.formula(paste("Surv(follow_up_death, status_death) ~",   
+                   paste(c(POPs_group_sd_bis, c("sex", "diagnosis_age")), collapse = " + ")))
+
+model_summary <- 
+  coxph(formula_danish, data = bdd_cases_danish) |> summary() 
+coefs <- model_summary$coefficients
+model3_cox_sd_lasso_restricted_covar_danish <- tibble(                          # creation of a table of results
+  study = "Danish", 
+  model = "Restricted covariates", 
+  term = rownames(coefs),
+  explanatory = rownames(coefs),
+  coef = coefs[, "coef"],
+  se = coefs[, "se(coef)"], 
+  `p-value` = coefs[, "Pr(>|z|)"]) |>
+  filter(str_detect(term, "_sd"))
+
+formula_danish <-                                                               # set the formulas  
+  as.formula(paste("Surv(follow_up_death, status_death) ~",   
+                   paste(c(POPs_group_sd_bis, covariates_danish), collapse = " + ")))
+
+model_summary <- 
+  coxph(formula_danish, data = bdd_cases_danish) |> summary() 
+coefs <- model_summary$coefficients
+model3_cox_sd_lasso_full_covar_danish <- tibble(                                # creation of a table of results
+  study = "Danish", 
+  model = "Full covariates", 
+  term = rownames(coefs),
+  explanatory = rownames(coefs),
+  coef = coefs[, "coef"],
+  se = coefs[, "se(coef)"], 
+  `p-value` = coefs[, "Pr(>|z|)"]) |>
+  filter(str_detect(term, "_sd"))
+
+results_sensi5 <-
+  bind_rows(
+    model3_cox_sd_lasso_restricted_covar_danish,
+    model3_cox_sd_lasso_full_covar_danish) |>
+  mutate(
+    HR = exp(coef),
+    lower_CI = exp(coef - 1.96 * se),
+    upper_CI = exp(coef + 1.96 * se)) |>
+  mutate(
+    explanatory = gsub("_sd", "", explanatory),
+    HR = as.numeric(sprintf("%.1f", HR)),
+    lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
+    upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
+    `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
+    `p-value_raw` = `p-value`,
+    `p-value_shape` = ifelse(`p-value_raw` < 0.05, "p-value<0.05", "p-value≥0.05"),
+    `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")),
+    `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
+  select(
+    study, model, explanatory, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`,
+    lower_CI,  upper_CI)
+
+rm(POPs_group_sd_bis, pollutant_labels_bis, formula_danish, model_summary, coefs, 
+   model3_cox_sd_lasso_restricted_covar_danish,
+   model3_cox_sd_lasso_full_covar_danish)
+
+POPs_sd_ALS_figure_sensi5_danish <-
+  results_sensi5 |>
+  mutate(
+    explanatory = factor(explanatory, levels = POPs_group_labels),
+    explanatory = fct_rev(explanatory),
+    explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
+  arrange(explanatory) |>
+  ggplot(aes(
+    x = explanatory,
+    y = HR,
+    ymin = lower_CI,
+    ymax = upper_CI,
+    color = `p-value_shape`)) +
+  geom_pointrange(position = position_dodge(width = 0.5), size = 0.5) +
+  geom_hline(yintercept = 1,
+             linetype = "dashed",
+             color = "black") +                        # , scales = "free_x"
+  scale_color_manual(values = c(
+    "p-value<0.05" = "red",
+    "p-value≥0.05" = "black")) +
+  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
+  theme_lucid() +
+  theme(
+    strip.text = element_text(face = "bold"),
+    legend.position = "bottom",
+    strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip() +
+  facet_grid( ~ model)
+
 
 # Tables and figures ----
 ## Danish ----
@@ -3942,8 +4106,13 @@ results_POPs_ALS_survival <-
          results_sensi3 = results_sensi3, 
          POPs_sd_ALS_table_sensi3 = POPs_sd_ALS_table_sensi3), 
        sensi4 = list(
+         plot_justif_sensi4 = plot_justif_sensi4, 
          results_sensi4 = results_sensi4, 
-         POPs_sd_ALS_figure_sensi4_danish = POPs_sd_ALS_figure_sensi4_danish))
+         POPs_sd_ALS_figure_sensi4_danish = POPs_sd_ALS_figure_sensi4_danish), 
+       sensi5 = list(results_sensi5 = results_sensi5, 
+                     cv_fit = cv_fit, 
+                     cv_fit_covar_forced = cv_fit_covar_forced, 
+                     POPs_sd_ALS_figure_sensi5_danish = POPs_sd_ALS_figure_sensi5_danish))
 
 rm(bdd_cases_danish, 
    bdd_cases_finnish, 
@@ -3997,4 +4166,10 @@ rm(bdd_cases_danish,
    POPs_sd_ALS_table_sensi3, 
    
    results_sensi4, 
-   POPs_sd_ALS_figure_sensi4_danish)
+   plot_justif_sensi4, 
+   POPs_sd_ALS_figure_sensi4_danish, 
+   
+   results_sensi5, 
+   cv_fit, 
+   cv_fit_covar_forced, 
+   POPs_sd_ALS_figure_sensi5_danish)

@@ -46,13 +46,19 @@ bdd_danish_proteomic_wide <- bdd_danish_proteomic|>
     values_from = NPX) |>
   rename(code = SampleID)
 
-bdd_danish_EV <- read_excel("/Volumes/shared/EOME/Weisskopf/POPs-ALS/Data/Danish EPIC data/20250527 MACSPLEX all log10FC values.xlsx")
+bdd_danish_EV <- 
+  read_excel("/Volumes/shared/EOME/Weisskopf/POPs-ALS/Data/Danish EPIC data/20250527 MACSPLEX all log10FC values.xlsx") |>
+  select(-filename, -BOX, -POSITION, -SAMPLE) |>
+  rename_with(~ ifelse(.x %in% c("SET", "CODE"), .x, paste0("ev_", .x))) |>
+  rename(code = CODE, saet = SET) |>
+  mutate(code = as.character(code))
 
 bdd_danish <- left_join(bdd_danish, bdd_danish_POPs, by = "code")               # merging all the different datasets for the danish data
 bdd_danish <- left_join(bdd_danish, bdd_danish_fattyacids, by = "code")
 bdd_danish <- left_join(bdd_danish, bdd_danish_lipids, by = "Barcode")
 bdd_danish <- left_join(bdd_danish, bdd_danish_proteomic_wide, by = "code")
-rm(bdd_danish_POPs, bdd_danish_lipids, bdd_danish_fattyacids, bdd_danish_proteomic_wide)
+bdd_danish <- left_join(bdd_danish, bdd_danish_EV, by = c("code", "saet"))
+rm(bdd_danish_POPs, bdd_danish_lipids, bdd_danish_fattyacids, bdd_danish_proteomic_wide, bdd_danish_EV)
 
 # bdd_danish |> filter(saet == 72) |> View()                           
 bdd_danish <- bdd_danish|> filter(!code %in% c("208", "209", "210"))        # we decided to remove match 72 because the controls doesn't match in term of sex and age with the case
@@ -134,7 +140,7 @@ bdd_danish <- bdd_danish |>
          birth_date = fsdato, baseline_date = mdato,                            # important dates
          als_date = als_ddat, death_date = DEATH_DATE,                          
          sex, 
-         marital_status = civil,                                           # important metadata
+         marital_status = civil,                                                # important metadata
          high_educ = HQJ_SKO, medium_educ = MEL_SKO, low_educ = LAV_SKO,        # education                          
          alcohol = alko, smoking = rygning,                                     # alcohol and smoking 
          bmi, heart_blood_clot = S25A01N, brain_blood_clot = S25C01N,           # important health information 
@@ -361,6 +367,7 @@ bdd_finnish  <-
 
 
 # vector creation ----
+## POPs ----
 POPs <- bdd_danish |> select(contains("PCB_"), contains("OCP_"), contains("PBDE_")) |> colnames()
 POPs_quart <- paste0(POPs, "_quart")
 
@@ -391,23 +398,27 @@ POPs_included <- bdd_danish |> select(all_of(POPs)) |> select(-OCP_PeCB, - OCP_�
 POPs_included_quart <- paste0(POPs_included, "_quart")
 POPs_included_outlier <- paste0(POPs_included, "_outlier")
 
-fattyacids <- bdd_danish |> 
-  select(contains("_sat"), contains("_ω9"), contains("_ω7"), contains("_ω6"), contains("_ω3")) |> 
-  colnames()
-fattyacids <- c("pufas", "pufas_ω9", "pufas_ω7", "pufas_ω6", "pufas_ω3", "ratio_ω6_ω3", fattyacids)
-explanatory_raw <- c("pufas", "pufas_ω9", "pufas_ω7", "pufas_ω6", "pufas_ω3", "ratio_ω6_ω3",
+POPs_finnish <- ifelse(POPs %in% c("PCB_28", "PCB_52", "OCP_PeCB", "OCP_α_HCH", "OCP_γ_HCH", 
+                                   "OCP_oxychlordane", "PBDE_47", "PBDE_99", "PBDE_153"), paste0(POPs, "_raw"), POPs)
+
+## fatty acids ----
+fattyacids_tot <- bdd_danish |> select(contains("_sat"), contains("_ω9"), contains("_ω7"), contains("_ω6"), contains("_ω3")) |> colnames()
+fattyacids_tot <- c("pufas", "pufas_ω9", "pufas_ω7", "pufas_ω6", "pufas_ω3", "ratio_ω6_ω3", fattyacids_tot)
+fattyacids_raw <- c("pufas", "pufas_ω9", "pufas_ω7", "pufas_ω6", "pufas_ω3", "ratio_ω6_ω3",
                  "rumenic_acid_ω6", "linoleic_acid_ω6", "dihomo_γ_linolenic_acid_ω6", "arachidonic_acid_ω6", "adrenic_acid_ω6",
                  "α_linolenic_acid_ω3", "timnodonic_acid_ω3", "clupanodonic_acid_ω3", "cervonic_acid_ω3") 
-explanatory <- c("pufas_sd", "pufas_ω9_sd", "pufas_ω7_sd", "pufas_ω6_sd", "pufas_ω3_sd", "ratio_ω6_ω3_sd",
+fattyacids <- c("pufas_sd", "pufas_ω9_sd", "pufas_ω7_sd", "pufas_ω6_sd", "pufas_ω3_sd", "ratio_ω6_ω3_sd",
                  "rumenic_acid_ω6_sd", "linoleic_acid_ω6_sd", "dihomo_γ_linolenic_acid_ω6_sd", "arachidonic_acid_ω6_sd", "adrenic_acid_ω6_sd",
                  "α_linolenic_acid_ω3_sd", "timnodonic_acid_ω3_sd", "clupanodonic_acid_ω3_sd", "cervonic_acid_ω3_sd") 
-explanatory_quart <- c("pufas_quart", "pufas_ω9_quart", "pufas_ω7_quart", "pufas_ω6_quart", "pufas_ω3_quart", "ratio_ω6_ω3_quart",
+fattyacids_quart <- c("pufas_quart", "pufas_ω9_quart", "pufas_ω7_quart", "pufas_ω6_quart", "pufas_ω3_quart", "ratio_ω6_ω3_quart",
                  "rumenic_acid_ω6_quart", "linoleic_acid_ω6_quart", "dihomo_γ_linolenic_acid_ω6_quart", "arachidonic_acid_ω6_quart", "adrenic_acid_ω6_quart",
                  "α_linolenic_acid_ω3_quart", "timnodonic_acid_ω3_quart", "clupanodonic_acid_ω3_quart", "cervonic_acid_ω3_quart") 
 
-POPs_finnish <- ifelse(POPs %in% c("PCB_28", "PCB_52", "OCP_PeCB", "OCP_α_HCH", "OCP_γ_HCH", 
-                           "OCP_oxychlordane", "PBDE_47", "PBDE_99", "PBDE_153"), paste0(POPs, "_raw"), POPs)
+## proteomic ----
 proteomic <- bdd_danish |> select(contains("proteomic_")) |> colnames()
+
+## EVs ----
+EVs <- bdd_danish |> select(starts_with("ev_")) |> colnames()
 
 # variable creation ----
 ## danish data ----
@@ -434,6 +445,7 @@ bdd_danish <- bdd_danish |>
                          sample == "300" ~ "1999-07-14",
                          TRUE ~ als_date), 
     als_date = as.Date(als_date), 
+    birth_year = year(birth_date), 
     baseline_age = as.numeric(difftime(baseline_date, birth_date, units = "days")) / 365.25, 
     diagnosis_age = as.numeric(difftime(als_date, birth_date, units = "days")) / 365.25, 
     death_age = as.numeric(difftime(death_date, birth_date, units = "days")) / 365.25, 
@@ -496,10 +508,10 @@ bdd_danish <- bdd_danish |>
     pufas = pufas_ω9 + pufas_ω7 + pufas_ω6 + pufas_ω3, 
     fatty_acids = acids_sat + pufas, 
     ratio_ω6_ω3 = pufas_ω6/pufas_ω3) |>
-  mutate(across(all_of(fattyacids),
+  mutate(across(all_of(fattyacids_tot),
                 ~as.numeric(scale(.x)),
                 .names = "{.col}_sd")) |>
-  mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                           
+  mutate(across(all_of(fattyacids_tot), ~ factor(ntile(.x, 4),                           
                                              labels = c("Q1", "Q2", "Q3", "Q4")),
                 .names = "{.col}_quart"))
 
@@ -534,7 +546,9 @@ bdd_finnish <- bdd_finnish |>
     time_baseline_diagnosis = diagnosis_age - baseline_age, 
     follow_up = (diagnosis_age - baseline_age)*12, 
     time_baseline_death = death_age - baseline_age, 
-    time_diagnosis_death = death_age - diagnosis_age) |>
+    time_diagnosis_death = death_age - diagnosis_age, 
+    baseline_date = ymd(baseline_date), 
+    birth_year = year(baseline_date) - baseline_age) |>
   
   mutate(across(all_of(POPs_finnish), ~ factor(ntile(.x, 4),                    # POP variables creation
                                                labels = c("Q1", "Q2", "Q3", "Q4")),
@@ -577,10 +591,10 @@ bdd_finnish <- bdd_finnish |>
     fatty_acids = acids_sat + pufas, 
     ratio_ω6_ω3 = pufas_ω6/pufas_ω3) |>
   mutate(across(
-    all_of(fattyacids),
+    all_of(fattyacids_tot),
     ~as.numeric(scale(.x)),
     .names = "{.col}_sd"))|>
-  mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                           
+  mutate(across(all_of(fattyacids_tot), ~ factor(ntile(.x, 4),                           
                                              labels = c("Q1", "Q2", "Q3", "Q4")),
                 .names = "{.col}_quart"))
     
@@ -605,7 +619,7 @@ covar_a_imputer <- bdd_danish|>
   colnames()
 
 bdd_danish_i <- bdd_danish|>
-  select(sample, all_of(POPs), all_of(fattyacids), 
+  select(sample, all_of(POPs), all_of(fattyacids_tot), 
          "sex", "baseline_age", "smoking", "smoking_2cat", "bmi", "cholesterol", 
          "marital_status_2cat", "education", als) 
 
@@ -672,7 +686,7 @@ rm(pred, method, bdd_danish_i, bdd_danish_ii, covar_a_imputer)
 bdd_danish_red <- bdd_danish |> 
   select(sample, als, study, match, 
          sex, baseline_age, smoking_2cat_i, bmi, marital_status_2cat_i, education_merged, education_i, cholesterol_i, fS_Kol,
-         baseline_age, death_age, diagnosis_age,  
+         baseline_age, death_age, diagnosis_age, birth_year, 
          time_baseline_diagnosis, time_baseline_death, time_diagnosis_death,
         follow_up,  follow_up_death, status_death, 
          alcohol, smoking, marital_status_2cat, blod_sys, blod_dias, 
@@ -680,9 +694,9 @@ bdd_danish_red <- bdd_danish |>
          all_of(POPs_group), ΣHCH, 
          all_of(POPs_group_quart), 
          all_of(POPs_group_quart_med),
+         all_of(fattyacids_tot), 
          all_of(fattyacids), 
-         all_of(explanatory), 
-         all_of(explanatory_quart)) |>
+         all_of(fattyacids_quart)) |>
   rename(smoking_2cat = smoking_2cat_i, 
          cholesterol = cholesterol_i, 
          education = education_i)
@@ -690,7 +704,7 @@ bdd_danish_red <- bdd_danish |>
 bdd_finnish_red <- bdd_finnish |> 
   select(sample, als, study, match, 
         baseline_age, sex,  smoking, bmi, cholesterol, marital_status, education, education_merged, alcohol, smoking_2cat, marital_status_2cat, blod_sys, blod_dias, 
-         baseline_age, death_age, diagnosis_age, S_Ca, fS_Kol, 
+         baseline_age, death_age, diagnosis_age, S_Ca, fS_Kol, birth_year, 
         follow_up, follow_up_death, status_death, 
         municipality, level_urbanization, thawed, 
         time_baseline_diagnosis, time_baseline_death, time_diagnosis_death,
@@ -698,9 +712,9 @@ bdd_finnish_red <- bdd_finnish |>
          all_of(POPs_group), ΣHCH, 
          all_of(POPs_group_quart), 
          all_of(POPs_group_quart_med),
+         all_of(fattyacids_tot), 
          all_of(fattyacids), 
-         all_of(explanatory), 
-        all_of(explanatory_quart)) |>
+        all_of(fattyacids_quart)) |>
   rename_with(~ gsub("_raw", "", .x)) |>
   mutate(sample = as.character(sample))
 
@@ -708,6 +722,7 @@ bdd <- bind_rows(bdd_danish_red, bdd_finnish_red)
 rm(bdd_danish_red, bdd_finnish_red)
 
 # variable labels ----
+## Danish ----
 var_label(bdd_danish) <- list(
   sample = "Identifcation", 
   match = "match", 
@@ -739,6 +754,7 @@ var_label(bdd_danish) <- list(
   follow_up	= "Length of follow-up from baseline to ALS diagnosis (months)", 
   follow_up_death	= "Length of follow-up from ALS diagnosis (months)", 
   status_death = "Status at end of the follow-up",
+  birth_year = "Birth year", 
   OCP_PeCB = "Pentachlorobenzene (PeCB)",            
   OCP_HCB = "HCB",            
   OCP_α_HCH = "α-HCH",
@@ -817,15 +833,14 @@ var_label(bdd_danish) <- list(
   "pufas_sd" = "Unsaturated acids (%)"
   )
 
-proteomic_labels <- setNames(
-  object = gsub(
-    pattern = "^proteomic_(immun_res|neuro_explo|metabolism)_",
-    replacement = "",
-    x = proteomic),
-  nm = proteomic)
-var_label(bdd_danish)[names(proteomic_labels)] <- proteomic_labels
-rm(proteomic_labels)
+for (var in proteomic) {
+  var_lab(bdd_danish[[var]]) <- gsub("^proteomic_(immun_res|neuro_explo|metabolism)_", "", var)
+}
+for (var in EVs) {
+  var_lab(bdd_danish[[var]]) <- gsub("^ev_", "", var)
+}
 
+## Finnish ----
 var_label(bdd_finnish) <- list(
   sample = "Identifcation", 
   match = "match", 
@@ -851,6 +866,7 @@ var_label(bdd_finnish) <- list(
   follow_up	= "Length of follow-up from baseline to ALS diagnosis (months)", 
   follow_up_death	= "Length of follow-up from ALS diagnosis (months)", 
   status_death = "Status at end of the follow-up",
+  birth_year = "Birth year", 
   OCP_PeCB = "Pentachlorobenzene (PeCB)",            
   OCP_HCB = "HCB",            
   OCP_α_HCH = "α-HCH",
@@ -929,7 +945,7 @@ var_label(bdd_finnish) <- list(
   "pufas_sd" = "Unsaturated acids (%)", 
   "ratio_ω6_ω3_sd" = "ω6/ω3 ratio (%)")
 
-
+## bdd total ----
 var_label(bdd) <- list(
   sample = "Identifcation", 
   als = "Amyotrophic lateral sclerosis",
@@ -958,6 +974,7 @@ var_label(bdd) <- list(
   time_diagnosis_death = "Duration between diagnosis and death (years)",
   follow_up	= "Length of follow-up from baseline to ALS diagnosis (months)", 
   follow_up_death	= "Length of follow-up from ALS diagnosis (months)", 
+  birth_year = "Birth year", 
   status_death = "Status at end of the follow-up",
   OCP_PeCB = "Pentachlorobenzene (PeCB)",            
   OCP_HCB = "HCB",            
@@ -1039,93 +1056,8 @@ var_label(bdd) <- list(
 
 
 # label vectors ----
-fattyacids_labels <- c(
-  "Unsaturated acids (%)" = "pufas", 
-  "ω9 unsaturated acids (%)" = "pufas_ω9", 
-  "ω7 unsaturated acids (%)" = "pufas_ω7", 
-  "ω6 unsaturated acids (%)" = "pufas_ω6", 
-  "ω3 unsaturated acids (%)" = "pufas_ω3", 
-  "ω6/ω3 ratio" = "ratio_ω6_ω3",
-  "Myristic acid (%)" = "myristic_acid_sat", 
-  "Pentadecylic acid (%)" = "pentadecylic_acid_sat", 
-  "Palmitic acid (%)" = "palmitic_acid_sat", 
-  "Margaric acid (%)" = "margaric_acid_sat", 
-  "Stearic acid (%)" = "stearic_acid_sat",           
-  "Arachidic acid (%)" = "arachidic_acid_sat",
-  "Dehenic acid (%)" = "dehenic_acid_sat", 
-  "Lignoceric acid (%)" = "lignoceric_acid_sat", 
-  "dma16x acid ω9 (%)" = "dma16x_acid_ω9", 
-  "ptol2 acid ω9 (%)"  = "ptol2_acid_ω9", 
-  "dma18x acid ω9 (%)" = "dma18x_acid_ω9", 
-  "Oleic acid ω9 (%)" = "oleic_acid_ω9", 
-  "Gadoleic acid ω9 (%)" = "gadoleic_acid_ω9", 
-  "Nervonic acid ω9 (%)" = "nervonic_acid_ω9",
-  "Palmitoleic acid ω7 (%)" = "palmitoleic_acid_ω7", 
-  "i17 acid ω7 (%)" = "i17_acid_ω7", 
-  "ai17 acid ω7 (%)" = "ai17_acid_ω7", 
-  "Vaccenic acid ω7 (%)" = "vaccenic_acid_ω7", 
-  "Rumenic acid ω6 (%)" = "rumenic_acid_ω6", 
-  "Linoleic acid ω6 (%)" = "linoleic_acid_ω6",          
-  "Dihomo-γ-linolenic acid ω6 (%)" = "dihomo_γ_linolenic_acid_ω6", 
-  "Arachidonic acid ω6 (%)" = "arachidonic_acid_ω6", 
-  "Adrenic acid ω6 (%)" = "adrenic_acid_ω6", 
-  "α-linolenic acid (ALA) ω3 (%)" = "α_linolenic_acid_ω3", 
-  "Timnodonic acid (EPA) ω3 (%)" = "timnodonic_acid_ω3", 
-  "Clupanodonic acid (DPA) ω3 (%)" = "clupanodonic_acid_ω3", 
-  "Cervonic acid (DHA) ω3 (%)" = "cervonic_acid_ω3") 
 
-explanatory_labels <- c(  
-  "Unsaturated acids (%)" = "pufas", 
-  "ω9 unsaturated acids (%)" = "pufas_ω9", 
-  "ω7 unsaturated acids (%)" = "pufas_ω7", 
-  "ω6 unsaturated acids (%)" = "pufas_ω6", 
-  "ω3 unsaturated acids (%)" = "pufas_ω3", 
-  "ω6/ω3 ratio" = "ratio_ω6_ω3",
-  "Rumenic acid ω6 (%)" = "rumenic_acid_ω6", 
-  "Linoleic acid ω6 (%)" = "linoleic_acid_ω6",          
-  "Dihomo-γ-linolenic acid ω6 (%)" = "dihomo_γ_linolenic_acid_ω6", 
-  "Arachidonic acid ω6 (%)" = "arachidonic_acid_ω6", 
-  "Adrenic acid ω6 (%)" = "adrenic_acid_ω6", 
-  "α-linolenic acid (ALA) ω3 (%)" = "α_linolenic_acid_ω3", 
-  "Timnodonic acid (EPA) ω3 (%)" = "timnodonic_acid_ω3", 
-  "Clupanodonic acid (DPA) ω3 (%)" = "clupanodonic_acid_ω3", 
-  "Cervonic acid (DHA) ω3 (%)" = "cervonic_acid_ω3")
-
-explanatory_sd_labels <- c(  
-  "Unsaturated acids (%)" = "pufas_sd", 
-  "ω9 unsaturated acids (%)" = "pufas_ω9_sd", 
-  "ω7 unsaturated acids (%)" = "pufas_ω7_sd", 
-  "ω6 unsaturated acids (%)" = "pufas_ω6_sd", 
-  "ω3 unsaturated acids (%)" = "pufas_ω3_sd", 
-  "ω6/ω3 ratio" = "ratio_ω6_ω3_sd",
-  "Rumenic acid ω6 (%)" = "rumenic_acid_ω6_sd", 
-  "Linoleic acid ω6 (%)" = "linoleic_acid_ω6_sd",          
-  "Dihomo-γ-linolenic acid ω6 (%)" = "dihomo_γ_linolenic_acid_ω6_sd", 
-  "Arachidonic acid ω6 (%)" = "arachidonic_acid_ω6_sd", 
-  "Adrenic acid ω6 (%)" = "adrenic_acid_ω6_sd", 
-  "α-linolenic acid (ALA) ω3 (%)" = "α_linolenic_acid_ω3_sd", 
-  "Timnodonic acid (EPA) ω3 (%)" = "timnodonic_acid_ω3_sd", 
-  "Clupanodonic acid (DPA) ω3 (%)" = "clupanodonic_acid_ω3_sd", 
-  "Cervonic acid (DHA) ω3 (%)" = "cervonic_acid_ω3_sd")
-
-
-explanatory_quart_labels <- c(
-  pufas_quart = "unsaturated acids",
-  pufas_ω9_quart = "ω9 unsaturated acids",
-  pufas_ω7_quart = "ω7 unsaturated acids",
-  pufas_ω6_quart = "ω6 unsaturated acids",
-  pufas_ω3_quart = "ω3 unsaturated acids",
-  ratio_ω6_ω3_quart = "ω6/ω3 ratio",
-  rumenic_acid_ω6_quart = "rumenic acid ω6",
-  linoleic_acid_ω6_quart = "linoleic acid ω6",
-  dihomo_γ_linolenic_acid_ω6_quart = "dihomo-γ-linolenic acid ω6",
-  arachidonic_acid_ω6_quart = "arachidonic acid ω6",
-  adrenic_acid_ω6_quart = "adrenic acid ω6",
-  α_linolenic_acid_ω3_quart = "α-linolenic acid (ALA) ω3",
-  timnodonic_acid_ω3_quart = "timnodonic acid (EPA) ω3",
-  clupanodonic_acid_ω3_quart = "clupanodonic acid (DPA) ω3",
-  cervonic_acid_ω3_quart = "cervonic acid (DHA) ω3")
-
+## POPs ----
 POPs_labels <- c(
   "PCB-118" = "PCB_118",
   "PCB-156" = "PCB_156",
@@ -1224,9 +1156,97 @@ POPs_group_quart_labels <- c(
   "ΣPBDE" = "ΣPBDE_quart")
 
 
-proteomic_labels <- setNames(
-  nm = proteomic,
-  object = gsub(
-    pattern = "^proteomic_(immun_res|neuro_explo|metabolism)_",
-    replacement = "",
-    x = proteomic))
+## fatty acids ----
+fattyacids_tot_labels <- c(
+  "Unsaturated acids (%)" = "pufas", 
+  "ω9 unsaturated acids (%)" = "pufas_ω9", 
+  "ω7 unsaturated acids (%)" = "pufas_ω7", 
+  "ω6 unsaturated acids (%)" = "pufas_ω6", 
+  "ω3 unsaturated acids (%)" = "pufas_ω3", 
+  "ω6/ω3 ratio" = "ratio_ω6_ω3",
+  "Myristic acid (%)" = "myristic_acid_sat", 
+  "Pentadecylic acid (%)" = "pentadecylic_acid_sat", 
+  "Palmitic acid (%)" = "palmitic_acid_sat", 
+  "Margaric acid (%)" = "margaric_acid_sat", 
+  "Stearic acid (%)" = "stearic_acid_sat",           
+  "Arachidic acid (%)" = "arachidic_acid_sat",
+  "Dehenic acid (%)" = "dehenic_acid_sat", 
+  "Lignoceric acid (%)" = "lignoceric_acid_sat", 
+  "dma16x acid ω9 (%)" = "dma16x_acid_ω9", 
+  "ptol2 acid ω9 (%)"  = "ptol2_acid_ω9", 
+  "dma18x acid ω9 (%)" = "dma18x_acid_ω9", 
+  "Oleic acid ω9 (%)" = "oleic_acid_ω9", 
+  "Gadoleic acid ω9 (%)" = "gadoleic_acid_ω9", 
+  "Nervonic acid ω9 (%)" = "nervonic_acid_ω9",
+  "Palmitoleic acid ω7 (%)" = "palmitoleic_acid_ω7", 
+  "i17 acid ω7 (%)" = "i17_acid_ω7", 
+  "ai17 acid ω7 (%)" = "ai17_acid_ω7", 
+  "Vaccenic acid ω7 (%)" = "vaccenic_acid_ω7", 
+  "Rumenic acid ω6 (%)" = "rumenic_acid_ω6", 
+  "Linoleic acid ω6 (%)" = "linoleic_acid_ω6",          
+  "Dihomo-γ-linolenic acid ω6 (%)" = "dihomo_γ_linolenic_acid_ω6", 
+  "Arachidonic acid ω6 (%)" = "arachidonic_acid_ω6", 
+  "Adrenic acid ω6 (%)" = "adrenic_acid_ω6", 
+  "α-linolenic acid (ALA) ω3 (%)" = "α_linolenic_acid_ω3", 
+  "Timnodonic acid (EPA) ω3 (%)" = "timnodonic_acid_ω3", 
+  "Clupanodonic acid (DPA) ω3 (%)" = "clupanodonic_acid_ω3", 
+  "Cervonic acid (DHA) ω3 (%)" = "cervonic_acid_ω3") 
+
+fattyacids_labels <- c(  
+  "Unsaturated acids (%)" = "pufas", 
+  "ω9 unsaturated acids (%)" = "pufas_ω9", 
+  "ω7 unsaturated acids (%)" = "pufas_ω7", 
+  "ω6 unsaturated acids (%)" = "pufas_ω6", 
+  "ω3 unsaturated acids (%)" = "pufas_ω3", 
+  "ω6/ω3 ratio" = "ratio_ω6_ω3",
+  "Rumenic acid ω6 (%)" = "rumenic_acid_ω6", 
+  "Linoleic acid ω6 (%)" = "linoleic_acid_ω6",          
+  "Dihomo-γ-linolenic acid ω6 (%)" = "dihomo_γ_linolenic_acid_ω6", 
+  "Arachidonic acid ω6 (%)" = "arachidonic_acid_ω6", 
+  "Adrenic acid ω6 (%)" = "adrenic_acid_ω6", 
+  "α-linolenic acid (ALA) ω3 (%)" = "α_linolenic_acid_ω3", 
+  "Timnodonic acid (EPA) ω3 (%)" = "timnodonic_acid_ω3", 
+  "Clupanodonic acid (DPA) ω3 (%)" = "clupanodonic_acid_ω3", 
+  "Cervonic acid (DHA) ω3 (%)" = "cervonic_acid_ω3")
+
+fattyacids_sd_labels <- c(  
+  "Unsaturated acids (%)" = "pufas_sd", 
+  "ω9 unsaturated acids (%)" = "pufas_ω9_sd", 
+  "ω7 unsaturated acids (%)" = "pufas_ω7_sd", 
+  "ω6 unsaturated acids (%)" = "pufas_ω6_sd", 
+  "ω3 unsaturated acids (%)" = "pufas_ω3_sd", 
+  "ω6/ω3 ratio" = "ratio_ω6_ω3_sd",
+  "Rumenic acid ω6 (%)" = "rumenic_acid_ω6_sd", 
+  "Linoleic acid ω6 (%)" = "linoleic_acid_ω6_sd",          
+  "Dihomo-γ-linolenic acid ω6 (%)" = "dihomo_γ_linolenic_acid_ω6_sd", 
+  "Arachidonic acid ω6 (%)" = "arachidonic_acid_ω6_sd", 
+  "Adrenic acid ω6 (%)" = "adrenic_acid_ω6_sd", 
+  "α-linolenic acid (ALA) ω3 (%)" = "α_linolenic_acid_ω3_sd", 
+  "Timnodonic acid (EPA) ω3 (%)" = "timnodonic_acid_ω3_sd", 
+  "Clupanodonic acid (DPA) ω3 (%)" = "clupanodonic_acid_ω3_sd", 
+  "Cervonic acid (DHA) ω3 (%)" = "cervonic_acid_ω3_sd")
+
+
+fattyacids_quart_labels <- c(
+  pufas_quart = "unsaturated acids",
+  pufas_ω9_quart = "ω9 unsaturated acids",
+  pufas_ω7_quart = "ω7 unsaturated acids",
+  pufas_ω6_quart = "ω6 unsaturated acids",
+  pufas_ω3_quart = "ω3 unsaturated acids",
+  ratio_ω6_ω3_quart = "ω6/ω3 ratio",
+  rumenic_acid_ω6_quart = "rumenic acid ω6",
+  linoleic_acid_ω6_quart = "linoleic acid ω6",
+  dihomo_γ_linolenic_acid_ω6_quart = "dihomo-γ-linolenic acid ω6",
+  arachidonic_acid_ω6_quart = "arachidonic acid ω6",
+  adrenic_acid_ω6_quart = "adrenic acid ω6",
+  α_linolenic_acid_ω3_quart = "α-linolenic acid (ALA) ω3",
+  timnodonic_acid_ω3_quart = "timnodonic acid (EPA) ω3",
+  clupanodonic_acid_ω3_quart = "clupanodonic acid (DPA) ω3",
+  cervonic_acid_ω3_quart = "cervonic acid (DHA) ω3")
+
+## proteomic ----
+proteomic_labels <- setNames(proteomic, gsub("^proteomic_(immun_res|neuro_explo|metabolism)_", "", proteomic))
+## Evs ----
+EVs_labels <- setNames(EVs, gsub("ev_", "", EVs))
+
+

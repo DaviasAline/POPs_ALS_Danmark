@@ -11,7 +11,7 @@ covariates_finnish <- c("marital_status_2cat", 'smoking_2cat', 'bmi', 'cholester
 # Occurrence analyses ----
 ## Danish cohort ----
 ### Base model ----
-model1_sd_danish <- map_dfr(explanatory, function(expl) {                       # map_dfr() met tout dans un seul dataframe par rapport a map() qui renvoit une liste
+model1_sd_danish <- map_dfr(fattyacids, function(expl) {                       # map_dfr() met tout dans un seul dataframe par rapport a map() qui renvoit une liste
   formula <- as.formula(paste("als ~", expl, "+ strata(match)"))
   model <- clogit(formula, data = bdd_danish)
   model_summary <- tidy(model)
@@ -25,7 +25,7 @@ model1_sd_danish <- map_dfr(explanatory, function(expl) {                       
     `p-value` = model_summary$p.value)
 })
 
-model1_quart_danish <- map_dfr(explanatory_quart, function(expl) {              # map_dfr() met tout dans un seul dataframe par rapport a map() qui renvoit une liste
+model1_quart_danish <- map_dfr(fattyacids_quart, function(expl) {              # map_dfr() met tout dans un seul dataframe par rapport a map() qui renvoit une liste
   formula <- as.formula(paste("als ~", expl, "+ strata(match)"))
   model <- clogit(formula, data = bdd_danish)
   model_summary <- tidy(model)
@@ -40,7 +40,7 @@ model1_quart_danish <- map_dfr(explanatory_quart, function(expl) {              
 })
 
 ### Adjusted model ----
-model2_sd_danish <- map_dfr(explanatory, function(expl) {                       # map_dfr() met tout dans un seul dataframe par rapport a map() qui renvoit une liste
+model2_sd_danish <- map_dfr(fattyacids, function(expl) {                       # map_dfr() met tout dans un seul dataframe par rapport a map() qui renvoit une liste
   formula <- as.formula(paste("als ~", expl, "+ strata(match) + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
   model <- clogit(formula, data = bdd_danish)
   model_summary <- tidy(model)
@@ -54,7 +54,7 @@ model2_sd_danish <- map_dfr(explanatory, function(expl) {                       
     `p-value` = model_summary$p.value)
 })
 
-model2_quart_danish <- map_dfr(explanatory_quart, function(expl) {              # map_dfr() met tout dans un seul dataframe par rapport a map() qui renvoit une liste
+model2_quart_danish <- map_dfr(fattyacids_quart, function(expl) {              # map_dfr() met tout dans un seul dataframe par rapport a map() qui renvoit une liste
   formula <- as.formula(paste("als ~", expl, "+ strata(match) + smoking_2cat_i + bmi + cholesterol_i + marital_status_2cat_i + education_i"))
   model <- clogit(formula, data = bdd_danish)
   model_summary <- tidy(model) 
@@ -101,18 +101,18 @@ run_clogit <- function(formula, data) {
 }
 
 ### Base model ----
-model1_sd_finnish <- map_dfr(explanatory, function(expl) {
+model1_sd_finnish <- map_dfr(fattyacids, function(expl) {
   formula <- as.formula(paste("als ~", expl, "+ strata(match)"))                # base formula: matched, not ajstuded
   
   bdd_finnish_FMC <- bdd |>                                                     # set the datasets
     filter(study == "FMC") |>                                                   # cohort selection
-    mutate(across(all_of(fattyacids),                                           # create cohort specific scaled fatty acids variables 
+    mutate(across(all_of(fattyacids_tot),                                           # create cohort specific scaled fatty acids variables 
                   scale,
                   .names = "{.col}_sd"))  
   
   bdd_finnish_FMCF <- bdd |>                                                    # set the datasets
     filter(study == "FMCF") |>                                                  # cohort selection
-    mutate(across(all_of(fattyacids),                                           # create cohort specific scaled fatty acids variables 
+    mutate(across(all_of(fattyacids_tot),                                           # create cohort specific scaled fatty acids variables 
                   scale,
                   .names = "{.col}_sd"))
   
@@ -136,17 +136,17 @@ model1_sd_finnish <- map_dfr(explanatory, function(expl) {
   )
 })
 
-model1_quart_finnish <- map_dfr(explanatory_quart, function(expl) {
+model1_quart_finnish <- map_dfr(fattyacids_quart, function(expl) {
   formula <- as.formula(paste("als ~", expl, "+ strata(match)"))                # base formula: matched, not ajstuded
   
   bdd_finnish_FMC <- bdd |>                                                     
     filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
-    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                    # creation of quartiles cohort specific                      
+    mutate(across(all_of(fattyacids_tot), ~ factor(ntile(.x, 4),                    # creation of quartiles cohort specific                      
                                              labels = c("Q1", "Q2", "Q3", "Q4")),
                 .names = "{.col}_quart")) 
   bdd_finnish_FMCF <- bdd |> 
     filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
-    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                    # creation of quartiles cohort specific    
+    mutate(across(all_of(fattyacids_tot), ~ factor(ntile(.x, 4),                    # creation of quartiles cohort specific    
                                                labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart"))
   
@@ -179,20 +179,20 @@ model1_quart_finnish <- map_dfr(explanatory_quart, function(expl) {
 })
 
 ### Adjusted model ----
-model2_sd_finnish <- map_dfr(explanatory, function(expl) {
+model2_sd_finnish <- map_dfr(fattyacids, function(expl) {
   formula <- as.formula(paste("als ~", expl, "+",                               # adjusted formula: matched and ajstuded
                               paste(covariates_finnish, collapse = " + "), 
                               "+ strata(match)"))
   
   bdd_finnish_FMC <- bdd |>                                                     # set the datasets
     filter(study == "FMC") |>                                                   # cohort selection
-    mutate(across(all_of(fattyacids),                                           # create cohort specific scaled fatty acids variables 
+    mutate(across(all_of(fattyacids_tot),                                           # create cohort specific scaled fatty acids variables 
                   scale,
                   .names = "{.col}_sd"))  
   
   bdd_finnish_FMCF <- bdd |>                                                    # set the datasets
     filter(study == "FMCF") |>                                                  # cohort selection
-    mutate(across(all_of(fattyacids),                                           # create cohort specific scaled fatty acids variables 
+    mutate(across(all_of(fattyacids_tot),                                           # create cohort specific scaled fatty acids variables 
                   scale,
                   .names = "{.col}_sd"))
   
@@ -216,19 +216,19 @@ model2_sd_finnish <- map_dfr(explanatory, function(expl) {
   )
 })
 
-model2_quart_finnish <- map_dfr(explanatory_quart, function(expl) {
+model2_quart_finnish <- map_dfr(fattyacids_quart, function(expl) {
   formula <- as.formula(paste("als ~", expl, "+",                               # adjusted formula: matched and adjusded
                               paste(covariates_finnish, collapse = " + "), 
                               "+ strata(match)"))
   
   bdd_finnish_FMC <- bdd |>                                                     
     filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
-    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                    # creation of quartiles cohort specific                      
+    mutate(across(all_of(fattyacids_tot), ~ factor(ntile(.x, 4),                    # creation of quartiles cohort specific                      
                                                labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart")) 
   bdd_finnish_FMCF <- bdd |> 
     filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
-    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                    # creation of quartiles cohort specific    
+    mutate(across(all_of(fattyacids_tot), ~ factor(ntile(.x, 4),                    # creation of quartiles cohort specific    
                                                labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart"))
   
@@ -308,7 +308,7 @@ run_logit_sensi_Ca <- function(formula, data) {
 }
 
 #### Base model ----
-model1_sd_sensi_ca_finnish <- map_dfr(explanatory, function(expl) {
+model1_sd_sensi_ca_finnish <- map_dfr(fattyacids, function(expl) {
   formula <- as.formula(paste("als ~", expl, "+ sex + baseline_age + municipality + thawed"))         # base formula: matched, not ajstuded
   
   bdd_finnish_1 <- bdd |> filter(study == "FMC") |> filter(S_Ca>2)              # creation of one dataset per finnish cohort
@@ -334,18 +334,18 @@ model1_sd_sensi_ca_finnish <- map_dfr(explanatory, function(expl) {
   )
 })
 
-model1_quart_sensi_ca_finnish <- map_dfr(explanatory_quart, function(expl) {
+model1_quart_sensi_ca_finnish <- map_dfr(fattyacids_quart, function(expl) {
   formula <- as.formula(paste("als ~", expl, "+ + sex + baseline_age + municipality + thawed"))     # base formula: matched, not ajstuded
   
   bdd_finnish_1 <- bdd |> filter(study == "FMC")                                # creation of one dataset per finnish cohort
   bdd_finnish_2 <- bdd |> filter(study == "FMCF")
   
   bdd_finnish_1 <- bdd_finnish_1 |>                                             # creation of quartiles cohort specific 
-    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                           
+    mutate(across(all_of(fattyacids_tot), ~ factor(ntile(.x, 4),                           
                                                labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart")) 
   bdd_finnish_2 <- bdd_finnish_2 |>                                             
-    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                           
+    mutate(across(all_of(fattyacids_tot), ~ factor(ntile(.x, 4),                           
                                                labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart"))
   
@@ -379,7 +379,7 @@ model1_quart_sensi_ca_finnish <- map_dfr(explanatory_quart, function(expl) {
 })
 
 #### Adjusted model ----
-model2_sd_sensi_ca_finnish <- map_dfr(explanatory, function(expl) {
+model2_sd_sensi_ca_finnish <- map_dfr(fattyacids, function(expl) {
   formula <- as.formula(paste("als ~", expl, "+",                               # adjusted formula: matched and ajstuded
                               paste(covariates_finnish, collapse = " + "), 
                               "+ sex + baseline_age + municipality + thawed"))
@@ -407,7 +407,7 @@ model2_sd_sensi_ca_finnish <- map_dfr(explanatory, function(expl) {
   )
 })
 
-model2_quart_sensi_ca_finnish <- map_dfr(explanatory_quart, function(expl) {
+model2_quart_sensi_ca_finnish <- map_dfr(fattyacids_quart, function(expl) {
   formula <- as.formula(paste("als ~", expl, "+",                               # adjusted formula: matched and adjusded
                               paste(covariates_finnish, collapse = " + "), 
                               "+ sex + baseline_age + municipality + thawed"))
@@ -416,11 +416,11 @@ model2_quart_sensi_ca_finnish <- map_dfr(explanatory_quart, function(expl) {
   bdd_finnish_2 <- bdd |> filter(study == "FMCF")
   
   bdd_finnish_1 <- bdd_finnish_1 |>                                             # creation of quartiles cohort specific 
-    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                           
+    mutate(across(all_of(fattyacids_tot), ~ factor(ntile(.x, 4),                           
                                                labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart")) 
   bdd_finnish_2 <- bdd_finnish_2 |>                                             
-    mutate(across(all_of(fattyacids), ~ factor(ntile(.x, 4),                           
+    mutate(across(all_of(fattyacids_tot), ~ factor(ntile(.x, 4),                           
                                                labels = c("Q1", "Q2", "Q3", "Q4")),
                   .names = "{.col}_quart"))
   
@@ -546,7 +546,7 @@ fattyacids_sd_als_table_danish <- main_results_fattyacids_ALS_danish |>
   select(explanatory, contains("base"), contains("adjusted")) |>
   rename("OR" = "OR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
          "OR " = "OR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |>
-  mutate(explanatory = fct_recode(explanatory, !!!explanatory_labels)) |>
+  mutate(explanatory = fct_recode(explanatory, !!!fattyacids_labels)) |>
   flextable() |>
   add_footer_lines(
   "1All models are matched for sex and age. Adjusted models further account for smoking, BMI, serum total cholesterol, marital status, and education. 
@@ -589,8 +589,8 @@ fattyacids_quart_als_table_danish <-
   select(explanatory, term, contains("base"), contains("adjusted")) |>
   rename("OR" = "OR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
          "OR " = "OR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |>
-  mutate(explanatory = factor(explanatory, levels = explanatory_labels), 
-         explanatory = fct_recode(explanatory, !!!explanatory_labels)) |>
+  mutate(explanatory = factor(explanatory, levels = fattyacids_labels), 
+         explanatory = fct_recode(explanatory, !!!fattyacids_labels)) |>
   arrange(explanatory) |>
   flextable() |>
   add_footer_lines(
@@ -619,16 +619,16 @@ rm(quartile1_rows)
 
 ### figure fattyacids description by als ----
 fattyacids_by_als_figure_danish <- bdd_danish |>
-  select(als, all_of(explanatory_raw)) |>
+  select(als, all_of(fattyacids_raw)) |>
   pivot_longer(cols = -als, names_to = "PUFAs", values_to = "Values") |>
   mutate(
     als = as.character(als), 
     als = fct_recode(als, 
                      "Controls" = "0",
                      "Cases" = "1"), 
-    PUFAs = factor(PUFAs, levels = fattyacids_labels),
+    PUFAs = factor(PUFAs, levels = fattyacids_tot_labels),
     PUFAs = fct_rev(PUFAs),
-    PUFAs = fct_recode(PUFAs, !!!fattyacids_labels)) |> 
+    PUFAs = fct_recode(PUFAs, !!!fattyacids_tot_labels)) |> 
   arrange(PUFAs) |>
   ggplot() +
   aes(x = Values, y = PUFAs, fill = als) +
@@ -647,9 +647,9 @@ fattyacids_sd_als_figure_danish <- main_results_fattyacids_ALS_danish |>
                             "Base model" = "base",
                             "Adjusted model" = "adjusted"),
          model = fct_relevel(model, 'Base model', 'Adjusted model'), 
-         explanatory = factor(explanatory, levels = fattyacids_labels),
+         explanatory = factor(explanatory, levels = fattyacids_tot_labels),
          explanatory = fct_rev(explanatory),
-         explanatory = fct_recode(explanatory, !!!fattyacids_labels)) |>
+         explanatory = fct_recode(explanatory, !!!fattyacids_tot_labels)) |>
   arrange(explanatory) |> 
   ggplot(aes(x = explanatory, y = OR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 
@@ -670,8 +670,8 @@ fattyacids_quart_als_figure_danish <- main_results_fattyacids_ALS_danish |>
                             "Base model" = "base",
                             "Adjusted model" = "adjusted"),
          model = fct_relevel(model, 'Base model', 'Adjusted model'), 
-         explanatory = factor(explanatory, levels = fattyacids_labels),
-         explanatory = fct_recode(explanatory, !!!fattyacids_labels), 
+         explanatory = factor(explanatory, levels = fattyacids_tot_labels),
+         explanatory = fct_recode(explanatory, !!!fattyacids_tot_labels), 
          term = fct_rev(term)) |>
   arrange(explanatory) |> 
   ggplot(aes(x = term, y = OR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
@@ -725,7 +725,7 @@ fattyacids_sd_als_table_finnish <- main_results_fattyacids_ALS_finnish |>
   select(explanatory, contains("base"), contains("adjusted")) |>
   rename("OR" = "OR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
          "OR " = "OR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |>
-  mutate(explanatory = fct_recode(explanatory, !!!explanatory_labels)) |> 
+  mutate(explanatory = fct_recode(explanatory, !!!fattyacids_labels)) |> 
   flextable() |>
   add_footer_lines(
     "1All models are matched for age, sex, municipality, and serum freeze-thaw cycles. Adjusted models further account for smoking, BMI, serum total cholesterol and marital status. 
@@ -768,8 +768,8 @@ fattyacids_quart_als_table_finnish <-
   select(explanatory, term, contains("base"), contains("adjusted")) |>
   rename("OR" = "OR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
          "OR " = "OR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |>
-  mutate(explanatory = factor(explanatory, levels = explanatory_labels), 
-         explanatory = fct_recode(explanatory, !!!explanatory_labels)) |>
+  mutate(explanatory = factor(explanatory, levels = fattyacids_labels), 
+         explanatory = fct_recode(explanatory, !!!fattyacids_labels)) |>
   arrange(explanatory) |>
   flextable() |>
   add_footer_lines(
@@ -798,16 +798,16 @@ rm(quartile1_rows)
 
 ### figure fattyacids description by als ----
 fattyacids_by_als_figure_finnish <- bdd_finnish|>
-  select(als, all_of(explanatory_raw)) |>
+  select(als, all_of(fattyacids_raw)) |>
   pivot_longer(cols = -als, names_to = "PUFAs", values_to = "Values") |>
   mutate(
     als = as.character(als), 
     als = fct_recode(als, 
                      "Controls" = "0",
                      "Cases" = "1"), 
-    PUFAs = factor(PUFAs, levels = fattyacids_labels),
+    PUFAs = factor(PUFAs, levels = fattyacids_tot_labels),
     PUFAs = fct_rev(PUFAs),
-    PUFAs = fct_recode(PUFAs, !!!fattyacids_labels)) |> 
+    PUFAs = fct_recode(PUFAs, !!!fattyacids_tot_labels)) |> 
   arrange(PUFAs) |>
   ggplot() +
   aes(x = Values, y = PUFAs, fill = als) +
@@ -827,9 +827,9 @@ fattyacids_sd_als_figure_finnish <- main_results_fattyacids_ALS_finnish |>
                             "Base model" = "base",
                             "Adjusted model" = "adjusted"),
          model = fct_relevel(model, 'Base model', 'Adjusted model'), 
-         explanatory = factor(explanatory, levels = fattyacids_labels),
+         explanatory = factor(explanatory, levels = fattyacids_tot_labels),
          explanatory = fct_rev(explanatory),
-         explanatory = fct_recode(explanatory, !!!fattyacids_labels)) |>
+         explanatory = fct_recode(explanatory, !!!fattyacids_tot_labels)) |>
   arrange(explanatory) |> 
   ggplot(aes(x = explanatory, y = OR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 
@@ -850,8 +850,8 @@ fattyacids_quart_als_figure_finnish <- main_results_fattyacids_ALS_finnish |>
                             "Base model" = "base",
                             "Adjusted model" = "adjusted"),
          model = fct_relevel(model, 'Base model', 'Adjusted model'), 
-         explanatory = factor(explanatory, levels = fattyacids_labels),
-         explanatory = fct_recode(explanatory, !!!fattyacids_labels), 
+         explanatory = factor(explanatory, levels = fattyacids_tot_labels),
+         explanatory = fct_recode(explanatory, !!!fattyacids_tot_labels), 
          term = fct_rev(term)) |>
   arrange(explanatory) |> 
   ggplot(aes(x = term, y = OR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
@@ -875,7 +875,7 @@ fattyacids_sd_als_table_sensi_ca_finnish <- sensi_ca_results_fattyacids_ALS_finn
   select(explanatory, contains("base"), contains("adjusted")) |>
   rename("OR" = "OR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
          "OR " = "OR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |>
-  mutate(explanatory = fct_recode(explanatory, !!!explanatory_labels)) |> 
+  mutate(explanatory = fct_recode(explanatory, !!!fattyacids_labels)) |> 
   flextable() |>
   add_footer_lines(
     "1All models are matched for age, sex, municipality, and serum freeze-thaw cycles. Adjusted models further account for smoking, BMI, serum total cholesterol and marital status. 
@@ -918,8 +918,8 @@ fattyacids_quart_als_table_sensi_ca_finnish <-
   select(explanatory, term, contains("base"), contains("adjusted")) |>
   rename("OR" = "OR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
          "OR " = "OR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |>
-  mutate(explanatory = factor(explanatory, levels = explanatory_labels), 
-         explanatory = fct_recode(explanatory, !!!explanatory_labels)) |>
+  mutate(explanatory = factor(explanatory, levels = fattyacids_labels), 
+         explanatory = fct_recode(explanatory, !!!fattyacids_labels)) |>
   arrange(explanatory) |>
   flextable() |>
   add_footer_lines(
@@ -953,9 +953,9 @@ fattyacids_sd_als_figure_sensi_ca_finnish <- sensi_ca_results_fattyacids_ALS_fin
                             "Base model" = "base",
                             "Adjusted model" = "adjusted"),
          model = fct_relevel(model, 'Base model', 'Adjusted model'), 
-         explanatory = factor(explanatory, levels = fattyacids_labels),
+         explanatory = factor(explanatory, levels = fattyacids_tot_labels),
          explanatory = fct_rev(explanatory),
-         explanatory = fct_recode(explanatory, !!!fattyacids_labels)) |>
+         explanatory = fct_recode(explanatory, !!!fattyacids_tot_labels)) |>
   arrange(explanatory) |> 
   ggplot(aes(x = explanatory, y = OR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 
@@ -976,8 +976,8 @@ fattyacids_quart_als_figure_sensi_ca_finnish <- sensi_ca_results_fattyacids_ALS_
                             "Base model" = "base",
                             "Adjusted model" = "adjusted"),
          model = fct_relevel(model, 'Base model', 'Adjusted model'), 
-         explanatory = factor(explanatory, levels = fattyacids_labels),
-         explanatory = fct_recode(explanatory, !!!fattyacids_labels), 
+         explanatory = factor(explanatory, levels = fattyacids_tot_labels),
+         explanatory = fct_recode(explanatory, !!!fattyacids_tot_labels), 
          term = fct_rev(term)) |>
   arrange(explanatory) |> 
   ggplot(aes(x = term, y = OR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +

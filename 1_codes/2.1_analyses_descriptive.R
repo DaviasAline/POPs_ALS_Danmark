@@ -11,7 +11,7 @@ covar_danish <- bdd_danish|>
     als = fct_recode(als, "Controls" = "0", "Cases" = "1"),
     als = fct_relevel(als, "Cases", "Controls"))|>
   select(
-    als, baseline_age, diagnosis_age, death_age, 
+    als, baseline_age, diagnosis_age, death_age, birth_year, 
     sex, marital_status, education, alcohol, smoking, bmi, cholesterol)|>
   tbl_summary(by = als)|>
   bold_labels()|>
@@ -146,13 +146,13 @@ POPs_heatmap_danish <-
 
 ## fatty acids ----
 fattyacids_table_danish <- 
-  descrip_num(data = bdd_danish, vars = c(fattyacids)) |> 
-  mutate(variable = factor(variable, levels = fattyacids_labels), 
-         variable = fct_recode(variable, !!!fattyacids_labels)) |>
+  descrip_num(data = bdd_danish, vars = c(fattyacids_tot)) |> 
+  mutate(variable = factor(variable, levels = fattyacids_tot_labels), 
+         variable = fct_recode(variable, !!!fattyacids_tot_labels)) |>
   arrange(variable) 
 
 fattyacids_table_danish_by_als <- bdd_danish |>
-  select(als, all_of(fattyacids)) |>
+  select(als, all_of(fattyacids_tot)) |>
   mutate(
     als = as.character(als), 
     als = fct_recode(als, "Controls" = "0", "Cases" = "1"), 
@@ -164,10 +164,10 @@ fattyacids_table_danish_by_als <- bdd_danish |>
   add_p() 
 
 fattyacids_boxplot_danish <- bdd_danish |>
-  select(all_of(fattyacids)) |>
+  select(all_of(fattyacids_tot)) |>
   pivot_longer(cols = everything(), names_to = "fattyacids", values_to = "values") |>
-  mutate(fattyacids = factor(fattyacids, levels = fattyacids_labels), 
-         fattyacids = fct_recode(fattyacids, !!!fattyacids_labels), 
+  mutate(fattyacids = factor(fattyacids, levels = fattyacids_tot_labels), 
+         fattyacids = fct_recode(fattyacids, !!!fattyacids_tot_labels), 
          fattyacids = fct_rev(fattyacids)) |>
   ggplot() +
   aes(x = fattyacids, y = values) +
@@ -180,10 +180,10 @@ fattyacids_boxplot_danish <- bdd_danish |>
   theme_lucid()
 
 fattyacids_boxplot_danish_by_als <- bdd_danish |>
-  select(als, all_of(fattyacids)) |>
+  select(als, all_of(fattyacids_tot)) |>
   pivot_longer(cols = -als, names_to = "fattyacids", values_to = "values") |>
-  mutate(fattyacids = factor(fattyacids, levels = fattyacids_labels), 
-         fattyacids = fct_recode(fattyacids, !!!fattyacids_labels), 
+  mutate(fattyacids = factor(fattyacids, levels = fattyacids_tot_labels), 
+         fattyacids = fct_recode(fattyacids, !!!fattyacids_tot_labels), 
          fattyacids = fct_rev(fattyacids)) |>
   mutate(
     als = as.character(als), 
@@ -201,17 +201,18 @@ fattyacids_boxplot_danish_by_als <- bdd_danish |>
   coord_flip() +
   theme_lucid()
 
-fattyacids_heatmap_danish <- bdd_danish |> select(all_of(fattyacids)) |>
-  rename(!!!fattyacids_labels) 
+fattyacids_heatmap_danish <- bdd_danish |> select(all_of(fattyacids_tot)) |>
+  rename(!!!fattyacids_tot_labels) 
 fattyacids_heatmap_danish <- cor(fattyacids_heatmap_danish, 
                                  use = "pairwise.complete.obs", 
                                  method = "pearson")
 
 POPs_fattyacids_heatmap_danish <- 
-  heatmap_cor_pairwise(fattyacids, POPs, decimal = 1, data = bdd_danish)
+  heatmap_cor_pairwise(fattyacids_tot, POPs, decimal = 1, data = bdd_danish)
 
 ## proteomic ----
-proteomic_table_danish <- descrip_num(data = bdd_danish, vars = proteomic)
+proteomic_table_danish <- descrip_num(data = bdd_danish, vars = proteomic) |>
+  mutate(variable = gsub("^proteomic_(immun_res|neuro_explo|metabolism)_", "", variable))
 
 proteomic_table_danish_by_als <- bdd_danish |>
   select(als, all_of(proteomic)) |>
@@ -222,107 +223,167 @@ proteomic_table_danish_by_als <- bdd_danish |>
   tbl_summary(by = als, 
               digits = all_continuous() ~1) |>
   bold_labels() |>
-  add_overall()
+  add_overall() |>
+  add_p()
 
 proteomic_boxplot_danish <- bdd_danish |>
   select(all_of(proteomic)) |>
-  pivot_longer(cols = everything(), names_to = "Proteomic", values_to = "values") |>
-  mutate(proteomic_group = 
-           case_when(grepl("proteomic_immun_res_", Proteomic) ~ "Immunne response", 
-                     grepl("proteomic_neuro_explo_", Proteomic) ~ "Neurology", 
-                     grepl("proteomic_metabolism_", Proteomic) ~ "Metabolism"),
-         Proteomic = fct_recode(Proteomic, !!!proteomic_labels)) |>
-  arrange(Proteomic) |>
+  remove_var_label() |>
+  pivot_longer(cols = everything(), names_to = "proteomic", values_to = "values") |>
+  mutate(proteomic = factor(proteomic, levels = proteomic_labels),
+         proteomic = fct_recode(proteomic, !!!proteomic_labels),
+         proteomic = fct_rev(proteomic)) |>
+  arrange(proteomic) |>
   ggplot() +
-  aes(x = Proteomic, y = values, color = proteomic_group) +
+  aes(x = proteomic, y = values) +
   geom_boxplot() +
   scale_fill_hue(direction = 1) +
-  # scale_y_continuous(trans = "log", 
-  #                    labels = number_format(accuracy = 1)) +
-  labs(x = "Proteomic", y = "Pre-disease plasma concentrations (unit?)", color = "Proteomic group") +
+  scale_y_continuous(labels = number_format(accuracy = 1)) +
+  labs(x = "proteomic", y = "Pre-disease serum concentrations (unit?)") +
   coord_flip() +
   theme_lucid()
 
 proteomic_boxplot_danish_by_als <- bdd_danish |>
   select(als, all_of(proteomic)) |>
-  pivot_longer(cols = -als, names_to = "Proteomic", values_to = "values") |>
-  mutate(
-    # POPs = factor(POPs, levels = POPs_tot_labels), 
-    # POPs = fct_recode(POPs, !!!POPs_tot_labels), 
-    # POPs = fct_rev(POPs),
-    als = as.character(als), 
-    als = fct_recode(als, 
-                     "Controls" = "0",
-                     "Cases" = "1")) |>
-  # arrange(POPs) |>
+  remove_var_label() |>
+  pivot_longer(cols = -als, names_to = "proteomic", values_to = "values") |>
+  mutate(proteomic = factor(proteomic, levels = proteomic_labels), 
+         proteomic = fct_recode(proteomic, !!!proteomic_labels), 
+         proteomic = fct_rev(proteomic),
+         als = as.character(als), 
+         als = fct_recode(als, 
+                          "Controls" = "0",
+                          "Cases" = "1")) |>
+  arrange(proteomic) |>
   ggplot() +
-  aes(x = Proteomic, y = values, fill = als) +
+  aes(x = proteomic, y = values, fill = als) +
   geom_boxplot() +
   scale_fill_hue(direction = 1, 
                  guide = guide_legend(reverse = TRUE)) +
-  # scale_y_continuous(trans = "log", 
-  #                    labels = number_format(accuracy = 1)) +
-  labs(x = "Proteomic", y = "Pre-disease plasma concentrations (unit?)", fill = "ALS") +
+  scale_y_continuous(labels = number_format(accuracy = 1)) +
+  labs(x = "proteomic", y = "Pre-disease serum concentrations (unit?)", fill = "ALS") +
   coord_flip() +
   theme_lucid()
 
-# proteomic_group_boxplot_danish_by_als <- bdd_danish |>
-#   select(als, all_of(proteomic)) |>
-#   pivot_longer(cols = -als, names_to = "Proteomic", values_to = "values") |>
-#   mutate(
-#     # POPs = factor(POPs, levels = POPs_group_labels), 
-#     # POPs = fct_recode(POPs, !!!POPs_group_labels), 
-#     # POPs = fct_rev(POPs),
-#     als = as.character(als), 
-#     als = fct_recode(als, 
-#                      "Controls" = "0",
-#                      "Cases" = "1")) |>
-#   # arrange(POPs) |>
-#   ggplot() +
-#   aes(x = Proteomic, y = values, fill = als) +
-#   geom_boxplot() +
-#   # scale_fill_hue(direction = 1, 
-#   #                guide = guide_legend(reverse = TRUE)) +
-#   scale_y_continuous(trans = "log", 
-#                      labels = number_format(accuracy = 1)) +
-#   labs(x = "Proteomic", y = "Pre-disease plasma concentrations (unit?)", fill = "ALS") +
-#   coord_flip() +
-#   theme_lucid()
+proteomic_heatmap_danish <- 
+  bdd_danish |> 
+  select(all_of(proteomic)) |>
+  rename(!!!proteomic_labels) 
+proteomic_heatmap_danish <- 
+  cor(proteomic_heatmap_danish, 
+      use = "pairwise.complete.obs", 
+      method = "pearson")
 
 proteomic_boxplot_danish_by_death <- bdd_danish |>
   filter(als == 1) |>
   select(status_death, all_of(proteomic)) |>
-  pivot_longer(cols = -status_death, names_to = "Proteomic", values_to = "values") |>
-  mutate(
-    # POPs = factor(POPs, levels = POPs_group_labels),
-    # POPs = fct_recode(POPs, !!!POPs_group_labels),
-    # POPs = fct_rev(POPs),
-    status_death = as.character(status_death),
-    status_death = fct_recode(status_death,
-                              "Alive" = "0",
-                              "Deceased" = "1")) |>
-  # arrange(POPs) |>
+  remove_var_label() |>
+  pivot_longer(cols = -status_death, names_to = "proteomic", values_to = "values") |>
+  mutate(proteomic = factor(proteomic, levels = proteomic_labels), 
+         proteomic = fct_recode(proteomic, !!!proteomic_labels), 
+         proteomic = fct_rev(proteomic),
+         status_death = as.character(status_death), 
+         status_death = fct_recode(status_death, 
+                                   "Alive" = "0",
+                                   "Deceased" = "1")) |>
+  arrange(proteomic) |>
   ggplot() +
-  aes(x = Proteomic, y = values, fill = status_death) +
+  aes(x = proteomic, y = values, fill = status_death) +
   geom_boxplot() +
-  scale_fill_hue(direction = 1,
+  scale_fill_hue(direction = 1, 
                  guide = guide_legend(reverse = TRUE)) +
-  # scale_y_continuous(trans = "log",
-  #                    labels = number_format(accuracy = 1)) +
-  labs(x = "Proteomic", y = "Pre-disease plasma concentrations (unit?)", fill = "") +
+  scale_y_continuous(labels = number_format(accuracy = 1)) +
+  labs(x = "proteomic", y = "Pre-disease serum concentrations (unit?)", fill = "") +
   coord_flip() +
   theme_lucid()
 
 
-proteomic_heatmap_danish <- bdd_danish |> 
-  select(all_of(proteomic)) 
-# |> rename(!!!POPs_tot_labels) 
+## EVs ----
+EVs_table_danish <- descrip_num(data = bdd_danish, vars = EVs)
 
-proteomic_heatmap_danish <- cor(proteomic_heatmap_danish, 
-                                use = "pairwise.complete.obs", 
-                                method = "pearson")
+EVs_table_danish_by_als <- bdd_danish |>
+  select(als, all_of(EVs)) |>
+  mutate(
+    als = as.character(als), 
+    als = fct_recode(als, "Controls" = "0", "Cases" = "1"), 
+    als = fct_relevel(als, "Cases", "Controls")) |>
+  tbl_summary(by = als, 
+              digits = all_continuous() ~1) |>
+  bold_labels() |>
+  add_overall() |>
+  add_p()
 
-### EV ----
+EVs_boxplot_danish <- bdd_danish |>
+  select(all_of(EVs)) |>
+  remove_var_label() |>
+  pivot_longer(cols = everything(), names_to = "EVs", values_to = "values") |>
+  mutate(EVs = factor(EVs, levels = EVs_labels),
+         EVs = fct_recode(EVs, !!!EVs_labels),
+         EVs = fct_rev(EVs)) |>
+  arrange(EVs) |>
+  ggplot() +
+  aes(x = EVs, y = values) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1) +
+  scale_y_continuous(labels = number_format(accuracy = 1)) +
+  labs(x = "EVs", y = "Pre-disease serum concentrations (unit?)") +
+  coord_flip() +
+  theme_lucid()
+
+EVs_boxplot_danish_by_als <- bdd_danish |>
+  select(als, all_of(EVs)) |>
+  remove_var_label() |>
+  pivot_longer(cols = -als, names_to = "EVs", values_to = "values") |>
+  mutate(EVs = factor(EVs, levels = EVs_labels), 
+         EVs = fct_recode(EVs, !!!EVs_labels), 
+         EVs = fct_rev(EVs),
+         als = as.character(als), 
+         als = fct_recode(als, 
+                          "Controls" = "0",
+                          "Cases" = "1")) |>
+  arrange(EVs) |>
+  ggplot() +
+  aes(x = EVs, y = values, fill = als) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1, 
+                 guide = guide_legend(reverse = TRUE)) +
+  scale_y_continuous(labels = number_format(accuracy = 1)) +
+  labs(x = "EVs", y = "Pre-disease serum concentrations (unit?)", fill = "ALS") +
+  coord_flip() +
+  theme_lucid()
+
+EVs_heatmap_danish <- 
+  bdd_danish |> 
+  select(all_of(EVs)) |>
+  rename(!!!EVs_labels) 
+EVs_heatmap_danish <- 
+  cor(EVs_heatmap_danish, 
+      use = "pairwise.complete.obs", 
+      method = "pearson")
+
+EVs_boxplot_danish_by_death <- bdd_danish |>
+  filter(als == 1) |>
+  select(status_death, all_of(EVs)) |>
+  remove_var_label() |>
+  pivot_longer(cols = -status_death, names_to = "EVs", values_to = "values") |>
+  mutate(EVs = factor(EVs, levels = EVs_labels), 
+         EVs = fct_recode(EVs, !!!EVs_labels), 
+         EVs = fct_rev(EVs),
+         status_death = as.character(status_death), 
+         status_death = fct_recode(status_death, 
+                                   "Alive" = "0",
+                                   "Deceased" = "1")) |>
+  arrange(EVs) |>
+  ggplot() +
+  aes(x = EVs, y = values, fill = status_death) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1, 
+                 guide = guide_legend(reverse = TRUE)) +
+  scale_y_continuous(labels = number_format(accuracy = 1)) +
+  labs(x = "EVs", y = "Pre-disease serum concentrations (unit?)", fill = "") +
+  coord_flip() +
+  theme_lucid()
+
 
 # finnish data ----
 ## metadata ----
@@ -332,7 +393,7 @@ covar_finnish <- bdd_finnish |>
     als = fct_recode(als, "Controls" = "0", "Cases" = "1"),
     als = fct_relevel(als, "Cases", "Controls"))|>
   select(
-    als, baseline_age, diagnosis_age, death_age, 
+    als, baseline_age, diagnosis_age, death_age, birth_year, 
     sex, marital_status, education, alcohol, smoking, bmi, cholesterol)|>
   tbl_summary(by = als)|>
   bold_labels()|>
@@ -435,12 +496,12 @@ POPs_heatmap_finnish <- cor(POPs_heatmap_finnish,
 
 ## fatty acids ----
 fattyacids_table_finnish <-
-  descrip_num(data = bdd_finnish, vars = fattyacids) |> 
-  mutate(variable = fct_recode(variable, !!!fattyacids_labels)) 
+  descrip_num(data = bdd_finnish, vars = fattyacids_tot) |> 
+  mutate(variable = fct_recode(variable, !!!fattyacids_tot_labels)) 
 
 fattyacids_table_finnish_by_als <- 
   bdd_finnish |>
-  select(als, all_of(fattyacids)) |>
+  select(als, all_of(fattyacids_tot)) |>
   mutate(
     als = as.character(als), 
     als = fct_recode(als, "Controls" = "0", "Cases" = "1"), 
@@ -452,10 +513,10 @@ fattyacids_table_finnish_by_als <-
   add_p() 
 
 fattyacids_boxplot_finnish <- bdd_finnish |>
-  select(all_of(fattyacids)) |>
+  select(all_of(fattyacids_tot)) |>
   pivot_longer(cols = everything(), names_to = "fattyacids", values_to = "values") |>
-  mutate(fattyacids = factor(fattyacids, levels = fattyacids_labels), 
-         fattyacids = fct_recode(fattyacids, !!!fattyacids_labels), 
+  mutate(fattyacids = factor(fattyacids, levels = fattyacids_tot_labels), 
+         fattyacids = fct_recode(fattyacids, !!!fattyacids_tot_labels), 
          fattyacids = fct_rev(fattyacids)) |>
   ggplot() +
   aes(x = fattyacids, y = values) +
@@ -468,10 +529,10 @@ fattyacids_boxplot_finnish <- bdd_finnish |>
   theme_lucid()
 
 fattyacids_boxplot_finnish_by_als <- bdd_finnish |>
-  select(als, all_of(fattyacids)) |>
+  select(als, all_of(fattyacids_tot)) |>
   pivot_longer(cols = -als, names_to = "fattyacids", values_to = "values") |>
-  mutate(fattyacids = factor(fattyacids, levels = fattyacids_labels), 
-         fattyacids = fct_recode(fattyacids, !!!fattyacids_labels), 
+  mutate(fattyacids = factor(fattyacids, levels = fattyacids_tot_labels), 
+         fattyacids = fct_recode(fattyacids, !!!fattyacids_tot_labels), 
          fattyacids = fct_rev(fattyacids), 
          als = as.character(als), 
          als = fct_recode(als, 
@@ -489,19 +550,20 @@ fattyacids_boxplot_finnish_by_als <- bdd_finnish |>
   theme_lucid()
 
 fattyacids_heatmap_finnish <- bdd_finnish |> 
-  select(all_of(fattyacids)) |>
-  rename(!!!fattyacids_labels) 
+  select(all_of(fattyacids_tot)) |>
+  rename(!!!fattyacids_tot_labels) 
 fattyacids_heatmap_finnish <- cor(fattyacids_heatmap_finnish, 
                                   use = "pairwise.complete.obs", 
                                   method = "pearson")
 
-POPs_fattyacids_heatmap_finnish <- heatmap_cor_pairwise(fattyacids, POPs_finnish, decimal = 1, data = bdd_finnish)
+POPs_fattyacids_heatmap_finnish <- heatmap_cor_pairwise(fattyacids_tot, POPs_finnish, decimal = 1, data = bdd_finnish)
 
 # comparison danish / finnish on the total population ----
 ## metadata ----
 covar_comp <- bdd |>
   select("study", "sex", "marital_status", "smoking", "alcohol", "education", 
-         "bmi", "cholesterol", "blod_sys", "blod_dias", "baseline_age", "diagnosis_age") |>
+         "bmi", "cholesterol", "blod_sys", "blod_dias", 
+         "baseline_age", "diagnosis_age", "birth_year") |>
   tbl_summary(by = "study") |>
   bold_labels() |>
   add_p(include = -education)
@@ -560,15 +622,15 @@ POPs_boxplot_comp <- bdd |>
 ## fatty acids ----
 fattyacids_table_comp <- bdd |>
   filter(als == 0) |>
-  select(study, all_of(fattyacids)) |>
+  select(study, all_of(fattyacids_tot)) |>
   tbl_summary(by = "study") |>
   bold_labels() |>
   add_n()
 
 fattyacids_boxplot_comp <- bdd |>
-  select(study, all_of(fattyacids)) |>
+  select(study, all_of(fattyacids_tot)) |>
   pivot_longer(cols = -study, names_to = "fattyacids", values_to = "values") |>
-  mutate(fattyacids = fct_recode(fattyacids, !!!fattyacids_labels)) |>
+  mutate(fattyacids = fct_recode(fattyacids, !!!fattyacids_tot_labels)) |>
   ggplot() +
   aes(x = fattyacids, y = values, fill = study) +
   geom_boxplot() +
@@ -592,7 +654,7 @@ covar_comp_cases <- bdd |>
          smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
          marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other")) |>
   select(
-    study, baseline_age, diagnosis_age, death_age, 
+    study, baseline_age, diagnosis_age, death_age, birth_year, 
     follow_up_death, status_death,
     sex, marital_status_2cat, education_merged, alcohol, smoking_2cat, bmi, cholesterol)|>
   tbl_summary(by = study, 
@@ -682,8 +744,15 @@ results_descriptive <- list(
     proteomic_table_danish_by_als = proteomic_table_danish_by_als, 
     proteomic_boxplot_danish = proteomic_boxplot_danish, 
     proteomic_boxplot_danish_by_als = proteomic_boxplot_danish_by_als, 
+    proteomic_heatmap_danish = proteomic_heatmap_danish, 
     proteomic_boxplot_danish_by_death = proteomic_boxplot_danish_by_death, 
-    proteomic_heatmap_danish = proteomic_heatmap_danish),
+    
+    EVs_table_danish = EVs_table_danish, 
+    EVs_table_danish_by_als = EVs_table_danish_by_als, 
+    EVs_boxplot_danish = EVs_boxplot_danish, 
+    EVs_boxplot_danish_by_als = EVs_boxplot_danish_by_als, 
+    EVs_heatmap_danish = EVs_heatmap_danish, 
+    EVs_boxplot_danish_by_death = EVs_boxplot_danish_by_death),
   
   finnish = list(
     covar_finnish = covar_finnish,
@@ -731,8 +800,14 @@ rm(
   proteomic_table_danish_by_als, 
   proteomic_boxplot_danish, 
   proteomic_boxplot_danish_by_als, 
-  proteomic_boxplot_danish_by_death,
   proteomic_heatmap_danish, 
+  proteomic_boxplot_danish_by_death, 
+  EVs_table_danish, 
+  EVs_table_danish_by_als, 
+  EVs_boxplot_danish, 
+  EVs_boxplot_danish_by_als, 
+  EVs_heatmap_danish, 
+  EVs_boxplot_danish_by_death, 
   
   covar_finnish,
   POPs_table_finnish,
