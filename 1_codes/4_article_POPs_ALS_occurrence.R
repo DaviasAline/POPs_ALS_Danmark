@@ -15,7 +15,7 @@ table_1 <- bdd |>
     als = fct_relevel(als, "Cases", "Controls"),
     follow_up = follow_up/12) |>
   select(
-    als, baseline_age, diagnosis_age, follow_up, death_age, 
+    als, birth_year, baseline_age, diagnosis_age, follow_up, death_age, 
     sex, marital_status_2cat, education_merged, alcohol, smoking_2cat, bmi, fS_Kol) |>
   tbl_summary(by = als, 
               missing = 'no', 

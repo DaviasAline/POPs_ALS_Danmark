@@ -57,6 +57,52 @@ results_descriptive$danish$covar_danish |>
   set_table_properties(align = "left")
 ```
 
+### Multiple cholesterol variables
+
+```{r, fig.height=5}
+#| echo: false
+#| message: false
+#| warning: false
+boxplot(data = bdd_danish, vars = c("fS_Kol", "cholesterol"))
+descrip_num(data = bdd_danish, vars = c("fS_Kol", "cholesterol")) |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
+cor.test(bdd_danish$fS_Kol, bdd_danish$cholesterol)
+```
+
+### Timing between baseline, ALS diagnosis and death
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+timing <- bdd |> 
+  filter(study == "Danish") |>
+  filter(als == 1) |>
+  select(baseline_age, diagnosis_age, death_age, 
+         time_baseline_diagnosis, time_baseline_death, time_diagnosis_death)
+
+timing |> 
+  tbl_summary() |>
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
+
+descrip_num(data = timing, vars = colnames(timing))   |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
+rm(timing)
+```
+
+
 ## POPs
 
 ### Distribution tables
@@ -267,7 +313,6 @@ corrplot(results_descriptive$danish$fattyacids_heatmap_danish,
 #| echo: false
 #| message: false
 #| warning: false
-# results_descriptive$danish$fattyacids_boxplot_danish
 results_descriptive$danish$fattyacids_boxplot_danish_by_als
 ```
 
@@ -280,9 +325,9 @@ results_descriptive$danish$fattyacids_boxplot_danish_by_als
 #| message: false
 #| warning: false
 bdd_danish |> 
-  select(sample, all_of(fattyacids)) |>
+  select(sample, all_of(fattyacids_tot)) |>
   pivot_longer(cols = -sample, names_to = "fattyacids", values_to = "values") |>
-  mutate(fattyacids = fct_recode(fattyacids, !!!fattyacids_labels)) |>
+  mutate(fattyacids = fct_recode(fattyacids, !!!fattyacids_tot_labels)) |>
   ggplot() +
   aes(x = values) +
   geom_density(fill = "#112446") +
@@ -299,50 +344,6 @@ bdd_danish |>
 results_descriptive$danish$POPs_fattyacids_heatmap_danish
 ```
 
-## Multiple cholesterol variables
-
-```{r, fig.height=5}
-#| echo: false
-#| message: false
-#| warning: false
-boxplot(data = bdd_danish, vars = c("fS_Kol", "cholesterol"))
-descrip_num(data = bdd_danish, vars = c("fS_Kol", "cholesterol")) |>
-  flextable() |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left")
-cor.test(bdd_danish$fS_Kol, bdd_danish$cholesterol)
-```
-
-## Timing between baseline, ALS diagnosis and death
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-timing <- bdd |> 
-  filter(study == "Danish") |>
-  filter(als == 1) |>
-  select(baseline_age, diagnosis_age, death_age, 
-         time_baseline_diagnosis, time_baseline_death, time_diagnosis_death)
-
-timing |> 
-  tbl_summary() |>
-  as_flex_table() |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left")
-
-descrip_num(data = timing, vars = colnames(timing))   |>
-  flextable() |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left")
-rm(timing)
-```
 
 ## Proteomic
 
@@ -402,6 +403,7 @@ corrplot(results_descriptive$danish$proteomic_heatmap_danish,
 results_descriptive$danish$proteomic_boxplot_danish
 ```
 
+Comparison between cases and controls 
 ```{r, fig.width=10, fig.height=30}
 #| echo: false
 #| message: false
@@ -409,7 +411,7 @@ results_descriptive$danish$proteomic_boxplot_danish
 results_descriptive$danish$proteomic_boxplot_danish_by_als
 ```
 
-POPs distribution depending on alive/deceased status at the end of the follow-up (among cases)
+Comparison between alive/deceased status at the end of the follow-up (among cases)
 
 ```{r, fig.width=10, fig.height=30}
 #| echo: false
@@ -417,6 +419,77 @@ POPs distribution depending on alive/deceased status at the end of the follow-up
 #| warning: false
 results_descriptive$danish$proteomic_boxplot_danish_by_death
 ```
+
+## EVs 
+### Distribution tables 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_descriptive$danish$EVs_table_danish |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
+```
+
+### Comparison of distribution cases/controls
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_descriptive$danish$EVs_table_danish_by_als |>
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
+```
+
+### Heatmap of correlation 
+```{r, fig.height=12, fig.width=12}
+#| echo: false
+#| message: false
+#| warning: false
+corrplot(results_descriptive$danish$EVs_heatmap_danish, 
+         method = 'color', 
+         type = "lower", 
+         tl.col = 'black', 
+         tl.srt = 45, 
+         addCoef.col = "black",
+         number.cex = 0.8,
+         number.digits = 1,
+         tl.cex = 1,
+         col = rev(COL2(diverging = "RdYlBu")))
+
+```
+
+### Boxplots
+```{r, fig.height=10, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+results_descriptive$danish$EVs_boxplot_danish
+```
+
+Comparison between cases and controls 
+```{r, fig.height=10, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+results_descriptive$danish$EVs_boxplot_danish_by_als
+```
+
+Comparison between alive/deceased status at the end of the follow-up (among cases)
+
+```{r, fig.width=10, fig.height=10}
+#| echo: false
+#| message: false
+#| warning: false
+results_descriptive$danish$EVs_boxplot_danish_by_death
+```
+
 
 # Finnish data description
 
@@ -653,7 +726,6 @@ corrplot(results_descriptive$finnish$fattyacids_heatmap_finnish,
 #| echo: false
 #| message: false
 #| warning: false
-# results_descriptive$finnish$fattyacids_boxplot_finnish
 results_descriptive$finnish$fattyacids_boxplot_finnish_by_als
 ```
 
@@ -664,9 +736,9 @@ results_descriptive$finnish$fattyacids_boxplot_finnish_by_als
 #| message: false
 #| warning: false
 bdd_finnish |> 
-  select(sample, all_of(fattyacids)) |>
+  select(sample, all_of(fattyacids_tot)) |>
   pivot_longer(cols = -sample, names_to = "fattyacids", values_to = "values") |>
-    mutate(fattyacids = fct_recode(fattyacids, !!!fattyacids_labels)) |>
+    mutate(fattyacids = fct_recode(fattyacids, !!!fattyacids_tot_labels)) |>
   ggplot() +
   aes(x = "", y = values) +
   geom_boxplot(shape = "circle", fill = "#112446") +
@@ -859,7 +931,8 @@ results_descriptive$comp$fattyacids_boxplot_comp
 
 ## Among cases
 
-(for ALS survival analyses) \### Metadata
+(for ALS survival analyses) 
+#### Metadata
 
 ```{r}
 #| echo: false
@@ -1468,7 +1541,12 @@ corrplot(results_POPs_ALS_survival$sensi1$cor_test_sensi1,
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi1$sample_size_check
+results_POPs_ALS_survival$sensi1$sample_size_check |>
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 results not adjusted on the cohort 
@@ -1512,7 +1590,8 @@ corrplot(results_POPs_ALS_survival$sensi1$POPs_heatmap_cases_group,
          col = rev(COL2(diverging = "RdYlBu")))
 ```
 
-## Sensitivity analyses 2 - effects of baseline age, follow-up duration among the Finnish population (stratified and adjusted analyses)
+## Sensitivity analyses 2 
+effects of baseline age, follow-up duration among the Finnish population (stratified and adjusted analyses)
 ```{r, fig.width=10}
 #| echo: false
 #| message: false
@@ -1523,20 +1602,122 @@ results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_purple
 results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_green
 ```
 
-## Sensitivity analyses 3  - effects of baseline age, follow-up duration among the Finnish population (interaction anayses)
+## Sensitivity analyses 3 
+effects of baseline age, follow-up duration among the Finnish population (interaction anayses)
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi3$POPs_sd_ALS_table_sensi3
+results_POPs_ALS_survival$sensi3$POPs_sd_ALS_table_sensi3 |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-## Sensitivity analyses 4 - effects of survival duration among the Danish population 
+## Sensitivity analyses 4 
+effects of survival duration among the Danish population 
+```{r, fig.height=12, fig.width=12}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi4$plot_justif_sensi4
+```
+
+
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
 results_POPs_ALS_survival$sensi4$POPs_sd_ALS_figure_sensi4_danish
+```
+
+## Sensitivity analyses 5 - LASSO POPs selection 
+### Model forcing the covariates to be included 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+plot(results_POPs_ALS_survival$sensi5$cv_fit_covar_forced)
+```
+This plots the cross-validation curve (red dotted line) along with upper and lower standard deviation curves along the 𝜆sequence (error bars). Two special values along the 𝜆sequence are indicated by the vertical dotted lines. 
+
+lambda.min is the value of 𝜆that gives minimum mean cross-validated error
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi5$cv_fit_covar_forced$lambda.min 
+```
+
+coefficients using lambda.min
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+coef(results_POPs_ALS_survival$sensi5$cv_fit_covar_forced, s = "lambda.min")     
+```
+
+while lambda.1se is the value of 𝜆that gives the most regularized model such that the cross-validated error is within one standard error of the minimum.
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi5$cv_fit_covar_forced$lambda.1se
+```
+
+coefficients using lambda.1se
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+coef(results_POPs_ALS_survival$sensi5$cv_fit_covar_forced, s = "lambda.1se")
+```
+
+### Model not forcing the covariates to be included 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+plot(results_POPs_ALS_survival$sensi5$cv_fit)
+```
+This plots the cross-validation curve (red dotted line) along with upper and lower standard deviation curves along the 𝜆sequence (error bars). Two special values along the 𝜆sequence are indicated by the vertical dotted lines. 
+
+lambda.min is the value of 𝜆that gives minimum mean cross-validated error
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi5$cv_fit$lambda.min 
+```
+
+coefficients using lambda.min
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+coef(results_POPs_ALS_survival$sensi5$cv_fit, s = "lambda.min")     
+```
+
+while lambda.1se is the value of 𝜆that gives the most regularized model such that the cross-validated error is within one standard error of the minimum.
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi5$cv_fit$lambda.1se
+```
+
+coefficients using lambda.1se
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+coef(results_POPs_ALS_survival$sensi5$cv_fit, s = "lambda.1se")
+```
+
+## New co-pollutant models with LASSO selected POPs (to get 95%CI and p-values)
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi5$POPs_sd_ALS_figure_sensi5_danish
 ```
 
 # Fatty acids and ALS occurence
@@ -1773,9 +1954,9 @@ results_fattyacids_ALS_survival$main_analysis$main_results_fattyacids_ALS_surviv
                             "Base model" = "base",
                             "Adjusted model" = "adjusted"),
          model = fct_relevel(model, 'Base model', 'Adjusted model'), 
-         explanatory = factor(explanatory, levels = fattyacids_labels),
+         explanatory = factor(explanatory, levels = fattyacids_tot_labels),
          explanatory = fct_rev(explanatory),
-         explanatory = fct_recode(explanatory, !!!fattyacids_labels)) |>
+         explanatory = fct_recode(explanatory, !!!fattyacids_tot_labels)) |>
   arrange(explanatory) |> 
   ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`, shape = study)) +
   geom_pointrange(position = position_dodge(width = 0.6), size = 0.5) + 
