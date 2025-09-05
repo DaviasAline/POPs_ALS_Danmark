@@ -214,17 +214,17 @@ POPs_fattyacids_heatmap_danish <-
 proteomic_table_danish <- descrip_num(data = bdd_danish, vars = proteomic) |>
   mutate(variable = gsub("^proteomic_(immun_res|neuro_explo|metabolism)_", "", variable))
 
-proteomic_table_danish_by_als <- bdd_danish |>
-  select(als, all_of(proteomic)) |>
-  mutate(
-    als = as.character(als), 
-    als = fct_recode(als, "Controls" = "0", "Cases" = "1"), 
-    als = fct_relevel(als, "Cases", "Controls")) |>
-  tbl_summary(by = als, 
-              digits = all_continuous() ~1) |>
-  bold_labels() |>
-  add_overall() |>
-  add_p()
+# proteomic_table_danish_by_als <- bdd_danish |>
+#   select(als, all_of(proteomic)) |>
+#   mutate(
+#     als = as.character(als), 
+#     als = fct_recode(als, "Controls" = "0", "Cases" = "1"), 
+#     als = fct_relevel(als, "Cases", "Controls")) |>
+#   tbl_summary(by = als, 
+#               digits = all_continuous() ~1) |>
+#   bold_labels() |>
+#   add_overall() |>
+#   add_p()
 
 proteomic_boxplot_danish <- bdd_danish |>
   select(all_of(proteomic)) |>
@@ -669,11 +669,44 @@ covar_comp_cases <- bdd |>
   bold_labels()|>
   add_overall() 
 
+covar_comp_cases_2cat <- bdd |> 
+  filter(als == 1) |>
+  mutate(status_death = as.character(status_death), 
+         status_death = fct_recode(status_death, 
+                                   "Alive" = "0",
+                                   "Deceased" = "1"), 
+         sex = fct_relevel(sex, "Male", "Female"), 
+         smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other")) |>
+  select(
+    study_2cat, baseline_age, diagnosis_age, death_age, birth_year, 
+    follow_up_death, status_death,
+    sex, marital_status_2cat, education_merged, alcohol, smoking_2cat, bmi, cholesterol)|>
+  tbl_summary(by = study_2cat, 
+              missing = "no", 
+              label = list(status_death ~ "Status at end of the follow-up"), 
+              digits = list(baseline_age ~ 0, 
+                            diagnosis_age ~ 0, 
+                            death_age ~ 0, 
+                            bmi ~ 1, 
+                            cholesterol ~ 1, 
+                            alcohol ~ 1))|>
+  bold_labels()|>
+  add_overall() 
+
+
+
 ## POPs ----
 POPs_table_comp_cases <- bdd |>
   filter(als == 1) |>
   select(study, all_of(POPs_tot), -OCP_α_HCH) |>
   tbl_summary(by = "study") |>
+  bold_labels() 
+
+POPs_table_comp_cases_2cat <- bdd |>
+  filter(als == 1) |>
+  select(study_2cat, all_of(POPs_tot), -OCP_α_HCH) |>
+  tbl_summary(by = "study_2cat") |>
   bold_labels() 
 
 POPs_group_bis <- c("PCB_4", "PCB_DL", "PCB_NDL", "OCP_HCB", "ΣDDT", "OCP_β_HCH", "OCP_γ_HCH", "Σchlordane", "OCP_PeCB", "ΣPBDE")
@@ -699,6 +732,25 @@ POPs_boxplot_comp_cases <- bdd |>
   arrange(POPs) |>
   ggplot() +
   aes(x = POPs, y = values, fill = study) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1, 
+                 guide = guide_legend(reverse = TRUE)) +
+  scale_y_continuous(trans = "log", 
+                     labels = number_format(accuracy = 1)) +
+  labs(x = "POPs", y = "Pre-disease concentrations (pg/ml)", fill = "Study") +
+  coord_flip() +
+  theme_lucid()
+
+POPs_boxplot_comp_cases_2cat <- bdd |>
+  filter(als == 1) |>
+  select(study_2cat, all_of(POPs_group_bis)) |>
+  pivot_longer(cols = -study_2cat, names_to = "POPs", values_to = "values") |>
+  mutate(POPs = factor(POPs, levels = POPs_group_labels_bis), 
+         POPs = fct_recode(POPs, !!!POPs_group_labels_bis), 
+         POPs = fct_rev(POPs)) |>
+  arrange(POPs) |>
+  ggplot() +
+  aes(x = POPs, y = values, fill = study_2cat) +
   geom_boxplot() +
   scale_fill_hue(direction = 1, 
                  guide = guide_legend(reverse = TRUE)) +
@@ -741,7 +793,7 @@ results_descriptive <- list(
     POPs_fattyacids_heatmap_danish = POPs_fattyacids_heatmap_danish, 
     
     proteomic_table_danish = proteomic_table_danish, 
-    proteomic_table_danish_by_als = proteomic_table_danish_by_als, 
+    # proteomic_table_danish_by_als = proteomic_table_danish_by_als, 
     proteomic_boxplot_danish = proteomic_boxplot_danish, 
     proteomic_boxplot_danish_by_als = proteomic_boxplot_danish_by_als, 
     proteomic_heatmap_danish = proteomic_heatmap_danish, 
@@ -775,8 +827,11 @@ results_descriptive <- list(
     fattyacids_table_comp = fattyacids_table_comp,
     fattyacids_boxplot_comp = fattyacids_boxplot_comp, 
     covar_comp_cases = covar_comp_cases, 
+    covar_comp_cases_2cat = covar_comp_cases_2cat, 
     POPs_table_comp_cases = POPs_table_comp_cases, 
+    POPs_table_comp_cases_2cat = POPs_table_comp_cases_2cat, 
     POPs_boxplot_comp_cases = POPs_boxplot_comp_cases, 
+    POPs_boxplot_comp_cases_2cat = POPs_boxplot_comp_cases_2cat, 
     POPs_heatmap_cases = POPs_heatmap_cases))
 
 
@@ -797,7 +852,7 @@ rm(
   fattyacids_heatmap_danish,
   POPs_fattyacids_heatmap_danish, 
   proteomic_table_danish, 
-  proteomic_table_danish_by_als, 
+  # proteomic_table_danish_by_als, 
   proteomic_boxplot_danish, 
   proteomic_boxplot_danish_by_als, 
   proteomic_heatmap_danish, 
@@ -830,6 +885,9 @@ rm(
   fattyacids_boxplot_comp, 
   
   covar_comp_cases, 
+  covar_comp_cases_2cat, 
   POPs_table_comp_cases, 
+  POPs_table_comp_cases_2cat, 
   POPs_boxplot_comp_cases, 
+  POPs_boxplot_comp_cases_2cat, 
   POPs_heatmap_cases)

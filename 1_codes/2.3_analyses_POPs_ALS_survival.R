@@ -9,7 +9,7 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/2.2_analyses_POPs_ALS_occurrence.
 POPs_group_bis <- setdiff(POPs_group, "ΣPBDE")
 bdd_cases_tot <- bdd |>
   filter (als == 1) |>
-  select(study, als, follow_up_death, status_death, sex, diagnosis_age, baseline_age, marital_status_2cat, smoking_2cat, bmi, follow_up, 
+  select(study, study_2cat, als, follow_up_death, status_death, sex, diagnosis_age, baseline_age, marital_status_2cat, smoking_2cat, bmi, follow_up, 
          "PCB_4", "PCB_DL", "PCB_NDL",  "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", "Σchlordane") |>
   mutate(across(all_of(POPs_group_bis), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
                                                  labels = c("Q1", "Q2", "Q3", "Q4")),
@@ -26,17 +26,13 @@ bdd_cases_tot <- bdd |>
   replace_with_median(Σchlordane, Σchlordane_quart) |>
   mutate(sex = fct_relevel(sex, "Male", "Female"), 
          smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"), 
-         study_2cat = fct_recode(study, 
-                                 "Finnish" = "FMC",
-                                 "Finnish" = "FMCF",
-                                 "Finnish" = "MFH"))
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
 rm(POPs_group_bis)
 
 bdd_cases_danish <- bdd_danish |>
   filter (als == 1) |>
   filter(study == "Danish") |>
-  select(study, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age,
+  select(study, study_2cat, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
          all_of(POPs_group)) |>
   mutate(across(all_of(POPs_group), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
@@ -60,7 +56,7 @@ bdd_cases_danish <- bdd_danish |>
 bdd_cases_finnish <- bdd_finnish |>
   filter (als == 1) |>
   filter(study %in% c("FMC", "FMCF", "MFH")) |>
-  select(study, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
+  select(study, study_2cat, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
          thawed, level_urbanization, marital_status_2cat, smoking_2cat, bmi, cholesterol,   
          "PCB_4", "PCB_DL", "PCB_NDL",  "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", 
          OCP_γ_HCH = "OCP_γ_HCH_raw", "Σchlordane", OCP_PeCB = "OCP_PeCB_raw") |>
@@ -1766,7 +1762,7 @@ POPs_group_sd_bis <- setdiff(POPs_group_sd, "ΣPBDE_sd")
 bdd_cases_tot_sauf_MFH <- bdd |>
   filter (als == 1) |>
   filter(!study == 'MFH') |>
-  select(study, als, follow_up_death, status_death, sex, diagnosis_age, baseline_age, marital_status_2cat, smoking_2cat, bmi, follow_up, 
+  select(study, study_2cat, als, follow_up_death, status_death, sex, diagnosis_age, baseline_age, marital_status_2cat, smoking_2cat, bmi, follow_up, 
          "PCB_4", "PCB_DL", "PCB_NDL",  "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", "Σchlordane") |>
   mutate(across(all_of(POPs_group_bis), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
                                                  labels = c("Q1", "Q2", "Q3", "Q4")),
@@ -1783,16 +1779,13 @@ bdd_cases_tot_sauf_MFH <- bdd |>
   replace_with_median(Σchlordane, Σchlordane_quart) |>
   mutate(sex = fct_relevel(sex, "Male", "Female"), 
          smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"), 
-         study_2cat = fct_recode(study, 
-                                 "Finnish" = "FMC",
-                                 "Finnish" = "FMCF"))
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
 
 bdd_cases_red_purple <- bdd |>
   filter (als == 1) |>
   # filter(baseline_age>45) |>
   filter(follow_up<300) |>
-  select(study, als, follow_up_death, status_death, sex, diagnosis_age, marital_status_2cat, smoking_2cat, bmi, baseline_age, follow_up, 
+  select(study, study_2cat, als, follow_up_death, status_death, sex, diagnosis_age, marital_status_2cat, smoking_2cat, bmi, baseline_age, follow_up, 
          "PCB_4", "PCB_DL", "PCB_NDL",  "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", "Σchlordane") |>
   mutate(across(all_of(POPs_group_bis), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
                                                  labels = c("Q1", "Q2", "Q3", "Q4")),
@@ -1809,17 +1802,13 @@ bdd_cases_red_purple <- bdd |>
   replace_with_median(Σchlordane, Σchlordane_quart) |>
   mutate(sex = fct_relevel(sex, "Male", "Female"), 
          smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"), 
-         study_2cat = fct_recode(study, 
-                                 "Finnish" = "FMC",
-                                 "Finnish" = "FMCF",
-                                 "Finnish" = "MFH"))
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
 
 bdd_cases_red_green <- bdd |>
   filter (als == 1) |>
   filter(baseline_age>45) |>
   # filter(follow_up<300) |>
-  select(study, als, follow_up_death, status_death, sex, diagnosis_age, marital_status_2cat, smoking_2cat, bmi, baseline_age, follow_up, 
+  select(study, study_2cat, als, follow_up_death, status_death, sex, diagnosis_age, marital_status_2cat, smoking_2cat, bmi, baseline_age, follow_up, 
          "PCB_4", "PCB_DL", "PCB_NDL",  "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", "Σchlordane") |>
   mutate(across(all_of(POPs_group_bis), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
                                                  labels = c("Q1", "Q2", "Q3", "Q4")),
@@ -1836,17 +1825,13 @@ bdd_cases_red_green <- bdd |>
   replace_with_median(Σchlordane, Σchlordane_quart) |>
   mutate(sex = fct_relevel(sex, "Male", "Female"), 
          smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"), 
-         study_2cat = fct_recode(study, 
-                                 "Finnish" = "FMC",
-                                 "Finnish" = "FMCF",
-                                 "Finnish" = "MFH"))
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
 
 bdd_cases_red_orange <- bdd |>
   filter (als == 1) |>
   filter(baseline_age>40) |>
   filter(follow_up<350) |>
-  select(study, als, follow_up_death, status_death, sex, diagnosis_age, marital_status_2cat, smoking_2cat, bmi, baseline_age, follow_up, 
+  select(study, study_2cat, als, follow_up_death, status_death, sex, diagnosis_age, marital_status_2cat, smoking_2cat, bmi, baseline_age, follow_up, 
          "PCB_4", "PCB_DL", "PCB_NDL",  "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", "Σchlordane") |>
   mutate(across(all_of(POPs_group_bis), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
                                                  labels = c("Q1", "Q2", "Q3", "Q4")),
@@ -1863,11 +1848,7 @@ bdd_cases_red_orange <- bdd |>
   replace_with_median(Σchlordane, Σchlordane_quart) |>
   mutate(sex = fct_relevel(sex, "Male", "Female"), 
          smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"), 
-         study_2cat = fct_recode(study, 
-                                 "Finnish" = "FMC",
-                                 "Finnish" = "FMCF",
-                                 "Finnish" = "MFH"))
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
 
 surv_obj_tot_sauf_MFH <- Surv(time = bdd_cases_tot_sauf_MFH$follow_up_death,    # set the outcomes
                      event = bdd_cases_tot_sauf_MFH$status_death)
@@ -1908,6 +1889,7 @@ sample_size_check_2cat <-
                     '**follow up < 350 months and baseline age > 40 years**'))
 
 ## justification ----
+### 4 cohorts ----
 plot_follow_up <- ggplot(bdd_cases_tot, aes(x = "", y = follow_up)) +
   geom_violin(fill = "gray90", color = "gray50", width = 1) +
   geom_boxplot(width = 0.1, outlier.shape = NA, fill = NA, color = "black") +
@@ -1964,6 +1946,63 @@ plot_baseline_follow_up <-
 
 plot_justif <- (plot_baseline_age + plot_follow_up + plot_diagnosis_age)/plot_baseline_follow_up + plot_layout()
 
+### 2 cohorts ----
+plot_follow_up_2cat <- ggplot(bdd_cases_tot, aes(x = "", y = follow_up)) +
+  geom_violin(fill = "gray90", color = "gray50", width = 1) +
+  geom_boxplot(width = 0.1, outlier.shape = NA, fill = NA, color = "black") +
+  geom_jitter(aes(color = study_2cat), width = 0.2, alpha = 0.6, size = 1.8) +
+  scale_color_brewer(palette = "Dark2") +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        plot.title = element_text(hjust = 0.5)) +
+  labs(x = NULL, y = "Follow-up (months)", title = "Distribution of the duration \nbetween baseline and diagnosis")
+
+plot_baseline_age_2cat <- ggplot(bdd_cases_tot, aes(x = "", y = baseline_age)) +
+  geom_violin(fill = "gray90", color = "gray50", width = 1) +
+  geom_boxplot(width = 0.1, outlier.shape = NA, fill = NA, color = "black") +
+  geom_jitter(aes(color = study_2cat), width = 0.2, alpha = 0.6, size = 1.8) +
+  scale_color_brewer(palette = "Dark2") +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        plot.title = element_text(hjust = 0.5)) +
+  labs(x = NULL, y = "Age at baseline (years)", title = "Distribution of the subjects \nage at baseline")
+
+plot_diagnosis_age_2cat <- ggplot(bdd_cases_tot, aes(x = "", y = diagnosis_age)) +
+  geom_violin(fill = "gray90", color = "gray50", width = 1) +
+  geom_boxplot(width = 0.1, outlier.shape = NA, fill = NA, color = "black") +
+  geom_jitter(aes(color = study_2cat), width = 0.2, alpha = 0.6, size = 1.8) +
+  scale_color_brewer(palette = "Dark2") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(x = NULL, y = "Age at diagnosis (years)", title = "Distribution of the subjects \nage at diagnosis")
+
+plot_baseline_follow_up_2cat <- 
+  ggplot(bdd_cases_tot) +
+  aes(x = baseline_age, y = follow_up, colour = study_2cat) +
+  geom_point(alpha = 0.6) +
+  scale_color_brewer(palette = "Dark2") +
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  geom_rect(aes(xmin = 45, xmax = 66, ymin = 0, ymax = 575),
+            fill = NA, color = "chartreuse3", linetype = "dashed", linewidth = 1) +
+  annotate("text", x = 45.5, y = 575, label = "n=204",
+           hjust = 0, vjust = -0.5, size = 5, color = "chartreuse3") +
+  
+  geom_rect(aes(xmin = 15, xmax = 66, ymin = 0, ymax = 300),
+            fill = NA, color = "darkorchid", linetype = "dashed", linewidth = 1) +
+  annotate("text", x = 16, y = 300, label = "n=208",
+           hjust = 0, vjust = -0.5, size = 5, color = "darkorchid") +
+  
+  geom_rect(aes(xmin = 40, xmax = 66, ymin = 0, ymax = 350),
+            fill = NA, color = "darksalmon", linetype = "dashed", linewidth = 1) +
+  annotate("text", x = 53, y = 350, label = "n=207",
+           hjust = 0, vjust = -0.5, size = 5, color = "darksalmon") +
+  
+  labs(x = "Age at baseline (years)", 
+       y = "Duration between baseline and \ndiagnosis (months)")
+
+plot_justif_2cat <- (plot_baseline_age_2cat + plot_follow_up_2cat + plot_diagnosis_age_2cat)/plot_baseline_follow_up_2cat + plot_layout()
+
 cor_test_sensi1 <- 
   bdd_cases_tot |> 
   select(baseline_age, diagnosis_age, follow_up)
@@ -1972,17 +2011,18 @@ cor_test_sensi1 <-
       use = "pairwise.complete.obs", 
       method = "pearson")
 
-rm(plot_baseline_age, plot_follow_up, plot_diagnosis_age, plot_baseline_follow_up)
+rm(plot_baseline_age, plot_follow_up, plot_diagnosis_age, plot_baseline_follow_up, 
+   plot_baseline_age_2cat, plot_follow_up_2cat,  plot_diagnosis_age_2cat, plot_baseline_follow_up_2cat)
          
 
 ## analysis ----
 ### with adjustment for study (4 cat) ----
 model2_cox_sd_sensi1 <- map_dfr(POPs_group_sd_bis, function(expl) {
   
-  formula <- as.formula(paste("surv_obj_tot ~", expl, "+ study +",            # set the formulas              
+  formula <- as.formula(paste("surv_obj_tot ~", expl, "+ study +",              # set the formulas              
                               paste(covariates_finnish, collapse = " + ")))
   
-  model_summary <- coxph(formula, data = bdd_cases_tot) |> summary()  # run cox model
+  model_summary <- coxph(formula, data = bdd_cases_tot) |> summary()            # run cox model
   coefs <- model_summary$coefficients
   tibble(                                                                       # creation of a table of results
     study = "sensi1_tot", 
@@ -2346,7 +2386,7 @@ POPs_sd_ALS_figure_sensi1_not_adjusted <-
                        "Danish (n=166)\n not adjusted on cohort" = "Danish",
                        "Finnish (n=97)\n not adjusted on cohort" = "Finnish",
                        "All cohorts (n=263)\n not adjusted on cohort" = "sensi1_tot", 
-                       "Restricted to \nfollow up < 350 months and \nbaseline age > 40 years \n(n=208)\n not adjusted on cohort" = "sensi1_red_orange"
+                       "Restricted to follow\nup < 350 months and \nbaseline age > 40 years \n(n=208)\n not adjusted on cohort" = "sensi1_red_orange"
                        # "Restricted to \nfollow up < 300 months \n(n=204)" = "sensi1_red_purple",
                        # "Restricted to \nbaseline age > 45 years \n(n=207)" = "sensi1_red_green",
                        # "All cohorts expect MFH (n=252)" = "sensi1_tot_sauf_MFH"
@@ -2475,7 +2515,62 @@ bdd_cases_finnish <- bdd_cases_finnish |>
   mutate(box_orange = ifelse(baseline_age > 40 &
                         follow_up < 350, "in", "out"), 
          box_purple = ifelse(follow_up<300, "in", "out"), 
-         box_green = ifelse(baseline_age>45, "in", "out"))
+         box_green = ifelse(baseline_age>45, "in", "out"), 
+         box_orange = fct_relevel(box_orange, "out", "in"),
+         box_purple = fct_relevel(box_purple, "out", "in"), 
+         box_green = fct_relevel(box_green, "out", "in"))
+
+bdd_cases_danish <- bdd_cases_danish |>                                         # all the danish cases are in the boxs
+  mutate(box_orange = ifelse(baseline_age > 40 &
+                               follow_up < 350, "in", "out"), 
+         box_purple = ifelse(follow_up<300, "in", "out"), 
+         box_green = ifelse(baseline_age>45, "in", "out"), 
+         box_orange = fct_relevel(box_orange, "out", "in"),
+         box_purple = fct_relevel(box_purple, "out", "in"), 
+         box_green = fct_relevel(box_green, "out", "in"))
+
+tbl_distrib_among_green_box <- tbl_merge(
+  tbls = list(bdd_cases_finnish |>
+                filter(box_green == "in") |>
+                select(baseline_age) |>
+                tbl_summary(), 
+              bdd_cases_danish |>
+                filter(box_green == "in") |>
+                select(baseline_age) |>
+                tbl_summary()), 
+  tab_spanner = c("**Finnish cases in the green box (baseline age > 45 years)**", 
+                  "**Danish cases among the green box (baseline age > 45 years)**"))
+
+tbl_distrib_among_purple_box <- tbl_merge(
+  tbls = list(bdd_cases_finnish |>
+                filter(box_purple == "in") |>
+                select(follow_up) |>
+                tbl_summary(), 
+              bdd_cases_danish |>
+                filter(box_purple == "in") |>
+                select(follow_up) |>
+                tbl_summary()),
+  tab_spanner = c("**Finnish cases in the purple box (follow-up duration < 300 months)**", 
+                  "**Danish cases in the purple box (follow-up duration < 300 months)**"))
+
+tbl_distrib_among_orange_box <- tbl_merge(
+  tbls = list(
+    tbl_stack(
+      tbls = list(bdd_cases_finnish |>
+                    filter(box_orange == "in") |>
+                    select(baseline_age) |>
+                    tbl_summary(), 
+                  bdd_cases_finnish |>
+                    filter(box_orange == "in") |>
+                    select(follow_up) |>
+                    tbl_summary())), 
+    bdd_cases_danish |>
+      filter(box_orange == "in") |>
+      select(baseline_age, follow_up) |>
+      tbl_summary()), 
+  tab_spanner = c("**Finnish cases in the orange box (baseline age > 40 and folloy-up duration < 350 months)**", 
+                  "**Danish cases in the orange box (baseline age > 40 and folloy-up duration < 350 months)**"))
+
 
 model2_cox_sd_sensi2_finnish <- map_dfr(POPs_group_sd_finnish, function(expl) {
   formula <- as.formula(paste("surv_obj_finnish ~", expl, "+ ",                 # set the formulas
@@ -2776,8 +2871,8 @@ POPs_sd_ALS_figure_sensi2_finnish_purple <-
     box_adj =  fct_relevel(box_adj, "not adjusted", "adj_purple", "in_purple", "out_purple"),
     box_adj = fct_recode(
       box_adj,
-      "Not adjusted on follow up<300 (Y/N, n=97)\nMain analysis" = "not adjusted",
-      "Adjusted on follow up<300 (Y/N, n=97)" = "adj_purple",
+      "Not adjusted on follow up<300\n(Y/N, n=97)\nMain analysis" = "not adjusted",
+      "Adjusted on follow up<300\n(Y/N, n=97)" = "adj_purple",
       "Stratified to follow up<300 (n=42)" = "in_purple",
       "Stratified to follow up>300 (n=55)" = "out_purple"),
     explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
@@ -2813,10 +2908,10 @@ POPs_sd_ALS_figure_sensi2_finnish_green <-
     box_adj =  fct_relevel(box_adj, "not adjusted", "adj_green", "in_green", "out_green"),
     box_adj = fct_recode(
       box_adj,
-      "Not adjusted on baseline age>45 (Y/N, n=97)\nMain analysis" = "not adjusted",
-      "Adjusted on baseline age>45 (Y/N, n=97)" = "adj_green",
-      "Stratified to baseline age>45 (n=38)" = "in_green",
-      "Stratified to baseline age>45 (n=59)" = "out_green"),
+      "Not adjusted on baseline\nage>45 (Y/N, n=97)\nMain analysis" = "not adjusted",
+      "Adjusted on baseline\nage>45 (Y/N, n=97)" = "adj_green",
+      "Stratified to baseline age>45\n(n=38)" = "in_green",
+      "Stratified to baseline age>45\n(n=59)" = "out_green"),
     explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
     explanatory = fct_rev(explanatory),
     explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |>
@@ -2850,6 +2945,8 @@ sensi3_interac_baseline_age <- map_dfr(POPs_group_sd_finnish, function(expl) {
     as.formula(paste("surv_obj_finnish ~", expl, "*baseline_age +",  
                      paste(covariates_finnish, collapse = " + ")))
   
+  
+  
   model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()# run cox model
   coefs <- model_summary$coefficients
   tibble(                                                                       # creation of a table of results
@@ -2866,8 +2963,11 @@ sensi3_interac_baseline_age <- map_dfr(POPs_group_sd_finnish, function(expl) {
 
 sensi3_interac_follow_up <- map_dfr(POPs_group_sd_finnish, function(expl) {
   
+  bdd_cases_finnish <- bdd_cases_finnish |>
+    mutate(follow_up_years = follow_up / 12)
+  
   formula_finnish <-                                                             # set the formulas
-    as.formula(paste("surv_obj_finnish ~", expl, "*follow_up +",  
+    as.formula(paste("surv_obj_finnish ~", expl, "*follow_up_years +",  
                      paste(covariates_finnish, collapse = " + ")))
   
   model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()# run cox model
@@ -2923,7 +3023,6 @@ sensi3_interac_box_purple <- map_dfr(POPs_group_sd_finnish, function(expl) {
     `p-value` = coefs[, "Pr(>|z|)"]) |>
     filter(str_starts(term, explanatory) | term == "box_purpleout")             # remove the covariates results 
 })
-
 
 sensi3_interac_box_green <- map_dfr(POPs_group_sd_finnish, function(expl) {
   
@@ -2985,9 +3084,9 @@ POPs_sd_ALS_table_sensi3 <-
            str_replace_all(c(
              "baseline_age" = "Baseline age",
              "follow_up" = "Follow-up",
-             "box_orangeout" = "Out of the orange box",
-             "box_purpleout" = "Out of the purple box",
-             "box_greenout" = "Out of the green box", 
+             "box_orangein" = "In of the orange box",
+             "box_purplein" = "In of the purple box",
+             "box_greenin" = "In of the green box", 
              "_sd" = "")) |>
            str_replace_all(setNames(names(POPs_group_labels_finnish), POPs_group_labels_finnish)), 
          study_design = fct_recode(study_design, 
@@ -2996,7 +3095,11 @@ POPs_sd_ALS_table_sensi3 <-
                                    "Interaction with baseline age (categorical)" = "interac green",
                                    "Interaction with both baseline age and follow-up duration (categorical)" = "interac orange",
                                    "Interaction with follow-up (categorical)" = "interac purple"), 
-         `p-value` = if_else(sprintf("%.2f", `p-value_raw`) == "0.00", "<0.01", sprintf("%.2f", `p-value_raw`))) |> 
+         `p-value` = if_else(sprintf("%.2f", `p-value_raw`) == "0.00", "<0.01", sprintf("%.2f", `p-value_raw`))) 
+
+POPs_sd_ALS_table_sensi3_baseline_age <- POPs_sd_ALS_table_sensi3 |>
+  filter(study_design %in% c("Interaction with baseline age (continuous)", 
+                             "Interaction with baseline age (categorical)")) |>
   flextable(col_keys = c("study_design", "explanatory", "term",  "HR", "95% CI", "p-value")) |>
   add_footer_lines(
     "1All models are adjusted for age at diagnosis, sex, smoking, BMI and marital status. 
@@ -3021,6 +3124,63 @@ POPs_sd_ALS_table_sensi3 <-
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")|> 
   color(i = ~ `p-value_raw` < 0.05, color = "red", part = "body")
+
+POPs_sd_ALS_table_sensi3_follow_up <- POPs_sd_ALS_table_sensi3 |>
+  filter(study_design %in% c("Interaction with follow up (continuous)", 
+                             "Interaction with follow-up (categorical)")) |>
+  flextable(col_keys = c("study_design", "explanatory", "term",  "HR", "95% CI", "p-value")) |>
+  add_footer_lines(
+    "1All models are adjusted for age at diagnosis, sex, smoking, BMI and marital status. 
+  2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease plasma concentration of POPs.
+  3CI: Confidence interval.") |>
+  add_header(
+    "study_design" = "Study design",
+    "explanatory" = "Exposures", 
+    "term" = "Term") |>
+  merge_h(part = "header") |>
+  merge_v(j = "explanatory") |>
+  merge_v(j = "study_design") |>
+  theme_vanilla() |>
+  bold(j = "explanatory", part = "body") |>
+  bold(j = "study_design", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  merge_at(j = "term", part = "header") |>
+  merge_at(j = "study_design", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")|> 
+  color(i = ~ `p-value_raw` < 0.05, color = "red", part = "body")
+
+
+POPs_sd_ALS_table_sensi3_baseline_age_follow_up <- POPs_sd_ALS_table_sensi3 |>
+  filter(study_design == "Interaction with both baseline age and follow-up duration (categorical)") |>
+  flextable(col_keys = c("study_design", "explanatory", "term",  "HR", "95% CI", "p-value")) |>
+  add_footer_lines(
+    "1All models are adjusted for age at diagnosis, sex, smoking, BMI and marital status. 
+  2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease plasma concentration of POPs.
+  3CI: Confidence interval.") |>
+  add_header(
+    "study_design" = "Study design",
+    "explanatory" = "Exposures", 
+    "term" = "Term") |>
+  merge_h(part = "header") |>
+  merge_v(j = "explanatory") |>
+  merge_v(j = "study_design") |>
+  theme_vanilla() |>
+  bold(j = "explanatory", part = "body") |>
+  bold(j = "study_design", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  merge_at(j = "term", part = "header") |>
+  merge_at(j = "study_design", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")|> 
+  color(i = ~ `p-value_raw` < 0.05, color = "red", part = "body")
+rm(POPs_sd_ALS_table_sensi3)
 
 # Sensitivity analysis 4 - effects of survival duration among the Danish population ----
 ## justification ----
@@ -3080,7 +3240,7 @@ model2_cox_sd_danish_sensi4_in <- map_dfr(POPs_group_sd, function(expl) {
     mutate(follow_up_death_cat = ifelse(follow_up_death>23, "survival ≥ 24 months", "survival <  24 months")) |>
     filter(follow_up_death_cat == "survival <  24 months")
   
-  surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,                # set the outcomes
+  surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,              # set the outcomes
                           event = bdd_cases_danish$status_death)
   
   formula_danish <-                                                             # set the formulas
@@ -3245,13 +3405,16 @@ cv_fit <- cv.glmnet(                                                            
   nfolds = 5,                                                                   # number of folds for the cross validation process. Default is 10. I chose 5 because sample size is small
   # penalty.factor = penalty_factor                                             # pre-set penalty factor because we want to force the model to select at least the covariates
 )
-plot(cv_fit)
-coef(cv_fit, s = "lambda.min")  
-coef(cv_fit, s = "lambda.1se")  
 
 plot(cv_fit_covar_forced)
 coef(cv_fit_covar_forced, s = "lambda.min")  
 coef(cv_fit_covar_forced, s = "lambda.1se")
+
+plot(cv_fit)
+coef(cv_fit, s = "lambda.min")  
+coef(cv_fit, s = "lambda.1se")  
+
+
 rm(bdd_cases_danish_bis, POPs_group_bis, X_matrix, penalty_factor)
 
 ## new copollutant models with selected POPs ----
@@ -4089,6 +4252,7 @@ results_POPs_ALS_survival <-
          POPs_quart_ALS_figure_metanalysis = POPs_quart_ALS_figure_metanalysis), 
        sensi1 = list(
          plot_justif = plot_justif, 
+         plot_justif_2cat = plot_justif_2cat, 
          cor_test_sensi1 = cor_test_sensi1, 
          results_sensi1 = results_sensi1, 
          sample_size_check = sample_size_check, 
@@ -4101,10 +4265,15 @@ results_POPs_ALS_survival <-
          results_sensi2 = results_sensi2, 
          POPs_sd_ALS_figure_sensi2_finnish_orange = POPs_sd_ALS_figure_sensi2_finnish_orange, 
          POPs_sd_ALS_figure_sensi2_finnish_purple = POPs_sd_ALS_figure_sensi2_finnish_purple, 
-         POPs_sd_ALS_figure_sensi2_finnish_green = POPs_sd_ALS_figure_sensi2_finnish_green), 
+         POPs_sd_ALS_figure_sensi2_finnish_green = POPs_sd_ALS_figure_sensi2_finnish_green, 
+         tbl_distrib_among_green_box = tbl_distrib_among_green_box, 
+         tbl_distrib_among_purple_box = tbl_distrib_among_purple_box, 
+         tbl_distrib_among_orange_box = tbl_distrib_among_orange_box), 
        sensi3 = list(
          results_sensi3 = results_sensi3, 
-         POPs_sd_ALS_table_sensi3 = POPs_sd_ALS_table_sensi3), 
+         POPs_sd_ALS_table_sensi3_baseline_age = POPs_sd_ALS_table_sensi3_baseline_age, 
+         POPs_sd_ALS_table_sensi3_follow_up = POPs_sd_ALS_table_sensi3_follow_up, 
+         POPs_sd_ALS_table_sensi3_baseline_age_follow_up = POPs_sd_ALS_table_sensi3_baseline_age_follow_up), 
        sensi4 = list(
          plot_justif_sensi4 = plot_justif_sensi4, 
          results_sensi4 = results_sensi4, 
@@ -4150,7 +4319,7 @@ rm(bdd_cases_danish,
    covariates_danish, covariates_finnish, 
    surv_obj_danish, surv_obj_FMC, surv_obj_FMCF, surv_obj_MFH, surv_obj_finnish, 
    
-   plot_justif, results_sensi1, sample_size_check, sample_size_check_2cat, 
+   plot_justif, plot_justif_2cat, results_sensi1, sample_size_check, sample_size_check_2cat, 
    POPs_heatmap_cases_group, cor_test_sensi1, 
    model2_cox_sd_danish, 
    POPs_sd_ALS_figure_sensi1_not_adjusted, 
@@ -4161,9 +4330,14 @@ rm(bdd_cases_danish,
    POPs_sd_ALS_figure_sensi2_finnish_orange, 
    POPs_sd_ALS_figure_sensi2_finnish_purple, 
    POPs_sd_ALS_figure_sensi2_finnish_green, 
+   tbl_distrib_among_green_box, 
+   tbl_distrib_among_purple_box, 
+   tbl_distrib_among_orange_box, 
    
    results_sensi3, 
-   POPs_sd_ALS_table_sensi3, 
+   POPs_sd_ALS_table_sensi3_baseline_age,
+   POPs_sd_ALS_table_sensi3_follow_up, 
+   POPs_sd_ALS_table_sensi3_baseline_age_follow_up,
    
    results_sensi4, 
    plot_justif_sensi4, 

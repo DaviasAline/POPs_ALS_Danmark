@@ -364,9 +364,10 @@ results_descriptive$danish$proteomic_table_danish  |>
 ### Comparison of distribution cases/controls
 
 ```{r}
-#| echo: false
+#| eval: false
 #| message: false
 #| warning: false
+#| include: false
 results_descriptive$danish$proteomic_table_danish_by_als|>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -1512,12 +1513,50 @@ results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_figure_metanalysis
 ```
 
 ## Sensitivity analyses 1
+The aim of this sensitivity analysis is to investigate if differences observed between the Danish and Finnish cohorts are due to differences in duration of follow-up and age at baseline 
+We re-ran the models by selecting the Finnish cases with follow-up and age at baseline similar to the Danish cases 
 
+4 cohorts (EPIC/FMC/FMCF/MFH)
 ```{r, fig.height=12, fig.width=12}
 #| echo: false
 #| message: false
 #| warning: false
 print(results_POPs_ALS_survival$sensi1$plot_justif)
+```
+
+2 cohorts (Danish/Finnish)
+```{r, fig.height=12, fig.width=12}
+#| echo: false
+#| message: false
+#| warning: false
+print(results_POPs_ALS_survival$sensi1$plot_justif_2cat)
+```
+
+Distribution of follow up and age at baseline among the cases within the boxes
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi2$tbl_distrib_among_green_box |>
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
+
+results_POPs_ALS_survival$sensi2$tbl_distrib_among_purple_box |>
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
+
+results_POPs_ALS_survival$sensi2$tbl_distrib_among_orange_box |>
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
 ```
 
 
@@ -1549,7 +1588,7 @@ results_POPs_ALS_survival$sensi1$sample_size_check |>
   set_table_properties(align = "left")
 ```
 
-results not adjusted on the cohort 
+results not adjusted on the cohort, adjusted for sex, diagnosis age, smoking status, bmi and marital_status
 ```{r, fig.width=8}
 #| echo: false
 #| message: false
@@ -1557,7 +1596,8 @@ results not adjusted on the cohort
 results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_not_adjusted
 ```
 
-results adjusted on the cohort (4 categories)
+results adjusted on the cohort (4 categories), adjusted for sex, diagnosis age, smoking status, bmi and marital_status
+These resuts are not trustful because sample size of MFH is too small (n=11)
 ```{r}
 #| echo: false
 #| message: false
@@ -1565,7 +1605,7 @@ results adjusted on the cohort (4 categories)
 results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_adjusted
 ```
 
-results adjusted on the cohort (2 categories danish or finnish)
+results adjusted on the cohort (2 categories danish or finnish), adjusted for sex, diagnosis age, smoking status, bmi and marital_status
 ```{r}
 #| echo: false
 #| message: false
@@ -1591,24 +1631,48 @@ corrplot(results_POPs_ALS_survival$sensi1$POPs_heatmap_cases_group,
 ```
 
 ## Sensitivity analyses 2 
-effects of baseline age, follow-up duration among the Finnish population (stratified and adjusted analyses)
+Results of sensivitity analysis 1 may be driven by the Danish cases. 
+Here, we ran adjusted and stratified analyses depending on 
+effects of baseline age, follow-up duration just among the Finnish population
+All models are adjusted for sex, diagnosis age, smoking status, bmi and marital_status
 ```{r, fig.width=10}
 #| echo: false
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_orange
+results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_orange 
 results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_purple
 results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_green
 ```
 
 ## Sensitivity analyses 3 
-effects of baseline age, follow-up duration among the Finnish population (interaction anayses)
+Here, we tried baseline age and follow-up duration as interaction terms (continuous and categorical) just among the Finnish cases 
+All models are adjusted for sex, diagnosis age, smoking status, bmi and marital_status
+
+### baseline age 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi3$POPs_sd_ALS_table_sensi3 |>
+results_POPs_ALS_survival$sensi3$POPs_sd_ALS_table_sensi3_baseline_age |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
+```
+
+### follow up duration 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi3$POPs_sd_ALS_table_sensi3_follow_up |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
+```
+
+### both baseline age and follow up duration 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi3$POPs_sd_ALS_table_sensi3_baseline_age_follow_up |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 

@@ -7,7 +7,7 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/2.3_analyses_POPs_ALS_survival.R"
 
 # Table 1 - description of the subjects ----
 # Description of the subject characteristics of the Danish EPIC, the FMC, the FMCF and the MFH Finnish cohorts (total sample size=263)
-table_1 <- results_descriptive$comp$covar_comp_cases |>
+table_1 <- results_descriptive$comp$covar_comp_cases_2cat |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
@@ -17,7 +17,7 @@ table_1 <- results_descriptive$comp$covar_comp_cases |>
 
 # Figure 1 - description of the POP levels (boxplots) ----
 # Distribution of pre-disease POP concentrations in ALS cases from the Danish EPIC, the FMC, the FMCF and the MFH Finnish cohorts (total sample size=263).
-figure_1 <- results_descriptive$comp$POPs_boxplot_comp_cases
+figure_1 <- results_descriptive$comp$POPs_boxplot_comp_cases_2cat
 
 # Figure 2 - forest plot expo - ALS survival (danish EPIC cohort) ----
 # Association between pre-diagnostic POP concentrations and survival among ALS cases from the Danish Diet, Cancer and Health cohort (cox models by exposure quartiles; n = 166).
@@ -73,7 +73,7 @@ figure_3 <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_surviv
 
 # Table S1 - description of the POP levels (table) ----
 # Distribution of pre-disease POP concentrations in ALS cases from the Danish EPIC, the FMC, the FMCF and the MFH Finnish cohorts (total sample size=263).
-table_S1 <- results_descriptive$comp$POPs_table_comp_cases |>
+table_S1 <- results_descriptive$comp$POPs_table_comp_cases_2cat |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>

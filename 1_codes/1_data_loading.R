@@ -356,6 +356,7 @@ bdd_finnish  <-
                             "FMC" = "1",
                             "FMCF" = "2",
                             "MFH" = "3"), 
+         study_2cat = "Finnish", 
          municipality = as.factor(as.character(municipality)), 
          level_urbanization = as.factor(as.character(level_urbanization)), 
          # status_death = as.factor(as.character(status_death)),                # do not factor the status_death variable (if yes, there is an issue in the cox models)
@@ -425,6 +426,7 @@ EVs <- bdd_danish |> select(starts_with("ev_")) |> colnames()
 bdd_danish <- bdd_danish |>
   mutate(
     study = "Danish", 
+    study_2cat = "Danish", 
     als = ifelse(!is.na(als_date), 1, 0),                                       # metadata variables creation 
     education = case_when(
       high_educ == 1 & medium_educ == 0 & low_educ == 0 ~ ">10 years of primary school", 
@@ -684,7 +686,7 @@ rm(pred, method, bdd_danish_i, bdd_danish_ii, covar_a_imputer)
 
 # merged dataset ----
 bdd_danish_red <- bdd_danish |> 
-  select(sample, als, study, match, 
+  select(sample, als, study, study_2cat, match, 
          sex, baseline_age, smoking_2cat_i, bmi, marital_status_2cat_i, education_merged, education_i, cholesterol_i, fS_Kol,
          baseline_age, death_age, diagnosis_age, birth_year, 
          time_baseline_diagnosis, time_baseline_death, time_diagnosis_death,
@@ -702,7 +704,7 @@ bdd_danish_red <- bdd_danish |>
          education = education_i)
 
 bdd_finnish_red <- bdd_finnish |> 
-  select(sample, als, study, match, 
+  select(sample, als, study, study_2cat, match, 
         baseline_age, sex,  smoking, bmi, cholesterol, marital_status, education, education_merged, alcohol, smoking_2cat, marital_status_2cat, blod_sys, blod_dias, 
          baseline_age, death_age, diagnosis_age, S_Ca, fS_Kol, birth_year, 
         follow_up, follow_up_death, status_death, 
@@ -718,7 +720,7 @@ bdd_finnish_red <- bdd_finnish |>
   rename_with(~ gsub("_raw", "", .x)) |>
   mutate(sample = as.character(sample))
 
-bdd <- bind_rows(bdd_danish_red, bdd_finnish_red)
+bdd <- bind_rows(bdd_danish_red, bdd_finnish_red) 
 rm(bdd_danish_red, bdd_finnish_red)
 
 # variable labels ----
@@ -950,6 +952,7 @@ var_label(bdd) <- list(
   sample = "Identifcation", 
   als = "Amyotrophic lateral sclerosis",
   study = "Cohort",
+  study_2cat = "Cohort",
   match = "match", 
   sex = "Sex", 
   baseline_age = "Age at baseline (years)",
