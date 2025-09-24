@@ -102,7 +102,6 @@ descrip_num(data = timing, vars = colnames(timing))   |>
 rm(timing)
 ```
 
-
 ## POPs
 
 ### Distribution tables
@@ -344,7 +343,6 @@ bdd_danish |>
 results_descriptive$danish$POPs_fattyacids_heatmap_danish
 ```
 
-
 ## Proteomic
 
 ### Distribution table
@@ -404,7 +402,8 @@ corrplot(results_descriptive$danish$proteomic_heatmap_danish,
 results_descriptive$danish$proteomic_boxplot_danish
 ```
 
-Comparison between cases and controls 
+Comparison between cases and controls
+
 ```{r, fig.width=10, fig.height=30}
 #| echo: false
 #| message: false
@@ -421,8 +420,10 @@ Comparison between alive/deceased status at the end of the follow-up (among case
 results_descriptive$danish$proteomic_boxplot_danish_by_death
 ```
 
-## EVs 
-### Distribution tables 
+## EVs
+
+### Distribution tables
+
 ```{r}
 #| echo: false
 #| message: false
@@ -436,6 +437,7 @@ results_descriptive$danish$EVs_table_danish |>
 ```
 
 ### Comparison of distribution cases/controls
+
 ```{r}
 #| echo: false
 #| message: false
@@ -448,7 +450,8 @@ results_descriptive$danish$EVs_table_danish_by_als |>
   set_table_properties(align = "left")
 ```
 
-### Heatmap of correlation 
+### Heatmap of correlation
+
 ```{r, fig.height=12, fig.width=12}
 #| echo: false
 #| message: false
@@ -467,6 +470,7 @@ corrplot(results_descriptive$danish$EVs_heatmap_danish,
 ```
 
 ### Boxplots
+
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
@@ -474,7 +478,8 @@ corrplot(results_descriptive$danish$EVs_heatmap_danish,
 results_descriptive$danish$EVs_boxplot_danish
 ```
 
-Comparison between cases and controls 
+Comparison between cases and controls
+
 ```{r, fig.height=10, fig.width=10}
 #| echo: false
 #| message: false
@@ -490,7 +495,6 @@ Comparison between alive/deceased status at the end of the follow-up (among case
 #| warning: false
 results_descriptive$danish$EVs_boxplot_danish_by_death
 ```
-
 
 # Finnish data description
 
@@ -932,8 +936,7 @@ results_descriptive$comp$fattyacids_boxplot_comp
 
 ## Among cases
 
-(for ALS survival analyses) 
-#### Metadata
+(for ALS survival analyses) \#### Metadata
 
 ```{r}
 #| echo: false
@@ -1126,6 +1129,7 @@ results_POPs_ALS_occurrence$sensitivity_not_summed$plot_quart_sensi_not_summed
 Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive model (gam) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. All models were adjusted for sex and age. Adjusted models further account for serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a gam that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
 
 ##### Main analyses
+
 ```{r, fig.height=3.5, fig.width=9}
 #| echo: false
 #| message: false
@@ -1310,14 +1314,14 @@ results_POPs_ALS_survival$danish$POPs_sd_ALS_table_danish  |>
 results_POPs_ALS_survival$danish$POPs_sd_ALS_figure_danish
 ```
 
-Checking for the copollutant model 
+Checking for the copollutant model
+
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
 results_POPs_ALS_survival$danish$cheking_model3_cox_sd_danish
 ```
-
 
 #### Quartiles
 
@@ -1423,7 +1427,26 @@ results_POPs_ALS_survival$finnish$POPs_sd_ALS_table_finnish_raw |>
 results_POPs_ALS_survival$finnish$POPs_sd_ALS_figure_finnish_raw
 ```
 
+#### Quartiles - raw analysis not adjusted on cohort
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+results_POPs_ALS_survival$danish$POPs_quart_ALS_table_finnish_raw |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
+```
+
+```{r fig.height=9, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$danish$POPs_quart_ALS_figure_finnish_raw
+```
+
 #### Continuous coding (standardized) - meta-analaysis
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1440,7 +1463,9 @@ results_POPs_ALS_survival$finnish$POPs_sd_ALS_figure_finnish
 ```
 
 #### Quartiles - meta-analaysis
+
 data not shown (instable)
+
 ```{r}
 #| eval: false
 #| message: false
@@ -1513,10 +1538,11 @@ results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_figure_metanalysis
 ```
 
 ## Sensitivity analyses 1
-The aim of this sensitivity analysis is to investigate if differences observed between the Danish and Finnish cohorts are due to differences in duration of follow-up and age at baseline 
-We re-ran the models by selecting the Finnish cases with follow-up and age at baseline similar to the Danish cases 
+
+The aim of this sensitivity analysis is to investigate if differences observed between the Danish and Finnish cohorts are due to differences in duration of follow-up and age at baseline We re-ran the models by selecting the Finnish cases with follow-up and age at baseline similar to the Danish cases
 
 4 cohorts (EPIC/FMC/FMCF/MFH)
+
 ```{r, fig.height=12, fig.width=12}
 #| echo: false
 #| message: false
@@ -1525,6 +1551,7 @@ print(results_POPs_ALS_survival$sensi1$plot_justif)
 ```
 
 2 cohorts (Danish/Finnish)
+
 ```{r, fig.height=12, fig.width=12}
 #| echo: false
 #| message: false
@@ -1533,6 +1560,7 @@ print(results_POPs_ALS_survival$sensi1$plot_justif_2cat)
 ```
 
 Distribution of follow up and age at baseline among the cases within the boxes
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1558,7 +1586,6 @@ results_POPs_ALS_survival$sensi2$tbl_distrib_among_orange_box |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left")
 ```
-
 
 ```{r}
 #| echo: false
@@ -1589,6 +1616,7 @@ results_POPs_ALS_survival$sensi1$sample_size_check |>
 ```
 
 results not adjusted on the cohort, adjusted for sex, diagnosis age, smoking status, bmi and marital_status
+
 ```{r, fig.width=8}
 #| echo: false
 #| message: false
@@ -1596,8 +1624,8 @@ results not adjusted on the cohort, adjusted for sex, diagnosis age, smoking sta
 results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_not_adjusted
 ```
 
-results adjusted on the cohort (4 categories), adjusted for sex, diagnosis age, smoking status, bmi and marital_status
-These resuts are not trustful because sample size of MFH is too small (n=11)
+results adjusted on the cohort (4 categories), adjusted for sex, diagnosis age, smoking status, bmi and marital_status These resuts are not trustful because sample size of MFH is too small (n=11)
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1606,6 +1634,7 @@ results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_adjusted
 ```
 
 results adjusted on the cohort (2 categories danish or finnish), adjusted for sex, diagnosis age, smoking status, bmi and marital_status
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1613,7 +1642,8 @@ results adjusted on the cohort (2 categories danish or finnish), adjusted for se
 results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_adjusted_2cat
 ```
 
-Correlation among standardized POPs among Danish ALS cases 
+Correlation among standardized POPs among Danish ALS cases
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1630,11 +1660,10 @@ corrplot(results_POPs_ALS_survival$sensi1$POPs_heatmap_cases_group,
          col = rev(COL2(diverging = "RdYlBu")))
 ```
 
-## Sensitivity analyses 2 
-Results of sensivitity analysis 1 may be driven by the Danish cases. 
-Here, we ran adjusted and stratified analyses depending on 
-effects of baseline age, follow-up duration just among the Finnish population
-All models are adjusted for sex, diagnosis age, smoking status, bmi and marital_status
+## Sensitivity analyses 2
+
+Results of sensivitity analysis 1 may be driven by the Danish cases. Here, we ran adjusted and stratified analyses depending on effects of baseline age, follow-up duration just among the Finnish population All models are adjusted for sex, diagnosis age, smoking status, bmi and marital_status
+
 ```{r, fig.width=10}
 #| echo: false
 #| message: false
@@ -1645,11 +1674,12 @@ results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_purple
 results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_green
 ```
 
-## Sensitivity analyses 3 
-Here, we tried baseline age and follow-up duration as interaction terms (continuous and categorical) just among the Finnish cases 
-All models are adjusted for sex, diagnosis age, smoking status, bmi and marital_status
+## Sensitivity analyses 3
 
-### baseline age 
+Here, we tried baseline age and follow-up duration as interaction terms (continuous and categorical) just among the Finnish cases All models are adjusted for sex, diagnosis age, smoking status, bmi and marital_status
+
+### baseline age
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1658,7 +1688,8 @@ results_POPs_ALS_survival$sensi3$POPs_sd_ALS_table_sensi3_baseline_age |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-### follow up duration 
+### follow up duration
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1667,7 +1698,8 @@ results_POPs_ALS_survival$sensi3$POPs_sd_ALS_table_sensi3_follow_up |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-### both baseline age and follow up duration 
+### both baseline age and follow up duration
+
 ```{r}
 #| echo: false
 #| message: false
@@ -1676,15 +1708,16 @@ results_POPs_ALS_survival$sensi3$POPs_sd_ALS_table_sensi3_baseline_age_follow_up
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-## Sensitivity analyses 4 
-effects of survival duration among the Danish population 
+## Sensitivity analyses 4
+
+effects of survival duration among the Danish population
+
 ```{r, fig.height=12, fig.width=12}
 #| echo: false
 #| message: false
 #| warning: false
 results_POPs_ALS_survival$sensi4$plot_justif_sensi4
 ```
-
 
 ```{r}
 #| echo: false
@@ -1693,95 +1726,108 @@ results_POPs_ALS_survival$sensi4$plot_justif_sensi4
 results_POPs_ALS_survival$sensi4$POPs_sd_ALS_figure_sensi4_danish
 ```
 
-## Sensitivity analyses 5 - LASSO POPs selection 
-### Model forcing the covariates to be included 
+## Sensitivity analyses 5
+Mixture models with POPs pre-selection
+
+### Model forcing the covariates to be included
+
+Using LASSO
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-plot(results_POPs_ALS_survival$sensi5$cv_fit_covar_forced)
+plot(results_POPs_ALS_survival$sensi5$model_lasso_sd_danish)  
 ```
-This plots the cross-validation curve (red dotted line) along with upper and lower standard deviation curves along the 𝜆sequence (error bars). Two special values along the 𝜆sequence are indicated by the vertical dotted lines. 
+
+Using ridge
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+plot(results_POPs_ALS_survival$sensi5$model_ridge_sd_danish)  
+```
+
+Using elastic net
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+plot(results_POPs_ALS_survival$sensi5$model_elastic_net_sd_danish)
+```
+
+These plot the cross-validation curve (red dotted line) along with upper and lower standard deviation curves along the 𝜆sequence (error bars). Two special values along the 𝜆sequence are indicated by the vertical dotted lines.
 
 lambda.min is the value of 𝜆that gives minimum mean cross-validated error
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$sensi5$cv_fit_covar_forced$lambda.min 
-```
 
 coefficients using lambda.min
+Using LASSO
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-coef(results_POPs_ALS_survival$sensi5$cv_fit_covar_forced, s = "lambda.min")     
+coef(results_POPs_ALS_survival$sensi5$model_lasso_sd_danish, s = "lambda.min")  
+```
+
+Using ridge
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+coef(results_POPs_ALS_survival$sensi5$model_ridge_sd_danish, s = "lambda.min")  
+```
+
+Using elastic net 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+coef(results_POPs_ALS_survival$sensi5$model_elastic_net_sd_danish, s = "lambda.min")
 ```
 
 while lambda.1se is the value of 𝜆that gives the most regularized model such that the cross-validated error is within one standard error of the minimum.
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$sensi5$cv_fit_covar_forced$lambda.1se
-```
 
 coefficients using lambda.1se
+Using LASSO
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-coef(results_POPs_ALS_survival$sensi5$cv_fit_covar_forced, s = "lambda.1se")
+coef(results_POPs_ALS_survival$sensi5$model_lasso_sd_danish, s = "lambda.1se")  
 ```
 
-### Model not forcing the covariates to be included 
+Using ridge
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-plot(results_POPs_ALS_survival$sensi5$cv_fit)
+coef(results_POPs_ALS_survival$sensi5$model_ridge_sd_danish, s = "lambda.1se")  
 ```
-This plots the cross-validation curve (red dotted line) along with upper and lower standard deviation curves along the 𝜆sequence (error bars). Two special values along the 𝜆sequence are indicated by the vertical dotted lines. 
 
-lambda.min is the value of 𝜆that gives minimum mean cross-validated error
+Using elastic net
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi5$cv_fit$lambda.min 
+coef(results_POPs_ALS_survival$sensi5$model_elastic_net_sd_danish, s = "lambda.1se")
 ```
 
-coefficients using lambda.min
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-coef(results_POPs_ALS_survival$sensi5$cv_fit, s = "lambda.min")     
-```
-
-while lambda.1se is the value of 𝜆that gives the most regularized model such that the cross-validated error is within one standard error of the minimum.
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$sensi5$cv_fit$lambda.1se
-```
-
-coefficients using lambda.1se
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-coef(results_POPs_ALS_survival$sensi5$cv_fit, s = "lambda.1se")
-```
-
-## New co-pollutant models with LASSO selected POPs (to get 95%CI and p-values)
+### New co-pollutant model with selected POPs using elastic net (to get unbiaised coefficients and 95%CI and p-values)
+#### Continuous coding 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
 results_POPs_ALS_survival$sensi5$POPs_sd_ALS_figure_sensi5_danish
+results_POPs_ALS_survival$sensi5$POPs_sd_ALS_table_sensi5_danish
+```
+
+#### Quartile coding 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi5$POPs_quart_ALS_figure_sensi5_danish
+results_POPs_ALS_survival$sensi5$POPs_quart_ALS_table_sensi5_danish
 ```
 
 # Fatty acids and ALS occurence

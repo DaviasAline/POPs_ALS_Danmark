@@ -356,7 +356,7 @@ bdd_finnish  <-
                             "FMC" = "1",
                             "FMCF" = "2",
                             "MFH" = "3"), 
-         study_2cat = "Finnish", 
+         study_2cat = "Finnish Health Surveys", 
          municipality = as.factor(as.character(municipality)), 
          level_urbanization = as.factor(as.character(level_urbanization)), 
          # status_death = as.factor(as.character(status_death)),                # do not factor the status_death variable (if yes, there is an issue in the cox models)
@@ -378,7 +378,7 @@ POPs_tot <- c("PCB_4",
               "PCB_138", "PCB_153", "PCB_170", "PCB_180", "PCB_183", "PCB_187", 
               "OCP_HCB",  
               "ΣDDT", "OCP_pp_DDT",  "OCP_pp_DDE",
-              "OCP_α_HCH", "OCP_β_HCH", "OCP_γ_HCH", 
+              "ΣHCH", "OCP_α_HCH", "OCP_β_HCH", "OCP_γ_HCH", 
               "Σchlordane", "OCP_oxychlordane", "OCP_transnonachlor", 
               "OCP_PeCB",   
               "ΣPBDE", "PBDE_47", "PBDE_99", "PBDE_153")
@@ -426,7 +426,7 @@ EVs <- bdd_danish |> select(starts_with("ev_")) |> colnames()
 bdd_danish <- bdd_danish |>
   mutate(
     study = "Danish", 
-    study_2cat = "Danish", 
+    study_2cat = "Danish EPIC", 
     als = ifelse(!is.na(als_date), 1, 0),                                       # metadata variables creation 
     education = case_when(
       high_educ == 1 & medium_educ == 0 & low_educ == 0 ~ ">10 years of primary school", 
@@ -757,7 +757,7 @@ var_label(bdd_danish) <- list(
   follow_up_death	= "Length of follow-up from ALS diagnosis (months)", 
   status_death = "Status at end of the follow-up",
   birth_year = "Birth year", 
-  OCP_PeCB = "Pentachlorobenzene (PeCB)",            
+  OCP_PeCB = "Pentachlorobenzene",            
   OCP_HCB = "HCB",            
   OCP_α_HCH = "α-HCH",
   OCP_β_HCH = "β-HCH", 
@@ -869,7 +869,7 @@ var_label(bdd_finnish) <- list(
   follow_up_death	= "Length of follow-up from ALS diagnosis (months)", 
   status_death = "Status at end of the follow-up",
   birth_year = "Birth year", 
-  OCP_PeCB = "Pentachlorobenzene (PeCB)",            
+  OCP_PeCB = "Pentachlorobenzene",            
   OCP_HCB = "HCB",            
   OCP_α_HCH = "α-HCH",
   OCP_β_HCH = "β-HCH", 
@@ -979,7 +979,7 @@ var_label(bdd) <- list(
   follow_up_death	= "Length of follow-up from ALS diagnosis (months)", 
   birth_year = "Birth year", 
   status_death = "Status at end of the follow-up",
-  OCP_PeCB = "Pentachlorobenzene (PeCB)",            
+  OCP_PeCB = "Pentachlorobenzene",            
   OCP_HCB = "HCB",            
   OCP_α_HCH = "α-HCH",
   OCP_β_HCH = "β-HCH", 
@@ -1083,7 +1083,7 @@ POPs_labels <- c(
   "γ-HCH" = "OCP_γ_HCH",
   "Oxychlordane" = "OCP_oxychlordane",
   "Transnonachlor" = "OCP_transnonachlor",
-  "Pentachlorobenzene (PeCB)" = "OCP_PeCB",
+  "Pentachlorobenzene" = "OCP_PeCB",
   "PBDE-47" = "PBDE_47",
   "PBDE-99" = "PBDE_99",
   "PBDE-153" = "PBDE_153")
@@ -1115,7 +1115,7 @@ POPs_tot_labels <- c(
   "Σchlordane" = "Σchlordane",
   "Oxychlordane" = "OCP_oxychlordane",
   "Transnonachlor" = "OCP_transnonachlor",
-  "Pentachlorobenzene (PeCB)" = "OCP_PeCB",
+  "Pentachlorobenzene" = "OCP_PeCB",
   "ΣPBDE" = "ΣPBDE",
   "PBDE-47" = "PBDE_47",
   "PBDE-99" = "PBDE_99",
@@ -1142,7 +1142,7 @@ POPs_group_labels_finnish <- c(
   "β-HCH" = "OCP_β_HCH",
   "γ-HCH" = "OCP_γ_HCH",
   "Σchlordane" = "Σchlordane",
-  "PeCB" = "OCP_PeCB")
+  "Pentachlorobenzene" = "OCP_PeCB")
 
 POPs_group_sd_labels <- set_names(
   c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 

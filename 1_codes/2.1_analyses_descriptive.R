@@ -677,10 +677,14 @@ covar_comp_cases_2cat <- bdd |>
                                    "Deceased" = "1"), 
          sex = fct_relevel(sex, "Male", "Female"), 
          smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other")) |>
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"), 
+         study_2cat = fct_recode(
+           study_2cat, 
+           "Danish EPIC" = "Danish",
+           "Finnish Health Surveys" = "Finnish")) |>
   select(
     study_2cat, baseline_age, diagnosis_age, death_age, birth_year, 
-    follow_up_death, status_death,
+    follow_up, follow_up_death, status_death,
     sex, marital_status_2cat, education_merged, alcohol, smoking_2cat, bmi, cholesterol)|>
   tbl_summary(by = study_2cat, 
               missing = "no", 
@@ -694,9 +698,8 @@ covar_comp_cases_2cat <- bdd |>
   bold_labels()|>
   add_overall() 
 
-
-
 ## POPs ----
+### Table 
 POPs_table_comp_cases <- bdd |>
   filter(als == 1) |>
   select(study, all_of(POPs_tot), -OCP_α_HCH) |>
@@ -706,9 +709,15 @@ POPs_table_comp_cases <- bdd |>
 POPs_table_comp_cases_2cat <- bdd |>
   filter(als == 1) |>
   select(study_2cat, all_of(POPs_tot), -OCP_α_HCH) |>
+  mutate(
+    study_2cat = fct_recode(
+      study_2cat, 
+      "Danish EPIC" = "Danish",
+      "Finnish Health Surveys" = "Finnish")) |>
   tbl_summary(by = "study_2cat") |>
   bold_labels() 
 
+### Boxplots
 POPs_group_bis <- c("PCB_4", "PCB_DL", "PCB_NDL", "OCP_HCB", "ΣDDT", "OCP_β_HCH", "OCP_γ_HCH", "Σchlordane", "OCP_PeCB", "ΣPBDE")
 POPs_group_labels_bis <- c(
   "Most prevalent PCBs" = "PCB_4",
@@ -744,6 +753,11 @@ POPs_boxplot_comp_cases <- bdd |>
 POPs_boxplot_comp_cases_2cat <- bdd |>
   filter(als == 1) |>
   select(study_2cat, all_of(POPs_group_bis)) |>
+  mutate(
+    study_2cat = fct_recode(
+      study_2cat, 
+      "Danish EPIC" = "Danish",
+      "Finnish Health Surveys" = "Finnish")) |>
   pivot_longer(cols = -study_2cat, names_to = "POPs", values_to = "values") |>
   mutate(POPs = factor(POPs, levels = POPs_group_labels_bis), 
          POPs = fct_recode(POPs, !!!POPs_group_labels_bis), 
@@ -762,10 +776,27 @@ POPs_boxplot_comp_cases_2cat <- bdd |>
 
 rm(POPs_group_bis, POPs_group_labels_bis)
 
+### Heatmaps
+POPs_group_bis <- c(setdiff(POPs_group, "PCB_4"), "OCP_PeCB")
+pollutant_labels_bis <- set_names(
+  POPs_group_bis,
+  c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
+    "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE", "Pentachlorobenzene"))
+
+POPs_heatmap_cases_group <- bdd |>
+  filter(als == 1) |>
+  select(all_of(POPs_group_bis)) |>
+  rename(!!!pollutant_labels_bis) 
+
+POPs_heatmap_cases_group <- cor(POPs_heatmap_cases_group, 
+                          use = "pairwise.complete.obs", 
+                          method = "pearson")
+
 POPs_heatmap_cases <- bdd |>
   filter(als == 1) |>
-  select(all_of(POPs_tot)) |>
-  rename(!!!POPs_tot_labels) 
+  select(all_of(POPs)) |>
+  rename(!!!POPs_labels) |>
+  select(-"α-HCH")
 
 POPs_heatmap_cases <- cor(POPs_heatmap_cases, 
                            use = "pairwise.complete.obs", 
@@ -820,6 +851,7 @@ results_descriptive <- list(
     fattyacids_boxplot_finnish_by_als = fattyacids_boxplot_finnish_by_als, 
     fattyacids_heatmap_finnish = fattyacids_heatmap_finnish, 
     POPs_fattyacids_heatmap_finnish = POPs_fattyacids_heatmap_finnish),
+  
   comp = list(
     covar_comp = covar_comp,
     POPs_table_comp = POPs_table_comp,
@@ -832,7 +864,8 @@ results_descriptive <- list(
     POPs_table_comp_cases_2cat = POPs_table_comp_cases_2cat, 
     POPs_boxplot_comp_cases = POPs_boxplot_comp_cases, 
     POPs_boxplot_comp_cases_2cat = POPs_boxplot_comp_cases_2cat, 
-    POPs_heatmap_cases = POPs_heatmap_cases))
+    POPs_heatmap_cases = POPs_heatmap_cases, 
+    POPs_heatmap_cases_group = POPs_heatmap_cases_group))
 
 
 rm(
@@ -890,4 +923,5 @@ rm(
   POPs_table_comp_cases_2cat, 
   POPs_boxplot_comp_cases, 
   POPs_boxplot_comp_cases_2cat, 
-  POPs_heatmap_cases)
+  POPs_heatmap_cases, 
+  POPs_heatmap_cases_group)
