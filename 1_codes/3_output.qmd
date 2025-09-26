@@ -1736,7 +1736,7 @@ Using LASSO
 #| echo: false
 #| message: false
 #| warning: false
-plot(results_POPs_ALS_survival$sensi5$model_lasso_sd_danish)  
+plot(results_POPs_ALS_survival$sensi5$sensi5_lasso_sd_danish)  
 ```
 
 Using ridge
@@ -1744,7 +1744,7 @@ Using ridge
 #| echo: false
 #| message: false
 #| warning: false
-plot(results_POPs_ALS_survival$sensi5$model_ridge_sd_danish)  
+plot(results_POPs_ALS_survival$sensi5$sensi5_ridge_sd_danish)  
 ```
 
 Using elastic net
@@ -1752,7 +1752,7 @@ Using elastic net
 #| echo: false
 #| message: false
 #| warning: false
-plot(results_POPs_ALS_survival$sensi5$model_elastic_net_sd_danish)
+plot(results_POPs_ALS_survival$sensi5$sensi5_elastic_net_sd_danish)
 ```
 
 These plot the cross-validation curve (red dotted line) along with upper and lower standard deviation curves along the 𝜆sequence (error bars). Two special values along the 𝜆sequence are indicated by the vertical dotted lines.
@@ -1765,7 +1765,7 @@ Using LASSO
 #| echo: false
 #| message: false
 #| warning: false
-coef(results_POPs_ALS_survival$sensi5$model_lasso_sd_danish, s = "lambda.min")  
+coef(results_POPs_ALS_survival$sensi5$sensi5_lasso_sd_danish, s = "lambda.min")  
 ```
 
 Using ridge
@@ -1773,7 +1773,7 @@ Using ridge
 #| echo: false
 #| message: false
 #| warning: false
-coef(results_POPs_ALS_survival$sensi5$model_ridge_sd_danish, s = "lambda.min")  
+coef(results_POPs_ALS_survival$sensi5$sensi5_ridge_sd_danish, s = "lambda.min")  
 ```
 
 Using elastic net 
@@ -1781,7 +1781,7 @@ Using elastic net
 #| echo: false
 #| message: false
 #| warning: false
-coef(results_POPs_ALS_survival$sensi5$model_elastic_net_sd_danish, s = "lambda.min")
+coef(results_POPs_ALS_survival$sensi5$sensi5_elastic_net_sd_danish, s = "lambda.min")
 ```
 
 while lambda.1se is the value of 𝜆that gives the most regularized model such that the cross-validated error is within one standard error of the minimum.
@@ -1792,7 +1792,7 @@ Using LASSO
 #| echo: false
 #| message: false
 #| warning: false
-coef(results_POPs_ALS_survival$sensi5$model_lasso_sd_danish, s = "lambda.1se")  
+coef(results_POPs_ALS_survival$sensi5$sensi5_lasso_sd_danish, s = "lambda.1se")  
 ```
 
 Using ridge
@@ -1800,7 +1800,7 @@ Using ridge
 #| echo: false
 #| message: false
 #| warning: false
-coef(results_POPs_ALS_survival$sensi5$model_ridge_sd_danish, s = "lambda.1se")  
+coef(results_POPs_ALS_survival$sensi5$sensi5_ridge_sd_danish, s = "lambda.1se")  
 ```
 
 Using elastic net
@@ -1808,7 +1808,7 @@ Using elastic net
 #| echo: false
 #| message: false
 #| warning: false
-coef(results_POPs_ALS_survival$sensi5$model_elastic_net_sd_danish, s = "lambda.1se")
+coef(results_POPs_ALS_survival$sensi5$sensi5_elastic_net_sd_danish, s = "lambda.1se")
 ```
 
 ### New co-pollutant model with selected POPs using elastic net (to get unbiaised coefficients and 95%CI and p-values)
@@ -2058,26 +2058,5 @@ results_fattyacids_ALS_survival$finnish$fattyacids_quart_als_figure_finnish
 #| echo: false
 #| message: false
 #| warning: false
-results_fattyacids_ALS_survival$main_analysis$main_results_fattyacids_ALS_survival |>
-  filter(term == "Continuous") |>
-  mutate(model = fct_recode(model, 
-                            "Base model" = "base",
-                            "Adjusted model" = "adjusted"),
-         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
-         explanatory = factor(explanatory, levels = fattyacids_tot_labels),
-         explanatory = fct_rev(explanatory),
-         explanatory = fct_recode(explanatory, !!!fattyacids_tot_labels)) |>
-  arrange(explanatory) |> 
-  ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`, shape = study)) +
-  geom_pointrange(position = position_dodge(width = 0.6), size = 0.5) + 
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "PUFAs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
-        legend.position = "bottom", 
-        strip.text.y = element_text(hjust = 0.5)) +
-  coord_flip()
-
+results_fattyacids_ALS_survival$comp_results_danish_finnish
 ```

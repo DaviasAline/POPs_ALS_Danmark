@@ -700,6 +700,29 @@ fattyacids_quart_als_figure_finnish <- main_results_fattyacids_ALS_survival |>
         strip.text.y.left = element_text(angle = 0, hjust = 0.5, vjust = 0.5)) +
   coord_flip()
 
+## Comparaison resultats ----
+comp_results_danish_finnish <- main_results_fattyacids_ALS_survival |>
+  filter(term == "Continuous") |>
+  mutate(model = fct_recode(model, 
+                            "Base model" = "base",
+                            "Adjusted model" = "adjusted"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
+         explanatory = factor(explanatory, levels = fattyacids_tot_labels),
+         explanatory = fct_rev(explanatory),
+         explanatory = fct_recode(explanatory, !!!fattyacids_tot_labels)) |>
+  arrange(explanatory) |> 
+  ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`, shape = study)) +
+  geom_pointrange(position = position_dodge(width = 0.6), size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
+  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  labs(x = "PUFAs", y = "Hazard Ratio (HR)", color = "p-value") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip()
+
 # Assemblage ----
 results_fattyacids_ALS_survival <- 
   list(main_analysis = list(main_results_fattyacids_ALS_survival = main_results_fattyacids_ALS_survival), 
@@ -716,7 +739,8 @@ results_fattyacids_ALS_survival <-
          fattyacids_quart_als_table_danish = fattyacids_quart_als_table_danish, 
          fattyacids_sd_als_figure_danish = fattyacids_sd_als_figure_danish, 
          fattyacids_quart_als_figure_danish = fattyacids_quart_als_figure_danish, 
-         survival_plots_danish = survival_plots_danish))
+         survival_plots_danish = survival_plots_danish), 
+       comp_results_danish_finnish = comp_results_danish_finnish)
 
 rm(main_results_fattyacids_ALS_survival, 
    fattyacids_sd_als_table_finnish, 
@@ -728,4 +752,8 @@ rm(main_results_fattyacids_ALS_survival,
    fattyacids_sd_als_figure_danish, 
    fattyacids_quart_als_figure_danish, 
    survival_plots_danish, 
-   covariates_danish, covariates_finnish)
+   covariates_danish, covariates_finnish,
+   comp_results_danish_finnish)
+
+# Supprimer ces objets
+rm(list = ls(pattern = "fattyacids"))

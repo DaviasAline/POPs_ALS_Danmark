@@ -34,7 +34,8 @@ bdd_cases_danish <- bdd_danish |>
   filter(study == "Danish") |>
   select(study, study_2cat, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
-         all_of(POPs_group)) |>
+         all_of(POPs_group), 
+         all_of(POPs_included)) |>
   mutate(across(all_of(POPs_group), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
                                              labels = c("Q1", "Q2", "Q3", "Q4")),
                 .names = "{.col}_quart")) |>
@@ -49,6 +50,32 @@ bdd_cases_danish <- bdd_danish |>
   replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
   replace_with_median(Σchlordane, Σchlordane_quart) |>
   replace_with_median(ΣPBDE, ΣPBDE_quart) |>
+  mutate(across(all_of(POPs_included), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
+                                                labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) |>
+  mutate(across(all_of(POPs_included),                                             # create cohort and cases specific scaled POPs variables 
+                ~as.numeric(scale(.x)),
+                .names = "{.col}_sd"))  |>
+  replace_with_median(PCB_28, PCB_28_quart) |>
+  replace_with_median(PCB_52, PCB_52_quart) |>
+  replace_with_median(PCB_74, PCB_74_quart) |>
+  replace_with_median(PCB_99, PCB_99_quart) |>
+  replace_with_median(PCB_101, PCB_101_quart) |>
+  replace_with_median(PCB_118, PCB_118_quart) |>
+  replace_with_median(PCB_138, PCB_138_quart) |>
+  replace_with_median(PCB_153, PCB_153_quart) |>
+  replace_with_median(PCB_156, PCB_156_quart) |>
+  replace_with_median(PCB_170, PCB_170_quart) |>
+  replace_with_median(PCB_180, PCB_180_quart) |>
+  replace_with_median(PCB_183, PCB_183_quart) |>
+  replace_with_median(PCB_187, PCB_187_quart) |>
+  replace_with_median(OCP_pp_DDT, OCP_pp_DDT_quart) |>
+  replace_with_median(OCP_pp_DDE, OCP_pp_DDE_quart) |>
+  replace_with_median(OCP_oxychlordane, OCP_oxychlordane_quart) |>
+  replace_with_median(OCP_transnonachlor, OCP_transnonachlor_quart) |>
+  replace_with_median(PBDE_47, PBDE_47_quart) |>
+  replace_with_median(PBDE_99, PBDE_99_quart) |>
+  replace_with_median(PBDE_153, PBDE_153_quart) |>
   mutate(sex = fct_relevel(sex, "Male", "Female"), 
          smoking_2cat_i = fct_relevel(smoking_2cat_i, "Ever", "Never"), 
          marital_status_2cat_i = fct_relevel(marital_status_2cat_i, "Married/cohabit", "Other"))
@@ -2313,7 +2340,8 @@ rm(model1_cox_sd_danish,
    model1_cox_sd_metanalysis, model2_cox_sd_metanalysis, model3_cox_sd_metanalysis, 
    model1_cox_quart_metanalysis, model2_cox_quart_metanalysis, model3_cox_quart_metanalysis, 
    bdd_cases_FMC, bdd_cases_FMCF, bdd_cases_MFH, 
-   heterogeneity_tests, trend_tests)
+   heterogeneity_tests, trend_tests, 
+   heterogeneity_tests_finnish, trend_tests_finnish)
 
 
 # Sensitivity analysis 1 - effects of baseline age and duration baseline - diagnosis among all cohorts ----
@@ -3966,7 +3994,7 @@ penalty_factor_quart <-                                                         
 
 ## LASSO POPs selection ----
 set.seed(1996)
-model_lasso_sd_danish <- cv.glmnet(                                             # lasso + cross validation to choose the lamda parameter
+sensi5_lasso_sd_danish <- cv.glmnet(                                             # lasso + cross validation to choose the lamda parameter
   x = X_matrix_sd,                                                              # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -3976,12 +4004,12 @@ model_lasso_sd_danish <- cv.glmnet(                                             
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10.
   penalty.factor = penalty_factor_sd)                                           # pre-set penalty factor because we want to force the model to select at least the covariates
 
-plot(model_lasso_sd_danish)
-coef(model_lasso_sd_danish, s = "lambda.min")                                   # lasso keeps only chlordane 
-coef(model_lasso_sd_danish, s = "lambda.1se")  
+plot(sensi5_lasso_sd_danish)
+coef(sensi5_lasso_sd_danish, s = "lambda.min")                                   # lasso keeps only chlordane 
+coef(sensi5_lasso_sd_danish, s = "lambda.1se")  
 
 set.seed(1996)
-model_lasso_quart_danish <- cv.glmnet(                                          # lasso + cross validation to choose the lamda parameter
+sensi5_lasso_quart_danish <- cv.glmnet(                                          # lasso + cross validation to choose the lamda parameter
   x = X_matrix_quart,                                                           # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -3991,13 +4019,13 @@ model_lasso_quart_danish <- cv.glmnet(                                          
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10.
   penalty.factor = penalty_factor_quart)                                        # pre-set penalty factor because we want to force the model to select at least the covariates
 
-plot(model_lasso_quart_danish)
-coef(model_lasso_quart_danish, s = "lambda.min")                                # lasso doesn't keep any pollutant when they are quartiles
-coef(model_lasso_quart_danish, s = "lambda.1se")  
+plot(sensi5_lasso_quart_danish)
+coef(sensi5_lasso_quart_danish, s = "lambda.min")                                # lasso doesn't keep any pollutant when they are quartiles
+coef(sensi5_lasso_quart_danish, s = "lambda.1se")  
 
 ## Ridge POPs selection ----
 set.seed(1996)
-model_ridge_sd_danish <- cv.glmnet(                                             # ridge + cross validation to choose the lamda parameter
+sensi5_ridge_sd_danish <- cv.glmnet(                                             # ridge + cross validation to choose the lamda parameter
   x = X_matrix_sd,                                                              # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -4007,12 +4035,12 @@ model_ridge_sd_danish <- cv.glmnet(                                             
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10. 
   penalty.factor = penalty_factor_sd)                                             
 
-plot(model_ridge_sd_danish)
-coef(model_ridge_sd_danish, s = "lambda.min")  
-coef(model_ridge_sd_danish, s = "lambda.1se")  
+plot(sensi5_ridge_sd_danish)
+coef(sensi5_ridge_sd_danish, s = "lambda.min")  
+coef(sensi5_ridge_sd_danish, s = "lambda.1se")  
 
 set.seed(1996)
-model_ridge_quart_danish <- cv.glmnet(                                          # ridge + cross validation to choose the lamda parameter
+sensi5_ridge_quart_danish <- cv.glmnet(                                          # ridge + cross validation to choose the lamda parameter
   x = X_matrix_quart,                                                           # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -4022,29 +4050,56 @@ model_ridge_quart_danish <- cv.glmnet(                                          
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10. 
   penalty.factor = penalty_factor_quart)                                             
 
-plot(model_ridge_quart_danish)
-coef(model_ridge_quart_danish, s = "lambda.min")  
-coef(model_ridge_quart_danish, s = "lambda.1se")  
+plot(sensi5_ridge_quart_danish)
+coef(sensi5_ridge_quart_danish, s = "lambda.min")  
+coef(sensi5_ridge_quart_danish, s = "lambda.1se")  
 
 ## Elastic net selection -----
+### choose the best alpha ----
+alpha_grid <- seq(0.3, 1, by = 0.1)  # de 0 (Ridge) à 1 (Lasso)                 # starting at least at 0.3 because we want to select variables, not just run a ridge 
+
+cv_results <- list()
+cvm_min <- numeric(length(alpha_grid))
+
+for (i in seq_along(alpha_grid)) {   # Boucle pour trouver le meilleur alpha
+  set.seed(1996)
+  cv_model <- cv.glmnet(
+    x = X_matrix_sd,
+    y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),
+    family = "cox",
+    alpha = alpha_grid[i],
+    type.measure = "deviance",
+    nfolds = 10,
+    standardize = FALSE,
+    penalty.factor = penalty_factor_sd
+  )
+  cv_results[[i]] <- cv_model
+  cvm_min[i] <- min(cv_model$cvm)  # stocke la deviance minimale
+}
+
+best_alpha <- alpha_grid[which.min(cvm_min)]
+best_alpha
+
+rm(alpha_grid, cv_results, cvm_min, i, cv_model, best_alpha)
+
 ### analysis ----
 set.seed(1996)
-model_elastic_net_sd_danish <- cv.glmnet(                                       # elastic net + cross validation to choose the lambda parameter
+sensi5_elastic_net_sd_danish <- cv.glmnet(                                       # elastic net + cross validation to choose the lambda parameter
   x = X_matrix_sd,                                                              # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
   standardize = FALSE,                                                          # standardize is a logical flag for x variable standardization prior to fitting the model sequence. The coefficients are always returned on the original scale. 
-  alpha = 0.3,                                                                  # alpha is for the elastic net mixing parameter 𝛼, with range 𝛼∈[0,1]. 𝛼=1 is lasso regression (default) and 𝛼=0 is ridge regression.
+  alpha = 0.4,                                                                  # alpha is for the elastic net mixing parameter 𝛼, with range 𝛼∈[0,1]. 𝛼=1 is lasso regression (default) and 𝛼=0 is ridge regression.
   type.measure = "deviance",                                                    # in cox models, we can choose between C and deviance. type.measure = "deviance" cv.glmnet choisira λ qui minimise la partial likelihood deviance (≈ maximise la log-vraisemblance).
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10. 
   penalty.factor = penalty_factor_sd)                          
 
-plot(model_elastic_net_sd_danish)
-coef(model_elastic_net_sd_danish, s = "lambda.min")                             # Elastic net keeps HCB, β-HCH and Σchlordane
-coef(model_elastic_net_sd_danish, s = "lambda.1se")
+plot(sensi5_elastic_net_sd_danish)
+coef(sensi5_elastic_net_sd_danish, s = "lambda.min")                             # Elastic net keeps HCB, β-HCH and Σchlordane
+coef(sensi5_elastic_net_sd_danish, s = "lambda.1se")
 
 set.seed(1996)
-model_elastic_net_quart_danish <- cv.glmnet(                                    # elastic net + cross validation to choose the lambda parameter
+sensi5_elastic_net_quart_danish <- cv.glmnet(                                    # elastic net + cross validation to choose the lambda parameter
   x = X_matrix_quart,                                                           # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -4054,17 +4109,17 @@ model_elastic_net_quart_danish <- cv.glmnet(                                    
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10. 
   penalty.factor = penalty_factor_quart)                          
 
-plot(model_elastic_net_quart_danish)
-coef(model_elastic_net_quart_danish, s = "lambda.min")                          # elastic net doesn't keep any pollutant when they are quartiles
-coef(model_elastic_net_quart_danish, s = "lambda.1se")
+plot(sensi5_elastic_net_quart_danish)
+coef(sensi5_elastic_net_quart_danish, s = "lambda.min")                          # elastic net doesn't keep any pollutant when they are quartiles
+coef(sensi5_elastic_net_quart_danish, s = "lambda.1se")
 
 
 ### new copollutant model with selected POPs ----
 #### sd ----
 POPs_sd_selected <-                                                             # selected POPs by LASSO
-  c("OCP_HCB_sd", "OCP_β_HCH_sd", "Σchlordane_sd")                 
+  c("OCP_HCB_sd", "Σchlordane_sd")                 
 POPs_sd_selected_labels <- 
-  set_names(c("OCP_HCB", "OCP_β_HCH", "Σchlordane"), c("HCB", "β-HCH", "Σchlordane"))
+  set_names(c("OCP_HCB", "Σchlordane"), c("HCB", "Σchlordane"))
 
 formula_danish <-                                                               # set the formulas  
   as.formula(paste("Surv(follow_up_death, status_death) ~",   
@@ -4073,7 +4128,7 @@ formula_danish <-                                                               
 model_summary <- 
   coxph(formula_danish, data = bdd_cases_danish) |> summary() 
 coefs <- model_summary$coefficients
-model3_cox_sd_elastic_net_danish <- tibble(                                     # creation of a table of results
+sensi5_model3_cox_sd_elastic_net_danish <- tibble(                                     # creation of a table of results
   study = "Danish", 
   model = "copollutant_sd", 
   term = rownames(coefs),
@@ -4085,9 +4140,9 @@ model3_cox_sd_elastic_net_danish <- tibble(                                     
 
 #### quartiles ----
 POPs_quart_selected <-                                                          # selected POPs by LASSO
-  c("OCP_HCB_quart", "OCP_β_HCH_quart", "Σchlordane_quart")                 
+  c("OCP_HCB_quart", "Σchlordane_quart")                 
 POPs_quart_selected_labels <- 
-  set_names(c("OCP_HCB", "OCP_β_HCH", "Σchlordane"), c("HCB", "β-HCH", "Σchlordane"))
+  set_names(c("OCP_HCB", "Σchlordane"), c("HCB", "Σchlordane"))
 
 formula_danish <-                                                               # set the formulas  
   as.formula(paste("Surv(follow_up_death, status_death) ~",   
@@ -4096,7 +4151,7 @@ formula_danish <-                                                               
 model_summary <- 
   coxph(formula_danish, data = bdd_cases_danish) |> summary() 
 coefs <- model_summary$coefficients
-model3_cox_quart_elastic_net_danish <- tibble(                                  # creation of a table of results
+sensi5_model3_cox_quart_elastic_net_danish <- tibble(                                  # creation of a table of results
   study = "Danish", 
   model = "copollutant_quart", 
   term = rownames(coefs),
@@ -4107,8 +4162,8 @@ model3_cox_quart_elastic_net_danish <- tibble(                                  
   filter(str_detect(term, "_quart"))
 
 results_sensi5 <-
-  bind_rows(model3_cox_sd_elastic_net_danish, 
-            model3_cox_quart_elastic_net_danish) |>
+  bind_rows(sensi5_model3_cox_sd_elastic_net_danish, 
+            sensi5_model3_cox_quart_elastic_net_danish) |>
   mutate(
     HR = exp(coef),
     lower_CI = exp(coef - 1.96 * se),
@@ -4140,8 +4195,7 @@ outcome <- with(bdd_cases_danish_bis, cbind(follow_up_death, status_death))
 
 model3_quart_HCB_full <- 
   gam(outcome ~ 
-        OCP_HCB_quart + 
-        s(OCP_β_HCH) + s(Σchlordane) + 
+        OCP_HCB_quart + s(Σchlordane) + 
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
       method = 'ML',
@@ -4150,7 +4204,7 @@ model3_quart_HCB_full <-
 model3_quart_HCB_raw <- 
   gam(outcome ~ 
         #OCP_HCB_quart + 
-        s(OCP_β_HCH) + s(Σchlordane) + 
+        s(Σchlordane) + 
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
       method = 'ML',
@@ -4159,32 +4213,10 @@ model3_quart_HCB_raw <-
 anova <- anova(model3_quart_HCB_raw, model3_quart_HCB_full, test = "Chisq")
 p.value_heterogeneity_HCB <- tibble(explanatory = "OCP_HCB_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
-
-model3_quart_β_HCH_full <- 
-  gam(outcome ~ 
-        OCP_β_HCH_quart +
-        s(OCP_HCB) + s(Σchlordane) + 
-        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i,  
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_danish_bis) 
-
-model3_quart_β_HCH_raw <- 
-  gam(outcome ~ 
-        #OCP_β_HCH_quart +
-        s(OCP_HCB) + s(Σchlordane) + 
-        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i,  
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_danish_bis) 
-
-anova <- anova(model3_quart_β_HCH_raw, model3_quart_β_HCH_full, test = "Chisq")
-p.value_heterogeneity_β_HCH <- tibble(explanatory = "OCP_β_HCH_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
-
 model3_quart_Σchlordane_full <- 
   gam(outcome ~ 
         Σchlordane_quart + 
-        s(OCP_HCB) + s(OCP_β_HCH) + 
+        s(OCP_HCB) + 
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
       method = 'ML',
@@ -4193,7 +4225,7 @@ model3_quart_Σchlordane_full <-
 model3_quart_Σchlordane_raw <- 
   gam(outcome ~ 
         #Σchlordane_quart + 
-        s(OCP_HCB) + s(OCP_β_HCH) + 
+        s(OCP_HCB) + 
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
       method = 'ML',
@@ -4204,7 +4236,6 @@ p.value_heterogeneity_Σchlordane <- tibble(explanatory = "Σchlordane_quart", p
 
 heterogeneity_copollutant_quart <- 
   bind_rows(p.value_heterogeneity_HCB, 
-            p.value_heterogeneity_β_HCH, 
             p.value_heterogeneity_Σchlordane) |>
   mutate(model = "copollutant_quart", 
          explanatory = gsub("_quart", "", explanatory), 
@@ -4212,10 +4243,8 @@ heterogeneity_copollutant_quart <-
 
 rm(anova, outcome, 
    model3_quart_HCB_full, model3_quart_HCB_raw, 
-   model3_quart_β_HCH_full, model3_quart_β_HCH_raw, 
    model3_quart_Σchlordane_full, model3_quart_Σchlordane_raw, 
    p.value_heterogeneity_HCB, 
-   p.value_heterogeneity_β_HCH, 
    p.value_heterogeneity_Σchlordane)
 
 ##### trend tests ----
@@ -4224,7 +4253,7 @@ outcome <- with(bdd_cases_danish_bis, cbind(follow_up_death, status_death))
 model3_quart_HCB_trend <- 
   gam(outcome ~ 
         OCP_HCB_quart_med + 
-        s(OCP_β_HCH) + s(Σchlordane) + 
+         s(Σchlordane) + 
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
       method = 'ML',
@@ -4232,21 +4261,10 @@ model3_quart_HCB_trend <-
   summary()
 p.value_trend_HCB <- model3_quart_HCB_trend$p.table["OCP_HCB_quart_med", "Pr(>|z|)"]
 
-model3_quart_β_HCH_trend <- 
-  gam(outcome ~ 
-        OCP_β_HCH_quart_med +
-        s(OCP_HCB) + s(Σchlordane) + 
-        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i,  
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_danish_bis) |> 
-  summary()
-p.value_trend_β_HCH <- model3_quart_β_HCH_trend$p.table["OCP_β_HCH_quart_med", "Pr(>|z|)"]
-
 model3_quart_Σchlordane_trend <- 
   gam(outcome ~ 
         Σchlordane_quart_med + 
-        s(OCP_HCB) + s(OCP_β_HCH) + 
+        s(OCP_HCB) + 
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
       method = 'ML',
@@ -4256,11 +4274,9 @@ p.value_trend_Σchlordane <- model3_quart_Σchlordane_trend$p.table["Σchlordane
 
 trend_copollutant <- 
   data.frame(explanatory = c("OCP_HCB_quart_med", 
-                             "OCP_β_HCH_quart_med", 
                              "Σchlordane_quart_med"),
              model = "copollutant_quart",
              p.value_trend = c(p.value_trend_HCB, 
-                               p.value_trend_β_HCH, 
                                p.value_trend_Σchlordane)) |>
   mutate(explanatory = gsub("_quart_med", "", explanatory), 
          study = "Danish")
@@ -4282,17 +4298,13 @@ results_sensi5 <- results_sensi5 |>
 
 rm(outcome, 
    model3_quart_HCB_trend, 
-   model3_quart_β_HCH_trend,
    model3_quart_Σchlordane_trend, 
    
    p.value_trend_HCB, 
-   p.value_trend_β_HCH, 
    p.value_trend_Σchlordane, 
    
    heterogeneity_copollutant_quart, 
    trend_copollutant)
-
-
 
 #### table sd ----
 POPs_sd_ALS_table_sensi5_danish <- results_sensi5 |>
@@ -4454,12 +4466,641 @@ rm(bdd_cases_danish_bis,
    POPs_sd_selected, POPs_sd_selected_labels, 
    POPs_quart_selected, POPs_quart_selected_labels,
    formula_danish, model_summary, coefs, 
-   model_lasso_quart_danish, 
-   model_ridge_quart_danish, 
-   model_elastic_net_quart_danish, 
-   model3_cox_sd_elastic_net_danish, 
-   model3_cox_quart_elastic_net_danish)
+   sensi5_lasso_quart_danish, 
+   sensi5_ridge_quart_danish, 
+   sensi5_elastic_net_quart_danish, 
+   sensi5_model3_cox_sd_elastic_net_danish, 
+   sensi5_model3_cox_quart_elastic_net_danish)
 
+# Sensitivity analysis 6 - elastic net on all the POPs (ungrouped) ----
+## Data prep ----
+bdd_cases_danish_bis <- bdd_danish |>
+  filter (als == 1) |>
+  filter(follow_up_death>0) |>
+  filter(study == "Danish") |>
+  select(study, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age,
+         bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
+         all_of(POPs_included)) |>
+  mutate(across(all_of(POPs_included), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
+                                                labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) |>
+  mutate(across(all_of(POPs_included),                                             # create cohort and cases specific scaled POPs variables 
+                ~as.numeric(scale(.x)),
+                .names = "{.col}_sd"))  |>
+  replace_with_median(PCB_28, PCB_28_quart) |>
+  replace_with_median(PCB_52, PCB_52_quart) |>
+  replace_with_median(PCB_74, PCB_74_quart) |>
+  replace_with_median(PCB_99, PCB_99_quart) |>
+  replace_with_median(PCB_101, PCB_101_quart) |>
+  replace_with_median(PCB_118, PCB_118_quart) |>
+  replace_with_median(PCB_138, PCB_138_quart) |>
+  replace_with_median(PCB_153, PCB_153_quart) |>
+  replace_with_median(PCB_156, PCB_156_quart) |>
+  replace_with_median(PCB_170, PCB_170_quart) |>
+  replace_with_median(PCB_180, PCB_180_quart) |>
+  replace_with_median(PCB_183, PCB_183_quart) |>
+  replace_with_median(PCB_187, PCB_187_quart) |>
+  replace_with_median(OCP_HCB, OCP_HCB_quart) |>
+  replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
+  replace_with_median(OCP_pp_DDT, OCP_pp_DDT_quart) |>
+  replace_with_median(OCP_pp_DDE, OCP_pp_DDE_quart) |>
+  replace_with_median(OCP_oxychlordane, OCP_oxychlordane_quart) |>
+  replace_with_median(OCP_transnonachlor, OCP_transnonachlor_quart) |>
+  replace_with_median(PBDE_47, PBDE_47_quart) |>
+  replace_with_median(PBDE_99, PBDE_99_quart) |>
+  replace_with_median(PBDE_153, PBDE_153_quart) |>
+  mutate(sex = fct_relevel(sex, "Male", "Female"), 
+         smoking_2cat_i = fct_relevel(smoking_2cat_i, "Ever", "Never"), 
+         marital_status_2cat_i = fct_relevel(marital_status_2cat_i, "Married/cohabit", "Other"))
+
+X_matrix_sd <- model.matrix(~ ., data = bdd_cases_danish_bis[, c(covariates_danish, POPs_included_sd)])[, -1] 
+X_matrix_quart <- model.matrix(~ ., data = bdd_cases_danish_bis[, c(covariates_danish, POPs_included_quart)])[, -1] 
+
+penalty_factor_sd <-                                                            # création d'un penalty factor pour forcer le modele lasso à inclure les covariables dans le modele 
+  ifelse(colnames(X_matrix_sd) %in% 
+           colnames(model.matrix(~ ., data = bdd_cases_danish_bis[, covariates_danish])[, -1]), 
+         0, 1)
+
+penalty_factor_quart <-                                                         # création d'un penalty factor pour forcer le modele lasso à inclure les covariables dans le modele 
+  ifelse(colnames(X_matrix_quart) %in% 
+           colnames(model.matrix(~ ., data = bdd_cases_danish_bis[, covariates_danish])[, -1]), 
+         0, 1)
+
+
+## LASSO POPs selection ----
+set.seed(1996)
+sensi6_lasso_sd_danish <- cv.glmnet(                                             # lasso + cross validation to choose the lamda parameter
+  x = X_matrix_sd,                                                              # matrice of explanatory variables 
+  y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
+  family = "cox",                                                               # cox regression 
+  standardize = FALSE,                                                          # standardize is a logical flag for x variable standardization prior to fitting the model sequence. The coefficients are always returned on the original scale. 
+  alpha = 1,                                                                    # alpha is for the elastic net mixing parameter 𝛼, with range 𝛼∈[0,1]. 𝛼=1 is lasso regression (default) and 𝛼=0 is ridge regression.
+  type.measure = "deviance",
+  nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10.
+  penalty.factor = penalty_factor_sd)                                           # pre-set penalty factor because we want to force the model to select at least the covariates
+
+plot(sensi6_lasso_sd_danish)
+coef(sensi6_lasso_sd_danish, s = "lambda.min")                                   # lasso keeps only chlordane 
+coef(sensi6_lasso_sd_danish, s = "lambda.1se")  
+
+set.seed(1996)
+sensi6_lasso_quart_danish <- cv.glmnet(                                          # lasso + cross validation to choose the lamda parameter
+  x = X_matrix_quart,                                                           # matrice of explanatory variables 
+  y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
+  family = "cox",                                                               # cox regression 
+  standardize = FALSE,                                                          # standardize is a logical flag for x variable standardization prior to fitting the model sequence. The coefficients are always returned on the original scale. 
+  alpha = 1,                                                                    # alpha is for the elastic net mixing parameter 𝛼, with range 𝛼∈[0,1]. 𝛼=1 is lasso regression (default) and 𝛼=0 is ridge regression.
+  type.measure = "deviance",
+  nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10.
+  penalty.factor = penalty_factor_quart)                                        # pre-set penalty factor because we want to force the model to select at least the covariates
+
+plot(sensi6_lasso_quart_danish)
+coef(sensi6_lasso_quart_danish, s = "lambda.min")                                # lasso doesn't keep any pollutant when they are quartiles
+coef(sensi6_lasso_quart_danish, s = "lambda.1se")  
+
+
+## Elastic net selection -----
+### choose the best alpha ----
+alpha_grid <- seq(0.3, 1, by = 0.1)  # de 0 (Ridge) à 1 (Lasso)                 # starting at least at 0.3 because we want to select variables, not just run a ridge 
+
+cv_results <- list()
+cvm_min <- numeric(length(alpha_grid))
+
+for (i in seq_along(alpha_grid)) {   # Boucle pour trouver le meilleur alpha
+  set.seed(1996)
+  cv_model <- cv.glmnet(
+    x = X_matrix_sd,
+    y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),
+    family = "cox",
+    alpha = alpha_grid[i],
+    type.measure = "deviance",
+    nfolds = 10,
+    standardize = FALSE,
+    penalty.factor = penalty_factor_sd
+  )
+  cv_results[[i]] <- cv_model
+  cvm_min[i] <- min(cv_model$cvm)  # stocke la deviance minimale
+}
+
+best_alpha <- alpha_grid[which.min(cvm_min)]
+best_alpha
+
+rm(alpha_grid, cv_results, cvm_min, i, cv_model, best_alpha)
+
+### analysis ----
+set.seed(1996)
+senis6_elastic_net_sd_danish <- cv.glmnet(                                       # elastic net + cross validation to choose the lambda parameter
+  x = X_matrix_sd,                                                              # matrice of explanatory variables 
+  y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
+  family = "cox",                                                               # cox regression 
+  standardize = FALSE,                                                          # standardize is a logical flag for x variable standardization prior to fitting the model sequence. The coefficients are always returned on the original scale. 
+  alpha = 0.4,                                                                  # alpha is for the elastic net mixing parameter 𝛼, with range 𝛼∈[0,1]. 𝛼=1 is lasso regression (default) and 𝛼=0 is ridge regression.
+  type.measure = "deviance",                                                    # in cox models, we can choose between C and deviance. type.measure = "deviance" cv.glmnet choisira λ qui minimise la partial likelihood deviance (≈ maximise la log-vraisemblance).
+  nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10. 
+  penalty.factor = penalty_factor_sd)                          
+
+plot(senis6_elastic_net_sd_danish)
+coef(senis6_elastic_net_sd_danish, s = "lambda.min")                             # Elastic net keeps HCB, β-HCH and Σchlordane
+coef(senis6_elastic_net_sd_danish, s = "lambda.1se")
+
+set.seed(1996)
+sensi6_elastic_net_quart_danish <- cv.glmnet(                                    # elastic net + cross validation to choose the lambda parameter
+  x = X_matrix_quart,                                                           # matrice of explanatory variables 
+  y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
+  family = "cox",                                                               # cox regression 
+  standardize = FALSE,                                                          # standardize is a logical flag for x variable standardization prior to fitting the model sequence. The coefficients are always returned on the original scale. 
+  alpha = 0.3,                                                                  # alpha is for the elastic net mixing parameter 𝛼, with range 𝛼∈[0,1]. 𝛼=1 is lasso regression (default) and 𝛼=0 is ridge regression.
+  type.measure = "deviance",                                                    # in cox models, we can choose between C and deviance. type.measure = "deviance" cv.glmnet choisira λ qui minimise la partial likelihood deviance (≈ maximise la log-vraisemblance).
+  nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10. 
+  penalty.factor = penalty_factor_quart)                          
+
+plot(sensi6_elastic_net_quart_danish)
+coef(sensi6_elastic_net_quart_danish, s = "lambda.min")                          # elastic net doesn't keep any pollutant when they are quartiles
+coef(sensi6_elastic_net_quart_danish, s = "lambda.1se")
+
+
+### new copollutant model with selected POPs ----
+#### sd ----
+POPs_sd_selected <-                                                             # selected POPs by LASSO
+  c("PCB_28_sd", "PCB_52_sd", "OCP_oxychlordane_sd", "OCP_transnonachlor_sd", "PBDE_47_sd")                 
+POPs_sd_selected_labels <- 
+  set_names(c("PCB_28", "PCB_52", "OCP_oxychlordane", "OCP_transnonachlor", "PBDE_47"), 
+            c("PCB-28", "PCB-52", "Oxychlordane", "Transnonachlor", "PBDE-47"))
+
+formula_danish <-                                                               # set the formulas  
+  as.formula(paste("Surv(follow_up_death, status_death) ~",   
+                   paste(c(POPs_sd_selected, covariates_danish), collapse = " + ")))
+
+model_summary <- 
+  coxph(formula_danish, data = bdd_cases_danish) |> summary() 
+coefs <- model_summary$coefficients
+sensi6_model3_cox_sd_elastic_net_danish <- tibble(                                     # creation of a table of results
+  study = "Danish", 
+  model = "copollutant_sd", 
+  term = rownames(coefs),
+  explanatory = rownames(coefs),
+  coef = coefs[, "coef"],
+  se = coefs[, "se(coef)"], 
+  `p-value` = coefs[, "Pr(>|z|)"]) |>
+  filter(str_detect(term, "_sd"))
+
+#### quartiles ----
+POPs_quart_selected <-                                                             # selected POPs by LASSO
+  c("PCB_28_quart", "PCB_52_quart", "OCP_oxychlordane_quart", "OCP_transnonachlor_quart", "PBDE_47_quart")                 
+POPs_quart_selected_labels <- 
+  set_names(c("PCB_28", "PCB_52", "OCP_oxychlordane", "OCP_transnonachlor", "PBDE_47"), 
+            c("PCB-28", "PCB-52", "Oxychlordane", "Transnonachlor", "PBDE-47"))
+
+formula_danish <-                                                               # set the formulas  
+  as.formula(paste("Surv(follow_up_death, status_death) ~",   
+                   paste(c(POPs_quart_selected, covariates_danish), collapse = " + ")))
+
+model_summary <- 
+  coxph(formula_danish, data = bdd_cases_danish) |> summary() 
+coefs <- model_summary$coefficients
+sensi6_model3_cox_quart_elastic_net_danish <- tibble(                                  # creation of a table of results
+  study = "Danish", 
+  model = "copollutant_quart", 
+  term = rownames(coefs),
+  explanatory = rownames(coefs),
+  coef = coefs[, "coef"],
+  se = coefs[, "se(coef)"], 
+  `p-value` = coefs[, "Pr(>|z|)"]) |>
+  filter(str_detect(term, "_quart"))
+
+results_sensi6 <-
+  bind_rows(sensi6_model3_cox_sd_elastic_net_danish, 
+            sensi6_model3_cox_quart_elastic_net_danish) |>
+  mutate(
+    HR = exp(coef),
+    lower_CI = exp(coef - 1.96 * se),
+    upper_CI = exp(coef + 1.96 * se)) |>
+  mutate(
+    explanatory = gsub("_quartQ2", "", explanatory),
+    explanatory = gsub("_quartQ3", "", explanatory),
+    explanatory = gsub("_quartQ4", "", explanatory),
+    explanatory = gsub("_sd", "", explanatory),
+    term = case_when(
+      str_detect(term, "_sd") ~ "Continuous", 
+      str_detect(term, "Q2") ~ "quartile 2",
+      str_detect(term, "Q3") ~ "quartile 3",
+      str_detect(term, "Q4") ~ "quartile 4"), 
+    HR = as.numeric(sprintf("%.1f", HR)),
+    lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
+    upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
+    `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
+    `p-value_raw` = `p-value`,
+    `p-value_shape` = ifelse(`p-value_raw` < 0.05, "p-value<0.05", "p-value≥0.05"),
+    `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")),
+    `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
+  select(
+    study, model, explanatory, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`,
+    lower_CI,  upper_CI)
+
+##### heterogeneity tests ----
+outcome <- with(bdd_cases_danish_bis, cbind(follow_up_death, status_death))
+
+model3_quart_PCB_28_full <- 
+  gam(outcome ~ 
+        PCB_28_quart + 
+        s(PCB_52) + s(OCP_oxychlordane) + s(OCP_transnonachlor) + s(PBDE_47) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish_bis)
+
+model3_quart_PCB_28_raw <- 
+  gam(outcome ~ 
+        #PCB_28_quart + 
+        s(PCB_52) + s(OCP_oxychlordane) + s(OCP_transnonachlor) + s(PBDE_47) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish_bis)
+
+anova <- anova(model3_quart_PCB_28_raw, model3_quart_PCB_28_full, test = "Chisq")
+p.value_heterogeneity_PCB_28 <- tibble(explanatory = "PCB_28_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+model3_quart_PCB_52_full <- 
+  gam(outcome ~ 
+        PCB_52_quart + 
+        s(PCB_28) + s(OCP_oxychlordane) + s(OCP_transnonachlor) + s(PBDE_47) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish_bis)
+
+model3_quart_PCB_52_raw <- 
+  gam(outcome ~ 
+        #PCB_52_quart + 
+        s(PCB_28) + s(OCP_oxychlordane) + s(OCP_transnonachlor) + s(PBDE_47) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish_bis)
+
+anova <- anova(model3_quart_PCB_52_raw, model3_quart_PCB_52_full, test = "Chisq")
+p.value_heterogeneity_PCB_52 <- tibble(explanatory = "PCB_52_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+model3_quart_oxychlordane_full <- 
+  gam(outcome ~ 
+        OCP_oxychlordane_quart + 
+        s(PCB_28) + s(PCB_52) + s(OCP_transnonachlor) + s(PBDE_47) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish_bis)
+
+model3_quart_oxychlordane_raw <- 
+  gam(outcome ~ 
+        #OCP_oxychlordane_quart + 
+        s(PCB_28) + s(PCB_52) + s(OCP_transnonachlor) + s(PBDE_47) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish_bis)
+
+anova <- anova(model3_quart_oxychlordane_raw, model3_quart_oxychlordane_full, test = "Chisq")
+p.value_heterogeneity_oxychlordane <- tibble(explanatory = "OCP_oxychlordane_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+model3_quart_transnonachlor_full <- 
+  gam(outcome ~ 
+        OCP_transnonachlor_quart +
+        s(PCB_28) + s(PCB_52) + s(OCP_oxychlordane) + s(PBDE_47) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish_bis)
+
+model3_quart_transnonachlor_raw <- 
+  gam(outcome ~ 
+        #OCP_transnonachlor_quart +
+        s(PCB_28) + s(PCB_52) + s(OCP_oxychlordane) + s(PBDE_47) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish_bis)
+
+anova <- anova(model3_quart_transnonachlor_raw, model3_quart_transnonachlor_full, test = "Chisq")
+p.value_heterogeneity_transnonachlor <- tibble(explanatory = "OCP_transnonachlor_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+model3_quart_PBDE_47_full <- 
+  gam(outcome ~ 
+        PBDE_47_quart +
+        s(PCB_28) + s(PCB_52) + s(OCP_oxychlordane) + s(OCP_transnonachlor) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish_bis)
+
+model3_quart_PBDE_47_raw <- 
+  gam(outcome ~ 
+        #PBDE_47_quart +
+        s(PCB_28) + s(PCB_52) + s(OCP_oxychlordane) + s(OCP_transnonachlor) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish_bis)
+
+anova <- anova(model3_quart_PBDE_47_raw, model3_quart_PBDE_47_full, test = "Chisq")
+p.value_heterogeneity_PBDE_47 <- tibble(explanatory = "PBDE_47_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+heterogeneity_copollutant_quart <- 
+  bind_rows(p.value_heterogeneity_PCB_28, 
+            p.value_heterogeneity_PCB_52,
+            p.value_heterogeneity_oxychlordane,
+            p.value_heterogeneity_transnonachlor,
+            p.value_heterogeneity_PBDE_47) |>
+  mutate(model = "copollutant_quart", 
+         explanatory = gsub("_quart", "", explanatory), 
+         study = "Danish")
+
+rm(anova, outcome, 
+   
+   model3_quart_PCB_28_full, model3_quart_PCB_28_raw, 
+   model3_quart_PCB_52_full, model3_quart_PCB_52_raw, 
+   model3_quart_oxychlordane_full, model3_quart_oxychlordane_raw, 
+   model3_quart_transnonachlor_full, model3_quart_transnonachlor_raw, 
+   model3_quart_PBDE_47_full, model3_quart_PBDE_47_raw, 
+   
+   p.value_heterogeneity_PCB_28, 
+   p.value_heterogeneity_PCB_52,
+   p.value_heterogeneity_oxychlordane,
+   p.value_heterogeneity_transnonachlor,
+   p.value_heterogeneity_PBDE_47)
+
+##### trend tests ----
+outcome <- with(bdd_cases_danish_bis, cbind(follow_up_death, status_death))
+
+model3_quart_PCB_28_trend <- 
+  gam(outcome ~ 
+        PCB_28_quart_med + 
+        s(PCB_52) + s(OCP_oxychlordane) + s(OCP_transnonachlor) + s(PBDE_47) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish_bis)|> 
+  summary()
+p.value_trend_PCB_28 <- model3_quart_PCB_28_trend$p.table["PCB_28_quart_med", "Pr(>|z|)"]
+
+model3_quart_PCB_52_trend <- 
+  gam(outcome ~ 
+        PCB_52_quart_med + 
+        s(PCB_28) + s(OCP_oxychlordane) + s(OCP_transnonachlor) + s(PBDE_47) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish_bis)|> 
+  summary()
+p.value_trend_PCB_52 <- model3_quart_PCB_52_trend$p.table["PCB_52_quart_med", "Pr(>|z|)"]
+
+model3_quart_oxychlordane_trend <- 
+  gam(outcome ~ 
+        OCP_oxychlordane_quart_med + 
+        s(PCB_28) + s(PCB_52) + s(OCP_transnonachlor) + s(PBDE_47) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish_bis) |> 
+  summary()
+p.value_trend_oxychlordane <- model3_quart_oxychlordane_trend$p.table["OCP_oxychlordane_quart_med", "Pr(>|z|)"]
+
+model3_quart_transnonachlor_trend <- 
+  gam(outcome ~ 
+        OCP_transnonachlor_quart_med + 
+        s(PCB_28) + s(PCB_52) + s(OCP_transnonachlor) + s(OCP_oxychlordane) + 
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish_bis) |> 
+  summary()
+p.value_trend_transnonachlor <- model3_quart_transnonachlor_trend$p.table["OCP_transnonachlor_quart_med", "Pr(>|z|)"]
+
+model3_quart_PBDE_47_trend <- 
+  gam(outcome ~ 
+        PBDE_47_quart_med + 
+        s(PCB_28) + s(PCB_52) + s(OCP_oxychlordane) + s(PBDE_47) +
+        sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish_bis) |> 
+  summary()
+p.value_trend_PBDE_47 <- model3_quart_PBDE_47_trend$p.table["PBDE_47_quart_med", "Pr(>|z|)"]
+
+trend_copollutant <- 
+  data.frame(explanatory = c("PCB_28_quart_med", 
+                             "PCB_52_quart_med", 
+                             "OCP_oxychlordane_quart_med", 
+                             "OCP_transnonachlor_quart_med", 
+                             "PBDE_47_quart_med"),
+             model = "copollutant_quart",
+             p.value_trend = c(p.value_trend_PCB_28,
+                               p.value_trend_PCB_52, 
+                               p.value_trend_oxychlordane, 
+                               p.value_trend_transnonachlor,
+                               p.value_trend_PBDE_47)) |>
+  mutate(explanatory = gsub("_quart_med", "", explanatory), 
+         study = "Danish")
+
+
+results_sensi6 <- left_join(results_sensi6, heterogeneity_copollutant_quart, 
+                            by = c("study", "model", "explanatory"))
+
+results_sensi6 <- 
+  left_join(results_sensi6, trend_copollutant, 
+            by = c("study", "model", "explanatory")) 
+
+results_sensi6 <- results_sensi6 |>
+  mutate(
+    p.value_heterogeneity = ifelse(p.value_heterogeneity < 0.01, "<0.01", number(p.value_heterogeneity, accuracy = 0.01, decimal.mark = ".")), 
+    p.value_heterogeneity = ifelse(p.value_heterogeneity == "1.00", ">0.99", p.value_heterogeneity), 
+    p.value_trend = ifelse(p.value_trend < 0.01, "<0.01", number(p.value_trend, accuracy = 0.01, decimal.mark = ".")), 
+    p.value_trend = ifelse(p.value_trend == "1.00", ">0.99", p.value_trend)) 
+
+rm(outcome, 
+   model3_quart_PCB_28_trend, 
+   model3_quart_PCB_52_trend, 
+   model3_quart_oxychlordane_trend, 
+   model3_quart_transnonachlor_trend, 
+   model3_quart_PBDE_47_trend, 
+   
+   p.value_trend_PCB_28,
+   p.value_trend_PCB_52, 
+   p.value_trend_oxychlordane, 
+   p.value_trend_transnonachlor,
+   p.value_trend_PBDE_47,
+   
+   heterogeneity_copollutant_quart, 
+   trend_copollutant)
+
+#### table sd ----
+POPs_sd_ALS_table_sensi6_danish <- 
+  results_sensi6 |>
+  filter(study == "Danish") |>
+  filter(model == "copollutant_sd") |>
+  select(explanatory, HR, "95% CI", "p-value") |>
+  mutate(
+    # explanatory = factor(explanatory, levels = POPs_sd_selected_labels), 
+    explanatory = fct_recode(explanatory, !!!POPs_sd_selected_labels)) |> 
+  flextable() |>
+  add_footer_lines(
+    "1The model was adjusted for sex, age at diagnosis, smoking, BMI and marital status.
+     2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease serum concentration of POPs.
+    3CI: Confidence interval.") |>
+  add_header(
+    "explanatory" = "Exposures", 
+    "HR" = "Copollutant model", "95% CI" = "Copollutant model", "p-value" = "Copollutant model") |>
+  merge_h(part = "header") |>
+  merge_v(j = "explanatory") |>
+  theme_vanilla() |>
+  bold(j = "explanatory", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
+#### table quart ----
+quartile1_rows <- 
+  results_sensi6 |>
+  filter(model == "copollutant_quart") |>
+  distinct(model, explanatory) |>
+  mutate(
+    term = "quartile 1",
+    HR = "-",
+    "95% CI" = "-",
+    `p-value` = "", 
+    "p.value_heterogeneity" = '', 
+    "p.value_trend" = '') |>
+  select("explanatory", "term", "HR", "95% CI", "p-value", 
+         "Heterogeneity test" = "p.value_heterogeneity", 
+         "Trend test" = "p.value_trend") 
+
+POPs_quart_ALS_table_sensi6_danish <- 
+  results_sensi6 |>
+  filter(study == "Danish") |>
+  filter(model == "copollutant_quart") |>
+  select("explanatory", "term", "HR", "95% CI", "p-value", 
+         "Heterogeneity test" = "p.value_heterogeneity", 
+         "Trend test" = "p.value_trend") |>
+  mutate(across(everything(), as.character))
+
+POPs_quart_ALS_table_sensi6_danish <- 
+  bind_rows(quartile1_rows, POPs_quart_ALS_table_sensi6_danish) |>
+  mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
+  arrange(explanatory, term) |>
+  mutate(`Heterogeneity test` = ifelse(term == 'quartile 1', `Heterogeneity test`[term == 'quartile 2'], ''), 
+         `Trend test` = ifelse(term == 'quartile 1', `Trend test`[term == 'quartile 2'], ''), 
+         explanatory = factor(explanatory, levels = POPs_sd_selected_labels), 
+         explanatory = fct_recode(explanatory, !!!POPs_sd_selected_labels)) |>
+  arrange(explanatory) |>
+  flextable() |>
+  add_footer_lines(
+    "1The model was adjusted for sex, age at diagnosis, smoking, BMI and marital status.
+    2Estimated risk of ALS death when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
+    3CI: Confidence interval.
+    4Heterogeneity tests in outcome value across POP quartiles, adjusted for sex, age at diagnosis, smoking, BMI and marital status.
+    5Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
+  add_header(
+    "explanatory" = "Exposures", term = "Quartiles",
+    "HR" = "Copollutant model", "95% CI" = "Copollutant model", "p-value" = "Copollutant model",  
+    "Heterogeneity test" = "Copollutant model",  "Trend test" = "Copollutant model") |>
+  merge_h(part = "header") |>
+  merge_v(j = "explanatory") |>
+  merge_v(j = "term") |>
+  theme_vanilla() |>
+  bold(j = "explanatory", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  align(j = "term", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  merge_at(j = "term", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+rm(quartile1_rows)
+
+
+#### figure sd ----
+POPs_sd_ALS_figure_sensi6_danish <-
+  results_sensi6 |>
+  filter(model == "copollutant_sd") |>
+  mutate(
+    explanatory = factor(explanatory, levels = POPs_sd_selected_labels),
+    explanatory = fct_recode(explanatory, !!!POPs_sd_selected_labels), 
+    explanatory = fct_rev(explanatory)) |>
+  arrange(explanatory) |>
+  ggplot(aes(
+    x = explanatory,
+    y = HR,
+    ymin = lower_CI,
+    ymax = upper_CI,
+    color = `p-value_shape`)) +
+  geom_pointrange(position = position_dodge(width = 0.5), size = 0.5) +
+  geom_hline(yintercept = 1,
+             linetype = "dashed",
+             color = "black") +                        # , scales = "free_x"
+  scale_color_manual(values = c(
+    "p-value<0.05" = "red",
+    "p-value≥0.05" = "black")) +
+  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
+  theme_lucid() +
+  theme(
+    strip.text = element_text(face = "bold"),
+    legend.position = "bottom",
+    strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip() 
+
+#### figure quart ----
+POPs_quart_ALS_figure_sensi6_danish <-
+  results_sensi6 |>
+  filter(model == "copollutant_quart") |>
+  mutate(
+    explanatory = factor(explanatory, levels = POPs_quart_selected_labels),
+    explanatory = fct_recode(explanatory, !!!POPs_quart_selected_labels), 
+    term = str_replace(term, "quartile", "Quartile"), 
+    term = fct_rev(term)) |>
+  arrange(explanatory) |>
+  ggplot(aes(
+    x = term,
+    y = HR,
+    ymin = lower_CI,
+    ymax = upper_CI,
+    color = `p-value_shape`)) +
+  geom_pointrange(position = position_dodge(width = 0.5), size = 0.5) +
+  geom_hline(yintercept = 1,
+             linetype = "dashed",
+             color = "black") +                        # , scales = "free_x"
+  scale_color_manual(values = c(
+    "p-value<0.05" = "red",
+    "p-value≥0.05" = "black")) +
+  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
+  theme_lucid() +
+  theme(
+    strip.text = element_text(face = "bold"),
+    legend.position = "bottom",
+    strip.text.y = element_text(hjust = 0.5)) +
+  facet_grid(rows = dplyr::vars(explanatory), switch = "y") +  
+  coord_flip() 
+
+rm(bdd_cases_danish_bis, 
+   POPs_sd_selected, POPs_sd_selected_labels,
+   POPs_quart_selected, POPs_quart_selected_labels,
+   X_matrix_sd, X_matrix_quart, 
+   penalty_factor_sd, penalty_factor_quart, 
+   POPs_sd_selected, POPs_sd_selected_labels, 
+   POPs_quart_selected, POPs_quart_selected_labels,
+   formula_danish, model_summary, coefs, 
+   sensi6_lasso_quart_danish, 
+   #sensi6_model_ridge_quart_danish, 
+   sensi6_elastic_net_quart_danish, 
+   sensi6_model3_cox_sd_elastic_net_danish, 
+   sensi6_model3_cox_quart_elastic_net_danish)
+
+
+# Sensitivity analysis 7 - follow-up duration ----
+# investigation du probleme de follow-up duration très courte par rapport à la réalité (3-5 ans)
 
 # Tables and figures ----
 ## Danish ----
@@ -5336,16 +5977,17 @@ results_POPs_ALS_survival <-
          results_sensi4 = results_sensi4, 
          POPs_sd_ALS_figure_sensi4_danish = POPs_sd_ALS_figure_sensi4_danish), 
        sensi5 = list(
-         model_lasso_sd_danish = model_lasso_sd_danish, 
-         model_ridge_sd_danish = model_ridge_sd_danish, 
-         model_elastic_net_sd_danish = model_elastic_net_sd_danish, 
+         sensi5_lasso_sd_danish = sensi5_lasso_sd_danish, 
+         sensi5_ridge_sd_danish = sensi5_ridge_sd_danish, 
+         sensi5_elastic_net_sd_danish = sensi5_elastic_net_sd_danish, 
          results_sensi5 = results_sensi5, 
          POPs_sd_ALS_figure_sensi5_danish = POPs_sd_ALS_figure_sensi5_danish, 
          POPs_quart_ALS_figure_sensi5_danish = POPs_quart_ALS_figure_sensi5_danish, 
          POPs_sd_ALS_table_sensi5_danish = POPs_sd_ALS_table_sensi5_danish, 
          POPs_quart_ALS_table_sensi5_danish = POPs_quart_ALS_table_sensi5_danish))
 
-rm(bdd_cases_danish, 
+rm(bdd_cases_tot, 
+   bdd_cases_danish, 
    bdd_cases_finnish, 
    main_results_POPs_ALS_survival, 
    covar_danish,
@@ -5408,10 +6050,20 @@ rm(bdd_cases_danish,
    POPs_sd_ALS_figure_sensi4_danish, 
    
    results_sensi5, 
-   model_lasso_sd_danish, 
-   model_ridge_sd_danish, 
-   model_elastic_net_sd_danish, 
+   sensi5_lasso_sd_danish, 
+   sensi5_ridge_sd_danish, 
+   sensi5_elastic_net_sd_danish, 
    POPs_sd_ALS_figure_sensi5_danish, 
    POPs_quart_ALS_figure_sensi5_danish, 
    POPs_sd_ALS_table_sensi5_danish, 
-   POPs_quart_ALS_table_sensi5_danish)
+   POPs_quart_ALS_table_sensi5_danish, 
+   
+   results_sensi6, 
+   sensi6_lasso_sd_danish, 
+   #sensi6_ridge_sd_danish, 
+   sensi6_elastic_net_sd_danish, 
+   POPs_sd_ALS_figure_sensi6_danish, 
+   POPs_quart_ALS_figure_sensi6_danish, 
+   POPs_sd_ALS_table_sensi6_danish, 
+   POPs_quart_ALS_table_sensi6_danish)
+

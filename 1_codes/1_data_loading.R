@@ -396,6 +396,7 @@ POPs_group_sd_finnish <- paste0(POPs_group_finnish, "_sd")
 POPs_group_quart_med_finnish <- paste0(POPs_group_finnish, "_quart_med")
 
 POPs_included <- bdd_danish |> select(all_of(POPs)) |> select(-OCP_PeCB, - OCP_α_HCH, -OCP_γ_HCH) |> colnames()
+POPs_included_sd <- paste0(POPs_included, "_sd")
 POPs_included_quart <- paste0(POPs_included, "_quart")
 POPs_included_outlier <- paste0(POPs_included, "_outlier")
 
