@@ -4363,10 +4363,13 @@ POPs_quart_ALS_table_sensi5_danish <-
   bind_rows(quartile1_rows, POPs_quart_ALS_table_sensi5_danish) |>
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
-  mutate(`Heterogeneity test` = ifelse(term == 'quartile 1', `Heterogeneity test`[term == 'quartile 2'], ''), 
-         `Trend test` = ifelse(term == 'quartile 1', `Trend test`[term == 'quartile 2'], ''), 
-         explanatory = factor(explanatory, levels = POPs_group_labels), 
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
+  group_by(explanatory) |>
+  mutate(
+    `Heterogeneity test` = ifelse(term == "quartile 1", first(`Heterogeneity test`[term == "quartile 2"]), ""),
+    `Trend test` = ifelse(term == "quartile 1", first(`Trend test`[term == "quartile 2"]), "")) |>
+  ungroup() |>
+  mutate(explanatory = factor(explanatory, levels = POPs_quart_selected_labels), 
+         explanatory = fct_recode(explanatory, !!!POPs_quart_selected_labels)) |>
   arrange(explanatory) |>
   flextable() |>
   add_footer_lines(
@@ -4589,7 +4592,7 @@ rm(alpha_grid, cv_results, cvm_min, i, cv_model, best_alpha)
 
 ### analysis ----
 set.seed(1996)
-senis6_elastic_net_sd_danish <- cv.glmnet(                                       # elastic net + cross validation to choose the lambda parameter
+sensi6_elastic_net_sd_danish <- cv.glmnet(                                       # elastic net + cross validation to choose the lambda parameter
   x = X_matrix_sd,                                                              # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -4599,9 +4602,9 @@ senis6_elastic_net_sd_danish <- cv.glmnet(                                      
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10. 
   penalty.factor = penalty_factor_sd)                          
 
-plot(senis6_elastic_net_sd_danish)
-coef(senis6_elastic_net_sd_danish, s = "lambda.min")                             # Elastic net keeps HCB, β-HCH and Σchlordane
-coef(senis6_elastic_net_sd_danish, s = "lambda.1se")
+plot(sensi6_elastic_net_sd_danish)
+coef(sensi6_elastic_net_sd_danish, s = "lambda.min")                             # Elastic net keeps HCB, β-HCH and Σchlordane
+coef(sensi6_elastic_net_sd_danish, s = "lambda.1se")
 
 set.seed(1996)
 sensi6_elastic_net_quart_danish <- cv.glmnet(                                    # elastic net + cross validation to choose the lambda parameter
@@ -4990,9 +4993,12 @@ POPs_quart_ALS_table_sensi6_danish <-
   bind_rows(quartile1_rows, POPs_quart_ALS_table_sensi6_danish) |>
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
-  mutate(`Heterogeneity test` = ifelse(term == 'quartile 1', `Heterogeneity test`[term == 'quartile 2'], ''), 
-         `Trend test` = ifelse(term == 'quartile 1', `Trend test`[term == 'quartile 2'], ''), 
-         explanatory = factor(explanatory, levels = POPs_sd_selected_labels), 
+  group_by(explanatory) |>
+  mutate(
+    `Heterogeneity test` = ifelse(term == "quartile 1", first(`Heterogeneity test`[term == "quartile 2"]), ""),
+    `Trend test` = ifelse(term == "quartile 1", first(`Trend test`[term == "quartile 2"]), "")) |>
+  ungroup() |>
+  mutate(explanatory = factor(explanatory, levels = POPs_sd_selected_labels), 
          explanatory = fct_recode(explanatory, !!!POPs_sd_selected_labels)) |>
   arrange(explanatory) |>
   flextable() |>
@@ -5089,8 +5095,6 @@ rm(bdd_cases_danish_bis,
    POPs_quart_selected, POPs_quart_selected_labels,
    X_matrix_sd, X_matrix_quart, 
    penalty_factor_sd, penalty_factor_quart, 
-   POPs_sd_selected, POPs_sd_selected_labels, 
-   POPs_quart_selected, POPs_quart_selected_labels,
    formula_danish, model_summary, coefs, 
    sensi6_lasso_quart_danish, 
    #sensi6_model_ridge_quart_danish, 
@@ -5984,7 +5988,16 @@ results_POPs_ALS_survival <-
          POPs_sd_ALS_figure_sensi5_danish = POPs_sd_ALS_figure_sensi5_danish, 
          POPs_quart_ALS_figure_sensi5_danish = POPs_quart_ALS_figure_sensi5_danish, 
          POPs_sd_ALS_table_sensi5_danish = POPs_sd_ALS_table_sensi5_danish, 
-         POPs_quart_ALS_table_sensi5_danish = POPs_quart_ALS_table_sensi5_danish))
+         POPs_quart_ALS_table_sensi5_danish = POPs_quart_ALS_table_sensi5_danish), 
+       sensi6 = list(
+         sensi6_lasso_sd_danish = sensi6_lasso_sd_danish, 
+         # sensi6_ridge_sd_danish = sensi6_ridge_sd_danish, 
+         sensi6_elastic_net_sd_danish = sensi6_elastic_net_sd_danish, 
+         results_sensi6 = results_sensi6, 
+         POPs_sd_ALS_figure_sensi6_danish = POPs_sd_ALS_figure_sensi6_danish, 
+         POPs_quart_ALS_figure_sensi6_danish = POPs_quart_ALS_figure_sensi6_danish, 
+         POPs_sd_ALS_table_sensi6_danish = POPs_sd_ALS_table_sensi6_danish, 
+         POPs_quart_ALS_table_sensi6_danish = POPs_quart_ALS_table_sensi6_danish))
 
 rm(bdd_cases_tot, 
    bdd_cases_danish, 
