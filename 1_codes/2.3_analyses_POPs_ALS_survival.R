@@ -1046,6 +1046,7 @@ plot_copollutant_cox_gam_danish <- map(POPs_group_sd_bis, function(var) {
 rm(POPs_group_sd_bis, POPs_group_sd_labels_bis, model, outcome, POPs_group_bis)
 
 ## Q-gcomp analysis ---- 
+### All pollutants (grouped) ----
 POPs_group_bis <- setdiff(POPs_group, "PCB_4")                                  # remove the 4 most abundant PCB because they are already NDL-PCB
 
 formula_danish <-                                                               # set the formulas  
@@ -1064,8 +1065,6 @@ qgcomp_boot_danish <-
     parallel = TRUE,                                                            # shorter run time
     parplan = TRUE)                                                             # shorter run time
 # print(qgcomp_boot_danish)
-# qgcomp_boot_danish$pos.weights                                                # NULL because the model is not significant 
-# qgcomp_boot_danish$neg.weights                                                # NULL because the model is not significant 
 # plot(qgcomp_boot_danish)
 
 # run the code without bootsrapping just to get weights even if the mixture is not significant 
@@ -1081,6 +1080,52 @@ qgcomp_noboot_danish <-
 # print(qgcomp_noboot_danish)
 # qgcomp_noboot_danish$pos.weights
 # qgcomp_noboot_danish$neg.weights
+# plot(qgcomp_noboot_danish, suppressprint = TRUE)
+rm(formula_danish, POPs_group_bis)
+
+### Just the positives, adjusted for the others (grouped) ----
+# run qgcomp just for the positive weigths and by adjusted for the negatives 
+formula_danish <-                                                               # set the formulas  
+  as.formula(paste("Surv(follow_up_death, status_death) ~",   
+                   paste(c(covariates_danish,                                     # attention pour qgcomp.cox.boot() pas besoin de mettre les expo dans la formule sinon sont comptés 2 fois
+                           # c("PCB_NDL", "OCP_β_HCH", "Σchlordane"), 
+                           c("PCB_DL_quart",  "OCP_HCB_quart", "ΣDDT_quart", "ΣPBDE_quart")), 
+                         collapse = " + ")))
+set.seed(1996)
+qgcomp_positive_boot_danish <-
+  qgcomp.cox.boot(
+    f = formula_danish,                                                         # formula
+    data =   bdd_cases_danish, 
+    q = 4,                                                                      # nb of quantiles
+    expnms = c( "PCB_NDL", "OCP_β_HCH", "Σchlordane"),                          # exposures of interest 
+    B = 1000,                                                                   # nb of boostrap
+    MCsize = 5000,
+    seed = 1996,
+    parallel = TRUE,                                                            # shorter run time
+    parplan = TRUE)                                                             # shorter run time
+# print(qgcomp_positive_boot_danish)
+# plot(qgcomp_positive_boot_danish)
+
+
+formula_danish <-                                                               # set the formulas  
+  as.formula(paste("Surv(follow_up_death, status_death) ~",   
+             paste(c(covariates_danish,                                         # attention pour qgcomp.cox.noboot() il faut mettre les expo dans la formule 
+                     c("PCB_NDL", "OCP_β_HCH", "Σchlordane"), 
+                     c("PCB_DL_quart",  "OCP_HCB_quart", "ΣDDT_quart", "ΣPBDE_quart")), 
+                   collapse = " + ")))
+qgcomp_positive_noboot_danish <-                                                         
+  qgcomp.cox.noboot(
+    f = formula_danish,                                                         # formula
+    bdd_cases_danish[, c(
+      c("PCB_NDL", "OCP_β_HCH", "Σchlordane"), 
+      c("PCB_DL_quart",  "OCP_HCB_quart", "ΣDDT_quart", "ΣPBDE_quart"), 
+      covariates_danish, 
+      'follow_up_death', 'status_death')],
+    q = 4,                                                                      # number of quantiles
+    expnms = c("PCB_NDL", "OCP_β_HCH", "Σchlordane"))                           # exposures of interest
+# print(qgcomp_positive_noboot_danish)
+# qgcomp_positive_noboot_danish$pos.weights
+# qgcomp_positive_noboot_danish$neg.weights
 # plot(qgcomp_noboot_danish, suppressprint = TRUE)
 rm(formula_danish, POPs_group_bis)
 
@@ -5065,6 +5110,8 @@ POPs_quart_ALS_figure_sensi6_danish <-
   mutate(
     explanatory = factor(explanatory, levels = POPs_quart_selected_labels),
     explanatory = fct_recode(explanatory, !!!POPs_quart_selected_labels), 
+    explanatory = str_replace(explanatory, "Transnonachlor", "Trans-\nnonachlor"), 
+    explanatory = fct_relevel(explanatory, "PCB-28", "PCB-52", "Oxychlordane", "Trans-\nnonachlor", "PBDE-47"),
     term = str_replace(term, "quartile", "Quartile"), 
     term = fct_rev(term)) |>
   arrange(explanatory) |>
@@ -5264,7 +5311,7 @@ POPs_quart_ALS_figure_danish <- main_results_POPs_ALS_survival |>
   coord_flip()
 
 
-### table POPs - ALS survival (qgcomp analysis) ----
+### table POPs - ALS survival (qgcomp analysis all POPs grouped) ----
 POPs_group_bis <- setdiff(POPs_group, "PCB_4")                                  # remove the 4 most abundant PCB because they are already NDL-PCB
 pollutant_labels_bis <- set_names(
   c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
@@ -5289,7 +5336,7 @@ POPs_ALS_qgcomp_table_danish <-                                                 
     `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
   select(study, model, HR, `95% CI`, `p-value`)
 
-### figure POPs - ALS survival (qgcomp analysis) ----
+### figure POPs - ALS survival (qgcomp analysis all POPs grouped) ----
 POPs_ALS_qgcomp_figure_danish <- 
   tibble(
     pollutant = c(names(qgcomp_noboot_danish$pos.weights), names(qgcomp_noboot_danish$neg.weights)),
@@ -5304,42 +5351,42 @@ POPs_ALS_qgcomp_figure_danish <-
   scale_fill_manual(values = c("TRUE" = "tomato", "FALSE" = "steelblue")) +
   theme_lucid()
 
-rm(qgcomp_boot_danish, qgcomp_noboot_danish, p, POPs_group_bis, pollutant_labels_bis)
 
+### table POPs - ALS survival (qgcomp analysis positive POPs grouped) ----
+p <- summary(qgcomp_positive_boot_danish)
+POPs_ALS_qgcomp_positive_table_danish <-                                                 # overall results
+  tibble(
+    study = "Danish", 
+    model = "copollutant", 
+    HR = exp(qgcomp_positive_boot_danish$psi),
+    lower_CI = exp(qgcomp_positive_boot_danish$ci[1]), 
+    upper_CI = exp(qgcomp_positive_boot_danish$ci[2]), 
+    p_value = p$coefficients[1, "Pr(>|z|)"]) |>
+  mutate(
+    HR = sprintf("%.1f", HR),
+    lower_CI = sprintf("%.2f", lower_CI),
+    upper_CI = sprintf("%.2f", upper_CI),
+    `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''), 
+    `p-value` = ifelse(p_value < 0.01, "<0.01", number(p_value, accuracy = 0.01, decimal.mark = ".")), 
+    `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
+  select(study, model, HR, `95% CI`, `p-value`)
 
-### figure cumulative incidence POPs (quart) - als survival ----
-# bdd_cases_danish <- bdd_danish |>                                               # set the datasets
-#   filter(als == 1) |>                                                           # case selection
-#   mutate(across(all_of(POPs_group), ~ factor(
-#     ntile(.x, 4),                                                               # creation of POPs quartiles (cohort and cases specific)
-#     labels = c("Q1", "Q2", "Q3", "Q4")), 
-#     .names = "{.col}_quart")) 
-# 
-# create_surv_plot <- function(expl) {
-#   formula <- as.formula(paste0("Surv(follow_up_death, status_death) ~ `", expl, "`"))
-#   fit <- survfit(formula, data = bdd_cases_danish)
-#   fit$call$formula <- formula
-#   
-#   plot <- ggsurvplot(
-#     fit,
-#     data = bdd_cases_danish,
-#     fun = "event",
-#     risk.table = TRUE,
-#     pval = FALSE,
-#     conf.int = FALSE,
-#     palette = "Dark2",
-#     xlab = "Follow-up (months)",
-#     ylab = "Cumulative incidence",
-#     legend.title = paste("Pre-disease", POPs_group_quart_labels[[expl]], "level"),
-#     legend.labs = c("Quartile 1", "Quartile 2", "Quartile 3", "Quartile 4")
-#   )
-#   
-#   return(plot = plot)
-# }
-# 
-# survival_plots_danish <- map(POPs_group_quart, create_surv_plot)
-# names(survival_plots_danish) <- POPs_group_quart
-# rm(create_surv_plot, bdd_cases_danish)
+### figure POPs - ALS survival (qgcomp analysis positive POPs grouped) ----
+POPs_ALS_qgcomp_positive_figure_danish <- 
+  tibble(
+    pollutant = c(names(qgcomp_positive_noboot_danish$pos.weights), names(qgcomp_positive_noboot_danish$neg.weights)),
+    weight = c(qgcomp_positive_noboot_danish$pos.weights, - qgcomp_positive_noboot_danish$neg.weights)) |>
+  mutate(
+    pollutant_label = pollutant_labels_bis[pollutant] %||% pollutant,
+    pollutant_label = factor(pollutant_label, levels = rev(pollutant_labels_bis))) |>
+  ggplot(
+    aes(x = weight, y = pollutant_label, fill = weight > 0)) +
+  geom_col(show.legend = FALSE) +
+  labs(y = "Exposures", x = "Positive weights") +
+  scale_fill_manual(values = c("TRUE" = "tomato", "FALSE" = "steelblue")) +
+  theme_lucid()
+
+rm(p, POPs_group_bis, pollutant_labels_bis)
 
 ## Finnish ----
 ### table covariates - als survival ----
@@ -5931,8 +5978,14 @@ results_POPs_ALS_survival <-
          plot_base_cox_gam_danish = plot_base_cox_gam_danish, 
          plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish, 
          plot_copollutant_cox_gam_danish = plot_copollutant_cox_gam_danish, 
+         qgcomp_boot_danish = qgcomp_boot_danish, 
+         qgcomp_noboot_danish = qgcomp_noboot_danish, 
+         qgcomp_positive_boot_danish = qgcomp_positive_boot_danish, 
+         qgcomp_positive_noboot_danish = qgcomp_positive_noboot_danish, 
          POPs_ALS_qgcomp_table_danish = POPs_ALS_qgcomp_table_danish,
-         POPs_ALS_qgcomp_figure_danish = POPs_ALS_qgcomp_figure_danish), 
+         POPs_ALS_qgcomp_figure_danish = POPs_ALS_qgcomp_figure_danish, 
+         POPs_ALS_qgcomp_positive_table_danish = POPs_ALS_qgcomp_positive_table_danish,
+         POPs_ALS_qgcomp_positive_figure_danish = POPs_ALS_qgcomp_positive_figure_danish), 
        finnish = list(
          covar_finnish = covar_finnish, 
          covar_ALS_table_finnish = covar_ALS_table_finnish,
@@ -6014,6 +6067,8 @@ rm(bdd_cases_tot,
    plot_copollutant_cox_gam_danish,
    POPs_ALS_qgcomp_table_danish, 
    POPs_ALS_qgcomp_figure_danish,
+   POPs_ALS_qgcomp_positive_table_danish, 
+   POPs_ALS_qgcomp_positive_figure_danish,
    
    covar_finnish,
    covar_ALS_table_finnish, 

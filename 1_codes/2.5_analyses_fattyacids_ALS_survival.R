@@ -755,5 +755,3 @@ rm(main_results_fattyacids_ALS_survival,
    covariates_danish, covariates_finnish,
    comp_results_danish_finnish)
 
-# Supprimer ces objets
-rm(list = ls(pattern = "fattyacids"))

@@ -45,36 +45,9 @@ figure_2 <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_surviv
         strip.text.y.left = element_text(angle = 0, hjust = 0.5, vjust = 0.5)) +
   coord_flip()
 
-# Figure 3 - forest plot expo - ALS survival (finnish cohorts) ----
-# Association between pre-diagnostic POP concentrations and survival among ALS cases from the FMC and the FMCF Finnish cohorts (total sample size=86).
-figure_3 <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_survival |>
-  filter(study == "Finnish") |>
-  filter(!term == "Continuous") |>
-  filter(!model == "copollutant") |>
-  filter(study_design == "raw unadjusted on cohort") |>
-  mutate(model = fct_recode(model, 
-                            "Base model" = "base",
-                            "Adjusted model" = "adjusted"),
-         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
-         explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish), 
-         term = fct_rev(term)) |>
-  arrange(explanatory) |> 
-  ggplot(aes(x = term, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
-  geom_pointrange(size = 0.5) + 
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y") +  
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
-        legend.position = "bottom", 
-        strip.text.y.left = element_text(angle = 0, hjust = 0.5, vjust = 0.5)) +
-  coord_flip()
-
-# Figure 4 - POPs - ALS survival among the Danish cohort (mixture model) ----
+# Figure 3 - POPs - ALS survival among the Danish cohort (mixture model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (ridge model; n = 166).
-figure_4 <- results_POPs_ALS_survival$sensi5$POPs_quart_ALS_figure_sensi5_danish
+figure_3 <- results_POPs_ALS_survival$sensi5$POPs_quart_ALS_figure_sensi5_danish
 
 # Table S1 - description of the POP levels (table) ----
 # Distribution of pre-disease POP concentrations in ALS cases from the Danish EPIC, the FMC, the FMCF and the MFH Finnish cohorts (total sample size=263).
@@ -254,12 +227,39 @@ corrplot(results_descriptive$comp$POPs_heatmap_cases_group,
          col = rev(COL2(diverging = "RdYlBu")))
 dev.off()
 
-# Figure S2 - Sensitivity analysis - distribution of baseline age and follow-up among the cohorts ----
-figure_S2 <-
+# Figure S2 - forest plot expo - ALS survival (finnish cohorts) ----
+# Association between pre-diagnostic POP concentrations and survival among ALS cases from the FMC and the FMCF Finnish cohorts (total sample size=86).
+figure_S2 <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_survival |>
+  filter(study == "Finnish") |>
+  filter(!term == "Continuous") |>
+  filter(!model == "copollutant") |>
+  filter(study_design == "raw unadjusted on cohort") |>
+  mutate(model = fct_recode(model, 
+                            "Base model" = "base",
+                            "Adjusted model" = "adjusted"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
+         explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
+         explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish), 
+         term = fct_rev(term)) |>
+  arrange(explanatory) |> 
+  ggplot(aes(x = term, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y") +  
+  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y.left = element_text(angle = 0, hjust = 0.5, vjust = 0.5)) +
+  coord_flip()
+
+# Figure S3 - Sensitivity analysis - distribution of baseline age and follow-up among the cohorts ----
+figure_S3 <-
   results_POPs_ALS_survival$sensi1$plot_justif_2cat
 
-# Figure S3 - Sensitivity analysis - effect of follow up duration and baseline age among the Finnish cohorts ----
-figure_S3 <- 
+# Figure S4 - Sensitivity analysis - effect of follow up duration and baseline age among the Finnish cohorts ----
+figure_S4 <- 
   results_POPs_ALS_survival$sensi2$results_sensi2 |>
   filter(box_adj %in% c("not adjusted", "in_orange", "in_purple", "in_green")) |>
   mutate(
@@ -297,6 +297,10 @@ figure_S3 <-
   facet_grid( ~ box_adj)
 
 
+# Figure S5 - Sensitivity analysis - POPs - ALS survival among the Danish cohort (mixture model) ----
+# Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).
+figure_S5 <- results_POPs_ALS_survival$sensi6$POPs_quart_ALS_figure_sensi6_danish
+
 # Export ----
 table_1 <- read_docx() |> body_add_flextable(table_1) 
 print(table_1, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_survival/table_1.docx")
@@ -330,28 +334,34 @@ ggsave(
 ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_survival/figure_3.tiff",
   figure_3,
+  height = 3,
+  width = 4,
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_survival/figure_S2.tiff",
+  figure_S2,
   height = 8,
   width = 8,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_survival/figure_4.tiff",
-  figure_4,
-  height = 4,
-  width = 4,
-  units = "in")
-
-
-ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_survival/figure_S2.tiff",
-  figure_S2,
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_survival/figure_S3.tiff",
+  figure_S3,
   height = 8, 
   width = 12,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_survival/figure_S3.tiff",
-  figure_S3,
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_survival/figure_S4.tiff",
+  figure_S4,
   height = 5,
   width = 7,
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_survival/figure_S5.tiff",
+  figure_S5,
+  height = 6,
+  width = 5,
   units = "in")
