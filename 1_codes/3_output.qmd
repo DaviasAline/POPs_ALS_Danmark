@@ -1387,13 +1387,13 @@ Including all the pollutants
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$danish$POPs_ALS_qgcomp_table_danish  |>
+results_POPs_ALS_survival$danish$qgcomp$POPs_ALS_qgcomp_table_danish  |>
   flextable() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left")
-results_POPs_ALS_survival$danish$POPs_ALS_qgcomp_figure_danish
+results_POPs_ALS_survival$danish$qgcomp$POPs_ALS_qgcomp_figure_danish
 ```
 
 Selecting the pollutants with a positive weight and adjusting for the others
@@ -1401,13 +1401,13 @@ Selecting the pollutants with a positive weight and adjusting for the others
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$danish$POPs_ALS_qgcomp_positive_table_danish  |>
+results_POPs_ALS_survival$danish$qgcomp$POPs_ALS_qgcomp_positive_table_danish  |>
   flextable() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left")
-results_POPs_ALS_survival$danish$POPs_ALS_qgcomp_positive_figure_danish
+results_POPs_ALS_survival$danish$qgcomp$POPs_ALS_qgcomp_positive_figure_danish
 ```
 
 ## Finnish cohorts
@@ -1842,6 +1842,15 @@ results_POPs_ALS_survival$sensi5$POPs_sd_ALS_table_sensi5_danish
 #| warning: false
 results_POPs_ALS_survival$sensi5$POPs_quart_ALS_figure_sensi5_danish
 results_POPs_ALS_survival$sensi5$POPs_quart_ALS_table_sensi5_danish
+```
+
+### ERS model with the POPs selestec with elastic net 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi5$cox_model_ERS_from_elastic_net_quart
+results_POPs_ALS_survival$sensi5$cox_model_ERS_from_elastic_net_sd
 ```
 
 

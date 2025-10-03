@@ -4140,7 +4140,7 @@ sensi5_elastic_net_sd_danish <- cv.glmnet(                                      
   penalty.factor = penalty_factor_sd)                          
 
 plot(sensi5_elastic_net_sd_danish)
-coef(sensi5_elastic_net_sd_danish, s = "lambda.min")                             # Elastic net keeps HCB, β-HCH and Σchlordane
+coef(sensi5_elastic_net_sd_danish, s = "lambda.min")                             # Elastic net keeps HCB and Σchlordane
 coef(sensi5_elastic_net_sd_danish, s = "lambda.1se")
 
 set.seed(1996)
@@ -4519,6 +4519,35 @@ rm(bdd_cases_danish_bis,
    sensi5_elastic_net_quart_danish, 
    sensi5_model3_cox_sd_elastic_net_danish, 
    sensi5_model3_cox_quart_elastic_net_danish)
+
+### ERS model avec les POP selectionnés par elastic net 0.4 ----
+coef(sensi5_elastic_net_sd_danish, s = "lambda.min")                            # Elastic net keeps HCB and Σchlordane
+cox_model <-                                                                    # regular co-pollutant cox model to get unpenalized coefficients 
+  coxph(Surv(follow_up_death, status_death) ~ 
+          OCP_HCB_sd + Σchlordane_sd + 
+          sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+        data = bdd_cases_danish)
+summary(cox_model)
+pollutants <- c("OCP_HCB", "Σchlordane")                                        # selected POPs
+scaled_betas <- c(OCP_HCB = 0.11796 / (0.11796 + 0.20180),                      # weigths of the POPs depending on the scaled coefficients of the regular cox copollutant model
+                  Σchlordane = 0.20180 / (0.11796 + 0.20180))
+Z <- scale(bdd_cases_danish[, pollutants])   
+bdd_cases_danish$ERS_score_from_elastic_net <- as.numeric(Z %*% scaled_betas)
+bdd_cases_danish <-
+  bdd_cases_danish |>
+  mutate(ERS_score_from_elastic_net_sd = scale(ERS_score_from_elastic_net), 
+         ERS_score_from_elastic_net_quart = factor(ntile(ERS_score_from_elastic_net, 4),
+                                                   labels = c("Q1", "Q2", "Q3", "Q4")))
+
+
+cox_model_ERS_from_elastic_net_quart <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_quart + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
+summary(cox_model_ERS_from_elastic_net_quart)
+
+cox_model_ERS_from_elastic_net_sd <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_sd + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
+summary(cox_model_ERS_from_elastic_net_sd)
+
+rm(cox_model, pollutants, scaled_betas, Z)
+
 
 # Sensitivity analysis 6 - elastic net on all the POPs (ungrouped) ----
 ## Data prep ----
@@ -5978,14 +6007,14 @@ results_POPs_ALS_survival <-
          plot_base_cox_gam_danish = plot_base_cox_gam_danish, 
          plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish, 
          plot_copollutant_cox_gam_danish = plot_copollutant_cox_gam_danish, 
-         qgcomp_boot_danish = qgcomp_boot_danish, 
-         qgcomp_noboot_danish = qgcomp_noboot_danish, 
-         qgcomp_positive_boot_danish = qgcomp_positive_boot_danish, 
-         qgcomp_positive_noboot_danish = qgcomp_positive_noboot_danish, 
-         POPs_ALS_qgcomp_table_danish = POPs_ALS_qgcomp_table_danish,
-         POPs_ALS_qgcomp_figure_danish = POPs_ALS_qgcomp_figure_danish, 
-         POPs_ALS_qgcomp_positive_table_danish = POPs_ALS_qgcomp_positive_table_danish,
-         POPs_ALS_qgcomp_positive_figure_danish = POPs_ALS_qgcomp_positive_figure_danish), 
+         qgcomp = list(qgcomp_boot_danish = qgcomp_boot_danish, 
+                       qgcomp_noboot_danish = qgcomp_noboot_danish, 
+                       qgcomp_positive_boot_danish = qgcomp_positive_boot_danish, 
+                       qgcomp_positive_noboot_danish = qgcomp_positive_noboot_danish, 
+                       POPs_ALS_qgcomp_table_danish = POPs_ALS_qgcomp_table_danish,
+                       POPs_ALS_qgcomp_figure_danish = POPs_ALS_qgcomp_figure_danish, 
+                       POPs_ALS_qgcomp_positive_table_danish = POPs_ALS_qgcomp_positive_table_danish,
+                       POPs_ALS_qgcomp_positive_figure_danish = POPs_ALS_qgcomp_positive_figure_danish)), 
        finnish = list(
          covar_finnish = covar_finnish, 
          covar_ALS_table_finnish = covar_ALS_table_finnish,
@@ -6041,7 +6070,9 @@ results_POPs_ALS_survival <-
          POPs_sd_ALS_figure_sensi5_danish = POPs_sd_ALS_figure_sensi5_danish, 
          POPs_quart_ALS_figure_sensi5_danish = POPs_quart_ALS_figure_sensi5_danish, 
          POPs_sd_ALS_table_sensi5_danish = POPs_sd_ALS_table_sensi5_danish, 
-         POPs_quart_ALS_table_sensi5_danish = POPs_quart_ALS_table_sensi5_danish), 
+         POPs_quart_ALS_table_sensi5_danish = POPs_quart_ALS_table_sensi5_danish, 
+         cox_model_ERS_from_elastic_net_quart = cox_model_ERS_from_elastic_net_quart, 
+         cox_model_ERS_from_elastic_net_sd = cox_model_ERS_from_elastic_net_sd), 
        sensi6 = list(
          sensi6_lasso_sd_danish = sensi6_lasso_sd_danish, 
          # sensi6_ridge_sd_danish = sensi6_ridge_sd_danish, 
