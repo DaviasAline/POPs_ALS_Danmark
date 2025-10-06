@@ -4540,11 +4540,11 @@ bdd_cases_danish <-
                                                    labels = c("Q1", "Q2", "Q3", "Q4")))
 
 
-cox_model_ERS_from_elastic_net_quart <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_quart + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
-summary(cox_model_ERS_from_elastic_net_quart)
+sensi5_cox_model_ERS_from_elastic_net_quart <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_quart + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
+summary(sensi5_cox_model_ERS_from_elastic_net_quart)
 
-cox_model_ERS_from_elastic_net_sd <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_sd + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
-summary(cox_model_ERS_from_elastic_net_sd)
+sensi5_cox_model_ERS_from_elastic_net_sd <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_sd + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
+summary(sensi5_cox_model_ERS_from_elastic_net_sd)
 
 rm(cox_model, pollutants, scaled_betas, Z)
 
@@ -5166,8 +5166,7 @@ POPs_quart_ALS_figure_sensi6_danish <-
   facet_grid(rows = dplyr::vars(explanatory), switch = "y") +  
   coord_flip() 
 
-rm(bdd_cases_danish_bis, 
-   POPs_sd_selected, POPs_sd_selected_labels,
+rm(POPs_sd_selected, POPs_sd_selected_labels,
    POPs_quart_selected, POPs_quart_selected_labels,
    X_matrix_sd, X_matrix_quart, 
    penalty_factor_sd, penalty_factor_quart, 
@@ -5179,8 +5178,67 @@ rm(bdd_cases_danish_bis,
    sensi6_model3_cox_quart_elastic_net_danish)
 
 
+
+
+### ERS model avec les POP selectionnés par elastic net 0.4 ----
+coef(sensi6_elastic_net_sd_danish, s = "lambda.min")                            # Elastic net keeps HCB and Σchlordane
+cox_model <-                                                                    # regular co-pollutant cox model to get unpenalized coefficients 
+  coxph(Surv(follow_up_death, status_death) ~ 
+          PCB_28_sd + PCB_52_sd + OCP_oxychlordane_sd + OCP_transnonachlor_sd + PBDE_47_sd + 
+          sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+        data = bdd_cases_danish_bis)
+summary(cox_model)
+pollutants <- c("PCB_28_sd", "PCB_52_sd", "OCP_oxychlordane_sd", "OCP_transnonachlor_sd", "PBDE_47_sd")                                        # selected POPs
+scaled_betas <- c(PCB_28_sd = 0.17657 / (0.17657 + 0.23046 + 0.17271 + 0.07953 + 0.14389),                      # weigths of the POPs depending on the scaled coefficients of the regular cox copollutant model
+                  PCB_52_sd = 0.23046 / (0.17657 + 0.23046 + 0.17271 + 0.07953 + 0.14389), 
+                  OCP_oxychlordane_sd = 0.17271 / (0.17657 + 0.23046 + 0.17271 + 0.07953 + 0.14389), 
+                  OCP_transnonachlor_sd = 0.07953 / (0.17657 + 0.23046 + 0.17271 + 0.07953 + 0.14389), 
+                  PBDE_47_sd = 0.14389 / (0.17657 + 0.23046 + 0.17271 + 0.07953 + 0.14389))
+Z <- scale(bdd_cases_danish_bis[, pollutants])   
+bdd_cases_danish_bis$ERS_score_from_elastic_net <- as.numeric(Z %*% scaled_betas)
+bdd_cases_danish_bis <-
+  bdd_cases_danish_bis |>
+  mutate(ERS_score_from_elastic_net_sd = scale(ERS_score_from_elastic_net), 
+         ERS_score_from_elastic_net_quart = factor(ntile(ERS_score_from_elastic_net, 4),
+                                                   labels = c("Q1", "Q2", "Q3", "Q4")))
+
+
+sensi6_cox_model_ERS_from_elastic_net_quart <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_quart + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish_bis)
+summary(sensi6_cox_model_ERS_from_elastic_net_quart)
+
+sensi5_cox_model_ERS_from_elastic_net_sd <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_sd + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish_bis)
+summary(sensi5_cox_model_ERS_from_elastic_net_sd)
+
+rm(cox_model, pollutants, scaled_betas, Z, bdd_cases_danish_bis)
+
+
 # Sensitivity analysis 7 - follow-up duration ----
 # investigation du probleme de follow-up duration très courte par rapport à la réalité (3-5 ans)
+sensi7_figure <- bdd_cases_danish |>
+  ggplot() +
+  aes(
+    y = als_year,
+    x = follow_up_death,
+    colour = status_death_rec) +
+  geom_point() +
+  scale_color_hue(direction = 1) +
+  labs(
+    y = "Year of ALS diagnosis",
+    x = " Follow-up between ALS diagnosis and death or end of study",
+    color = "Death statut at the end of the study") +
+  theme_minimal()
+
+sensi7_table <- tbl_merge(
+  tbls = list(
+    bdd_cases_danish |> 
+      select(follow_up_death, status_death) |>
+      tbl_summary(by = status_death) |>
+      add_overall(), 
+    bdd_cases_finnish |> 
+      select(follow_up_death, status_death) |>
+      tbl_summary(by = status_death) |>
+      add_overall()), 
+  tab_spanner = c('**Danish EPIC**', "**Finnish Health Surveys**"))
 
 # Tables and figures ----
 ## Danish ----
@@ -6071,8 +6129,8 @@ results_POPs_ALS_survival <-
          POPs_quart_ALS_figure_sensi5_danish = POPs_quart_ALS_figure_sensi5_danish, 
          POPs_sd_ALS_table_sensi5_danish = POPs_sd_ALS_table_sensi5_danish, 
          POPs_quart_ALS_table_sensi5_danish = POPs_quart_ALS_table_sensi5_danish, 
-         cox_model_ERS_from_elastic_net_quart = cox_model_ERS_from_elastic_net_quart, 
-         cox_model_ERS_from_elastic_net_sd = cox_model_ERS_from_elastic_net_sd), 
+         sensi5_cox_model_ERS_from_elastic_net_quart = sensi5_cox_model_ERS_from_elastic_net_quart, 
+         sensi5_cox_model_ERS_from_elastic_net_sd = sensi5_cox_model_ERS_from_elastic_net_sd), 
        sensi6 = list(
          sensi6_lasso_sd_danish = sensi6_lasso_sd_danish, 
          # sensi6_ridge_sd_danish = sensi6_ridge_sd_danish, 
@@ -6081,7 +6139,12 @@ results_POPs_ALS_survival <-
          POPs_sd_ALS_figure_sensi6_danish = POPs_sd_ALS_figure_sensi6_danish, 
          POPs_quart_ALS_figure_sensi6_danish = POPs_quart_ALS_figure_sensi6_danish, 
          POPs_sd_ALS_table_sensi6_danish = POPs_sd_ALS_table_sensi6_danish, 
-         POPs_quart_ALS_table_sensi6_danish = POPs_quart_ALS_table_sensi6_danish))
+         POPs_quart_ALS_table_sensi6_danish = POPs_quart_ALS_table_sensi6_danish, 
+         sensi6_cox_model_ERS_from_elastic_net_quart = sensi6_cox_model_ERS_from_elastic_net_quart, 
+         sensi6_cox_model_ERS_from_elastic_net_sd = sensi6_cox_model_ERS_from_elastic_net_sd), 
+       sensi7 = list(
+         sensi7_figure = sensi7_figure, 
+         sensi7_table = sensi7_table))
 
 rm(bdd_cases_tot, 
    bdd_cases_danish, 
@@ -6156,6 +6219,8 @@ rm(bdd_cases_tot,
    POPs_quart_ALS_figure_sensi5_danish, 
    POPs_sd_ALS_table_sensi5_danish, 
    POPs_quart_ALS_table_sensi5_danish, 
+   sensi5_cox_model_ERS_from_elastic_net_quart,
+   sensi5_cox_model_ERS_from_elastic_net_sd, 
    
    results_sensi6, 
    sensi6_lasso_sd_danish, 
@@ -6164,5 +6229,10 @@ rm(bdd_cases_tot,
    POPs_sd_ALS_figure_sensi6_danish, 
    POPs_quart_ALS_figure_sensi6_danish, 
    POPs_sd_ALS_table_sensi6_danish, 
-   POPs_quart_ALS_table_sensi6_danish)
+   POPs_quart_ALS_table_sensi6_danish, 
+   sensi6_cox_model_ERS_from_elastic_net_quart,
+   sensi6_cox_model_ERS_from_elastic_net_sd, 
+   
+   sensi7_figure, 
+   sensi7_table)
 
