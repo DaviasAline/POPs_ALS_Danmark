@@ -1845,12 +1845,22 @@ results_POPs_ALS_survival$sensi5$POPs_quart_ALS_table_sensi5_danish
 ```
 
 ### ERS model with the POPs selestec with elastic net 
+#### Continuous coding (standardized)
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi5$cox_model_ERS_from_elastic_net_quart
-results_POPs_ALS_survival$sensi5$cox_model_ERS_from_elastic_net_sd
+results_POPs_ALS_survival$sensi5$POPs_sd_ALS_figure_sensi5_ERS_danish
+results_POPs_ALS_survival$sensi5$POPs_sd_ALS_table_sensi5_ERS_danish
+```
+
+#### Quartile coding 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi5$POPs_quart_ALS_figure_sensi5_ERS_danish
+results_POPs_ALS_survival$sensi5$POPs_quart_ALS_table_sensi5_ERS_danish
 ```
 
 
@@ -1895,7 +1905,7 @@ coef(results_POPs_ALS_survival$sensi6$sensi6_elastic_net_sd_danish, s = "lambda.
 ```
 
 ### New co-pollutant model with selected POPs using elastic net (to get unbiaised coefficients and 95%CI and p-values)
-#### Continuous coding 
+#### Continuous coding (standardized)
 ```{r}
 #| echo: false
 #| message: false
@@ -1913,6 +1923,24 @@ results_POPs_ALS_survival$sensi6$POPs_quart_ALS_figure_sensi6_danish
 results_POPs_ALS_survival$sensi6$POPs_quart_ALS_table_sensi6_danish
 ```
 
+### ERS model with the POPs selestec with elastic net 
+#### Continuous coding (standardized)
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi6$POPs_sd_ALS_figure_sensi6_ERS_danish
+results_POPs_ALS_survival$sensi6$POPs_sd_ALS_table_sensi6_ERS_danish
+```
+
+#### Quartile coding 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi6$POPs_quart_ALS_figure_sensi6_ERS_danish
+results_POPs_ALS_survival$sensi6$POPs_quart_ALS_table_sensi6_ERS_danish
+```
 
 # Fatty acids and ALS occurence
 
