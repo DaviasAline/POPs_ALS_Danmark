@@ -32,7 +32,7 @@ rm(POPs_group_bis)
 bdd_cases_danish <- bdd_danish |>
   filter (als == 1) |>
   filter(study == "Danish") |>
-  select(study, study_2cat, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
+  select(study, study_2cat, als, als_date, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
          all_of(POPs_group), 
          all_of(POPs_included)) |>
@@ -837,9 +837,12 @@ rm(heterogeneity_base_quart, heterogeneity_adjusted_quart, heterogeneity_copollu
    trend_base, trend_adjusted, trend_copollutant)
 
 
-## Cox-gam model (sd) ----
+## Cox-gam model ----
 ### Base  ----
-plot_base_cox_gam_danish <- map(POPs_group_sd, function(var) {
+POPs_group_labels <- set_names(
+  c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+  POPs_group)
+plot_base_cox_gam_danish <- map(POPs_group, function(var) {
   
   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
   formula <- as.formula(paste("outcome ~ s(", var, ") + diagnosis_age + sex")) 
@@ -869,7 +872,7 @@ plot_base_cox_gam_danish <- map(POPs_group_sd, function(var) {
   p_value <- model_summary$s.table[1, "p-value"]
   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
   x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
-  x_label <- POPs_group_sd_labels[var] 
+  x_label <- POPs_group_labels[var] 
   
   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
     geom_line(color = "blue", size = 1) +
@@ -884,11 +887,10 @@ plot_base_cox_gam_danish <- map(POPs_group_sd, function(var) {
           axis.line.x = element_blank(),
           axis.ticks.x = element_blank()) +
     ggtitle("Base model")
-  
-  var_orig <- gsub("_sd$", "", var)                                             # distribution of the non-scaled POP variables 
+                                              # distribution of the non-scaled POP variables 
   p2 <- bdd_cases_danish |>
     ggplot() +
-    aes(x = "", y = .data[[var_orig]]) +
+    aes(x = "", y = .data[[var]]) +
     geom_boxplot(fill = "blue") +
     coord_flip() +
     ylab(x_label) + 
@@ -904,7 +906,7 @@ plot_base_cox_gam_danish <- map(POPs_group_sd, function(var) {
 
 
 ### Adjusted ----
-plot_adjusted_cox_gam_danish <- map(POPs_group_sd, function(var) {
+plot_adjusted_cox_gam_danish <- map(POPs_group, function(var) {
   
   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
   formula <- as.formula(paste("outcome ~ s(", var, ") + ", paste(covariates_danish, collapse = "+"))) 
@@ -937,7 +939,7 @@ plot_adjusted_cox_gam_danish <- map(POPs_group_sd, function(var) {
   p_value <- model_summary$s.table[1, "p-value"]
   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
   x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
-  x_label <- POPs_group_sd_labels[var] 
+  x_label <- POPs_group_labels[var] 
   
   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
     geom_line(color = "blue", size = 1) +
@@ -953,11 +955,10 @@ plot_adjusted_cox_gam_danish <- map(POPs_group_sd, function(var) {
           axis.line.x = element_blank(),
           axis.ticks.x = element_blank()) +
     ggtitle("Adjusted model")
-  
-  var_orig <- gsub("_sd$", "", var)                                             # distribution of non-scaled POP variables 
+                                             # distribution of non-scaled POP variables 
   p2 <- bdd_cases_danish |>
     ggplot() +
-    aes(x = "", y = .data[[var_orig]]) +
+    aes(x = "", y = .data[[var]]) +
     geom_boxplot(fill = "blue") +
     coord_flip() +
     ylab(x_label) + 
@@ -972,17 +973,16 @@ plot_adjusted_cox_gam_danish <- map(POPs_group_sd, function(var) {
   set_names(POPs_group)
 
 ### Copollutant ----
-POPs_group_sd_bis <- setdiff(POPs_group_sd, "PCB_4_sd")                         # PCB4 not included because already present in NDL-PCBs
-POPs_group_bis <- setdiff(POPs_group, "PCB_4")
-POPs_group_sd_labels_bis <- set_names(
+POPs_group_bis <- setdiff(POPs_group, "PCB_4")                         # PCB4 not included because already present in NDL-PCBs
+POPs_group_labels_bis <- set_names(
   c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
     "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
-  POPs_group_sd_bis)
+  POPs_group_bis)
 
 outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
-model <- gam(outcome ~ s(PCB_DL_sd) + s(PCB_NDL_sd) + s(OCP_HCB_sd) + s(ΣDDT_sd) + 
-               s(OCP_β_HCH_sd) + s(Σchlordane_sd) + s(ΣPBDE_sd) + 
+model <- gam(outcome ~ s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + 
+               s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) + 
                sex + diagnosis_age + 
                smoking_2cat_i + bmi + marital_status_2cat_i, 
              family = cox.ph(), 
@@ -990,14 +990,14 @@ model <- gam(outcome ~ s(PCB_DL_sd) + s(PCB_NDL_sd) + s(OCP_HCB_sd) + s(ΣDDT_sd
              data = bdd_cases_danish)
 
 
-plot_copollutant_cox_gam_danish <- map(POPs_group_sd_bis, function(var) {
+plot_copollutant_cox_gam_danish <- map(POPs_group_bis, function(var) {
   
   bdd_pred <- bdd_cases_danish |>
     mutate(across(all_of(covariates_danish),                                    # fixe toutes les covariables à leurs moyennes
                   ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.))))) |>
-    mutate(across(setdiff(POPs_group_sd_bis, var), 
+    mutate(across(setdiff(POPs_group_bis, var), 
                   ~ mean(., na.rm = TRUE)))|>                                   # Fixe tous les autres POPs à leur moyenne
-    select(all_of(var), all_of(covariates_danish), all_of(setdiff(POPs_group_sd_bis, var)))  
+    select(all_of(var), all_of(covariates_danish), all_of(setdiff(POPs_group_bis, var)))  
   
   pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
   
@@ -1012,7 +1012,7 @@ plot_copollutant_cox_gam_danish <- map(POPs_group_sd_bis, function(var) {
   p_value <- model_summary$s.table[rownames(model_summary$s.table) == paste0("s(", var, ")"), "p-value"]
   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
   x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
-  x_label <- POPs_group_sd_labels_bis[var]
+  x_label <- POPs_group_labels_bis[var]
   
   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
     geom_line(color = "blue", size = 1) +
@@ -1029,10 +1029,9 @@ plot_copollutant_cox_gam_danish <- map(POPs_group_sd_bis, function(var) {
           axis.ticks.x = element_blank()) +
     ggtitle("Co-pollutant model")
   
-  var_orig <- gsub("_sd$", "", var)          
   p2 <- bdd_cases_danish |>
     ggplot() +
-    aes(x = "", y = .data[[var_orig]]) +
+    aes(x = "", y = .data[[var]]) +
     geom_boxplot(fill = "blue") +
     coord_flip() +
     ylab(x_label) + 
@@ -1043,7 +1042,7 @@ plot_copollutant_cox_gam_danish <- map(POPs_group_sd_bis, function(var) {
                            guides = 'collect')
   p
 }) |> set_names(POPs_group_bis)
-rm(POPs_group_sd_bis, POPs_group_sd_labels_bis, model, outcome, POPs_group_bis)
+rm(POPs_group_bis, POPs_group_labels_bis, model, outcome)
 
 ## Q-gcomp analysis ---- 
 ### All pollutants (grouped) ----
@@ -4305,18 +4304,24 @@ cox_model <-                                                                    
   coxph(Surv(follow_up_death, status_death) ~ 
           OCP_HCB_sd + Σchlordane_sd + 
           sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
-        data = bdd_cases_danish)
-summary(cox_model)
-pollutants <- c("OCP_HCB", "Σchlordane")                                        # selected POPs
-scaled_betas <- c(OCP_HCB = 0.11796 / (0.11796 + 0.20180),                      # weigths of the POPs depending on the scaled coefficients of the regular cox copollutant model
-                  Σchlordane = 0.20180 / (0.11796 + 0.20180))
-Z <- scale(bdd_cases_danish[, pollutants])   
-bdd_cases_danish$ERS_score_from_elastic_net <- as.numeric(Z %*% scaled_betas)
+        data = bdd_cases_danish)  |> summary()
+
+weight_HCB <- cox_model$coefficients["OCP_HCB_sd", "coef"] / (cox_model$coefficients["OCP_HCB_sd", "coef"]  + cox_model$coefficients["Σchlordane_sd", "coef"])
+weight_Σchlordane <- cox_model$coefficients["Σchlordane_sd", "coef"] / (cox_model$coefficients["OCP_HCB_sd", "coef"]  + cox_model$coefficients["Σchlordane_sd", "coef"])
+
 bdd_cases_danish <-
   bdd_cases_danish |>
-  mutate(ERS_score_from_elastic_net_sd = scale(ERS_score_from_elastic_net), 
-         ERS_score_from_elastic_net_quart = factor(ntile(ERS_score_from_elastic_net, 4),
-                                                   labels = c("Q1", "Q2", "Q3", "Q4")))
+  mutate(
+    ERS_score_from_elastic_net = 
+      OCP_HCB_sd * weight_HCB +                                                 # somme des 2 POPs qui ont ete multiplié par leur poids respectif
+      Σchlordane_sd * weight_Σchlordane,   
+    
+    ERS_score_from_elastic_net_sd = 
+      scale(ERS_score_from_elastic_net), 
+    
+    ERS_score_from_elastic_net_quart = 
+      factor(ntile(ERS_score_from_elastic_net, 4),
+             labels = c("Q1", "Q2", "Q3", "Q4")))
 
 
 sensi5_cox_model_ERS_from_elastic_net_sd <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_sd + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
@@ -4345,7 +4350,7 @@ sensi5_cox_model_ERS_from_elastic_net_quart <- tibble(                          
   `p-value` = coefs[, "Pr(>|z|)"]) |>
   filter(str_detect(term, "_quart"))
 
-rm(cox_model, pollutants, scaled_betas, Z, coefs, model_summary)
+rm(cox_model, coefs, model_summary, weight_HCB, weight_Σchlordane)
 
 
 ### assemblage ----
@@ -5543,6 +5548,12 @@ POPs_quart_ALS_figure_sensi6_ERS_danish <-
 # Sensitivity analysis 7 - follow-up duration ----
 # investigation du probleme de follow-up duration très courte par rapport à la réalité (3-5 ans)
 sensi7_figure <- bdd_cases_danish |>
+  mutate(
+    als_year = year(als_date), 
+    status_death = as.factor(as.character(status_death)),
+    status_death_rec = fct_recode(status_death, 
+                                  "Alive" = "0",
+                                  "Deceased" = "1")) |>
   ggplot() +
   aes(
     y = als_year,

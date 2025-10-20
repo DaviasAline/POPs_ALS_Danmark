@@ -1448,7 +1448,7 @@ results_POPs_ALS_survival$finnish$POPs_sd_ALS_figure_finnish_raw
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-results_POPs_ALS_survival$danish$POPs_quart_ALS_table_finnish_raw |>
+results_POPs_ALS_survival$finnish$POPs_quart_ALS_table_finnish_raw |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
@@ -1456,7 +1456,7 @@ results_POPs_ALS_survival$danish$POPs_quart_ALS_table_finnish_raw |>
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$danish$POPs_quart_ALS_figure_finnish_raw
+results_POPs_ALS_survival$finnish$POPs_quart_ALS_figure_finnish_raw
 ```
 
 #### Continuous coding (standardized) - meta-analaysis
@@ -1864,7 +1864,7 @@ results_POPs_ALS_survival$sensi5$POPs_quart_ALS_table_sensi5_ERS_danish
 ```
 
 
-## Sensitivity analysis 6
+## Sensitivity analyses 6
 ### Model forcing the covariates to be included
 
 coefficients using lambda.min (lambda.min is the value of 𝜆that gives minimum mean cross-validated error)
@@ -1885,24 +1885,6 @@ Using elastic net
 coef(results_POPs_ALS_survival$sensi6$sensi6_elastic_net_sd_danish, s = "lambda.min")
 ```
 
-while lambda.1se is the value of 𝜆that gives the most regularized model such that the cross-validated error is within one standard error of the minimum.
-
-coefficients using lambda.1se
-Using LASSO
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-coef(results_POPs_ALS_survival$sensi6$sensi6_lasso_sd_danish, s = "lambda.1se")  
-```
-
-Using elastic net
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-coef(results_POPs_ALS_survival$sensi6$sensi6_elastic_net_sd_danish, s = "lambda.1se")
-```
 
 ### New co-pollutant model with selected POPs using elastic net (to get unbiaised coefficients and 95%CI and p-values)
 #### Continuous coding (standardized)
@@ -1941,6 +1923,23 @@ results_POPs_ALS_survival$sensi6$POPs_sd_ALS_table_sensi6_ERS_danish
 results_POPs_ALS_survival$sensi6$POPs_quart_ALS_figure_sensi6_ERS_danish
 results_POPs_ALS_survival$sensi6$POPs_quart_ALS_table_sensi6_ERS_danish
 ```
+
+## Sensitivity analyses 7
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi7$sensi7_figure
+```
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi7$sensi7_table
+```
+
 
 # Fatty acids and ALS occurence
 

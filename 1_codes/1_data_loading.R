@@ -200,6 +200,7 @@ bdd_danish <- bdd_danish |>
          "TEXT_bdd_lipids" = "TEXT",   
          "SampleStatusText_bdd_fattyacids" = "SampleStatusText", 
          "Comment_bdd_POPs" = "Comment", 
+         "proteomic_metabolism_NT_proBNP" = "proteomic_metabolism_NT-proBNP",
          everything())  |>                                                      # occupations
   select(-X1, -X7, -X3, -XDATE2, -LIM1, -LIM2, -LIM3, -LIM4, -X, -XInt3, -XINT1)# empty variables to delate
 
@@ -418,6 +419,9 @@ fattyacids_quart <- c("pufas_quart", "pufas_ω9_quart", "pufas_ω7_quart", "pufa
 
 ## proteomic ----
 proteomic <- bdd_danish |> select(contains("proteomic_")) |> colnames()
+proteomic_sd <- paste0(proteomic, "_sd")
+proteomic_quart <- paste0(proteomic, "_quart")
+proteomic_quart_med <- paste0(proteomic, "_quart_med")
 
 ## EVs ----
 EVs <- bdd_danish |> select(starts_with("ev_")) |> colnames()
@@ -516,7 +520,24 @@ bdd_danish <- bdd_danish |>
                 .names = "{.col}_sd")) |>
   mutate(across(all_of(fattyacids_tot), ~ factor(ntile(.x, 4),                           
                                              labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart"))
+                .names = "{.col}_quart")) |>
+  mutate(across(all_of(proteomic),
+              ~as.numeric(scale(.x)),
+              .names = "{.col}_sd")) |>
+  mutate(across(all_of(proteomic), ~ factor(ntile(.x, 4),                           
+                                                 labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) |>
+  mutate(across(
+    all_of(proteomic),
+    ~ {
+      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
+      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
+      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
+      quart_meds[quartiles]                                                     
+    },
+    .names = "{.col}_quart_med"
+  ))
+
 
 bdd_danish <- bdd_danish|>
   replace_with_median(OCP_HCB, OCP_HCB_quart)|>
@@ -839,6 +860,23 @@ var_label(bdd_danish) <- list(
 for (var in proteomic) {
   var_lab(bdd_danish[[var]]) <- gsub("^proteomic_(immun_res|neuro_explo|metabolism)_", "", var)
 }
+
+for (var in proteomic_sd) {
+  var_lab(bdd_danish[[var]]) <- gsub("^proteomic_(immun_res|neuro_explo|metabolism)_", "", var)
+}
+
+for (var in proteomic_sd) {
+  var_lab(bdd_danish[[var]]) <- gsub("_sd", "", var)
+}
+
+for (var in proteomic_quart) {
+  var_lab(bdd_danish[[var]]) <- gsub("^proteomic_(immun_res|neuro_explo|metabolism)_", "", var)
+}
+for (var in proteomic_quart) {
+  var_lab(bdd_danish[[var]]) <- gsub("_quart", "", var)
+}
+
+
 for (var in EVs) {
   var_lab(bdd_danish[[var]]) <- gsub("^ev_", "", var)
 }
@@ -1250,6 +1288,11 @@ fattyacids_quart_labels <- c(
 
 ## proteomic ----
 proteomic_labels <- setNames(proteomic, gsub("^proteomic_(immun_res|neuro_explo|metabolism)_", "", proteomic))
+proteomic_sd_labels <- setNames(proteomic_sd, gsub("^proteomic_(immun_res|neuro_explo|metabolism)_", "", proteomic_sd))
+proteomic_sd_labels <- setNames(proteomic_sd, gsub("_sd", "", proteomic_sd))
+proteomic_quart_labels <- setNames(proteomic_quart, gsub("^proteomic_(immun_res|neuro_explo|metabolism)_", "", proteomic_quart))
+proteomic_quart_labels <- setNames(proteomic_quart, gsub("_quart", "", proteomic_quart))
+
 ## Evs ----
 EVs_labels <- setNames(EVs, gsub("ev_", "", EVs))
 
