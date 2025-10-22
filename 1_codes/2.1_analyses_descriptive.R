@@ -19,7 +19,7 @@ covar_danish <- bdd_danish|>
 
 ## POPs ----
 POPs_table_danish <- descrip_num(data = bdd_danish, vars = POPs_tot)
-POPs_table_danish <- left_join(POPs_table_danish, bdd_danish_loq, by = "variable") |>
+POPs_table_danish <- left_join(POPs_table_danish, bdd_danish_POPs_loq, by = "variable") |>
   mutate(variable = factor(variable, levels = POPs_tot_labels), 
          variable = fct_recode(variable, !!!POPs_tot_labels)) |>
   arrange(variable) 
@@ -869,6 +869,7 @@ results_descriptive <- list(
 
 
 rm(
+  bdd_danish_POPs_loq, 
   covar_danish,
   POPs_table_danish,
   POPs_table_danish_by_als,

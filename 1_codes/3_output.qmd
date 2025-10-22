@@ -14,7 +14,7 @@ toc-location: left
 #| message: false
 #| warning: false
 #| include: false
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2.5_analyses_fattyacids_ALS_survival.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/2.6_analyses_proteomic_ALS_occurrence.R")
 ```
 
 # Danish data description
@@ -2170,4 +2170,90 @@ results_fattyacids_ALS_survival$finnish$fattyacids_quart_als_figure_finnish
 #| message: false
 #| warning: false
 results_fattyacids_ALS_survival$comp_results_danish_finnish
+```
+
+# Proteomic and ALS occurrence
+## Effects of subject characterist on ALS occurence in the Danish cohort
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_occurrence$covar
+```
+
+## Logistic regressions
+### continuous standardized
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_occurrence$proteomic_sd_ALS_table
+
+wrap_plots(results_proteomic_ALS_occurrence$proteomic_sd_ALS_base_figure, 
+           results_proteomic_ALS_occurrence$proteomic_sd_ALS_adjusted_figure, 
+           ncol = 1)
+```
+
+### quartiles
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_occurrence$proteomic_quart_ALS_table
+```
+
+### GAMs
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+wrap_plots(results_proteomic_ALS_occurrence$plot_base_gam, ncol = 4)
+wrap_plots(results_proteomic_ALS_occurrence$plot_adjusted_gam, ncol = 4)
+```
+
+# Proteomic and ALS survival
+## Effects of subject characteristics on ALS occurence
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_occurrence$covar |>
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
+```
+
+## Cox models 
+### continuous standardized
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_survival$proteomic_sd_ALS_table
+
+wrap_plots(results_proteomic_ALS_survival$proteomic_sd_ALS_base_figure, 
+           results_proteomic_ALS_survival$proteomic_sd_ALS_adjusted_figure, 
+           ncol = 1)
+```
+
+### quartiles
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_survival$proteomic_quart_ALS_table
+```
+
+### GAMs
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+wrap_plots(results_proteomic_ALS_survival$plot_base_gam, ncol = 4)
+wrap_plots(results_proteomic_ALS_survival$plot_adjusted_gam, ncol = 4)
 ```

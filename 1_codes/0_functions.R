@@ -50,6 +50,7 @@ library(qgcomp)
 library(gWQS)
 library(glmnet)
 library(performance)
+library(ggrepel)
 
 ## Tableau descriptif variables numériques
 descrip_num <- function(data, vars) {                                           

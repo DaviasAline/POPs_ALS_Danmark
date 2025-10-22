@@ -743,6 +743,7 @@ results_fattyacids_ALS_survival <-
        comp_results_danish_finnish = comp_results_danish_finnish)
 
 rm(main_results_fattyacids_ALS_survival, 
+   covar_danish, 
    fattyacids_sd_als_table_finnish, 
    fattyacids_quart_als_table_finnish, 
    fattyacids_sd_als_figure_finnish, 

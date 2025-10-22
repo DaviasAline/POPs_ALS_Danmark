@@ -63,7 +63,7 @@ rm(bdd_danish_POPs, bdd_danish_lipids, bdd_danish_fattyacids, bdd_danish_proteom
 # bdd_danish |> filter(saet == 72) |> View()                           
 bdd_danish <- bdd_danish|> filter(!code %in% c("208", "209", "210"))        # we decided to remove match 72 because the controls doesn't match in term of sex and age with the case
 
-bdd_danish_loq <- 
+bdd_danish_POPs_loq <- 
   read_excel("/Volumes/shared/EOME/Weisskopf/POPs-ALS/Data/Danish EPIC data/2024_ALS-Denmark-POP-Final-Results.xlsx", 
              sheet = "Results-blank-subtracted", 
              range = "D1:AB3")|> 
@@ -386,20 +386,17 @@ POPs_tot <- c("PCB_4",
 
 POPs_group <- c("PCB_4", "PCB_DL", "PCB_NDL", "OCP_HCB", "ΣDDT", "OCP_β_HCH", "Σchlordane", "ΣPBDE")
 POPs_group_quart <- paste0(POPs_group, "_quart")
-POPs_group_outlier <- paste0(POPs_group, "_outlier")
 POPs_group_sd <- paste0(POPs_group, "_sd")
 POPs_group_quart_med <- paste0(POPs_group, "_quart_med")
 
 POPs_group_finnish <- c("PCB_4", "PCB_DL", "PCB_NDL", "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", "OCP_γ_HCH", "Σchlordane", "OCP_PeCB")
 POPs_group_quart_finnish<- paste0(POPs_group_finnish, "_quart")
-POPs_group_outlier_finnish <- paste0(POPs_group_finnish, "_outlier")
 POPs_group_sd_finnish <- paste0(POPs_group_finnish, "_sd")
 POPs_group_quart_med_finnish <- paste0(POPs_group_finnish, "_quart_med")
 
 POPs_included <- bdd_danish |> select(all_of(POPs)) |> select(-OCP_PeCB, - OCP_α_HCH, -OCP_γ_HCH) |> colnames()
 POPs_included_sd <- paste0(POPs_included, "_sd")
 POPs_included_quart <- paste0(POPs_included, "_quart")
-POPs_included_outlier <- paste0(POPs_included, "_outlier")
 
 POPs_finnish <- ifelse(POPs %in% c("PCB_28", "PCB_52", "OCP_PeCB", "OCP_α_HCH", "OCP_γ_HCH", 
                                    "OCP_oxychlordane", "PBDE_47", "PBDE_99", "PBDE_153"), paste0(POPs, "_raw"), POPs)
@@ -876,10 +873,11 @@ for (var in proteomic_quart) {
   var_lab(bdd_danish[[var]]) <- gsub("_quart", "", var)
 }
 
-
 for (var in EVs) {
   var_lab(bdd_danish[[var]]) <- gsub("^ev_", "", var)
 }
+
+rm(var)
 
 ## Finnish ----
 var_label(bdd_finnish) <- list(

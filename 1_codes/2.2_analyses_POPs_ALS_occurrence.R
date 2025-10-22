@@ -4,7 +4,6 @@
 # data loading - package loading ----
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2.1_analyses_descriptive.R")
 
-covariates <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'fS_Kol', 'marital_status_2cat_i', 'education_i')
 covariates_danish <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'fS_Kol', 'marital_status_2cat_i', 'education_i')
 covariates_finnish <- c("marital_status_2cat", 'smoking_2cat', 'bmi', 'fS_Kol')     # education removed because missing in one finnish cohort 
 
@@ -12,7 +11,7 @@ covariates_finnish <- c("marital_status_2cat", 'smoking_2cat', 'bmi', 'fS_Kol') 
 covar <- tbl_merge(
   tbls = list(
     tbl_1 = bdd_danish |>
-  select(als, all_of(covariates)) |>
+  select(als, all_of(covariates_danish)) |>
   tbl_uvregression(
     y = als,
     method = glm,
@@ -1538,12 +1537,12 @@ pollutant_labels <- set_names(
 
 plot_adjusted_gam <- map(POPs_group, function(var) {
   
-  formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates, collapse = ' + ')}"))
+  formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates_danish, collapse = ' + ')}"))
   
   model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
   
   bdd_pred <- bdd_danish |>                                                    # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(across(all_of(covariates), 
+    mutate(across(all_of(covariates_danish), 
                   ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.))), 
                   .names = "adj_{.col}")) |>
     select(all_of(var), starts_with("adj_")) |>
@@ -1678,11 +1677,11 @@ model <- gam(als ~ s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) +
 plot_copollutant_gam <- map(POPs_group_bis, function(var) {
   
   bdd_pred <- bdd_danish|>
-    mutate(across(all_of(covariates),                                           # fixe toutes les covariables à leurs moyennes
+    mutate(across(all_of(covariates_danish),                                           # fixe toutes les covariables à leurs moyennes
                   ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.)))))|>
     mutate(across(setdiff(POPs_group_bis, var), 
                   ~ mean(., na.rm = TRUE)))|>                                   # Fixe tous les autres POPs à leur moyenne
-    select(all_of(var), all_of(covariates), all_of(setdiff(POPs_group_bis, var)))  
+    select(all_of(var), all_of(covariates_danish), all_of(setdiff(POPs_group_bis, var)))  
   
   pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
   
