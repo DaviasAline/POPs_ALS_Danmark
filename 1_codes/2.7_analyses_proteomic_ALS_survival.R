@@ -12,7 +12,7 @@ bdd_cases_danish <- bdd_danish |>
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
          all_of(proteomic)) |>
   mutate(across(all_of(proteomic), 
-                ~ factor(ntile(.x, 4),                       # creation of proteomic quartiles variables (cohort and cases specific)                        
+                ~ factor(ntile(.x, 4),                                          # creation of proteomic quartiles variables (cohort and cases specific)                        
                 labels = c("Q1", "Q2", "Q3", "Q4")),
                 .names = "{.col}_quart")) |>
   mutate(across(all_of(proteomic),                                              # creation of proteomic standardized variables (cohort and cases specific)  
@@ -27,7 +27,7 @@ bdd_cases_danish <- bdd_danish |>
                   },
                 .names = "{.col}_quart_med"))
 
-surv_obj <- Surv(time = bdd_cases_danish$follow_up_death,                # set the outcomes
+surv_obj <- Surv(time = bdd_cases_danish$follow_up_death,                       # set the outcomes
                         event = bdd_cases_danish$status_death)
 covariates <-                                                                   # set the covariates 
   c("sex", "diagnosis_age", "smoking_2cat_i", "bmi", "marital_status_2cat_i")
@@ -57,7 +57,7 @@ covar <- tbl_merge(tbls = list(
 model1_cox_sd <- map_dfr(proteomic_sd, function(expl) {
   
   formula_danish <- 
-    as.formula(paste("surv_obj ~", expl, "+ diagnosis_age + sex"))       # set the formulas                
+    as.formula(paste("surv_obj ~", expl, "+ diagnosis_age + sex"))              # set the formulas                
   model_summary <- coxph(formula_danish, data = bdd_cases_danish) |> summary()  # run cox model
   
   coefs <- model_summary$coefficients
@@ -68,7 +68,7 @@ model1_cox_sd <- map_dfr(proteomic_sd, function(expl) {
     coef = coefs[, "coef"],
     se = coefs[, "se(coef)"], 
     p_value = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                         # remove the covariates results 
+    filter(str_starts(term, explanatory))                                       # remove the covariates results 
 })
 
 ### Adjusted ----
@@ -113,7 +113,7 @@ model1_cox_quart <- map_dfr(proteomic_quart, function(expl) {
 ### Adjusted ----
 model2_cox_quart <- map_dfr(proteomic_quart, function(expl) {
   
-  formula_danish <- as.formula(paste("surv_obj ~", expl, "+",            # set the formulas              
+  formula_danish <- as.formula(paste("surv_obj ~", expl, "+",                   # set the formulas              
                                      paste(covariates, collapse = " + ")))
   
   model_summary <- coxph(formula_danish, data = bdd_cases_danish) |> summary()  # run cox model
@@ -246,7 +246,7 @@ for (var in proteomic) {
   model1_gam[[var]] <- model_summary
 }
 
-rm(var, formula, model, model_summary)
+rm(var, outcome, formula, model, model_summary)
 
 ### Adjusted ----
 model2_gam <- list()
@@ -264,7 +264,7 @@ for (var in proteomic) {
   model2_gam[[var]] <- model_summary
 }
 
-rm(var, formula, model, model_summary)
+rm(var, outcome, formula, model, model_summary)
 
 # Assemblage main analyses ----
 main_results <-       
@@ -324,8 +324,8 @@ covar
 ### Table proteomic (sd) - als survival ----
 proteomic_sd_ALS_table <- 
   main_results |>
-  filter(model %in% c("base", "adjusted") & term == "Continuous") |>              # select quartile results
-  group_by(explanatory) |>                                                      # select explanatory var s with at least one quartile significant 
+  filter(model %in% c("base", "adjusted") & term == "Continuous") |>            # select continuous results
+  group_by(explanatory) |>                                                      # select explanatory vars significant 
   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
   select(model, explanatory, protein_group, term, HR, "95% CI", "p_value") |>
   arrange(protein_group, explanatory) |>
@@ -362,7 +362,7 @@ proteomic_sd_ALS_table <-
 extra_rows <- 
   main_results |>
   filter(model %in% c("base", "adjusted") & term != "Continuous") |>            # select quartile results
-  group_by(explanatory) |>                                                      # select explanatory var s with at least one quartile significant 
+  group_by(explanatory) |>                                                      # select explanatory vars with at least one quartile significant 
   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
   distinct(protein_group, explanatory) |> 
   mutate(
@@ -373,7 +373,7 @@ extra_rows <-
 proteomic_quart_ALS_table <- 
   main_results |>
   filter(model %in% c("base", "adjusted") & term != "Continuous") |>            # select quartile results
-  group_by(explanatory) |>                                                      # select explanatory var s with at least one quartile significant 
+  group_by(explanatory) |>                                                      # select explanatory vars with at least one quartile significant 
   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
   ungroup() |>
   select(model, protein_group, explanatory, term, HR, "95% CI", "p_value", "p_value_heterogeneity", "p_value_trend") |>
@@ -507,7 +507,7 @@ plot_base_gam <- map(signif_vars, function(var) {
                method = "ML", 
                data = bdd_cases_danish)            
   
-  bdd_pred <- bdd_cases_danish |>                                               # création bdd avec expo + covariables ramenées à leur moyenne
+  bdd_pred <- bdd_cases_danish |>                                               # création bdd avec protein + covariables ramenées à leur moyenne
     mutate(
       adj_diagnosis_age = mean(diagnosis_age, na.rm = TRUE),
       adj_sex = names(which.max(table(sex)))) |>
@@ -575,7 +575,7 @@ plot_adjusted_gam <- map(signif_vars, function(var) {
                method = "ML", 
                data = bdd_cases_danish)     
   
-  bdd_pred <- bdd_cases_danish |>                                               # création bdd avec expo + covariables ramenées à leur moyenne
+  bdd_pred <- bdd_cases_danish |>                                               # création bdd avec protein + covariables ramenées à leur moyenne
     mutate(
       adj_diagnosis_age = mean(diagnosis_age, na.rm = TRUE),
       adj_sex = names(which.max(table(sex))), 
@@ -652,7 +652,9 @@ results_proteomic_ALS_survival <-
     plot_base_gam = plot_base_gam, 
     plot_adjusted_gam = plot_adjusted_gam)
 
-rm(covariates, 
+rm(bdd_cases_danish, 
+   surv_obj, 
+   covariates, 
    covar, 
    main_results, 
    proteomic_sd_ALS_table,

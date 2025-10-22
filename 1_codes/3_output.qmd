@@ -14,7 +14,7 @@ toc-location: left
 #| message: false
 #| warning: false
 #| include: false
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2.6_analyses_proteomic_ALS_occurrence.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/2.7_analyses_proteomic_ALS_survival.R")
 ```
 
 # Danish data description

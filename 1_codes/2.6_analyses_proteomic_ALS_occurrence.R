@@ -8,7 +8,7 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/2.5_analyses_fattyacids_ALS_survi
 covariates <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'fS_Kol', 'marital_status_2cat_i', 'education_i')
 
 
-# effects of the covariates on ALS ----
+# Effects of the covariates on ALS ----
 covar <- tbl_merge(
   tbls = list(
     tbl_1 = bdd_danish |>
@@ -32,9 +32,9 @@ covar <- tbl_merge(
 
 
 
-# main analysis ----
-### model 1 ----
-#### sd ----
+# Main analysis ----
+## model 1 ----
+### sd ----
 model1_sd <- data.frame(explanatory = character(),
                            term = integer(),
                            OR = numeric(),
@@ -75,7 +75,7 @@ model1_sd <- model1_sd |>
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
-#### quartiles ----
+### quartiles ----
 model1_quart <- data.frame(explanatory = character(),
                            term = integer(),
                            OR = numeric(),
@@ -118,7 +118,7 @@ model1_quart <- model1_quart |>
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
-#### gams ----
+### gams ----
 model1_gam <- list()
 
 for (var in proteomic) {
@@ -131,10 +131,8 @@ for (var in proteomic) {
 
 rm(var, formula, model, model_summary)
 
-### model 2 ----
-# matched on sex and age, adjusted on for smoking_2cat_i, BMI, serum total fS_Kol, marital status and education
-
-#### sd ----
+## model 2 ----
+### sd ----
 model2_sd <- data.frame(explanatory = character(),
                            term = integer(),
                            OR = numeric(),
@@ -170,7 +168,7 @@ model2_sd <- model2_sd |>
   select(explanatory, model, everything())
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
-#### quartiles ----
+### quartiles ----
 model2_quart <- data.frame(explanatory = character(),
                            term = integer(),
                            OR = numeric(),
@@ -208,22 +206,8 @@ model2_quart <- model2_quart |>
   select(explanatory, model, everything())
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
-#### gams ----
-model2_gam <- list()
-
-for (var in proteomic) {
-  
-  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
-  model_summary <- summary(model)
-  model2_gam[[var]] <- model_summary
-}
-
-rm(var, formula, model, model_summary)
-
-
-### heterogeneity tests ----
-#### model 1 quartile ----
+#### heterogeneity tests ----
+##### model 1 quartile ----
 heterogeneity_base_quart <- data.frame(explanatory = character(),
                                        model = factor(),
                                        p_value_heterogeneity = numeric(), 
@@ -246,7 +230,7 @@ for (var in proteomic_quart) {
 }
 rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
 
-#### model 2 quartile ----
+##### model 2 quartile ----
 heterogeneity_adjusted_quart <- data.frame(explanatory = character(),
                                            model = factor(), 
                                            p_value_heterogeneity = numeric(), 
@@ -274,8 +258,8 @@ heterogeneity_tests <-
             heterogeneity_adjusted_quart)  |>
   mutate(explanatory = gsub("_quart", "", explanatory))
 
-### trend tests ----
-#### model 1 quartile ----
+#### trend tests ----
+##### model 1 quartile ----
 trend_base <- data.frame(explanatory = character(),
                          model = factor(), 
                          p_value_trend = numeric(), 
@@ -296,7 +280,7 @@ for (var in proteomic_quart_med) {
 }
 rm(var, test, formula, p_value_trend)
 
-#### model 2 quartile ----
+##### model 2 quartile ----
 trend_adjusted <- data.frame(explanatory = character(),
                              model = factor(), 
                              p_value_trend = numeric(), 
@@ -319,9 +303,21 @@ trend_tests <-
   bind_rows(trend_base, trend_adjusted) |>
   mutate(explanatory = gsub("_quart_med", "", explanatory))
 
+### gams ----
+model2_gam <- list()
+
+for (var in proteomic) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i"))
+  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model_summary <- summary(model)
+  model2_gam[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
 
 
-### merging the main results ----
+## merging the main results ----
 main_results <- bind_rows(model1_quart, 
                           model2_quart, 
                           model1_sd, 
@@ -335,14 +331,12 @@ main_results <- bind_rows(model1_quart,
          p_value_raw = p_value, 
          p_value = ifelse(p_value < 0.01, "<0.01", number(p_value, accuracy = 0.01, decimal.mark = ".")), 
          "95% CI" = paste(lower_CI, ", ", upper_CI, sep = '')) |>
-  group_by(model) %>%                                  # correction séparée par modèle
+  group_by(model) |>                               
   mutate(
     p_value_fdr = if_else(
-      term == "Continuous",                             # seulement pour sd == "Continuous"
+      term == "Continuous",                            
       p.adjust(p_value_raw, method = "fdr"),
-      NA_real_                                        # NA sinon
-    )
-  ) |>
+      NA_real_)) |>
   ungroup() |>
   arrange(explanatory) |>
   select(explanatory, 
@@ -379,9 +373,9 @@ covar
 
 ## Table proteomic - als occurence - base and adjusted sd ----
 proteomic_sd_ALS_table <- main_results |>
-  filter(model %in% c("base", "adjusted") & term == "Continuous") |>
-  group_by(explanatory) |>                                                      # select explanatory var s with at least one quartile significant 
-  filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
+  filter(model %in% c("base", "adjusted") & term == "Continuous") |>            # select only continuous results
+  group_by(explanatory) |>                                                      # select explanatory vars significant                
+  filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>                     
   ungroup() |>
   select(model, explanatory, protein_group, OR, "95% CI", "p_value") |>
   pivot_wider(names_from = "model", values_from = c("OR", "95% CI", "p_value")) |>
@@ -417,8 +411,8 @@ proteomic_sd_ALS_table <- main_results |>
 ## Table proteomic - als occurence - base and adjusted quart ----
 extra_rows <- 
   main_results |>
-  filter(model %in% c("base", "adjusted") & term != "Continuous") |>              # select quartile results
-  group_by(explanatory) |>                                                      # select explanatory var s with at least one quartile significant 
+  filter(model %in% c("base", "adjusted") & term != "Continuous") |>            # select only quartile results
+  group_by(explanatory) |>                                                      # select explanatory vars with at least one quartile significant 
   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
   distinct(protein_group, explanatory) |> 
   mutate(
