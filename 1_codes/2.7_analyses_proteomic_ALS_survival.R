@@ -8,7 +8,7 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/2.6_analyses_proteomic_ALS_occurr
 # Creation of cases specific datasets ----
 bdd_cases_danish <- bdd_danish |>
   filter (als == 1) |>
-  select(als, als_date, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
+  select(sample, als, als_date, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
          all_of(proteomic)) |>
   mutate(across(all_of(proteomic), 
@@ -318,10 +318,10 @@ rm(model1_cox_sd,
 
 
 # Tables and Figures ----
-### Table covariates - als survival ----
+## Table covariates - als survival ----
 covar
 
-### Table proteomic (sd) - als survival ----
+## Table proteomic (sd) - als survival ----
 proteomic_sd_ALS_table <- 
   main_results |>
   filter(model %in% c("base", "adjusted") & term == "Continuous") |>            # select continuous results
@@ -341,8 +341,8 @@ proteomic_sd_ALS_table <-
   add_header(
     "explanatory" = "Pre-disease serum proteins", 
     "protein_group" = "Protein group", 
-    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model") |>
+    "HR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models", 
+    "HR " = "Adjusted models", "95% CI " = "Adjusted models", "p-value " = "Adjusted models") |>
   theme_vanilla() |>
   merge_h(part = "header") |>
   align(align = "center", part = "all") |>
@@ -358,7 +358,41 @@ proteomic_sd_ALS_table <-
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
-### Table proteomic (quart) - als survival ----
+proteomic_sd_ALS_table <- 
+  main_results |>
+  filter(model == "base" & term == "Continuous") |>            # select continuous results
+  group_by(explanatory) |>                                                      # select explanatory vars significant 
+  filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
+  select(model, explanatory, protein_group, term, HR, "95% CI", "p_value") |>
+  arrange(protein_group, explanatory) |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p_value")) |>
+  select(protein_group, explanatory, contains("base")) |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base") |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are adjusted for age at diagnosis and sex. 
+    2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease serum concentration of proteins. 
+    3CI: Confidence interval.") |>
+  add_header(
+    "explanatory" = "Pre-disease serum proteins", 
+    "protein_group" = "Protein group", 
+    "HR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  merge_v(j = "protein_group") |>
+  merge_v(j = "explanatory") |>
+  bold(j = "explanatory", part = "body") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
+## Table proteomic (quart) - als survival ----
 extra_rows <- 
   main_results |>
   filter(model %in% c("base", "adjusted") & term != "Continuous") |>            # select quartile results
@@ -402,8 +436,70 @@ proteomic_quart_ALS_table <-
     "explanatory" = "Pre-disease serum proteins", 
     "protein_group" = "Protein group", 
     "quartiles" = "Quartiles",
-    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model") |>
+    "HR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models", 
+    "Heterogeneity test" = "Base models",  "Trend test" = "Base models",
+    "HR " = "Adjusted models", "95% CI " = "Adjusted models", "p-value " = "Adjusted models", 
+    "Heterogeneity test " = "Adjusted models",  "Trend test " = "Adjusted models") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  merge_v(j = "protein_group") |>
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  merge_v(j = "explanatory") |>
+  bold(j = "explanatory", part = "body") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  merge_at(j = "quartiles", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
+rm(extra_rows)
+
+
+extra_rows <- 
+  main_results |>
+  filter(model == "base" & term != "Continuous") |>            # select quartile results
+  group_by(explanatory) |>                                                      # select explanatory vars with at least one quartile significant 
+  filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
+  distinct(protein_group, explanatory) |> 
+  mutate(
+    quartiles = "Quartile 1",
+    "HR_base" = '-', "95% CI_base" = '-', "p_value_base" = '', "p_value_heterogeneity_base" = '', "p_value_trend_base" = '')
+
+proteomic_quart_ALS_table <- 
+  main_results |>
+  filter(model == "base" & term != "Continuous") |>            # select quartile results
+  group_by(explanatory) |>                                                      # select explanatory vars with at least one quartile significant 
+  filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
+  ungroup() |>
+  select(model, protein_group, explanatory, term, HR, "95% CI", "p_value", "p_value_heterogeneity", "p_value_trend") |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p_value", "p_value_heterogeneity", "p_value_trend")) |>
+  select(protein_group, explanatory, quartiles = term, contains("base")) 
+
+proteomic_quart_ALS_table <- 
+  proteomic_quart_ALS_table |>
+  mutate_if(is.numeric, as.character) |>
+  bind_rows(extra_rows) |>
+  group_by(explanatory) |>
+  mutate(p_value_heterogeneity_base = ifelse(quartiles == 'Quartile 1', p_value_heterogeneity_base[quartiles == 'Quartile 2'], ''), 
+         p_value_trend_base = ifelse(quartiles == 'Quartile 1', p_value_trend_base[quartiles == 'Quartile 2'], '')) |>
+  ungroup() |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base", "Heterogeneity test" = "p_value_heterogeneity_base",  "Trend test" = "p_value_trend_base") |>
+  arrange(protein_group, explanatory, quartiles) |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are adjusted for age at baseline and sex. Adjusted models further account for smoking, BMI, cholesterol, marital status and education. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease serum concentration of proteins.
+    3CI: Confidence interval.") |>
+  add_header(
+    "explanatory" = "Pre-disease serum proteins", 
+    "protein_group" = "Protein group", 
+    "quartiles" = "Quartiles",
+    "HR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models", 
+    "Heterogeneity test" = "Base models",  "Trend test" = "Base models") |>
   theme_vanilla() |>
   merge_h(part = "header") |>
   align(align = "center", part = "all") |>

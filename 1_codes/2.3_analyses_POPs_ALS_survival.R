@@ -839,9 +839,9 @@ rm(heterogeneity_base_quart, heterogeneity_adjusted_quart, heterogeneity_copollu
 
 ## Cox-gam model ----
 ### Base  ----
-POPs_group_labels <- set_names(
-  c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
-  POPs_group)
+POPs_group_labels_cox_gam <- set_names(
+  POPs_group, 
+  c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"))
 plot_base_cox_gam_danish <- map(POPs_group, function(var) {
   
   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
@@ -872,7 +872,7 @@ plot_base_cox_gam_danish <- map(POPs_group, function(var) {
   p_value <- model_summary$s.table[1, "p-value"]
   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
   x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
-  x_label <- POPs_group_labels[var] 
+  x_label <- POPs_group_labels_cox_gam[var] 
   
   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
     geom_line(color = "blue", size = 1) +
@@ -902,7 +902,7 @@ plot_base_cox_gam_danish <- map(POPs_group, function(var) {
     theme_minimal()
   p
 }) |> 
-  set_names(POPs_group)
+  set_names(POPs_group_labels_cox_gam)
 
 
 ### Adjusted ----
@@ -939,7 +939,7 @@ plot_adjusted_cox_gam_danish <- map(POPs_group, function(var) {
   p_value <- model_summary$s.table[1, "p-value"]
   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
   x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
-  x_label <- POPs_group_labels[var] 
+  x_label <- POPs_group_labels_cox_gam[var] 
   
   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
     geom_line(color = "blue", size = 1) +
@@ -970,7 +970,8 @@ plot_adjusted_cox_gam_danish <- map(POPs_group, function(var) {
     theme_minimal()
   p
 }) |> 
-  set_names(POPs_group)
+  set_names(POPs_group_labels_cox_gam)
+rm(POPs_group_labels_cox_gam)
 
 ### Copollutant ----
 POPs_group_bis <- setdiff(POPs_group, "PCB_4")                         # PCB4 not included because already present in NDL-PCBs
@@ -2338,6 +2339,7 @@ main_results_POPs_ALS_survival <-
       str_detect(term, "Q4") ~ "quartile 4"), 
     explanatory = gsub("_sd", "", explanatory), 
     explanatory = gsub("_quart", "", explanatory), 
+    HR_raw = HR, 
     HR = as.numeric(sprintf("%.1f", HR)),
     lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
     upper_CI = as.numeric(sprintf("%.1f", upper_CI)),, 
@@ -2346,7 +2348,7 @@ main_results_POPs_ALS_survival <-
     `p-value_shape` = ifelse(`p-value_raw`<0.05, "p-value<0.05", "p-value≥0.05"), 
     `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")), 
     `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
-  select(study, model, study_design, explanatory, term,  HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI, "p.value_heterogeneity")
+  select(study, model, study_design, explanatory, term,  HR, HR_raw, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI, "p.value_heterogeneity")
 
 heterogeneity_tests <- 
   bind_rows(heterogeneity_tests, heterogeneity_tests_finnish) |>
@@ -5699,7 +5701,7 @@ POPs_sd_ALS_figure_danish <- main_results_POPs_ALS_survival |>
          explanatory = fct_rev(explanatory),
          explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
   arrange(explanatory) |> 
-  ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
+  ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(cols = dplyr::vars(model), switch = "y") +                         # , scales = "free_x"
@@ -5724,7 +5726,7 @@ POPs_quart_ALS_figure_danish <- main_results_POPs_ALS_survival |>
          explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
          term = fct_rev(term)) |>
   arrange(explanatory) |> 
-  ggplot(aes(x = term, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
+  ggplot(aes(x = term, y = HR_raw, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y") +  

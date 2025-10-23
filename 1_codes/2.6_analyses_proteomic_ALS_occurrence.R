@@ -70,7 +70,8 @@ model1_sd <- model1_sd |>
     term = case_when(
       grepl("_sd", term) ~ "Continuous",
       TRUE ~ NA_character_),
-    model = "base") |>
+    model = "base", 
+    analysis = "main") |>
   select(explanatory, model, everything())
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
@@ -113,7 +114,8 @@ model1_quart <- model1_quart |>
       grepl("_quartQ3", term) ~ "Quartile 3",
       grepl("_quartQ4", term) ~ "Quartile 4",
       TRUE ~ NA_character_),
-    model = "base") |>
+    model = "base", 
+    analysis = "main") |>
   select(explanatory, model, everything())
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
@@ -164,7 +166,8 @@ model2_sd <- model2_sd |>
     term = case_when(
       grepl("_sd", term) ~ "Continuous",
       TRUE ~ NA_character_),
-    model = "adjusted") |>
+    model = "adjusted", 
+    analysis = "main") |>
   select(explanatory, model, everything())
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
@@ -202,7 +205,8 @@ model2_quart <- model2_quart |>
       grepl("_quartQ3", term) ~ "Quartile 3",
       grepl("_quartQ4", term) ~ "Quartile 4",
       TRUE ~ NA_character_),
-    model = "adjusted") |>
+    model = "adjusted", 
+    analysis = "main") |>
   select(explanatory, model, everything())
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
@@ -225,7 +229,8 @@ for (var in proteomic_quart) {
   
   heterogeneity_base_quart <- rbind(heterogeneity_base_quart, 
                                     data.frame(explanatory = var,
-                                               model = "base",
+                                               model = "base", 
+                                               analysis = "main",
                                                p_value_heterogeneity = p_value_heterogeneity))
 }
 rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
@@ -248,7 +253,8 @@ for (var in proteomic_quart) {
   
   heterogeneity_adjusted_quart <- rbind(heterogeneity_adjusted_quart, 
                                         data.frame(explanatory = var,
-                                                   model = "adjusted",
+                                                   model = "adjusted", 
+                                                   analysis = "main",
                                                    p_value_heterogeneity = p_value_heterogeneity))
 }
 rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
@@ -275,7 +281,8 @@ for (var in proteomic_quart_med) {
   
   trend_base <- rbind(trend_base, 
                       data.frame(explanatory = var,
-                                 model = "base",
+                                 model = "base", 
+                                 analysis = "main",
                                  p_value_trend = p_value_trend))
 }
 rm(var, test, formula, p_value_trend)
@@ -294,7 +301,8 @@ for (var in proteomic_quart_med) {
   
   trend_adjusted <- rbind(trend_adjusted, 
                           data.frame(explanatory = var,
-                                     model = "adjusted",
+                                     model = "adjusted", 
+                                     analysis = "main",
                                      p_value_trend = p_value_trend))
 }
 rm(var, test, formula, p_value_trend)
@@ -317,11 +325,72 @@ for (var in proteomic) {
 rm(var, formula, model, model_summary)
 
 
-## merging the main results ----
+# Sensitivity analyses ----
+## sensi1 - Removing the oulier for NEFL ----
+### model 1 sd 
+bdd_danish_outlier <- 
+  bdd_danish |>
+  mutate(
+    proteomic_neuro_explo_NEFL_sd_outlier = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd))
+proteomic_sd_outlier <-
+  proteomic_sd |> 
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sd_outlier")
+model1_sd_outlier <- data.frame(explanatory = character(),
+                        term = integer(),
+                        OR = numeric(),
+                        lower_CI = numeric(),
+                        upper_CI = numeric(),
+                        p_value = numeric(),
+                        stringsAsFactors = FALSE)
+
+for (var in proteomic_sd_outlier) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  
+  model <- clogit(formula, data = bdd_danish_outlier)
+  
+  model_summary <- tidy(model)
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model1_sd_outlier <- rbind(model1_sd_outlier, data.frame(explanatory = var,
+                                           term = term, 
+                                           OR = OR,
+                                           lower_CI = lower_CI,
+                                           upper_CI = upper_CI,
+                                           p_value = p_value))
+}
+
+model1_sd_outlier <- model1_sd_outlier |> 
+  mutate(
+    term = case_when(
+      grepl("_sd", term) ~ "Continuous",
+      TRUE ~ NA_character_),
+    model = "base", 
+    analysis = "sensi_1") |>
+  select(explanatory, model, everything())
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var, 
+   bdd_danish_outlier, proteomic_sd_outlier)
+
+## sensi2 - Removing cases and their controls with follow_up < 5 years ----
+### model 1 sd 
+bdd_danish |>
+  filter(follow_up<60) |>
+  select(sample, match, follow_up, everything()) |>
+  arrange(follow_up) |>
+  View()
+
+
+# Merging the results ----
 main_results <- bind_rows(model1_quart, 
                           model2_quart, 
                           model1_sd, 
-                          model2_sd) |> 
+                          model2_sd, 
+                          model1_sd_outlier) |> 
   mutate(explanatory = gsub("_quart", "", explanatory), 
          explanatory = gsub("_sd", "", explanatory), 
          OR_raw = OR, 
@@ -334,23 +403,30 @@ main_results <- bind_rows(model1_quart,
   group_by(model) |>                               
   mutate(
     p_value_fdr = if_else(
-      term == "Continuous",                            
+      term == "Continuous" & analysis == "main",                            
       p.adjust(p_value_raw, method = "fdr"),
-      NA_real_)) |>
+      NA_real_), 
+    p_value_fdr = if_else(
+      term == "Continuous" & analysis == "sensi_1",                            
+      p.adjust(p_value_raw, method = "fdr"),
+      p_value_fdr)) |>
   ungroup() |>
   arrange(explanatory) |>
-  select(explanatory, 
+  select(analysis, 
          model,
+         explanatory, 
          term,
          starts_with("OR"), 
          starts_with("95%"), 
          starts_with("p_value"), 
          lower_CI, upper_CI) 
 
-main_results <- left_join(main_results, heterogeneity_tests, by = c("explanatory", "model"))
-main_results <- left_join(main_results, trend_tests, by = c("explanatory", "model"))
+main_results <- left_join(main_results, heterogeneity_tests, by = c("explanatory", "model", "analysis"))
+main_results <- left_join(main_results, trend_tests, by = c("explanatory", "model", "analysis"))
 main_results <- main_results |>
   mutate(
+    p_value_heterogeneity = ifelse(term == "Continuous", NA, p_value_heterogeneity), 
+    p_value_trend = ifelse(term == "Continuous", NA, p_value_trend), 
     p_value_heterogeneity = ifelse(p_value_heterogeneity < 0.01, "<0.01", number(p_value_heterogeneity, accuracy = 0.01, decimal.mark = ".")), 
     p_value_trend = ifelse(p_value_trend < 0.01, "<0.01", number(p_value_trend, accuracy = 0.01, decimal.mark = ".")), 
     protein_group = case_when(str_detect(explanatory, 'proteomic_immun_res') ~ "Immune response", 
@@ -361,6 +437,7 @@ main_results <- main_results |>
 
 rm(model1_quart, model2_quart, 
    model1_sd, model2_sd,
+   model1_sd_outlier, 
    heterogeneity_base_quart, heterogeneity_adjusted_quart, 
    trend_base, trend_adjusted, 
    heterogeneity_tests, trend_tests)
@@ -372,8 +449,11 @@ rm(model1_quart, model2_quart,
 covar
 
 ## Table proteomic - als occurence - base and adjusted sd ----
-proteomic_sd_ALS_table <- main_results |>
-  filter(model %in% c("base", "adjusted") & term == "Continuous") |>            # select only continuous results
+proteomic_sd_ALS_table <- 
+  main_results |>
+  filter(model %in% c("base", "adjusted") &                                     # select only continuous results
+           term == "Continuous" & 
+           analysis == "main") |>            
   group_by(explanatory) |>                                                      # select explanatory vars significant                
   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>                     
   ungroup() |>
@@ -407,11 +487,48 @@ proteomic_sd_ALS_table <- main_results |>
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
+proteomic_sd_ALS_table <- 
+  main_results |>
+  filter(model == "base" &                                                      # select only continuous results
+           term == "Continuous" & 
+           p_value_raw < 0.05 & 
+           analysis == "main") |>        
+  select(model, explanatory, protein_group, OR, "95% CI", "p_value") |>
+  pivot_wider(names_from = "model", values_from = c("OR", "95% CI", "p_value")) |>
+  select(protein_group, explanatory, contains("base")) |>
+  rename("OR" = "OR_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base") |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are adjusted for age at baseline and sex. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease serum concentration of proteins.
+    3CI: Confidence interval.") |>
+  add_header(
+    "explanatory" = "Pre-disease serum proteins", 
+    "protein_group" = "Protein group", 
+    "OR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  merge_v(j = "explanatory") |>
+  bold(j = "explanatory", part = "body") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  merge_v(j = "protein_group") |>
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
+
 
 ## Table proteomic - als occurence - base and adjusted quart ----
 extra_rows <- 
   main_results |>
-  filter(model %in% c("base", "adjusted") & term != "Continuous") |>            # select only quartile results
+  filter(model %in% c("base", "adjusted") &                                     # select only quartile results
+           term != "Continuous" & 
+           analysis == "main") |>           
   group_by(explanatory) |>                                                      # select explanatory vars with at least one quartile significant 
   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
   distinct(protein_group, explanatory) |> 
@@ -422,7 +539,9 @@ extra_rows <-
 
 proteomic_quart_ALS_table <- 
   main_results |>
-  filter(model %in% c("base", "adjusted") & term != "Continuous") |>              # select quartile results
+  filter(model %in% c("base", "adjusted") &                                     # select quartile results
+           term != "Continuous" & 
+           analysis == "main") |>             
   group_by(explanatory) |>                                                      # select explanatory var s with at least one quartile significant 
   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
   ungroup() |>
@@ -476,12 +595,79 @@ proteomic_quart_ALS_table <-
 
 rm(extra_rows)
 
+extra_rows <- 
+  main_results |>
+  filter(model == "base" &                                                      # select only quartile results
+           term != "Continuous" & 
+           analysis == "main") |>            
+  group_by(explanatory) |>                                                      # select explanatory vars with at least one quartile significant 
+  filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
+  distinct(protein_group, explanatory) |> 
+  mutate(
+    quartiles = "Quartile 1",
+    "OR_base" = '-', "95% CI_base" = '-', "p_value_base" = '', "p_value_heterogeneity_base" = '', "p_value_trend_base" = '')
+
+proteomic_quart_ALS_table <- 
+  main_results |>
+  filter(model == "base" &                                                      # select quartile results
+           term != "Continuous" & 
+           analysis == "main") |>            
+  group_by(explanatory) |>                                                      # select explanatory var s with at least one quartile significant 
+  filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
+  ungroup() |>
+  select(model, protein_group, explanatory, term, OR, "95% CI", "p_value", "p_value_heterogeneity", "p_value_trend") |>
+  pivot_wider(names_from = "model", values_from = c("OR", "95% CI", "p_value", "p_value_heterogeneity", "p_value_trend")) |>
+  select(protein_group, explanatory, quartiles = term, contains("base")) 
+
+proteomic_quart_ALS_table <- 
+  proteomic_quart_ALS_table |>
+  mutate_if(is.numeric, as.character) |>
+  bind_rows(extra_rows) |>
+  group_by(explanatory) |>
+  mutate(p_value_heterogeneity_base = ifelse(quartiles == 'Quartile 1', p_value_heterogeneity_base[quartiles == 'Quartile 2'], ''), 
+         p_value_trend_base = ifelse(quartiles == 'Quartile 1', p_value_trend_base[quartiles == 'Quartile 2'], '')) |>
+  ungroup() |>
+  rename("OR" = "OR_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base", "Heterogeneity test" = "p_value_heterogeneity_base",  "Trend test" = "p_value_trend_base") |>
+  arrange(protein_group, explanatory, quartiles) |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are adjusted for age at baseline and sex. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease serum concentration of proteins.
+    3CI: Confidence interval.
+    4Heterogeneity tests in outcome value across protein quartiles, adjusted for sex and age at baseline. 
+    5Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, adjusted for sex and age at baseline.") |>
+  add_header(
+    "explanatory" = "Pre-disease serum proteins", 
+    "protein_group" = "Protein group", 
+    "quartiles" = "Quartiles",
+    "OR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models", 
+    "Heterogeneity test" = "Base models",  "Trend test" = "Base models") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  merge_v(j = "protein_group") |>
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  merge_v(j = "explanatory") |>
+  bold(j = "explanatory", part = "body") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  merge_at(j = "quartiles", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
+rm(extra_rows)
+
 
 
 ## Figure proteomic - als occurence - base sd ----
 proteomic_sd_ALS_base_figure <- 
   main_results |>
-  filter(model == "base" & term == "Continuous") |>
+  filter(model == "base" & 
+           term == "Continuous" & 
+           analysis == "main") |>
   mutate(
     log2OR = log2(OR_raw),
     neg_log10_p = -log10(p_value_raw),
@@ -513,10 +699,54 @@ proteomic_sd_ALS_base_figure <-
     y = "-log10(p-value)", 
     color = "")
 
+
+## Figure proteomic - als occurence - base sd (sensi_1) ----
+proteomic_sd_ALS_base_figure_sensi_1 <- 
+  main_results |>
+  filter(model == "base" & 
+           term == "Continuous" & 
+           analysis == "sensi_1") |>
+  mutate(
+    log2OR = log2(OR_raw),
+    neg_log10_p = -log10(p_value_raw),
+    significance = case_when(
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      TRUE ~ "p-value>0.05")) |>
+  ggplot(aes(x = OR_raw, y = neg_log10_p, color = significance)) +
+  geom_point(alpha = 0.8, size = 2) +
+  geom_text_repel(
+    data = ~filter(.x, p_value_raw < 0.05),       
+    aes(label = explanatory), 
+    size = 3.5,
+    max.overlaps = 20,
+    box.padding = 0.4,
+    point.padding = 0.2,
+    segment.color = "grey20", 
+    color = "black") +
+  scale_color_manual(
+    values = c("OR<1 & p-value<0.05" = "blue", 
+               "p-value>0.05" = "grey70", 
+               "OR>1 & p-value<0.05" = "red")) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Base logistic models",
+    x = "OR",
+    y = "-log10(p-value)", 
+    color = "")
+
+proteomic_sd_ALS_base_figure + proteomic_sd_ALS_base_figure_sensi_1
+
 ## Figure proteomic - als occurence - adjusted sd ----
 proteomic_sd_ALS_adjusted_figure <- 
   main_results |>
-  filter(model == "adjusted" & term == "Continuous") |>
+  filter(model == "adjusted" & 
+           term == "Continuous" & 
+           analysis == "main") |>
   mutate(
     log2OR = log2(OR_raw),
     neg_log10_p = -log10(p_value_raw),
@@ -679,19 +909,21 @@ rm(pvals, signif_vars)
 # Assemblage ----
 results_proteomic_ALS_occurrence <- 
   list(
-    covar = covar, 
-    main_results= main_results, 
+    main = list(
+      covar = covar, 
+      main_results= main_results, 
     
-    proteomic_sd_ALS_table = proteomic_sd_ALS_table,
-    proteomic_quart_ALS_table = proteomic_quart_ALS_table,
+      proteomic_sd_ALS_table = proteomic_sd_ALS_table,
+      proteomic_quart_ALS_table = proteomic_quart_ALS_table,
     
-    proteomic_sd_ALS_base_figure = proteomic_sd_ALS_base_figure, 
-    proteomic_sd_ALS_adjusted_figure = proteomic_sd_ALS_adjusted_figure, 
+      proteomic_sd_ALS_base_figure = proteomic_sd_ALS_base_figure, 
+      proteomic_sd_ALS_adjusted_figure = proteomic_sd_ALS_adjusted_figure, 
     
-    model1_gam = model1_gam, 
-    model2_gam = model2_gam,
-    plot_base_gam = plot_base_gam, 
-    plot_adjusted_gam = plot_adjusted_gam)
+      model1_gam = model1_gam, 
+      model2_gam = model2_gam,
+      plot_base_gam = plot_base_gam, 
+      plot_adjusted_gam = plot_adjusted_gam),
+    sensi_1 = proteomic_sd_ALS_base_figure_sensi_1)
 
 rm(covariates, 
    covar, 
@@ -703,5 +935,7 @@ rm(covariates,
    model1_gam, 
    model2_gam,
    plot_base_gam, 
-   plot_adjusted_gam)
+   plot_adjusted_gam, 
+   
+   proteomic_sd_ALS_base_figure_sensi_1)
   

@@ -5,7 +5,7 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 
 # danish data ----
 ## metadata ----
-covar_danish <- bdd_danish|> 
+covar_danish <- bdd_danish |> 
   mutate(
     als = as.character(als),
     als = fct_recode(als, "Controls" = "0", "Cases" = "1"),
@@ -16,6 +16,60 @@ covar_danish <- bdd_danish|>
   tbl_summary(by = als)|>
   bold_labels()|>
   add_overall() 
+
+covar_danish_cases <- 
+  bdd |> 
+  filter(study == "Danish") |>
+  filter(als == 1) |>
+  mutate(status_death = as.character(status_death), 
+         status_death = fct_recode(status_death, 
+                                   "Alive" = "0",
+                                   "Deceased" = "1"), 
+         sex = fct_relevel(sex, "Male", "Female"), 
+         smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other")) |>
+  select(
+    baseline_age, diagnosis_age, death_age, birth_year, 
+    follow_up_death, status_death,
+    sex, marital_status_2cat, education_merged, alcohol, smoking_2cat, bmi, cholesterol)|>
+  tbl_summary(missing = "no", 
+              label = list(status_death ~ "Status at end of the follow-up"), 
+              digits = list(birth_year ~ 0, 
+                            baseline_age ~ 0, 
+                            diagnosis_age ~ 0, 
+                            death_age ~ 0, 
+                            bmi ~ 1, 
+                            cholesterol ~ 1, 
+                            alcohol ~ 1))|>
+  bold_labels()
+
+
+covar_danish_by_death <- 
+  bdd |> 
+  filter(study == "Danish") |>
+  filter(als == 1) |>
+  mutate(status_death = as.character(status_death), 
+         status_death = fct_recode(status_death, 
+                                   "Alive" = "0",
+                                   "Deceased" = "1"), 
+         sex = fct_relevel(sex, "Male", "Female"), 
+         smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
+         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other")) |>
+  select(
+    status_death, baseline_age, diagnosis_age, death_age, birth_year, 
+    follow_up_death, status_death,
+    sex, marital_status_2cat, education_merged, alcohol, smoking_2cat, bmi, cholesterol)|>
+  tbl_summary(by = status_death, 
+              missing = "no", 
+              digits = list(birth_year ~ 0, 
+                            baseline_age ~ 0, 
+                            diagnosis_age ~ 0, 
+                            death_age ~ 0, 
+                            bmi ~ 1, 
+                            cholesterol ~ 1, 
+                            alcohol ~ 1))|>
+  bold_labels()
+
 
 ## POPs ----
 POPs_table_danish <- descrip_num(data = bdd_danish, vars = POPs_tot)
@@ -35,6 +89,18 @@ POPs_table_danish_by_als <- bdd_danish |>
   bold_labels() |>
   add_overall() |>
   add_p()
+
+POPs_table_danish_by_death <- bdd_danish |>
+  filter(als == 1) |>                         # among cases 
+  select(status_death, all_of(POPs_tot)) |>
+  mutate(
+    status_death = as.character(status_death), 
+    status_death = fct_recode(status_death, 
+                              "Alive" = "0",
+                              "Deceased" = "1")) |>
+  tbl_summary(by = status_death, 
+              digits = all_continuous() ~1) |>
+  bold_labels() 
 
 POPs_boxplot_danish <- bdd_danish |>
   select(all_of(POPs_tot)) |>
@@ -141,6 +207,27 @@ POPs_heatmap_danish <-
   rename(!!!POPs_labels) 
 POPs_heatmap_danish <- 
   cor(POPs_heatmap_danish, 
+      use = "pairwise.complete.obs", 
+      method = "pearson")
+
+
+POPs_heatmap_danish_cases_group <- 
+  bdd_danish |> 
+  filter(als == 1) |>
+  select(all_of(POPs_group_bis)) |>
+  rename(!!!pollutant_labels_bis) 
+POPs_heatmap_danish_cases_group <- 
+  cor(POPs_heatmap_danish_cases_group, 
+      use = "pairwise.complete.obs", 
+      method = "pearson")
+
+POPs_heatmap_danish_cases <- 
+  bdd_danish |> 
+  filter(als == 1) |>
+  select(all_of(POPs)) |>
+  rename(!!!POPs_labels) 
+POPs_heatmap_danish_cases <- 
+  cor(POPs_heatmap_danish_cases, 
       use = "pairwise.complete.obs", 
       method = "pearson")
 
@@ -806,15 +893,20 @@ POPs_heatmap_cases <- cor(POPs_heatmap_cases,
 results_descriptive <- list(
   danish = list(
     covar_danish = covar_danish, 
+    covar_danish_cases = covar_danish_cases, 
+    covar_danish_by_death = covar_danish_by_death,                              # among cases
     
     POPs_table_danish = POPs_table_danish,
     POPs_table_danish_by_als = POPs_table_danish_by_als,
+    POPs_table_danish_by_death = POPs_table_danish_by_death,                    # among cases 
     POPs_boxplot_danish = POPs_boxplot_danish,
     POPs_boxplot_danish_by_als = POPs_boxplot_danish_by_als,
     POPs_group_boxplot_danish_by_als = POPs_group_boxplot_danish_by_als,
     POPs_group_boxplot_danish_by_death = POPs_group_boxplot_danish_by_death,    # among cases
     POPs_heatmap_danish = POPs_heatmap_danish,
     POPs_heatmap_danish_group = POPs_heatmap_danish_group,
+    POPs_heatmap_danish_cases_group = POPs_heatmap_danish_cases_group, 
+    POPs_heatmap_danish_cases = POPs_heatmap_danish_cases, 
     
     fattyacids_table_danish = fattyacids_table_danish,
     fattyacids_table_danish_by_als = fattyacids_table_danish_by_als,
@@ -871,14 +963,19 @@ results_descriptive <- list(
 rm(
   bdd_danish_POPs_loq, 
   covar_danish,
+  covar_danish_cases, 
+  covar_danish_by_death, 
   POPs_table_danish,
   POPs_table_danish_by_als,
+  POPs_table_danish_by_death, 
   POPs_boxplot_danish,
   POPs_boxplot_danish_by_als,
   POPs_group_boxplot_danish_by_als, 
   POPs_group_boxplot_danish_by_death, 
   POPs_heatmap_danish, 
   POPs_heatmap_danish_group, 
+  POPs_heatmap_danish_cases, 
+  POPs_heatmap_danish_cases_group, 
   fattyacids_table_danish,
   fattyacids_table_danish_by_als,
   fattyacids_boxplot_danish,
