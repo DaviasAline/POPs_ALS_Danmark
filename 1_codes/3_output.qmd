@@ -1847,15 +1847,15 @@ results_proteomic_ALS_occurrence$covar |>
   set_table_properties(align = "left")
 ```
 
-## Logistic regressions
+## Main analysis - logistic regressions
 ### continuous standardized
 ```{r, fig.width=9}
 #| echo: false
 #| message: false
 #| warning: false
-results_proteomic_ALS_occurrence$proteomic_sd_ALS_table |>
+results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_table |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
-results_proteomic_ALS_occurrence$proteomic_sd_ALS_base_figure
+results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_base_figure
 # results_proteomic_ALS_occurrence$proteomic_sd_ALS_adjusted_figure
 ```
 
@@ -1865,7 +1865,7 @@ results_proteomic_ALS_occurrence$proteomic_sd_ALS_base_figure
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-results_proteomic_ALS_occurrence$proteomic_quart_ALS_table  |>
+results_proteomic_ALS_occurrence$main$proteomic_quart_ALS_table  |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
@@ -1874,9 +1874,86 @@ results_proteomic_ALS_occurrence$proteomic_quart_ALS_table  |>
 #| echo: false
 #| message: false
 #| warning: false
-wrap_plots(results_proteomic_ALS_occurrence$plot_base_gam, ncol = 3)
+wrap_plots(results_proteomic_ALS_occurrence$main$plot_base_gam, ncol = 3)
 # wrap_plots(results_proteomic_ALS_occurrence$plot_adjusted_gam, ncol = 3)
 ```
+
+## Main analysis - logistic regressions
+### Sensitivity 1: Removing NEFL outlier 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_base_figure_sensi_1
+```
+
+
+```{r, fig.height=21, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1, ncol = 3)
+```
+
+### Sensitivity 2: Removing cases and their controls with follow_up < 5 years
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_occurrence$sensi_2$proteomic_sd_ALS_base_figure_sensi_2
+```
+
+```{r, fig.height=21, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2, ncol = 3)
+```
+
+### Sensitivity 1 + 2: Removing NEFL outlier + removing cases and their controls with follow_up < 5 years
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_occurrence$sensi_1_2$proteomic_sd_ALS_base_figure_sensi_1_2
+```
+
+```{r, fig.height=21, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2, ncol = 3)
+```
+
+### Sensitivity 3:stratifiyng the analysis in tertiles of follow-up duration
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_occurrence$sensi_3$sensi_3_table_follow_up
+results_proteomic_ALS_occurrence$sensi_3$sensi_3_densityplot_follow_up
+```
+
+
+```{r, fig.width=12}
+results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_base_figure + labs(title = "Main analysis - full sample size") + 
+results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_base_figure_sensi_3_T1 + labs(title = "Filtered to follow-up T1 (<11 years)") + 
+results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_base_figure_sensi_3_T2 + labs(title = "Filtered to follow-up T2 (11-16 years)") + 
+results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_base_figure_sensi_3_T3 + labs(title = "Filtered to follow-up T3 (>16 years)") 
+```
+
+
+### Sensitivity 1 + 3: Removing NEFL outlier + stratifiyng the analysis in tertiles of follow-up duration
+```{r, fig.width=12}
+results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_base_figure + labs(title = "Main analysis - full sample size") + 
+results_proteomic_ALS_occurrence$sensi_1_3$proteomic_sd_ALS_base_figure_sensi_1_3_T1 + labs(title = "Filtered to follow-up T1 (<11 years)") + 
+results_proteomic_ALS_occurrence$sensi_1_3$proteomic_sd_ALS_base_figure_sensi_1_3_T2 + labs(title = "Filtered to follow-up T2 (11-16 years)") + 
+results_proteomic_ALS_occurrence$sensi_1_3$proteomic_sd_ALS_base_figure_sensi_1_3_T3 + labs(title = "Filtered to follow-up T3 (>16 years)") 
+```
+
+NEFL is not significantly associated with ALS occurence when the follow-up duration is >16 years. 
+We don't see many signals in the follow-up group T1: I suspect that it is because of high heterogeneity in follow-up duration among this sub-group (1-11 years).
+--> then I trust more the sensi 2 results where we just remove the cases (and their controls) with follow-up <5 years. 
 
 # Proteomic and ALS survival
 ## Effects of subject characteristics on ALS survival

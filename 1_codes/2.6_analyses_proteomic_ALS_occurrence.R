@@ -326,16 +326,22 @@ rm(var, formula, model, model_summary)
 
 
 # Sensitivity analyses ----
+
+
 ## sensi1 - Removing the oulier for NEFL ----
-### model 1 sd 
-bdd_danish_outlier <- 
+bdd_danish_sensi_1 <- 
   bdd_danish |>
   mutate(
-    proteomic_neuro_explo_NEFL_sd_outlier = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd))
-proteomic_sd_outlier <-
+    proteomic_neuro_explo_NEFL_sd_sensi_1 = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd), 
+    proteomic_neuro_explo_NEFL_sensi_1 = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL))
+
+
+
+### model 1 sd ----
+proteomic_sd_sensi_1 <-
   proteomic_sd |> 
-  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sd_outlier")
-model1_sd_outlier <- data.frame(explanatory = character(),
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sd_sensi_1")
+model1_sd_sensi_1 <- data.frame(explanatory = character(),
                         term = integer(),
                         OR = numeric(),
                         lower_CI = numeric(),
@@ -343,11 +349,11 @@ model1_sd_outlier <- data.frame(explanatory = character(),
                         p_value = numeric(),
                         stringsAsFactors = FALSE)
 
-for (var in proteomic_sd_outlier) {
+for (var in proteomic_sd_sensi_1) {
   
   formula <- as.formula(paste("als ~", var, "+ strata(match)"))
   
-  model <- clogit(formula, data = bdd_danish_outlier)
+  model <- clogit(formula, data = bdd_danish_sensi_1)
   
   model_summary <- tidy(model)
   
@@ -357,7 +363,7 @@ for (var in proteomic_sd_outlier) {
   p_value <- model_summary$p.value
   term <- model_summary$term
   
-  model1_sd_outlier <- rbind(model1_sd_outlier, data.frame(explanatory = var,
+  model1_sd_sensi_1 <- rbind(model1_sd_sensi_1, data.frame(explanatory = var,
                                            term = term, 
                                            OR = OR,
                                            lower_CI = lower_CI,
@@ -365,7 +371,7 @@ for (var in proteomic_sd_outlier) {
                                            p_value = p_value))
 }
 
-model1_sd_outlier <- model1_sd_outlier |> 
+model1_sd_sensi_1 <- model1_sd_sensi_1 |> 
   mutate(
     term = case_when(
       grepl("_sd", term) ~ "Continuous",
@@ -373,16 +379,731 @@ model1_sd_outlier <- model1_sd_outlier |>
     model = "base", 
     analysis = "sensi_1") |>
   select(explanatory, model, everything())
-rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var, 
-   bdd_danish_outlier, proteomic_sd_outlier)
+
+
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var, proteomic_sd_sensi_1)
+
+### model 1 gams ----
+
+proteomic_sensi_1 <-
+  proteomic |> 
+  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1")
+
+model1_gam_sensi_1 <- list()
+
+for (var in proteomic_sensi_1) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
+  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1)
+  model_summary <- summary(model)
+  model1_gam_sensi_1[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
+
+
+pvals <- sapply(model1_gam_sensi_1, function(m) m$s.table[1, "p-value"])
+signif_vars <- names(pvals)[pvals < 0.05]
+
+# pollutant_labels <- set_names(
+#   c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+#   POPs_group)
+plot_base_gam_sensi_1 <- map(signif_vars, function(var) {
+  
+  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
+  
+  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish_sensi_1)
+  
+  bdd_pred <- bdd_danish_sensi_1 |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
+    mutate(
+      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
+      adj_sex = names(which.max(table(sex)))) |>
+    select(all_of(var), starts_with("adj_")) |>
+    rename_with(~ gsub("adj_", "", .x)) 
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred |>
+    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
+           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
+  x_min <- min(bdd_danish_sensi_1[[var]], na.rm = TRUE)
+  # x_label <- pollutant_labels[var] 
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "blue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
+    labs(x = var, y = "Predicted probability of ALS") +
+    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 0, vjust = 1.2, size = 4, color = "black") +
+    theme_minimal() +
+    scale_y_continuous(limits = c(0, 1)) +  
+    theme(axis.text.x = element_text(color = 'white'),
+          axis.title.x = element_blank(),
+          axis.line.x = element_blank(),
+          axis.ticks.x = element_blank()) +
+    ggtitle("Base model")
+  
+  p2 <- ggplot(bdd_pred) +
+    aes(x = "", y = .data[[var]]) +
+    geom_boxplot(fill = "blue") +
+    coord_flip() +
+    # ylab(x_label) + 
+    xlab("") + 
+    theme_minimal()
+  
+  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
+                           guides = 'collect') + 
+    theme_minimal()
+  p
+}) |>
+  set_names(signif_vars)
+# rm(pollutant_labels)
+
+rm(pvals, signif_vars, 
+   bdd_danish_sensi_1, proteomic_sensi_1)
+
+
+
+
 
 ## sensi2 - Removing cases and their controls with follow_up < 5 years ----
+### model 1 sd ----
+# bdd_danish |>                                              # have to remove 17 cases with follow-up<60 months (and their controls) -> 51 people
+#   filter(follow_up<60) |>
+#   select(sample, match, follow_up, everything()) |>
+#   arrange(follow_up) 
+
+bdd_danish_sensi_2 <- 
+  bdd_danish |>
+  group_by(match) |>
+  filter(any(als == 1 & follow_up > 60)) |>
+  ungroup()
+
+model1_sd_sensi_2 <- data.frame(explanatory = character(),
+                                term = integer(),
+                                OR = numeric(),
+                                lower_CI = numeric(),
+                                upper_CI = numeric(),
+                                p_value = numeric(),
+                                stringsAsFactors = FALSE)
+
+for (var in proteomic_sd) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_2)
+  
+  model_summary <- tidy(model)
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model1_sd_sensi_2 <- rbind(model1_sd_sensi_2, data.frame(explanatory = var,
+                                                           term = term, 
+                                                           OR = OR,
+                                                           lower_CI = lower_CI,
+                                                           upper_CI = upper_CI,
+                                                           p_value = p_value))
+}
+
+model1_sd_sensi_2 <- model1_sd_sensi_2 |> 
+  mutate(
+    term = case_when(
+      grepl("_sd", term) ~ "Continuous",
+      TRUE ~ NA_character_),
+    model = "base", 
+    analysis = "sensi_2") |>
+  select(explanatory, model, everything())
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
+
+
+
+### model 1 gams ----
+model1_gam_sensi_2 <- list()
+
+for (var in proteomic_sd) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
+  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_2)
+  model_summary <- summary(model)
+  model1_gam_sensi_2[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
+
+
+pvals <- sapply(model1_gam_sensi_2, function(m) m$s.table[1, "p-value"])
+signif_vars <- names(pvals)[pvals < 0.05]
+
+# pollutant_labels <- set_names(
+#   c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+#   POPs_group)
+plot_base_gam_sensi_2 <- map(signif_vars, function(var) {
+  
+  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
+  
+  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish_sensi_2)
+  
+  bdd_pred <- bdd_danish_sensi_2 |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
+    mutate(
+      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
+      adj_sex = names(which.max(table(sex)))) |>
+    select(all_of(var), starts_with("adj_")) |>
+    rename_with(~ gsub("adj_", "", .x)) 
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred |>
+    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
+           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
+  x_min <- min(bdd_danish_sensi_2[[var]], na.rm = TRUE)
+  # x_label <- pollutant_labels[var] 
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "blue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
+    labs(x = var, y = "Predicted probability of ALS") +
+    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 0, vjust = 1.2, size = 4, color = "black") +
+    theme_minimal() +
+    scale_y_continuous(limits = c(0, 1)) +  
+    theme(axis.text.x = element_text(color = 'white'),
+          axis.title.x = element_blank(),
+          axis.line.x = element_blank(),
+          axis.ticks.x = element_blank()) +
+    ggtitle("Base model")
+  
+  p2 <- ggplot(bdd_pred) +
+    aes(x = "", y = .data[[var]]) +
+    geom_boxplot(fill = "blue") +
+    coord_flip() +
+    # ylab(x_label) + 
+    xlab("") + 
+    theme_minimal()
+  
+  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
+                           guides = 'collect') + 
+    theme_minimal()
+  p
+}) |>
+  set_names(signif_vars)
+# rm(pollutant_labels)
+
+rm(pvals, signif_vars, 
+   bdd_danish_sensi_2)
+
+
+
+
+
+
+
+## sensi1 + sensi2 - Removing the oulier for NEFL + removing cases and their controls with follow_up < 5 years ----
+### model 1 sd ----
+# bdd_danish |>                                              # have to remove 17 cases with follow-up<60 months (and their controls) -> 51 people
+#   filter(follow_up<60) |>
+#   select(sample, match, follow_up, everything()) |>
+#   arrange(follow_up) 
+
+bdd_danish_sensi_1_2 <- 
+  bdd_danish |>
+  group_by(match) |>                                                            # sensi 2 : we remove cases (and their controls) with follow-up <60 months to see if the association with NEFL really happens a long time before ALS diagnosis 
+  filter(any(als == 1 & follow_up > 60)) |>
+  ungroup()|>
+  mutate(                                                                       # sensi 1 : we remove NEFL in match 159 because it's an outlier
+    proteomic_neuro_explo_NEFL_sd_sensi_1_2 = 
+      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd), 
+    proteomic_neuro_explo_NEFL_sensi_1_2 = 
+      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL))
+
+proteomic_sd_sensi_1_2 <-
+  proteomic_sd |> 
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sd_sensi_1_2")
+
+model1_sd_sensi_1_2 <- data.frame(explanatory = character(),
+                                term = integer(),
+                                OR = numeric(),
+                                lower_CI = numeric(),
+                                upper_CI = numeric(),
+                                p_value = numeric(),
+                                stringsAsFactors = FALSE)
+
+for (var in proteomic_sd_sensi_1_2) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_1_2)
+  
+  model_summary <- tidy(model)
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model1_sd_sensi_1_2 <- rbind(model1_sd_sensi_1_2, data.frame(explanatory = var,
+                                                           term = term, 
+                                                           OR = OR,
+                                                           lower_CI = lower_CI,
+                                                           upper_CI = upper_CI,
+                                                           p_value = p_value))
+}
+
+model1_sd_sensi_1_2 <- model1_sd_sensi_1_2 |> 
+  mutate(
+    term = case_when(
+      grepl("_sd", term) ~ "Continuous",
+      TRUE ~ NA_character_),
+    model = "base", 
+    analysis = "sensi_1_2") |>
+  select(explanatory, model, everything())
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var, proteomic_sd_sensi_1_2)
+
+### model 1 gams ---- 
+proteomic_sensi_1_2 <-
+  proteomic |> 
+  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_2")
+
+
+
+model1_gam_sensi_1_2 <- list()
+
+for (var in proteomic_sensi_1_2) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
+  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_2)
+  model_summary <- summary(model)
+  model1_gam_sensi_1_2[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
+
+
+pvals <- sapply(model1_gam_sensi_1_2, function(m) m$s.table[1, "p-value"])
+signif_vars <- names(pvals)[pvals < 0.05]
+
+# pollutant_labels <- set_names(
+#   c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"), 
+#   POPs_group)
+plot_base_gam_sensi_1_2 <- map(signif_vars, function(var) {
+  
+  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
+  
+  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish_sensi_1_2)
+  
+  bdd_pred <- bdd_danish_sensi_1_2 |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
+    mutate(
+      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
+      adj_sex = names(which.max(table(sex)))) |>
+    select(all_of(var), starts_with("adj_")) |>
+    rename_with(~ gsub("adj_", "", .x)) 
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred |>
+    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
+           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
+  x_min <- min(bdd_danish_sensi_1_2[[var]], na.rm = TRUE)
+  # x_label <- pollutant_labels[var] 
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "blue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
+    labs(x = var, y = "Predicted probability of ALS") +
+    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+             hjust = 0, vjust = 1.2, size = 4, color = "black") +
+    theme_minimal() +
+    scale_y_continuous(limits = c(0, 1)) +  
+    theme(axis.text.x = element_text(color = 'white'),
+          axis.title.x = element_blank(),
+          axis.line.x = element_blank(),
+          axis.ticks.x = element_blank()) +
+    ggtitle("Base model")
+  
+  p2 <- ggplot(bdd_pred) +
+    aes(x = "", y = .data[[var]]) +
+    geom_boxplot(fill = "blue") +
+    coord_flip() +
+    # ylab(x_label) + 
+    xlab("") + 
+    theme_minimal()
+  
+  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
+                           guides = 'collect') + 
+    theme_minimal()
+  p
+}) |>
+  set_names(signif_vars)
+# rm(pollutant_labels)
+
+rm(pvals, signif_vars, 
+   bdd_danish_sensi_1_2, 
+   proteomic_sensi_1_2)
+
+
+
+## sensi3 - stratifiyng the analysis in tertiles of follow-up duration  ----
 ### model 1 sd 
-bdd_danish |>
-  filter(follow_up<60) |>
-  select(sample, match, follow_up, everything()) |>
-  arrange(follow_up) |>
-  View()
+bdd_danish_sensi_3 <- bdd_danish |>                                             # just for visualisation of follow up distribution 
+  group_by(match) |>
+  mutate(follow_up_years = follow_up/12, 
+         follow_up_ter = follow_up_years[als == 1]) |>
+  ungroup() |>
+  mutate(
+    follow_up_ter = cut(
+      follow_up_ter,
+      breaks = quantile(follow_up_ter, probs = c(0, 1/3, 2/3, 1), na.rm = TRUE),
+      include.lowest = TRUE))
+
+sensi_3_table_follow_up <- bdd_danish_sensi_3 |>                                # for visualisation of follow up distribution 
+  select(follow_up_years, follow_up_ter) |>
+  tbl_summary(by = follow_up_ter)
+
+sensi_3_densityplot_follow_up <-                                                # for visualisation of follow up distribution 
+  bdd_danish_sensi_3 |>
+  filter(als ==1) |>
+  ggplot() +
+  aes(x = follow_up_years) +
+  geom_density(fill = "lightgray") +
+  geom_vline(
+    xintercept = quantile(bdd_danish_sensi_3$follow_up_years, probs = c(1/3, 2/3), na.rm = TRUE),
+    color = "red", linetype = "dashed", linewidth = 1) +
+  annotate("text",
+           x = min(bdd_danish_sensi_3$follow_up_years, na.rm = TRUE),
+           y = Inf, label = "Tertile 1", color = "red", hjust = 0, vjust = 2) +
+  annotate("text",
+           x = median(bdd_danish_sensi_3$follow_up_years, na.rm = TRUE),  # centre entre les deux lignes
+           y = Inf, label = "Tertile 2", color = "red", vjust = 2) +
+  annotate("text",
+           x = max(bdd_danish_sensi_3$follow_up_years, na.rm = TRUE),
+           y = Inf, label = "Tertile 3", color = "red", hjust = 1, vjust = 2) +
+  labs(x = "Follow-up duration from baseline to diagnosis (years)")
+
+bdd_danish_sensi_3 <- bdd_danish |>
+  group_by(match) |>
+  mutate(follow_up_ter = follow_up[als == 1]) |>
+  ungroup() |>
+  mutate(
+    follow_up_ter = cut(
+      follow_up_ter,
+      breaks = quantile(follow_up_ter, probs = c(0, 1/3, 2/3, 1), na.rm = TRUE),
+      include.lowest = TRUE, 
+      labels = c("Tertile 1", "Tertile 2", "Tertile 3")))
+bdd_danish_sensi_3_T1 <-                                                        # stratifiyng the data on tertiles of follow up duration 
+  bdd_danish_sensi_3 |>
+  filter(follow_up_ter == "Tertile 1")
+bdd_danish_sensi_3_T2 <- 
+  bdd_danish_sensi_3 |>
+  filter(follow_up_ter == "Tertile 2")
+bdd_danish_sensi_3_T3 <- 
+  bdd_danish_sensi_3 |>
+  filter(follow_up_ter == "Tertile 3")
+
+### T1 ----
+model1_sd_sensi_3_T1 <- data.frame(explanatory = character(),
+                                term = integer(),
+                                OR = numeric(),
+                                lower_CI = numeric(),
+                                upper_CI = numeric(),
+                                p_value = numeric(),
+                                stringsAsFactors = FALSE)
+
+for (var in proteomic_sd) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_3_T1)
+  
+  model_summary <- tidy(model)
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model1_sd_sensi_3_T1 <- rbind(model1_sd_sensi_3_T1, data.frame(explanatory = var,
+                                                           term = term, 
+                                                           OR = OR,
+                                                           lower_CI = lower_CI,
+                                                           upper_CI = upper_CI,
+                                                           p_value = p_value))
+}
+
+model1_sd_sensi_3_T1 <- model1_sd_sensi_3_T1 |> 
+  mutate(
+    term = case_when(
+      grepl("_sd", term) ~ "Continuous",
+      TRUE ~ NA_character_),
+    model = "base", 
+    analysis = "sensi_3_T1") |>
+  select(explanatory, model, everything())
+
+### T2 ----
+model1_sd_sensi_3_T2 <- data.frame(explanatory = character(),
+                                   term = integer(),
+                                   OR = numeric(),
+                                   lower_CI = numeric(),
+                                   upper_CI = numeric(),
+                                   p_value = numeric(),
+                                   stringsAsFactors = FALSE)
+
+for (var in proteomic_sd) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_3_T2)
+  
+  model_summary <- tidy(model)
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model1_sd_sensi_3_T2 <- rbind(model1_sd_sensi_3_T2, data.frame(explanatory = var,
+                                                                 term = term, 
+                                                                 OR = OR,
+                                                                 lower_CI = lower_CI,
+                                                                 upper_CI = upper_CI,
+                                                                 p_value = p_value))
+}
+
+model1_sd_sensi_3_T2 <- model1_sd_sensi_3_T2 |> 
+  mutate(
+    term = case_when(
+      grepl("_sd", term) ~ "Continuous",
+      TRUE ~ NA_character_),
+    model = "base", 
+    analysis = "sensi_3_T2") |>
+  select(explanatory, model, everything())
+
+
+### T3 ----
+model1_sd_sensi_3_T3 <- data.frame(explanatory = character(),
+                                   term = integer(),
+                                   OR = numeric(),
+                                   lower_CI = numeric(),
+                                   upper_CI = numeric(),
+                                   p_value = numeric(),
+                                   stringsAsFactors = FALSE)
+
+for (var in proteomic_sd) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_3_T3)
+  
+  model_summary <- tidy(model)
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model1_sd_sensi_3_T3 <- rbind(model1_sd_sensi_3_T3, data.frame(explanatory = var,
+                                                                 term = term, 
+                                                                 OR = OR,
+                                                                 lower_CI = lower_CI,
+                                                                 upper_CI = upper_CI,
+                                                                 p_value = p_value))
+}
+
+model1_sd_sensi_3_T3 <- model1_sd_sensi_3_T3 |> 
+  mutate(
+    term = case_when(
+      grepl("_sd", term) ~ "Continuous",
+      TRUE ~ NA_character_),
+    model = "base", 
+    analysis = "sensi_3_T3") |>
+  select(explanatory, model, everything())
+
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var, 
+   bdd_danish_sensi_3, bdd_danish_sensi_3_T1, bdd_danish_sensi_3_T2, bdd_danish_sensi_3_T3)
+
+
+## sensi1 + sensi3 - Removing the oulier for NEFL + stratifiyng the analysis in tertiles of follow-up duration  ----
+### model 1 sd 
+bdd_danish_sensi_1_3 <- 
+  bdd_danish  |>
+  mutate(
+    proteomic_neuro_explo_NEFL_sd_sensi_1_3 = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd)) |>
+  group_by(match) |>
+  mutate(follow_up_ter = follow_up[als == 1]) |>
+  ungroup() |>
+  mutate(
+    follow_up_ter = cut(
+      follow_up_ter,
+      breaks = quantile(follow_up_ter, probs = c(0, 1/3, 2/3, 1), na.rm = TRUE),
+      include.lowest = TRUE, 
+      labels = c("Tertile 1", "Tertile 2", "Tertile 3")))
+bdd_danish_sensi_1_3_T1 <- 
+  bdd_danish_sensi_1_3 |>
+  filter(follow_up_ter == "Tertile 1")
+bdd_danish_sensi_1_3_T2 <- 
+  bdd_danish_sensi_1_3 |>
+  filter(follow_up_ter == "Tertile 2")
+bdd_danish_sensi_1_3_T3 <- 
+  bdd_danish_sensi_1_3 |>
+  filter(follow_up_ter == "Tertile 3")
+
+proteomic_sd_sensi_1_3 <-
+  proteomic_sd |> 
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sd_sensi_1_3")
+
+### T1 ----
+model1_sd_sensi_1_3_T1 <- data.frame(explanatory = character(),
+                                   term = integer(),
+                                   OR = numeric(),
+                                   lower_CI = numeric(),
+                                   upper_CI = numeric(),
+                                   p_value = numeric(),
+                                   stringsAsFactors = FALSE)
+
+for (var in proteomic_sd_sensi_1_3) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_1_3_T1)
+  
+  model_summary <- tidy(model)
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model1_sd_sensi_1_3_T1 <- rbind(model1_sd_sensi_1_3_T1, data.frame(explanatory = var,
+                                                                 term = term, 
+                                                                 OR = OR,
+                                                                 lower_CI = lower_CI,
+                                                                 upper_CI = upper_CI,
+                                                                 p_value = p_value))
+}
+
+model1_sd_sensi_1_3_T1 <- model1_sd_sensi_1_3_T1 |> 
+  mutate(
+    term = case_when(
+      grepl("_sd", term) ~ "Continuous",
+      TRUE ~ NA_character_),
+    model = "base", 
+    analysis = "sensi_1_3_T1") |>
+  select(explanatory, model, everything())
+
+
+### T2 ----
+model1_sd_sensi_1_3_T2 <- data.frame(explanatory = character(),
+                                   term = integer(),
+                                   OR = numeric(),
+                                   lower_CI = numeric(),
+                                   upper_CI = numeric(),
+                                   p_value = numeric(),
+                                   stringsAsFactors = FALSE)
+
+for (var in proteomic_sd_sensi_1_3) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_1_3_T2)
+  
+  model_summary <- tidy(model)
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model1_sd_sensi_1_3_T2 <- rbind(model1_sd_sensi_1_3_T2, data.frame(explanatory = var,
+                                                                 term = term, 
+                                                                 OR = OR,
+                                                                 lower_CI = lower_CI,
+                                                                 upper_CI = upper_CI,
+                                                                 p_value = p_value))
+}
+
+model1_sd_sensi_1_3_T2 <- model1_sd_sensi_1_3_T2 |> 
+  mutate(
+    term = case_when(
+      grepl("_sd", term) ~ "Continuous",
+      TRUE ~ NA_character_),
+    model = "base", 
+    analysis = "sensi_1_3_T2") |>
+  select(explanatory, model, everything())
+
+
+
+### T3 ----
+model1_sd_sensi_1_3_T3 <- data.frame(explanatory = character(),
+                                   term = integer(),
+                                   OR = numeric(),
+                                   lower_CI = numeric(),
+                                   upper_CI = numeric(),
+                                   p_value = numeric(),
+                                   stringsAsFactors = FALSE)
+
+
+for (var in proteomic_sd_sensi_1_3) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_1_3_T3)
+  
+  model_summary <- tidy(model)
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model1_sd_sensi_1_3_T3 <- rbind(model1_sd_sensi_1_3_T3, data.frame(explanatory = var,
+                                                                 term = term, 
+                                                                 OR = OR,
+                                                                 lower_CI = lower_CI,
+                                                                 upper_CI = upper_CI,
+                                                                 p_value = p_value))
+}
+
+model1_sd_sensi_1_3_T3 <- model1_sd_sensi_1_3_T3 |> 
+  mutate(
+    term = case_when(
+      grepl("_sd", term) ~ "Continuous",
+      TRUE ~ NA_character_),
+    model = "base", 
+    analysis = "sensi_1_3_T3") |>
+  select(explanatory, model, everything())
+
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var, 
+   bdd_danish_sensi_1_3, bdd_danish_sensi_1_3_T1, bdd_danish_sensi_1_3_T2, bdd_danish_sensi_1_3_T3)
+
+
+  
 
 
 # Merging the results ----
@@ -390,7 +1111,15 @@ main_results <- bind_rows(model1_quart,
                           model2_quart, 
                           model1_sd, 
                           model2_sd, 
-                          model1_sd_outlier) |> 
+                          model1_sd_sensi_1, 
+                          model1_sd_sensi_2, 
+                          model1_sd_sensi_1_2, 
+                          model1_sd_sensi_3_T1, 
+                          model1_sd_sensi_3_T2, 
+                          model1_sd_sensi_3_T3, 
+                          model1_sd_sensi_1_3_T1, 
+                          model1_sd_sensi_1_3_T2, 
+                          model1_sd_sensi_1_3_T3) |> 
   mutate(explanatory = gsub("_quart", "", explanatory), 
          explanatory = gsub("_sd", "", explanatory), 
          OR_raw = OR, 
@@ -437,7 +1166,15 @@ main_results <- main_results |>
 
 rm(model1_quart, model2_quart, 
    model1_sd, model2_sd,
-   model1_sd_outlier, 
+   model1_sd_sensi_1, 
+   model1_sd_sensi_2, 
+   model1_sd_sensi_1_2, 
+   model1_sd_sensi_3_T1, 
+   model1_sd_sensi_3_T2, 
+   model1_sd_sensi_3_T3, 
+   model1_sd_sensi_1_3_T1, 
+   model1_sd_sensi_1_3_T2, 
+   model1_sd_sensi_1_3_T3, 
    heterogeneity_base_quart, heterogeneity_adjusted_quart, 
    trend_base, trend_adjusted, 
    heterogeneity_tests, trend_tests)
@@ -741,6 +1478,325 @@ proteomic_sd_ALS_base_figure_sensi_1 <-
 
 proteomic_sd_ALS_base_figure + proteomic_sd_ALS_base_figure_sensi_1
 
+
+## Figure proteomic - als occurence - base sd (sensi_2) ----
+proteomic_sd_ALS_base_figure_sensi_2 <- 
+  main_results |>
+  filter(model == "base" & 
+           term == "Continuous" & 
+           analysis == "sensi_2") |>
+  mutate(
+    log2OR = log2(OR_raw),
+    neg_log10_p = -log10(p_value_raw),
+    significance = case_when(
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      TRUE ~ "p-value>0.05")) |>
+  ggplot(aes(x = OR_raw, y = neg_log10_p, color = significance)) +
+  geom_point(alpha = 0.8, size = 2) +
+  geom_text_repel(
+    data = ~filter(.x, p_value_raw < 0.05),       
+    aes(label = explanatory), 
+    size = 3.5,
+    max.overlaps = 20,
+    box.padding = 0.4,
+    point.padding = 0.2,
+    segment.color = "grey20", 
+    color = "black") +
+  scale_color_manual(
+    values = c("OR<1 & p-value<0.05" = "blue", 
+               "p-value>0.05" = "grey70", 
+               "OR>1 & p-value<0.05" = "red")) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Base logistic models",
+    x = "OR",
+    y = "-log10(p-value)", 
+    color = "")
+
+proteomic_sd_ALS_base_figure + proteomic_sd_ALS_base_figure_sensi_2
+
+
+## Figure proteomic - als occurence - base sd (sensi_1_2) ----
+proteomic_sd_ALS_base_figure_sensi_1_2 <- 
+  main_results |>
+  filter(model == "base" & 
+           term == "Continuous" & 
+           analysis == "sensi_1_2") |>
+  mutate(
+    log2OR = log2(OR_raw),
+    neg_log10_p = -log10(p_value_raw),
+    significance = case_when(
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      TRUE ~ "p-value>0.05")) |>
+  ggplot(aes(x = OR_raw, y = neg_log10_p, color = significance)) +
+  geom_point(alpha = 0.8, size = 2) +
+  geom_text_repel(
+    data = ~filter(.x, p_value_raw < 0.05),       
+    aes(label = explanatory), 
+    size = 3.5,
+    max.overlaps = 20,
+    box.padding = 0.4,
+    point.padding = 0.2,
+    segment.color = "grey20", 
+    color = "black") +
+  scale_color_manual(
+    values = c("OR<1 & p-value<0.05" = "blue", 
+               "p-value>0.05" = "grey70", 
+               "OR>1 & p-value<0.05" = "red")) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Base logistic models",
+    x = "OR",
+    y = "-log10(p-value)", 
+    color = "")
+
+proteomic_sd_ALS_base_figure + proteomic_sd_ALS_base_figure_sensi_1_2
+
+
+## Figure proteomic - als occurence - base sd (sensi_3) ----
+proteomic_sd_ALS_base_figure_sensi_3_T1 <- 
+  main_results |>
+  filter(model == "base" & 
+           term == "Continuous" & 
+           analysis == "sensi_3_T1") |>
+  mutate(
+    log2OR = log2(OR_raw),
+    neg_log10_p = -log10(p_value_raw),
+    significance = case_when(
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      TRUE ~ "p-value>0.05")) |>
+  ggplot(aes(x = OR_raw, y = neg_log10_p, color = significance)) +
+  geom_point(alpha = 0.8, size = 2) +
+  geom_text_repel(
+    data = ~filter(.x, p_value_raw < 0.05),       
+    aes(label = explanatory), 
+    size = 3.5,
+    max.overlaps = 20,
+    box.padding = 0.4,
+    point.padding = 0.2,
+    segment.color = "grey20", 
+    color = "black") +
+  scale_color_manual(
+    values = c("OR<1 & p-value<0.05" = "blue", 
+               "p-value>0.05" = "grey70", 
+               "OR>1 & p-value<0.05" = "red")) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Base logistic models (filtered to follow-up T1)",
+    x = "OR",
+    y = "-log10(p-value)", 
+    color = "")
+
+proteomic_sd_ALS_base_figure_sensi_3_T2 <- 
+  main_results |>
+  filter(model == "base" & 
+           term == "Continuous" & 
+           analysis == "sensi_3_T2") |>
+  mutate(
+    log2OR = log2(OR_raw),
+    neg_log10_p = -log10(p_value_raw),
+    significance = case_when(
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      TRUE ~ "p-value>0.05")) |>
+  ggplot(aes(x = OR_raw, y = neg_log10_p, color = significance)) +
+  geom_point(alpha = 0.8, size = 2) +
+  geom_text_repel(
+    data = ~filter(.x, p_value_raw < 0.05),       
+    aes(label = explanatory), 
+    size = 3.5,
+    max.overlaps = 20,
+    box.padding = 0.4,
+    point.padding = 0.2,
+    segment.color = "grey20", 
+    color = "black") +
+  scale_color_manual(
+    values = c("OR<1 & p-value<0.05" = "blue", 
+               "p-value>0.05" = "grey70", 
+               "OR>1 & p-value<0.05" = "red")) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Base logistic models (filtered to follow-up T2)",
+    x = "OR",
+    y = "-log10(p-value)", 
+    color = "")
+
+proteomic_sd_ALS_base_figure_sensi_3_T3 <- 
+  main_results |>
+  filter(model == "base" & 
+           term == "Continuous" & 
+           analysis == "sensi_3_T3") |>
+  mutate(
+    log2OR = log2(OR_raw),
+    neg_log10_p = -log10(p_value_raw),
+    significance = case_when(
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      TRUE ~ "p-value>0.05")) |>
+  ggplot(aes(x = OR_raw, y = neg_log10_p, color = significance)) +
+  geom_point(alpha = 0.8, size = 2) +
+  geom_text_repel(
+    data = ~filter(.x, p_value_raw < 0.05),       
+    aes(label = explanatory), 
+    size = 3.5,
+    max.overlaps = 20,
+    box.padding = 0.4,
+    point.padding = 0.2,
+    segment.color = "grey20", 
+    color = "black") +
+  scale_color_manual(
+    values = c("OR<1 & p-value<0.05" = "blue", 
+               "p-value>0.05" = "grey70", 
+               "OR>1 & p-value<0.05" = "red")) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Base logistic models (filtered to follow-up T3)",
+    x = "OR",
+    y = "-log10(p-value)", 
+    color = "")
+
+
+
+## Figure proteomic - als occurence - base sd (sensi_1_3) ----
+proteomic_sd_ALS_base_figure_sensi_1_3_T1 <- 
+  main_results |>
+  filter(model == "base" & 
+           term == "Continuous" & 
+           analysis == "sensi_1_3_T1") |>
+  mutate(
+    log2OR = log2(OR_raw),
+    neg_log10_p = -log10(p_value_raw),
+    significance = case_when(
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      TRUE ~ "p-value>0.05")) |>
+  ggplot(aes(x = OR_raw, y = neg_log10_p, color = significance)) +
+  geom_point(alpha = 0.8, size = 2) +
+  geom_text_repel(
+    data = ~filter(.x, p_value_raw < 0.05),       
+    aes(label = explanatory), 
+    size = 3.5,
+    max.overlaps = 20,
+    box.padding = 0.4,
+    point.padding = 0.2,
+    segment.color = "grey20", 
+    color = "black") +
+  scale_color_manual(
+    values = c("OR<1 & p-value<0.05" = "blue", 
+               "p-value>0.05" = "grey70", 
+               "OR>1 & p-value<0.05" = "red")) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Base logistic models (filtered to follow-up T1)",
+    x = "OR",
+    y = "-log10(p-value)", 
+    color = "")
+
+proteomic_sd_ALS_base_figure_sensi_1_3_T2 <- 
+  main_results |>
+  filter(model == "base" & 
+           term == "Continuous" & 
+           analysis == "sensi_1_3_T2") |>
+  mutate(
+    log2OR = log2(OR_raw),
+    neg_log10_p = -log10(p_value_raw),
+    significance = case_when(
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      TRUE ~ "p-value>0.05")) |>
+  ggplot(aes(x = OR_raw, y = neg_log10_p, color = significance)) +
+  geom_point(alpha = 0.8, size = 2) +
+  geom_text_repel(
+    data = ~filter(.x, p_value_raw < 0.05),       
+    aes(label = explanatory), 
+    size = 3.5,
+    max.overlaps = 20,
+    box.padding = 0.4,
+    point.padding = 0.2,
+    segment.color = "grey20", 
+    color = "black") +
+  scale_color_manual(
+    values = c("OR<1 & p-value<0.05" = "blue", 
+               "p-value>0.05" = "grey70", 
+               "OR>1 & p-value<0.05" = "red")) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Base logistic models (filtered to follow-up T2)",
+    x = "OR",
+    y = "-log10(p-value)", 
+    color = "")
+
+proteomic_sd_ALS_base_figure_sensi_1_3_T3 <- 
+  main_results |>
+  filter(model == "base" & 
+           term == "Continuous" & 
+           analysis == "sensi_1_3_T3") |>
+  mutate(
+    log2OR = log2(OR_raw),
+    neg_log10_p = -log10(p_value_raw),
+    significance = case_when(
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+      TRUE ~ "p-value>0.05")) |>
+  ggplot(aes(x = OR_raw, y = neg_log10_p, color = significance)) +
+  geom_point(alpha = 0.8, size = 2) +
+  geom_text_repel(
+    data = ~filter(.x, p_value_raw < 0.05),       
+    aes(label = explanatory), 
+    size = 3.5,
+    max.overlaps = 20,
+    box.padding = 0.4,
+    point.padding = 0.2,
+    segment.color = "grey20", 
+    color = "black") +
+  scale_color_manual(
+    values = c("OR<1 & p-value<0.05" = "blue", 
+               "p-value>0.05" = "grey70", 
+               "OR>1 & p-value<0.05" = "red")) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Base logistic models (filtered to follow-up T3)",
+    x = "OR",
+    y = "-log10(p-value)", 
+    color = "")
+
+proteomic_sd_ALS_base_figure + proteomic_sd_ALS_base_figure_sensi_1_3_T1 + proteomic_sd_ALS_base_figure_sensi_1_3_T2 + proteomic_sd_ALS_base_figure_sensi_1_3_T3
+
 ## Figure proteomic - als occurence - adjusted sd ----
 proteomic_sd_ALS_adjusted_figure <- 
   main_results |>
@@ -923,7 +1979,32 @@ results_proteomic_ALS_occurrence <-
       model2_gam = model2_gam,
       plot_base_gam = plot_base_gam, 
       plot_adjusted_gam = plot_adjusted_gam),
-    sensi_1 = proteomic_sd_ALS_base_figure_sensi_1)
+    
+    sensi_1 = list(
+      proteomic_sd_ALS_base_figure_sensi_1 = proteomic_sd_ALS_base_figure_sensi_1, 
+      model1_gam_sensi_1 = model1_gam_sensi_1, 
+      plot_base_gam_sensi_1 = plot_base_gam_sensi_1), 
+    
+    sensi_2 = list(
+      proteomic_sd_ALS_base_figure_sensi_2 = proteomic_sd_ALS_base_figure_sensi_2, 
+      model1_gam_sensi_2 = model1_gam_sensi_2, 
+      plot_base_gam_sensi_2 = plot_base_gam_sensi_2), 
+    
+    sensi_1_2 = list(
+      proteomic_sd_ALS_base_figure_sensi_1_2 = proteomic_sd_ALS_base_figure_sensi_1_2, 
+      model1_gam_sensi_1_2 = model1_gam_sensi_1_2, 
+      plot_base_gam_sensi_1_2 = plot_base_gam_sensi_1_2), 
+    
+    sensi_3 = list(
+      sensi_3_table_follow_up = sensi_3_table_follow_up, 
+      sensi_3_densityplot_follow_up = sensi_3_densityplot_follow_up, 
+      proteomic_sd_ALS_base_figure_sensi_3_T1 = proteomic_sd_ALS_base_figure_sensi_3_T1, 
+      proteomic_sd_ALS_base_figure_sensi_3_T2 = proteomic_sd_ALS_base_figure_sensi_3_T2, 
+      proteomic_sd_ALS_base_figure_sensi_3_T3 = proteomic_sd_ALS_base_figure_sensi_3_T3), 
+    sensi_1_3 = list(
+      proteomic_sd_ALS_base_figure_sensi_1_3_T1 = proteomic_sd_ALS_base_figure_sensi_1_3_T1, 
+      proteomic_sd_ALS_base_figure_sensi_1_3_T2 = proteomic_sd_ALS_base_figure_sensi_1_3_T2, 
+      proteomic_sd_ALS_base_figure_sensi_1_3_T3 = proteomic_sd_ALS_base_figure_sensi_1_3_T3))
 
 rm(covariates, 
    covar, 
@@ -937,5 +2018,24 @@ rm(covariates,
    plot_base_gam, 
    plot_adjusted_gam, 
    
-   proteomic_sd_ALS_base_figure_sensi_1)
+   proteomic_sd_ALS_base_figure_sensi_1, 
+   model1_gam_sensi_1, 
+   plot_base_gam_sensi_1, 
+   
+   proteomic_sd_ALS_base_figure_sensi_2, 
+   model1_gam_sensi_2, 
+   plot_base_gam_sensi_2, 
+   
+   proteomic_sd_ALS_base_figure_sensi_1_2,
+   model1_gam_sensi_1_2, 
+   plot_base_gam_sensi_1_2, 
+   
+   sensi_3_table_follow_up, 
+   sensi_3_densityplot_follow_up, 
+   proteomic_sd_ALS_base_figure_sensi_3_T1, 
+   proteomic_sd_ALS_base_figure_sensi_3_T2, 
+   proteomic_sd_ALS_base_figure_sensi_3_T3, 
+   proteomic_sd_ALS_base_figure_sensi_1_3_T1, 
+   proteomic_sd_ALS_base_figure_sensi_1_3_T2, 
+   proteomic_sd_ALS_base_figure_sensi_1_3_T3)
   
