@@ -6,29 +6,6 @@
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2.2_analyses_POPs_ALS_occurrence.R")
 
 # Creation of cases specific datasets ----
-POPs_group_bis <- setdiff(POPs_group, "ΣPBDE")
-bdd_cases_tot <- bdd |>
-  filter (als == 1) |>
-  select(study, study_2cat, als, follow_up_death, status_death, sex, diagnosis_age, baseline_age, marital_status_2cat, smoking_2cat, bmi, follow_up, 
-         "PCB_4", "PCB_DL", "PCB_NDL",  "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", "Σchlordane") |>
-  mutate(across(all_of(POPs_group_bis), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
-                                                 labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(all_of(POPs_group_bis),                                             # create cohort and cases specific scaled POPs variables 
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd"))  |>
-  replace_with_median(PCB_4, PCB_4_quart) |>
-  replace_with_median(PCB_DL, PCB_DL_quart) |>
-  replace_with_median(PCB_NDL, PCB_NDL_quart) |>
-  replace_with_median(OCP_HCB, OCP_HCB_quart) |>
-  replace_with_median(ΣDDT, ΣDDT_quart) |>
-  replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
-  replace_with_median(Σchlordane, Σchlordane_quart) |>
-  mutate(sex = fct_relevel(sex, "Male", "Female"), 
-         smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
-rm(POPs_group_bis)
-
 bdd_cases_danish <- bdd_danish |>
   filter (als == 1) |>
   filter(study == "Danish") |>
@@ -80,129 +57,10 @@ bdd_cases_danish <- bdd_danish |>
          smoking_2cat_i = fct_relevel(smoking_2cat_i, "Ever", "Never"), 
          marital_status_2cat_i = fct_relevel(marital_status_2cat_i, "Married/cohabit", "Other"))
 
-bdd_cases_finnish <- bdd_finnish |>
-  filter (als == 1) |>
-  filter(study %in% c("FMC", "FMCF", "MFH")) |>
-  select(study, study_2cat, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
-         thawed, level_urbanization, marital_status_2cat, smoking_2cat, bmi, cholesterol,   
-         "PCB_4", "PCB_DL", "PCB_NDL",  "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", 
-         OCP_γ_HCH = "OCP_γ_HCH_raw", "Σchlordane", OCP_PeCB = "OCP_PeCB_raw") |>
-  mutate(across(all_of(POPs_group_finnish), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
-                                                     labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(all_of(POPs_group_finnish),                                             # create cohort and cases specific scaled POPs variables 
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd"))  |>
-  replace_with_median(PCB_4, PCB_4_quart) |>
-  replace_with_median(PCB_DL, PCB_DL_quart) |>
-  replace_with_median(PCB_NDL, PCB_NDL_quart) |>
-  replace_with_median(OCP_HCB, OCP_HCB_quart) |>
-  replace_with_median(ΣDDT, ΣDDT_quart) |>
-  replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
-  replace_with_median(ΣHCH, ΣHCH_quart) |>
-  replace_with_median(OCP_γ_HCH, OCP_γ_HCH_quart) |>
-  replace_with_median(Σchlordane, Σchlordane_quart) |>
-  replace_with_median(OCP_PeCB, OCP_PeCB_quart) |>
-  mutate(sex = fct_relevel(sex, "Male", "Female"), 
-         smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
-
-bdd_cases_FMC <- bdd_finnish |>
-  filter (als == 1) |>
-  filter(study == "FMC") |>
-  select(study, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, 
-         thawed, level_urbanization, marital_status_2cat, smoking_2cat, bmi, cholesterol,   
-         "PCB_4", "PCB_DL", "PCB_NDL",  "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", 
-         OCP_γ_HCH = "OCP_γ_HCH_raw", "Σchlordane", OCP_PeCB = "OCP_PeCB_raw") |>
-  mutate(across(all_of(POPs_group_finnish), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
-                                             labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(all_of(POPs_group_finnish),                                             # create cohort and cases specific scaled POPs variables 
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd"))  |>
-  replace_with_median(PCB_4, PCB_4_quart) |>
-  replace_with_median(PCB_DL, PCB_DL_quart) |>
-  replace_with_median(PCB_NDL, PCB_NDL_quart) |>
-  replace_with_median(OCP_HCB, OCP_HCB_quart) |>
-  replace_with_median(ΣDDT, ΣDDT_quart) |>
-  replace_with_median(ΣHCH, ΣHCH_quart) |>
-  replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
-  replace_with_median(OCP_γ_HCH, OCP_γ_HCH_quart) |>
-  replace_with_median(Σchlordane, Σchlordane_quart) |>
-  replace_with_median(OCP_PeCB, OCP_PeCB_quart) |>
-  mutate(sex = fct_relevel(sex, "Male", "Female"), 
-         smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
-
-bdd_cases_FMCF <- bdd_finnish |>
-  filter (als == 1) |>
-  filter(study == "FMCF") |>
-  select(study, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, 
-         thawed, level_urbanization, marital_status_2cat, smoking_2cat, bmi, cholesterol, education_merged,  
-         "PCB_4", "PCB_DL", "PCB_NDL",  "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", 
-         OCP_γ_HCH = "OCP_γ_HCH_raw", "Σchlordane", OCP_PeCB = "OCP_PeCB_raw") |>
-  mutate(across(all_of(POPs_group_finnish), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
-                                                     labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(all_of(POPs_group_finnish),                                             # create cohort and cases specific scaled POPs variables 
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd"))  |>
-  replace_with_median(PCB_4, PCB_4_quart) |>
-  replace_with_median(PCB_DL, PCB_DL_quart) |>
-  replace_with_median(PCB_NDL, PCB_NDL_quart) |>
-  replace_with_median(OCP_HCB, OCP_HCB_quart) |>
-  replace_with_median(ΣDDT, ΣDDT_quart) |>
-  replace_with_median(ΣHCH, ΣHCH_quart) |>
-  replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
-  replace_with_median(OCP_γ_HCH, OCP_γ_HCH_quart) |>
-  replace_with_median(Σchlordane, Σchlordane_quart) |>
-  replace_with_median(OCP_PeCB, OCP_PeCB_quart) |>
-  mutate(sex = fct_relevel(sex, "Male", "Female"), 
-         smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
-
-bdd_cases_MFH <- bdd_finnish |>
-  filter (als == 1) |>
-  filter(study == "MFH") |>
-  select(study, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, 
-         thawed, level_urbanization, marital_status_2cat, smoking_2cat, bmi, cholesterol, education_merged,   
-         "PCB_4", "PCB_DL", "PCB_NDL",  "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", 
-         OCP_γ_HCH = "OCP_γ_HCH_raw", "Σchlordane", OCP_PeCB = "OCP_PeCB_raw") |>
-  mutate(across(all_of(POPs_group_finnish), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
-                                                     labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(all_of(POPs_group_finnish),                                             # create cohort and cases specific scaled POPs variables 
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd"))  |>
-  replace_with_median(PCB_4, PCB_4_quart) |>
-  replace_with_median(PCB_DL, PCB_DL_quart) |>
-  replace_with_median(PCB_NDL, PCB_NDL_quart) |>
-  replace_with_median(OCP_HCB, OCP_HCB_quart) |>
-  replace_with_median(ΣDDT, ΣDDT_quart) |>
-  replace_with_median(ΣHCH, ΣHCH_quart) |>
-  replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
-  replace_with_median(OCP_γ_HCH, OCP_γ_HCH_quart) |>
-  replace_with_median(Σchlordane, Σchlordane_quart) |>
-  replace_with_median(OCP_PeCB, OCP_PeCB_quart) |>
-  mutate(sex = fct_relevel(sex, "Male", "Female"), 
-         smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
-
-surv_obj_tot <- Surv(time = bdd_cases_tot$follow_up_death,                      # set the outcomes
-                     event = bdd_cases_tot$status_death)
 surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,                # set the outcomes
                         event = bdd_cases_danish$status_death)
-surv_obj_finnish <- Surv(time = bdd_cases_finnish$follow_up_death,               
-                     event = bdd_cases_finnish$status_death)
-surv_obj_FMC <- Surv(time = bdd_cases_FMC$follow_up_death,               
-                        event = bdd_cases_FMC$status_death)
-surv_obj_FMCF <- Surv(time = bdd_cases_FMCF$follow_up_death,              
-                        event = bdd_cases_FMCF$status_death)
-surv_obj_MFH <- Surv(time = bdd_cases_MFH$follow_up_death,               
-                        event = bdd_cases_MFH$status_death)
 
 covariates_danish <- c("sex", "diagnosis_age", "smoking_2cat_i", "bmi", "marital_status_2cat_i")
-covariates_finnish <- c("sex", "diagnosis_age", "smoking_2cat", "bmi", "marital_status_2cat")
 
 # Danish cohort ----
 ## Covar model ----
@@ -288,10 +146,7 @@ model3_cox_sd_danish <- tibble(                                                 
   `p-value` = coefs[, "Pr(>|z|)"]) |>
   filter(str_detect(term, "_sd"))
 
-model <- coxph(formula_danish, data = bdd_cases_danish) 
-cheking_model3_cox_sd_danish <- check_model(model, residual_type = "normal")
-
-rm(POPs_group_sd_bis, pollutant_labels_bis, formula_danish, model_summary, model, coefs)
+rm(POPs_group_sd_bis, pollutant_labels_bis, formula_danish, model_summary, coefs)
 
 
 ## Cox model (quart) ----
@@ -1127,1210 +982,19 @@ qgcomp_positive_noboot_danish <-
 # qgcomp_positive_noboot_danish$pos.weights
 # qgcomp_positive_noboot_danish$neg.weights
 # plot(qgcomp_noboot_danish, suppressprint = TRUE)
-rm(formula_danish, POPs_group_bis)
+rm(formula_danish)
 
 
-# Finnish cohort ----
-run_cox <- function(formula, data) {
-  model <- coxph(formula, data = data)
-  model_summary <- summary(model)
-  coefs <- model_summary$coefficients
-  tibble(
-    term = rownames(coefs),
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"])
-}
-
-## Covar model ----
-### crude 
-covar_crude_finnish <- map_dfr(
-  c("diagnosis_age", "sex", "level_urbanization", "smoking_2cat", "bmi", "marital_status_2cat", "cholesterol"), function(expl) {
-  
-  formula_FMC <- as.formula(paste("surv_obj_FMC ~", expl))                      # set the formulas
-  formula_FMCF <- as.formula(paste("surv_obj_FMCF ~", expl))
-  
-  results <- list(                                                              # run of the simple cox models 
-    finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
-    finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
-    bind_rows(.id = "dataset") |>
-    mutate(var = se^2, variable = expl)
-  
-  meta_results <- results |>                                                    # run metanalyse
-    group_by(variable, term) |> 
-    group_modify(~ {
-      rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
-      tibble(                                                                   # results table creation 
-        HR = exp(as.numeric(rma_fit$beta)),
-        lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
-        upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-        `p-value` = as.numeric(rma_fit$pval))
-    }) |> 
-    ungroup() |> 
-    mutate(model = "base") |> 
-    relocate(model, variable, term)
-  return(meta_results)
-  })
-
-### adjusted 
-formula <- "Surv(follow_up_death, status_death) ~ diagnosis_age + sex + level_urbanization + smoking_2cat + bmi + marital_status_2cat + cholesterol"
-formula <- as.formula(formula)
-
-covar_adjusted_finnish <- list(                                                 # run of the simple cox models
-  finnish_FMC = run_cox(formula, bdd_cases_FMC),
-  finnish_FMCF = run_cox(formula, bdd_cases_FMCF)) |>
-  bind_rows(.id = "dataset") |>
-  mutate(var = se^2)
-
-covar_adjusted_finnish <- covar_adjusted_finnish |>                             # run metanalyse
-  group_by(term) |>
-  group_modify( ~ {
-    rma_fit <- rma(yi = .x$coef,
-                   vi = .x$var,
-                   method = "DL")
-    tibble(                                                                     # results table creation
-      HR = exp(as.numeric(rma_fit$beta)),
-      lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
-      upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-      `p-value` = as.numeric(rma_fit$pval))
-  }) |>
-  ungroup() |>
-  mutate(model = "adjusted", 
-         variable = fct_recode(
-           term, 
-             "level_urbanization" = "level_urbanization2",
-             "level_urbanization" = "level_urbanization3",
-             "level_urbanization" = "level_urbanization4",
-             "marital_status_2cat" = "marital_status_2catOther",
-             "sex" = "sexFemale",
-             "smoking_2cat" = "smoking_2catNever")) |>
-  relocate(model, variable, term) 
-
-covar_finnish <- bind_rows(covar_crude_finnish, covar_adjusted_finnish)
-rm(formula, covar_crude_finnish, covar_adjusted_finnish)
-
-## Cox model (sd) - meta-analysis ----
-### Base ----
-model1_cox_sd_finnish <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  
-  formula_FMC <-                                                                # set the formulas
-    as.formula(paste("surv_obj_FMC ~", expl, "+ diagnosis_age + sex"))  
-  formula_FMCF <- 
-    as.formula(paste("surv_obj_FMCF ~", expl, "+ diagnosis_age + sex"))
-  
-  results <- list(                                                              # run of the simple cox models 
-    finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
-    finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
-    bind_rows(.id = "dataset") |>
-    mutate(var = se^2, explanatory = expl) |>
-    filter(explanatory == term)                                                 # remove the covariates results                           
-  
-  rma_fit <- rma(yi = coef, vi = var, data = results, method = "DL")            # run of the meta-analyse (metafor package as Ian did)
-  
-  tibble(                                                                       # creation of the table of results
-    study = "Finnish", 
-    model = "base", 
-    study_design = "meta-analysis", 
-    explanatory = expl,
-    term = expl,
-    HR = exp(as.numeric(rma_fit$beta)),
-    lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
-    upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-    `p-value` = as.numeric(rma_fit$pval),
-    p.value_heterogeneity = as.numeric(rma_fit$QEp)
-  )
-})
-
-### Adjusted ----
-model2_cox_sd_finnish <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  
-  formula_FMC <- as.formula(paste("surv_obj_FMC ~", expl, "+",                  # set the formulas              
-                                  paste(covariates_finnish, collapse = " + ")))
-  formula_FMCF <- as.formula(paste("surv_obj_FMCF ~", expl, "+",                            
-                                   paste(covariates_finnish, collapse = " + ")))
-  
-  results <- list(                                                              # run of the simple cox models 
-    finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
-    finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
-    bind_rows(.id = "dataset") |>
-    mutate(var = se^2, explanatory = expl) |>
-    filter(explanatory == term)                                                 # remove the covariates results
-  
-  rma_fit <- rma(yi = coef, vi = var, data = results, method = "DL")            # run of the meta-analyse (metafor package as Ian did)
-  
-  tibble(                                                                       # creation of the table of results
-    study = "Finnish", 
-    model = "adjusted", 
-    study_design = "meta-analysis", 
-    explanatory = expl,
-    term = expl,
-    HR = exp(as.numeric(rma_fit$beta)),
-    lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
-    upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-    `p-value` = as.numeric(rma_fit$pval),
-    p.value_heterogeneity = as.numeric(rma_fit$QEp)
-    
-  )
-})
-
-### Copollutant ----
-POPs_group_sd_finnish_bis <- setdiff(POPs_group_sd_finnish, c("OCP_β_HCH_sd",  "OCP_γ_HCH_sd", "PCB_4_sd"))
-
-formula_FMC <-                                                                  # creation of the formulas
-  as.formula(paste("surv_obj_FMC ~", paste(c(POPs_group_sd_finnish_bis, covariates_finnish), collapse = "+")))  
-formula_FMCF <- 
-  as.formula(paste("surv_obj_FMCF ~", paste(c(POPs_group_sd_finnish_bis, covariates_finnish), collapse = "+")))  
-
-model3_cox_sd_finnish <- list(                                                                # run of the simple cox models 
-  finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
-  finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
-  bind_rows(.id = "dataset") |>
-  mutate(var = se^2, 
-         explanatory = term) |>
-  filter(str_detect(term, "_sd"))                                               # remove the covariates results
-
-model3_cox_sd_finnish <- model3_cox_sd_finnish |>
-  group_by(term) |> 
-  group_modify(~ {
-    rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
-    tibble(                                                                     # results table creation 
-      study = "Finnish", 
-      model = "copollutant", 
-      study_design = "meta-analysis", 
-      HR = exp(as.numeric(rma_fit$beta)),
-      lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
-      upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-      `p-value` = as.numeric(rma_fit$pval),
-    p.value_heterogeneity = as.numeric(rma_fit$QEp))
-  }) |> 
-  ungroup() |>
-  mutate(explanatory = term)
-
-rm(POPs_group_sd_finnish_bis, formula_FMC, formula_FMCF)
-
-## Cox model (quart) - meta-analysis ----
-### Base ----
-model1_cox_quart_finnish <- map_dfr(POPs_group_quart_finnish, function(expl) {
-  
-  formula_FMC <-                                                                # creation of the formulas
-    as.formula(paste("surv_obj_FMC ~", expl, "+ diagnosis_age + sex"))  
-  formula_FMCF <- 
-    as.formula(paste("surv_obj_FMCF ~", expl, "+ diagnosis_age + sex"))
-  
-  results <- list(                                                              # run of the simple cox model
-    finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
-    finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
-    bind_rows(.id = "dataset") |>
-    mutate(var = se^2, 
-           explanatory = expl) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-  
-  meta_results <- results |>                                                    # run metanalyse (one per quartile per explanatory variable)
-    group_by(explanatory, term) |> 
-    group_modify(~ {
-      rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
-      tibble(                                                                   # results table creation 
-        HR = exp(as.numeric(rma_fit$beta)),
-        lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
-        upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-        `p-value` = as.numeric(rma_fit$pval),
-        p.value_heterogeneity = as.numeric(rma_fit$QEp))
-    }) |> 
-    ungroup() |> 
-    mutate(study = "Finnish", model = "base", study_design = "meta-analysis") |> 
-    relocate(model, explanatory, term)
-  return(meta_results)
-})
-
-### Adjusted ----
-model2_cox_quart_finnish <- map_dfr(POPs_group_quart_finnish, function(expl) {
-  
-  formula_FMC <- as.formula(paste("surv_obj_FMC ~", expl, "+",                  # set the formulas              
-                                  paste(covariates_finnish, collapse = " + ")))
-  formula_FMCF <- as.formula(paste("surv_obj_FMCF ~", expl, "+",                            
-                                   paste(covariates_finnish, collapse = " + ")))
-  
-  results <- list(                                                              # run of the simple cox model
-    finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
-    finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
-    bind_rows(.id = "dataset") |>
-    mutate(var = se^2, 
-           explanatory = expl) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-  
-  meta_results <- results |>                                                    # run metanalyse (one per quartile per explanatory variable)
-    group_by(explanatory, term) |> 
-    group_modify(~ {
-      rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
-      tibble(                                                                   # results table creation 
-        study = "Finnish", 
-        HR = exp(as.numeric(rma_fit$beta)),
-        lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
-        upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-        `p-value` = as.numeric(rma_fit$pval),
-        p.value_heterogeneity = as.numeric(rma_fit$QEp))
-    }) |> 
-    ungroup() |> 
-    mutate(model = "adjusted", study_design = "meta-analysis") |> 
-    relocate(model, explanatory, term)
-  return(meta_results)
-})
-
-### Copollutant ---- 
-POPs_group_quart_finnish_bis <- setdiff(POPs_group_quart_finnish, c("OCP_β_HCH_quart",  "OCP_γ_HCH_quart", "PCB_4_quart"))
-
-formula_FMC <- as.formula(paste("surv_obj_FMC ~ ",                  # set the formulas              
-                                paste(c(POPs_group_quart_finnish_bis, covariates_finnish), 
-                                      collapse = " + ")))
-formula_FMCF <- as.formula(paste("surv_obj_FMCF ~ ",                             
-                                 paste(c(POPs_group_quart_finnish_bis, covariates_finnish), 
-                                       collapse = " + ")))
-
-model3_cox_quart_finnish <- list(                                               # run of the simple cox model
-  finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
-  finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
-  bind_rows(.id = "dataset") |>
-  mutate(var = se^2, 
-         explanatory = term) |>
-  filter(str_detect(term, "_quart"))                                            # remove the covariates results
-
-model3_cox_quart_finnish <- model3_cox_quart_finnish |>                         # run metanalyse (one per quartile per explanatory variable)
-  group_by(explanatory, term) |> 
-  group_modify(~ {
-    rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
-    tibble(                                                                     # results table creation 
-      study = "Finnish", 
-      model = "copollutant", 
-      study_design = "meta-analysis",
-      HR = exp(as.numeric(rma_fit$beta)),
-      lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
-      upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-      `p-value` = as.numeric(rma_fit$pval),
-      p.value_heterogeneity = as.numeric(rma_fit$QEp))
-  }) |> 
-  ungroup() |> 
-  mutate(
-    explanatory = gsub("Q2", "", explanatory),
-    explanatory = gsub("Q3", "", explanatory),
-    explanatory = gsub("Q4", "", explanatory)) |>
-  relocate(model, explanatory, term)
-
-rm(POPs_group_quart_finnish_bis, formula_FMC, formula_FMCF)
-
-## Cox model (sd) - raw - not adjusted on cohort ----
-### Base ----
-model1_cox_sd_finnish_raw <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  
-  formula_finnish <- 
-    as.formula(paste("surv_obj_finnish ~", expl, "+ diagnosis_age + sex"))      # set the formulas                
-  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()# run cox model
-  
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "Finnish", 
-    model = "base", 
-    study_design = "raw unadjusted on cohort", 
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results 
-})
-
-### Adjusted ----
-model2_cox_sd_finnish_raw <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  
-  formula_finnish <-                                                            # set the formulas
-    as.formula(paste("surv_obj_finnish ~", expl, "+",  
-                     paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()# run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "Finnish", 
-    model = "adjusted", 
-    study_design = "raw unadjusted on cohort", 
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results 
-})
-
-### Copollutant ----
-POPs_group_sd_finnish_bis <- setdiff(POPs_group_sd_finnish, c("OCP_β_HCH_sd",  "OCP_γ_HCH_sd", "PCB_4_sd"))
-
-formula_finnish <-                                                               # set the formulas  
-  as.formula(paste("Surv(follow_up_death, status_death) ~",   
-                   paste(c(POPs_group_sd_finnish_bis, covariates_finnish), collapse = " + ")))
-
-model_summary <- 
-  coxph(formula_finnish, data = bdd_cases_finnish) |> summary() 
-coefs <- model_summary$coefficients
-model3_cox_sd_finnish_raw <- tibble(                                                 # creation of a table of results
-  study = "Finnish", 
-  model = "copollutant", 
-  study_design = "raw unadjusted on cohort", 
-  term = rownames(coefs),
-  explanatory = rownames(coefs),
-  coef = coefs[, "coef"],
-  se = coefs[, "se(coef)"], 
-  `p-value` = coefs[, "Pr(>|z|)"]) |>
-  filter(str_detect(term, "_sd"))
-
-model <- coxph(formula_finnish, data = bdd_cases_finnish) 
-cheking_model3_cox_sd_finnish <- check_model(model, residual_type = "normal")
-
-rm(POPs_group_sd_finnish_bis, formula_finnish, model_summary, model, coefs)
-
-
-## Cox model (quart) - raw - not adjusted on cohort ----
-### Base ----
-model1_cox_quart_finnish_raw <- map_dfr(POPs_group_quart_finnish, function(expl) {
-  
-  formula_finnish <-                                                             # creation of the formulas
-    as.formula(paste("surv_obj_finnish ~", expl, "+ diagnosis_age + sex"))  
-  
-  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()  # run cox model
-  
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "Finnish", 
-    model = "base", 
-    study_design = "raw unadjusted on cohort",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                      # remove the covariates results
-})
-
-### Adjusted ----
-model2_cox_quart_finnish_raw <- map_dfr(POPs_group_quart_finnish, function(expl) {
-  
-  formula_finnish <- as.formula(paste("surv_obj_finnish ~", expl, "+",            # set the formulas              
-                                      paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "Finnish", 
-    model = "adjusted", 
-    study_design = "raw unadjusted on cohort",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-
-### Copollutant ----
-outcome <- with(bdd_cases_finnish, cbind(follow_up_death, status_death))
-
-model3_quart_PCB_DL <- 
-  gam(outcome ~ 
-        PCB_DL_quart + 
-        s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',                                                            # maximum likelihood
-      data = bdd_cases_finnish) |>
-  summary()
-model3_quart_PCB_DL <- model3_quart_PCB_DL$p.table |>
-  as.data.frame() |>
-  rownames_to_column("variable") 
-
-model3_quart_PCB_NDL <- 
-  gam(outcome ~ 
-        PCB_NDL_quart + 
-        s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish) |>
-  summary()
-model3_quart_PCB_NDL <- model3_quart_PCB_NDL$p.table |>
-  as.data.frame() |>
-  rownames_to_column("variable") 
-
-model3_quart_HCB <- 
-  gam(outcome ~ 
-        OCP_HCB_quart + 
-        s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish) |>
-  summary()
-model3_quart_HCB <- model3_quart_HCB$p.table |>
-  as.data.frame() |>
-  rownames_to_column("variable") 
-
-model3_quart_ΣDDT <- 
-  gam(outcome ~ 
-        ΣDDT_quart + 
-        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish) |>
-  summary()
-model3_quart_ΣDDT <- model3_quart_ΣDDT$p.table |>
-  as.data.frame() |>
-  rownames_to_column("variable") 
-
-model3_quart_ΣHCH <- 
-  gam(outcome ~ 
-        ΣHCH_quart +
-        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat,  
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish) |>
-  summary()
-model3_quart_ΣHCH <- model3_quart_ΣHCH$p.table |>
-  as.data.frame() |>
-  rownames_to_column("variable") 
-
-model3_quart_Σchlordane <- 
-  gam(outcome ~ 
-        Σchlordane_quart + 
-        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish) |>
-  summary()
-model3_quart_Σchlordane <- model3_quart_Σchlordane$p.table |>
-  as.data.frame() |>
-  rownames_to_column("variable") 
-
-model3_quart_OCP_PeCB <- 
-  gam(outcome ~ 
-        OCP_PeCB_quart + 
-        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish) |>
-  summary()
-model3_quart_OCP_PeCB <- model3_quart_OCP_PeCB$p.table |>
-  as.data.frame() |>
-  rownames_to_column("variable") 
-
-model3_cox_quart_finnish_raw <- bind_rows(
-  model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_HCB, model3_quart_ΣDDT, model3_quart_ΣHCH, model3_quart_Σchlordane, model3_quart_OCP_PeCB) |>
-  filter(grepl("quart", variable)) |>
-  mutate(
-    study = "Finnish", 
-    model = "copollutant", 
-    study_design = "raw unadjusted on cohort", 
-    term = variable,
-    explanatory = gsub("Q2", "", variable), 
-    explanatory = gsub("Q3", "", explanatory), 
-    explanatory = gsub("Q4", "", explanatory), 
-    coef = Estimate, 
-    se = `Std. Error`, 
-    `p-value` =`Pr(>|z|)`) |> 
-  select(study, model, study_design, term, explanatory, coef, se, `p-value`)
-
-rm(model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_HCB, model3_quart_ΣDDT, model3_quart_ΣHCH, model3_quart_Σchlordane, model3_quart_OCP_PeCB, 
-   outcome)
-
-### Heterogeneity tests ----
-#### base ----
-heterogeneity_base_quart_finnish <- data.frame(explanatory = character(),
-                                               model = factor(),
-                                               p.value_heterogeneity = numeric(), 
-                                               stringsAsFactors = FALSE)
-
-for (expl in POPs_group_quart_finnish) {
-  
-  formula_raw <- as.formula("surv_obj_finnish ~ diagnosis_age + sex")
-  model_raw <- coxph(formula_raw, data = bdd_cases_finnish) 
-  
-  formula <- as.formula(paste("surv_obj_finnish ~", expl, "+ diagnosis_age + sex"))  
-  model <- coxph(formula, data = bdd_cases_finnish)  
-  
-  anova <- anova(model_raw, model, test = "LR")
-  p.value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_base_quart_finnish <- rbind(heterogeneity_base_quart_finnish, 
-                                            data.frame(explanatory = expl,
-                                                       model = "base",
-                                                       p.value_heterogeneity = p.value_heterogeneity))
-}
-rm(expl, formula_raw, model_raw, formula, model, anova, p.value_heterogeneity)
-
-#### adjusted ----
-heterogeneity_adjusted_quart_finnish <- data.frame(explanatory = character(),
-                                                   model = factor(),
-                                                   p.value_heterogeneity = numeric(), 
-                                                   stringsAsFactors = FALSE)
-
-for (expl in POPs_group_quart_finnish) {
-  
-  formula_raw <- as.formula(paste("surv_obj_finnish ~ ", paste(covariates_finnish, collapse = "+")))
-  model_raw <- coxph(formula_raw, data = bdd_cases_finnish) 
-  
-  formula <- as.formula(paste("surv_obj_finnish ~", expl, "+ ", paste(covariates_finnish, collapse = "+")))  
-  model <- coxph(formula, data = bdd_cases_finnish)  
-  
-  anova <- anova(model_raw, model, test = "LR")
-  p.value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_adjusted_quart_finnish <- rbind(heterogeneity_adjusted_quart_finnish, 
-                                                data.frame(explanatory = expl,
-                                                           model = "adjusted",
-                                                           p.value_heterogeneity = p.value_heterogeneity))
-}
-rm(expl, formula_raw, model_raw, formula, model, anova, p.value_heterogeneity)
-
-#### copollutant ----
-outcome <- with(bdd_cases_finnish, cbind(follow_up_death, status_death))
-
-model3_quart_PCB_DL_full <- 
-  gam(outcome ~ 
-        PCB_DL_quart + 
-        s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',                                                            # maximum likelihood
-      data = bdd_cases_finnish) 
-
-model3_quart_PCB_DL_raw <- 
-  gam(outcome ~ 
-        #PCB_DL_quart + 
-        s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',                                                            # maximum likelihood
-      data = bdd_cases_finnish) 
-
-anova <- anova(model3_quart_PCB_DL_raw, model3_quart_PCB_DL_full, test = "Chisq")
-p.value_heterogeneity_PCB_DL <- tibble(explanatory = "PCB_DL_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
-
-model3_quart_PCB_NDL_full <- 
-  gam(outcome ~ 
-        PCB_NDL_quart + 
-        s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish)
-
-model3_quart_PCB_NDL_raw <- 
-  gam(outcome ~ 
-        #PCB_NDL_quart + 
-        s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish)
-
-anova <- anova(model3_quart_PCB_NDL_raw, model3_quart_PCB_NDL_full, test = "Chisq")
-p.value_heterogeneity_PCB_NDL <- tibble(explanatory = "PCB_NDL_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
-
-model3_quart_HCB_full <- 
-  gam(outcome ~ 
-        OCP_HCB_quart + 
-        s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish)
-
-model3_quart_HCB_raw <- 
-  gam(outcome ~ 
-        #OCP_HCB_quart + 
-        s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish)
-
-anova <- anova(model3_quart_HCB_raw, model3_quart_HCB_full, test = "Chisq")
-p.value_heterogeneity_HCB <- tibble(explanatory = "OCP_HCB_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
-
-
-model3_quart_ΣDDT_full <- 
-  gam(outcome ~ 
-        ΣDDT_quart + 
-        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish) 
-
-model3_quart_ΣDDT_raw <- 
-  gam(outcome ~ 
-        #ΣDDT_quart + 
-        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish) 
-
-anova <- anova(model3_quart_ΣDDT_raw, model3_quart_ΣDDT_full, test = "Chisq")
-p.value_heterogeneity_ΣDDT <- tibble(explanatory = "ΣDDT_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
-
-model3_quart_ΣHCH_full <- 
-  gam(outcome ~ 
-        ΣHCH_quart +
-        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat,  
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish) 
-
-model3_quart_ΣHCH_raw <- 
-  gam(outcome ~ 
-        #ΣHCH_quart +
-        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat,  
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish) 
-
-anova <- anova(model3_quart_ΣHCH_raw, model3_quart_ΣHCH_full, test = "Chisq")
-p.value_heterogeneity_ΣHCH <- tibble(explanatory = "ΣHCH_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
-
-model3_quart_Σchlordane_full <- 
-  gam(outcome ~ 
-        Σchlordane_quart + 
-        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish)
-
-model3_quart_Σchlordane_raw <- 
-  gam(outcome ~ 
-        #Σchlordane_quart + 
-        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish)
-
-anova <- anova(model3_quart_Σchlordane_raw, model3_quart_Σchlordane_full, test = "Chisq")
-p.value_heterogeneity_Σchlordane <- tibble(explanatory = "Σchlordane_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
-
-model3_quart_OCP_PeCB_full <- 
-  gam(outcome ~ 
-        OCP_PeCB_quart + 
-        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish) 
-
-model3_quart_OCP_PeCB_raw <- 
-  gam(outcome ~ 
-        #OCP_PeCB_quart + 
-        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish) 
-
-anova <- anova(model3_quart_OCP_PeCB_raw, model3_quart_OCP_PeCB_full, test = "Chisq")
-p.value_heterogeneity_OCP_PeCB <- tibble(explanatory = "OCP_PeCB_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
-
-heterogeneity_copollutant_quart_finnish <- 
-  bind_rows(p.value_heterogeneity_PCB_DL, 
-            p.value_heterogeneity_PCB_NDL, 
-            p.value_heterogeneity_HCB, 
-            p.value_heterogeneity_ΣDDT, 
-            p.value_heterogeneity_ΣHCH, 
-            p.value_heterogeneity_Σchlordane, 
-            p.value_heterogeneity_OCP_PeCB) |>
-  mutate(model = "copollutant")
-
-rm(anova, outcome, 
-   model3_quart_PCB_DL_full, model3_quart_PCB_DL_raw, 
-   model3_quart_PCB_NDL_full, model3_quart_PCB_NDL_raw, 
-   model3_quart_HCB_full, model3_quart_HCB_raw, 
-   model3_quart_ΣDDT_full, model3_quart_ΣDDT_raw, 
-   model3_quart_ΣHCH_full, model3_quart_ΣHCH_raw, 
-   model3_quart_Σchlordane_full, model3_quart_Σchlordane_raw, 
-   model3_quart_OCP_PeCB_full, model3_quart_OCP_PeCB_raw,
-   p.value_heterogeneity_PCB_DL, 
-   p.value_heterogeneity_PCB_NDL, 
-   p.value_heterogeneity_HCB, 
-   p.value_heterogeneity_ΣDDT, 
-   p.value_heterogeneity_ΣHCH, 
-   p.value_heterogeneity_Σchlordane, 
-   p.value_heterogeneity_OCP_PeCB)
-
-heterogeneity_tests_finnish <- 
-  bind_rows(heterogeneity_base_quart_finnish, 
-            heterogeneity_adjusted_quart_finnish, 
-            heterogeneity_copollutant_quart_finnish) |>
-  mutate(explanatory = gsub("_quart", "", explanatory), 
-         study = "Finnish")
-
-### Trend tests ----
-#### base ----
-trend_base_finnish <- data.frame(explanatory = character(),
-                                 model = factor(), 
-                                 p.value_trend = numeric(), 
-                                 stringsAsFactors = FALSE)
-
-for (expl in POPs_group_quart_med_finnish) {
-  
-  formula <- as.formula(paste("surv_obj_finnish ~", expl, "+ diagnosis_age + sex"))  
-  model <- coxph(formula, data = bdd_cases_finnish) |> summary()
-  p.value_trend <- model$coefficients[expl, "Pr(>|z|)"]
-  
-  trend_base_finnish <- rbind(trend_base_finnish, 
-                              data.frame(explanatory = expl,
-                                         model = "base",
-                                         p.value_trend = p.value_trend))
-}
-rm(expl, model, formula, p.value_trend)
-
-#### adjusted ----
-trend_adjusted_finnish <- data.frame(explanatory = character(),
-                                     model = factor(), 
-                                     p.value_trend = numeric(), 
-                                     stringsAsFactors = FALSE)
-
-for (expl in POPs_group_quart_med_finnish) {
-  
-  formula <- as.formula(paste("surv_obj_finnish ~", expl, "+ ", paste(covariates_finnish, collapse = "+")))  
-  model <- coxph(formula, data = bdd_cases_finnish) |> summary()
-  p.value_trend <- model$coefficients[expl, "Pr(>|z|)"]
-  
-  trend_adjusted_finnish <- rbind(trend_adjusted_finnish, 
-                                  data.frame(explanatory = expl,
-                                             model = "adjusted",
-                                             p.value_trend = p.value_trend))
-}
-rm(expl, model, formula, p.value_trend)
-
-#### copollutant ----
-outcome <- with(bdd_cases_finnish, cbind(follow_up_death, status_death))
-
-model3_quart_PCB_DL_trend <- 
-  gam(outcome ~ 
-        PCB_DL_quart_med + 
-        s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',                                                            # maximum likelihood
-      data = bdd_cases_finnish) |> 
-  summary()
-p.value_trend_PCB_DL <- model3_quart_PCB_DL_trend$p.table["PCB_DL_quart_med", "Pr(>|z|)"]
-
-model3_quart_PCB_NDL_trend <- 
-  gam(outcome ~ 
-        PCB_NDL_quart_med + 
-        s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish)|> 
-  summary()
-p.value_trend_PCB_NDL <- model3_quart_PCB_NDL_trend$p.table["PCB_NDL_quart_med", "Pr(>|z|)"]
-
-model3_quart_HCB_trend <- 
-  gam(outcome ~ 
-        OCP_HCB_quart_med + 
-        s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish)|> 
-  summary()
-p.value_trend_HCB <- model3_quart_HCB_trend$p.table["OCP_HCB_quart_med", "Pr(>|z|)"]
-
-model3_quart_ΣDDT_trend <- 
-  gam(outcome ~ 
-        ΣDDT_quart_med + 
-        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣHCH) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish) |> 
-  summary()
-p.value_trend_ΣDDT <- model3_quart_ΣDDT_trend$p.table["ΣDDT_quart_med", "Pr(>|z|)"]
-
-model3_quart_ΣHCH_trend <- 
-  gam(outcome ~ 
-        ΣHCH_quart_med +
-        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat,  
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish) |> 
-  summary()
-p.value_trend_ΣHCH <- model3_quart_ΣHCH_trend$p.table["ΣHCH_quart_med", "Pr(>|z|)"]
-
-model3_quart_Σchlordane_trend <- 
-  gam(outcome ~ 
-        Σchlordane_quart_med + 
-        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(OCP_PeCB) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish) |> 
-  summary()
-p.value_trend_Σchlordane <- model3_quart_Σchlordane_trend$p.table["Σchlordane_quart_med", "Pr(>|z|)"]
-
-model3_quart_OCP_PeCB_trend <- 
-  gam(outcome ~ 
-        OCP_PeCB_quart_med + 
-        s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(ΣHCH) + s(Σchlordane) +
-        sex + diagnosis_age + smoking_2cat + bmi + marital_status_2cat, 
-      family = cox.ph(), 
-      method = 'ML',
-      data = bdd_cases_finnish) |> 
-  summary()
-p.value_trend_OCP_PeCB <- model3_quart_OCP_PeCB_trend$p.table["OCP_PeCB_quart_med", "Pr(>|z|)"]
-
-trend_copollutant_finnish <- 
-  data.frame(explanatory = c("PCB_DL_quart_med", "PCB_NDL_quart_med", "OCP_HCB_quart_med", 
-                             "ΣDDT_quart_med", "ΣHCH_quart_med", "Σchlordane_quart_med", 
-                             "OCP_PeCB_quart_med" ),
-             model = "copollutant",
-             p.value_trend = c(p.value_trend_PCB_DL, 
-                               p.value_trend_PCB_NDL, 
-                               p.value_trend_HCB, 
-                               p.value_trend_ΣDDT, 
-                               p.value_trend_ΣHCH, 
-                               p.value_trend_Σchlordane, 
-                               p.value_trend_OCP_PeCB))
-
-rm(outcome, 
-   model3_quart_PCB_DL_trend,
-   model3_quart_PCB_NDL_trend, 
-   model3_quart_HCB_trend, 
-   model3_quart_ΣDDT_trend, 
-   model3_quart_ΣHCH_trend,
-   model3_quart_Σchlordane_trend, 
-   model3_quart_OCP_PeCB_trend, 
-   
-   p.value_trend_PCB_DL, 
-   p.value_trend_PCB_NDL, 
-   p.value_trend_HCB, 
-   p.value_trend_ΣDDT, 
-   p.value_trend_ΣHCH, 
-   p.value_trend_Σchlordane, 
-   p.value_trend_OCP_PeCB)
-
-trend_tests_finnish <- 
-  bind_rows(trend_base_finnish, trend_adjusted_finnish, trend_copollutant_finnish) |>
-  mutate(explanatory = gsub("_quart_med", "", explanatory), 
-         study = "Finnish")
-
-rm(heterogeneity_base_quart_finnish, heterogeneity_adjusted_quart_finnish, heterogeneity_copollutant_quart_finnish,
-   trend_base_finnish, trend_adjusted_finnish, trend_copollutant_finnish)
-
-
-
-## Q-gcomp analysis ---- 
-POPs_group_finnish_bis <-                                                 # remove the 4 most abundant PCB because they are already NDL-PCB
-  setdiff(POPs_group_finnish, 
-          c("OCP_β_HCH",  "OCP_γ_HCH", "PCB_4"))                    
-
-formula_finnish <-                                                              # set the formulas  
-  as.formula(paste("Surv(follow_up_death, status_death) ~",   
-                   paste(c(covariates_finnish, "study"), collapse = " + ")))
-set.seed(1996)
-qgcomp_boot_finnish <-
-  qgcomp.cox.boot(
-    f = formula_finnish,                                                        # formula
-    data =   bdd_cases_finnish, 
-    q = 4,                                                                      # nb of quantiles
-    expnms = POPs_group_finnish_bis,                                                 # exposures of interest 
-    B = 1000,                                                                   # nb of boostrap
-    MCsize = 5000,
-    seed = 1996,
-    parallel = TRUE,                                                            # shorter run time
-    parplan = TRUE)                                                             # shorter run time
-# print(qgcomp_boot_finnish)
-# qgcomp_boot_finnish$pos.weights                                                  # NULL because the model is not significant 
-# qgcomp_boot_finnish$neg.weights                                                  # NULL because the model is not significant 
-# plot(qgcomp_boot_finnish)
-
-# run the code without bootsrapping just to get weights even if the mixture is not significant 
-formula_finnish <-                                                               # set the formulas  
-  as.formula(paste("Surv(follow_up_death, status_death) ~",   
-                   paste(c(covariates_finnish, POPs_group_finnish_bis, "study"), collapse = " + ")))
-qgcomp_noboot_finnish <-                                                         
-  qgcomp.cox.noboot(
-    f = formula_finnish,                                                         # formula
-    bdd_cases_finnish[, c(POPs_group_finnish_bis, covariates_finnish, 'follow_up_death', 'status_death', "study")],
-    q = 4,                                                                      # number of quantiles
-    expnms = POPs_group_finnish_bis)                                                 # exposures of interest
-# print(qgcomp_noboot_finnish)
-# qgcomp_noboot_finnish$pos.weights
-# qgcomp_noboot_finnish$neg.weights
-# plot(qgcomp_noboot_finnish, suppressprint = TRUE)
-
-rm(formula_finnish, POPs_group_finnish_bis)
-
-# Metaanalysis ----
-## Cox model (sd) ----
-POPs_group_sd_bis <- setdiff(POPs_group_sd, "ΣPBDE_sd")
-
-### Base ----
-model1_cox_sd_metanalysis <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula_danish <-                                                             # set the formulas
-    as.formula(paste("surv_obj_danish ~", expl, "+ diagnosis_age + sex"))  
-  formula_FMC <-                                                                
-    as.formula(paste("surv_obj_FMC ~", expl, "+ diagnosis_age + sex"))  
-  formula_FMCF <- 
-    as.formula(paste("surv_obj_FMCF ~", expl, "+ diagnosis_age + sex"))
-  
-  results <- list(                                                              # run of the simple cox models 
-    danish = run_cox(formula_danish, bdd_cases_danish),
-    finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
-    finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
-    bind_rows(.id = "dataset") |>
-    mutate(var = se^2, explanatory = expl) |>
-    filter(explanatory == term)                                                 # remove the covariates results
-  
-  rma_fit <- rma(yi = coef, vi = var, data = results, method = "DL")            # run of the meta-analyse (metafor package as Ian did)
-  
-  tibble(                                                                       # creation of the table of results
-    study = "Metanalysis", 
-    model = "base", 
-    explanatory = expl,
-    term = expl,
-    HR = exp(as.numeric(rma_fit$beta)),
-    lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
-    upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-    `p-value` = as.numeric(rma_fit$pval),
-    p.value_heterogeneity = as.numeric(rma_fit$QEp)
-    
-  )
-})
-
-### Adjusted ----
-model2_cox_sd_metanalysis <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula_danish <-                                                             # set the formulas
-    as.formula(paste("surv_obj_danish ~", expl, "+",
-                     paste(covariates_danish, collapse = "+")))  
-  formula_FMC <-                                                                
-    as.formula(paste("surv_obj_FMC ~", expl,  "+",
-                     paste(covariates_finnish, collapse = "+")))  
-  formula_FMCF <- 
-    as.formula(paste("surv_obj_FMCF ~", expl,  "+",
-                     paste(covariates_finnish, collapse = "+")))
-  
-  results <- list(                                                              # run of the simple cox models 
-    danish = run_cox(formula_danish, bdd_cases_danish),
-    finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
-    finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
-    bind_rows(.id = "dataset") |>
-    mutate(var = se^2, explanatory = expl) |>
-    filter(explanatory == term)                                                 # remove the covariates results
-  
-  rma_fit <- rma(yi = coef, vi = var, data = results, method = "DL")            # run of the meta-analyse (metafor package as Ian did)
-  
-  tibble(                                                                       # creation of the table of results
-    study = "Metanalysis", 
-    model = "adjusted", 
-    explanatory = expl,
-    term = expl,
-    HR = exp(as.numeric(rma_fit$beta)),
-    lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
-    upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-    `p-value` = as.numeric(rma_fit$pval),
-    p.value_heterogeneity = as.numeric(rma_fit$QEp)
-    
-  )
-})
-
-### Copollutant ----
-POPs_group_sd_bis <- setdiff(POPs_group_sd, c("PCB_4_sd", "ΣPBDE_sd"))
-
-formula_danish <-                                                                  # creation of the formulas
-  as.formula(paste("surv_obj_danish ~", paste(c(POPs_group_sd_bis, 
-                                                covariates_danish), 
-                                              collapse = "+")))  
-formula_FMC <-                                                                  # creation of the formulas
-  as.formula(paste("surv_obj_FMC ~", paste(c(POPs_group_sd_bis, 
-                                             covariates_finnish), 
-                                           collapse = "+")))  
-formula_FMCF <- 
-  as.formula(paste("surv_obj_FMCF ~", paste(c(POPs_group_sd_bis, covariates_finnish), 
-                                            collapse = "+")))  
-
-model3_cox_sd_metanalysis <- list(                                                                # run of the simple cox models 
-  danish = run_cox(formula_danish, bdd_cases_danish),
-  finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
-  finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
-  bind_rows(.id = "dataset") |>
-  mutate(var = se^2, 
-         explanatory = term) |>
-  filter(str_detect(term, "_sd"))                                               # remove the covariates results
-
-model3_cox_sd_metanalysis <- model3_cox_sd_metanalysis |>
-  group_by(term) |> 
-  group_modify(~ {
-    rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
-    tibble(                                                                     # results table creation 
-      study = "Metanalysis", 
-      model = "copollutant", 
-      HR = exp(as.numeric(rma_fit$beta)),
-      lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
-      upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-      `p-value` = as.numeric(rma_fit$pval),
-      p.value_heterogeneity = as.numeric(rma_fit$QEp))
-  }) |> 
-  ungroup() |>
-  mutate(explanatory = term)
-
-rm(POPs_group_sd_bis, formula_danish, formula_FMC, formula_FMCF)
-
-
-## Cox model (quart) ----
-POPs_group_quart_bis <- setdiff(POPs_group_quart, "ΣPBDE_quart")
-
-### Base ----
-model1_cox_quart_metanalysis <- map_dfr(POPs_group_quart_bis, function(expl) {
-  
-  formula_danish <-                                                             # creation of the formulas
-    as.formula(paste("surv_obj_danish ~", expl, "+ diagnosis_age + sex")) 
-  formula_FMC <-                                                                # creation of the formulas
-    as.formula(paste("surv_obj_FMC ~", expl, "+ diagnosis_age + sex"))  
-  formula_FMCF <- 
-    as.formula(paste("surv_obj_FMCF ~", expl, "+ diagnosis_age + sex"))
-  
-  results <- list(                                                              # run of the simple cox model
-    danish = run_cox(formula_danish, bdd_cases_danish),
-    finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
-    finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
-    bind_rows(.id = "dataset") |>
-    mutate(var = se^2, 
-           explanatory = expl) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-  
-  meta_results <- results |>                                                    # run metanalyse (one per quartile per explanatory variable)
-    group_by(explanatory, term) |> 
-    group_modify(~ {
-      rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
-      tibble(                                                                   # results table creation 
-        HR = exp(as.numeric(rma_fit$beta)),
-        lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
-        upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-        `p-value` = as.numeric(rma_fit$pval),
-        p.value_heterogeneity = as.numeric(rma_fit$QEp))
-    }) |> 
-    ungroup() |> 
-    mutate(study = "Metanalysis", 
-           model = "base") |> 
-    relocate(model, explanatory, term)
-  return(meta_results)
-})
-
-### Adjusted  ----
-model2_cox_quart_metanalysis <- map_dfr(POPs_group_quart_bis, function(expl) {
-  
-  formula_danish <- 
-    as.formula(paste("surv_obj_danish ~", expl, "+",                            # set the formulas 
-                      paste(covariates_danish, collapse = "+")))
-  formula_FMC <- 
-    as.formula(paste("surv_obj_FMC ~", expl, "+", 
-                     paste(covariates_finnish, collapse = "+")))
-  formula_FMCF <- 
-    as.formula(paste("surv_obj_FMCF ~", expl, "+", 
-                     paste(covariates_finnish, collapse = "+")))
-  
-  results <- list(                                                              # run of the simple cox model
-    danish = run_cox(formula_danish, bdd_cases_danish),
-    finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
-    finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
-    bind_rows(.id = "dataset") |>
-    mutate(var = se^2, 
-           explanatory = expl) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-  
-  meta_results <- results |>                                                    # run metanalyse (one per quartile per explanatory variable)
-    group_by(explanatory, term) |> 
-    group_modify(~ {
-      rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
-      tibble(                                                                   # results table creation 
-        study = "Metanalysis", 
-        HR = exp(as.numeric(rma_fit$beta)),
-        lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
-        upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-        `p-value` = as.numeric(rma_fit$pval),
-        p.value_heterogeneity = as.numeric(rma_fit$QEp))
-    }) |> 
-    ungroup() |> 
-    mutate(model = "adjusted") |> 
-    relocate(model, explanatory, term)
-  return(meta_results)
-})
-
-### Copollutant ---- 
-POPs_group_quart_bis <- setdiff(POPs_group_quart, c("PCB_4_quart", "ΣPBDE_quart"))
-
-formula_danish <- as.formula(paste("surv_obj_danish ~ ",                        # set the formulas              
-                                paste(c(POPs_group_quart_bis, covariates_danish), collapse = " + ")))
-formula_FMC <- as.formula(paste("surv_obj_FMC ~ ",                               
-                                paste(c(POPs_group_quart_bis, covariates_finnish), collapse = " + ")))
-formula_FMCF <- as.formula(paste("surv_obj_FMCF ~ ",                             
-                                 paste(c(POPs_group_quart_bis, covariates_finnish), collapse = " + ")))
-
-model3_cox_quart_metanalysis <- list(                                               # run of the simple cox model
-  danish = run_cox(formula_danish, bdd_cases_danish),
-  finnish_FMC = run_cox(formula_FMC, bdd_cases_FMC),
-  finnish_FMCF = run_cox(formula_FMCF, bdd_cases_FMCF)) |>
-  bind_rows(.id = "dataset") |>
-  mutate(var = se^2, 
-         explanatory = term) |>
-  filter(str_detect(term, "_quart"))                                            # remove the covariates results
-
-model3_cox_quart_metanalysis <- model3_cox_quart_metanalysis |>                         # run metanalyse (one per quartile per explanatory variable)
-  group_by(explanatory, term) |> 
-  group_modify(~ {
-    rma_fit <- rma(yi = .x$coef, vi = .x$var, method = "DL")
-    tibble(                                                                     # results table creation 
-      study = "Metanalysis", 
-      model = "copollutant",
-      HR = exp(as.numeric(rma_fit$beta)),
-      lower_CI = exp(as.numeric(rma_fit$beta) - 1.96 * as.numeric(rma_fit$se)),
-      upper_CI = exp(as.numeric(rma_fit$beta) + 1.96 * as.numeric(rma_fit$se)),
-      `p-value` = as.numeric(rma_fit$pval),
-      p.value_heterogeneity = as.numeric(rma_fit$QEp))
-  }) |> 
-  ungroup() |> 
-  mutate(
-    explanatory = gsub("Q2", "", explanatory),
-    explanatory = gsub("Q3", "", explanatory),
-    explanatory = gsub("Q4", "", explanatory)) |>
-  relocate(model, explanatory, term)
-
-rm(POPs_group_quart_bis, formula_danish, formula_FMC, formula_FMCF)
 
 # Assemblage main analyses ----
 main_results_POPs_ALS_survival <-       
   bind_rows(
     model1_cox_sd_danish, model2_cox_sd_danish, model3_cox_sd_danish,
-    model1_cox_quart_danish, model2_cox_quart_danish, model3_cox_quart_danish, 
-    model1_cox_sd_finnish_raw, model2_cox_sd_finnish_raw, model3_cox_sd_finnish_raw,  # raw analysis of the finnish cohorts (not adjusting for cohort)
-    model1_cox_quart_finnish_raw, model2_cox_quart_finnish_raw, model3_cox_quart_finnish_raw) |> # raw analysis of the finnish cohorts (not adjusting for cohort)
+    model1_cox_quart_danish, model2_cox_quart_danish, model3_cox_quart_danish) |> 
   mutate(
     HR = exp(coef),
     lower_CI = exp(coef - 1.96 * se),
     upper_CI = exp(coef + 1.96 * se)) |>
-  select(study, model, study_design, explanatory, term, HR, lower_CI, upper_CI, "p-value") |>
-  
-  bind_rows(model1_cox_sd_finnish, model2_cox_sd_finnish, model3_cox_sd_finnish,  # meta-anlaysis of the finnish cohorts
-            model1_cox_quart_finnish, model2_cox_quart_finnish, model3_cox_quart_finnish,  # meta-anlaysis of the finnish cohorts
-            model1_cox_sd_metanalysis, model2_cox_sd_metanalysis, model3_cox_sd_metanalysis, # meta-anlaysis of all cohorts 
-            model1_cox_quart_metanalysis, model2_cox_quart_metanalysis, model3_cox_quart_metanalysis) |> # meta-anlaysis of all cohorts 
   mutate(
     term = case_when(
       str_detect(term, "_sd") ~ "Continuous", 
@@ -2348,1653 +1012,30 @@ main_results_POPs_ALS_survival <-
     `p-value_shape` = ifelse(`p-value_raw`<0.05, "p-value<0.05", "p-value≥0.05"), 
     `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")), 
     `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
-  select(study, model, study_design, explanatory, term,  HR, HR_raw, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI, "p.value_heterogeneity")
-
-heterogeneity_tests <- 
-  bind_rows(heterogeneity_tests, heterogeneity_tests_finnish) |>
-  mutate(study_design = ifelse(study == "Danish", NA, "raw unadjusted on cohort"))
+  select(study, model, explanatory, term,  HR, HR_raw, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI)
 
 main_results_POPs_ALS_survival <- 
   left_join(main_results_POPs_ALS_survival, heterogeneity_tests, 
-            by = c("explanatory", "model", "study", "study_design")) |>
-  mutate(p.value_heterogeneity = ifelse(is.na(p.value_heterogeneity.x), p.value_heterogeneity.y, p.value_heterogeneity.x), 
-         p.value_heterogeneity = ifelse(term == "Continuous" & study == "Danish", NA, p.value_heterogeneity), 
-         p.value_heterogeneity = ifelse(term == "Continuous" & study == "Finnish" & study_design == "raw unadjusted on cohort", NA, p.value_heterogeneity), 
+            by = c("explanatory", "model", "study")) |>
+  mutate(p.value_heterogeneity = ifelse(term == "Continuous" & study == "Danish", NA, p.value_heterogeneity), 
          p.value_heterogeneity = ifelse(p.value_heterogeneity < 0.01, "<0.01", number(p.value_heterogeneity, accuracy = 0.01, decimal.mark = ".")), 
-         p.value_heterogeneity = ifelse(p.value_heterogeneity == "1.00", ">0.99", p.value_heterogeneity)) |>
-  select(-p.value_heterogeneity.x, -p.value_heterogeneity.y)
-
-trend_tests <- bind_rows(trend_tests, trend_tests_finnish)|>
-  mutate(study_design = ifelse(study == "Danish", NA, "raw unadjusted on cohort"))
+         p.value_heterogeneity = ifelse(p.value_heterogeneity == "1.00", ">0.99", p.value_heterogeneity))
 
 main_results_POPs_ALS_survival <- 
   left_join(main_results_POPs_ALS_survival, trend_tests, 
-            by = c("explanatory", "model", "study", "study_design")) |>
+            by = c("explanatory", "model", "study")) |>
   mutate(p.value_trend = ifelse(term == "Continuous", NA, p.value_trend), 
          p.value_trend = ifelse(p.value_trend < 0.01, "<0.01", number(p.value_trend, accuracy = 0.01, decimal.mark = ".")), 
          p.value_trend = ifelse(p.value_trend == "1.00", ">0.99", p.value_trend)) 
 
 rm(model1_cox_sd_danish, 
-   # model2_cox_sd_danish, 
+   model2_cox_sd_danish, 
    model3_cox_sd_danish, 
    model1_cox_quart_danish, model2_cox_quart_danish, model3_cox_quart_danish,
-   model1_cox_sd_finnish, model2_cox_sd_finnish, model3_cox_sd_finnish, 
-   model1_cox_sd_finnish_raw, #model2_cox_sd_finnish_raw, 
-   model3_cox_sd_finnish_raw, 
-   model1_cox_quart_finnish_raw, model2_cox_quart_finnish_raw, model3_cox_quart_finnish_raw, 
-   model1_cox_quart_finnish, model2_cox_quart_finnish, model3_cox_quart_finnish,  
-   model1_cox_sd_metanalysis, model2_cox_sd_metanalysis, model3_cox_sd_metanalysis, 
-   model1_cox_quart_metanalysis, model2_cox_quart_metanalysis, model3_cox_quart_metanalysis, 
-   bdd_cases_FMC, bdd_cases_FMCF, bdd_cases_MFH, 
-   heterogeneity_tests, trend_tests, 
-   heterogeneity_tests_finnish, trend_tests_finnish)
+   heterogeneity_tests, trend_tests)
 
 
-# Sensitivity analysis 1 - effects of baseline age and duration baseline - diagnosis among all cohorts ----
-## data prep ----
-POPs_group_bis <- setdiff(POPs_group, "ΣPBDE")
-POPs_group_quart_bis <- setdiff(POPs_group_quart, "ΣPBDE_quart")
-POPs_group_sd_bis <- setdiff(POPs_group_sd, "ΣPBDE_sd")
-
-bdd_cases_tot_sauf_MFH <- bdd |>
-  filter (als == 1) |>
-  filter(!study == 'MFH') |>
-  select(study, study_2cat, als, follow_up_death, status_death, sex, diagnosis_age, baseline_age, marital_status_2cat, smoking_2cat, bmi, follow_up, 
-         "PCB_4", "PCB_DL", "PCB_NDL",  "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", "Σchlordane") |>
-  mutate(across(all_of(POPs_group_bis), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
-                                                 labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(all_of(POPs_group_bis),                                             # create cohort and cases specific scaled POPs variables 
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd"))  |>
-  replace_with_median(PCB_4, PCB_4_quart) |>
-  replace_with_median(PCB_DL, PCB_DL_quart) |>
-  replace_with_median(PCB_NDL, PCB_NDL_quart) |>
-  replace_with_median(OCP_HCB, OCP_HCB_quart) |>
-  replace_with_median(ΣDDT, ΣDDT_quart) |>
-  replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
-  replace_with_median(Σchlordane, Σchlordane_quart) |>
-  mutate(sex = fct_relevel(sex, "Male", "Female"), 
-         smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
-
-bdd_cases_red_purple <- bdd |>
-  filter (als == 1) |>
-  # filter(baseline_age>45) |>
-  filter(follow_up<300) |>
-  select(study, study_2cat, als, follow_up_death, status_death, sex, diagnosis_age, marital_status_2cat, smoking_2cat, bmi, baseline_age, follow_up, 
-         "PCB_4", "PCB_DL", "PCB_NDL",  "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", "Σchlordane") |>
-  mutate(across(all_of(POPs_group_bis), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
-                                                 labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(all_of(POPs_group_bis),                                             # create cohort and cases specific scaled POPs variables 
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd"))  |>
-  replace_with_median(PCB_4, PCB_4_quart) |>
-  replace_with_median(PCB_DL, PCB_DL_quart) |>
-  replace_with_median(PCB_NDL, PCB_NDL_quart) |>
-  replace_with_median(OCP_HCB, OCP_HCB_quart) |>
-  replace_with_median(ΣDDT, ΣDDT_quart) |>
-  replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
-  replace_with_median(Σchlordane, Σchlordane_quart) |>
-  mutate(sex = fct_relevel(sex, "Male", "Female"), 
-         smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
-
-bdd_cases_red_green <- bdd |>
-  filter (als == 1) |>
-  filter(baseline_age>45) |>
-  # filter(follow_up<300) |>
-  select(study, study_2cat, als, follow_up_death, status_death, sex, diagnosis_age, marital_status_2cat, smoking_2cat, bmi, baseline_age, follow_up, 
-         "PCB_4", "PCB_DL", "PCB_NDL",  "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", "Σchlordane") |>
-  mutate(across(all_of(POPs_group_bis), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
-                                                 labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(all_of(POPs_group_bis),                                             # create cohort and cases specific scaled POPs variables 
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd"))  |>
-  replace_with_median(PCB_4, PCB_4_quart) |>
-  replace_with_median(PCB_DL, PCB_DL_quart) |>
-  replace_with_median(PCB_NDL, PCB_NDL_quart) |>
-  replace_with_median(OCP_HCB, OCP_HCB_quart) |>
-  replace_with_median(ΣDDT, ΣDDT_quart) |>
-  replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
-  replace_with_median(Σchlordane, Σchlordane_quart) |>
-  mutate(sex = fct_relevel(sex, "Male", "Female"), 
-         smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
-
-bdd_cases_red_orange <- bdd |>
-  filter (als == 1) |>
-  filter(baseline_age>40) |>
-  filter(follow_up<350) |>
-  select(study, study_2cat, als, follow_up_death, status_death, sex, diagnosis_age, marital_status_2cat, smoking_2cat, bmi, baseline_age, follow_up, 
-         "PCB_4", "PCB_DL", "PCB_NDL",  "OCP_HCB", "ΣDDT", "ΣHCH", "OCP_β_HCH", "Σchlordane") |>
-  mutate(across(all_of(POPs_group_bis), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
-                                                 labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(all_of(POPs_group_bis),                                             # create cohort and cases specific scaled POPs variables 
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd"))  |>
-  replace_with_median(PCB_4, PCB_4_quart) |>
-  replace_with_median(PCB_DL, PCB_DL_quart) |>
-  replace_with_median(PCB_NDL, PCB_NDL_quart) |>
-  replace_with_median(OCP_HCB, OCP_HCB_quart) |>
-  replace_with_median(ΣDDT, ΣDDT_quart) |>
-  replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
-  replace_with_median(Σchlordane, Σchlordane_quart) |>
-  mutate(sex = fct_relevel(sex, "Male", "Female"), 
-         smoking_2cat = fct_relevel(smoking_2cat, "Ever", "Never"), 
-         marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other"))
-
-surv_obj_tot_sauf_MFH <- Surv(time = bdd_cases_tot_sauf_MFH$follow_up_death,    # set the outcomes
-                     event = bdd_cases_tot_sauf_MFH$status_death)
-
-surv_obj_red_purple <- Surv(time = bdd_cases_red_purple$follow_up_death,        # set the outcomes
-                            event = bdd_cases_red_purple$status_death)
-
-surv_obj_red_green <- Surv(time = bdd_cases_red_green$follow_up_death,          # set the outcomes
-                           event = bdd_cases_red_green$status_death)
-
-surv_obj_red_orange <- Surv(time = bdd_cases_red_orange$follow_up_death,        # set the outcomes
-                     event = bdd_cases_red_orange$status_death)
-
-sample_size_check <- 
-  tbl_merge(
-    list(bdd_cases_tot |> select(study) |> tbl_summary(),
-         bdd_cases_tot_sauf_MFH |> select(study) |> tbl_summary(),
-         bdd_cases_red_purple |> select(study) |> tbl_summary(),
-         bdd_cases_red_green |> select(study) |> tbl_summary(),
-         bdd_cases_red_orange |> select(study) |> tbl_summary()), 
-    tab_spanner = c('**All subjects**', 
-                    '**All subjects except MFH**', 
-                    '**follow up < 300 months**', 
-                    '**baseline age > 45 years**', 
-                    '**follow up < 350 months and baseline age > 40 years**'))
-
-sample_size_check_2cat <- 
-  tbl_merge(
-    list(bdd_cases_tot |> select(study_2cat) |> tbl_summary(),
-         bdd_cases_tot_sauf_MFH |> select(study_2cat) |> tbl_summary(),
-         bdd_cases_red_purple |> select(study_2cat) |> tbl_summary(),
-         bdd_cases_red_green |> select(study_2cat) |> tbl_summary(),
-         bdd_cases_red_orange |> select(study_2cat) |> tbl_summary()), 
-    tab_spanner = c('**All subjects**', 
-                    '**All subjects except MFH**', 
-                    '**follow up < 300 months**', 
-                    '**baseline age > 45 years**', 
-                    '**follow up < 350 months and baseline age > 40 years**'))
-
-## justification ----
-### 4 cohorts ----
-plot_follow_up <- ggplot(bdd_cases_tot, aes(x = "", y = follow_up)) +
-  geom_violin(fill = "gray90", color = "gray50", width = 1) +
-  geom_boxplot(width = 0.1, outlier.shape = NA, fill = NA, color = "black") +
-  geom_jitter(aes(color = study), width = 0.2, alpha = 0.6, size = 1.8) +
-  scale_color_brewer(palette = "Dark2") +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        plot.title = element_text(hjust = 0.5)) +
-  labs(x = NULL, y = "Follow-up (months)", title = "Distribution of the duration \nbetween baseline and diagnosis")
-
-plot_baseline_age <- ggplot(bdd_cases_tot, aes(x = "", y = baseline_age)) +
-  geom_violin(fill = "gray90", color = "gray50", width = 1) +
-  geom_boxplot(width = 0.1, outlier.shape = NA, fill = NA, color = "black") +
-  geom_jitter(aes(color = study), width = 0.2, alpha = 0.6, size = 1.8) +
-  scale_color_brewer(palette = "Dark2") +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        plot.title = element_text(hjust = 0.5)) +
-  labs(x = NULL, y = "Age at baseline (years)", title = "Distribution of the subjects \nage at baseline")
-
-plot_diagnosis_age <- ggplot(bdd_cases_tot, aes(x = "", y = diagnosis_age)) +
-  geom_violin(fill = "gray90", color = "gray50", width = 1) +
-  geom_boxplot(width = 0.1, outlier.shape = NA, fill = NA, color = "black") +
-  geom_jitter(aes(color = study), width = 0.2, alpha = 0.6, size = 1.8) +
-  scale_color_brewer(palette = "Dark2") +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  labs(x = NULL, y = "Age at diagnosis (years)", title = "Distribution of the subjects \nage at diagnosis")
-
-plot_baseline_follow_up <- 
-  ggplot(bdd_cases_tot) +
-  aes(x = baseline_age, y = follow_up, colour = study) +
-  geom_point(alpha = 0.6) +
-  scale_color_brewer(palette = "Dark2") +
-  theme_minimal() + 
-  theme(plot.title = element_text(hjust = 0.5)) +
-  geom_rect(aes(xmin = 45, xmax = 66, ymin = 0, ymax = 575),
-            fill = NA, color = "chartreuse3", linetype = "dashed", linewidth = 1) +
-  annotate("text", x = 45.5, y = 575, label = "n=204",
-           hjust = 0, vjust = -0.5, size = 5, color = "chartreuse3") +
-  
-  geom_rect(aes(xmin = 15, xmax = 66, ymin = 0, ymax = 300),
-            fill = NA, color = "darkorchid", linetype = "dashed", linewidth = 1) +
-  annotate("text", x = 16, y = 300, label = "n=208",
-           hjust = 0, vjust = -0.5, size = 5, color = "darkorchid") +
-  
-  geom_rect(aes(xmin = 40, xmax = 66, ymin = 0, ymax = 350),
-            fill = NA, color = "darksalmon", linetype = "dashed", linewidth = 1) +
-  annotate("text", x = 53, y = 350, label = "n=207",
-           hjust = 0, vjust = -0.5, size = 5, color = "darksalmon") +
-  
-  labs(x = "Age at baseline (years)", 
-       y = "Duration between baseline and \ndiagnosis (months)")
-
-plot_justif <- (plot_baseline_age + plot_follow_up + plot_diagnosis_age)/plot_baseline_follow_up + plot_layout()
-
-### 2 cohorts ----
-plot_follow_up_2cat <- ggplot(bdd_cases_tot, aes(x = "", y = follow_up)) +
-  geom_violin(fill = "gray90", color = "gray50", width = 1) +
-  geom_boxplot(width = 0.1, outlier.shape = NA, fill = NA, color = "black") +
-  geom_jitter(aes(color = study_2cat), width = 0.2, alpha = 0.6, size = 1.8) +
-  scale_color_brewer(palette = "Dark2") +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        plot.title = element_text(hjust = 0.5)) +
-  labs(x = NULL, y = "Follow-up (months)", 
-       title = "Follow-up duration \nbetween baseline and diagnosis",
-       colour = "Cohorts")
-
-plot_baseline_age_2cat <- ggplot(bdd_cases_tot, aes(x = "", y = baseline_age)) +
-  geom_violin(fill = "gray90", color = "gray50", width = 1) +
-  geom_boxplot(width = 0.1, outlier.shape = NA, fill = NA, color = "black") +
-  geom_jitter(aes(color = study_2cat), width = 0.2, alpha = 0.6, size = 1.8) +
-  scale_color_brewer(palette = "Dark2") +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        plot.title = element_text(hjust = 0.5)) +
-  labs(x = NULL, 
-       y = "Age at baseline (years)", 
-       title = "Age at baseline",
-       colour = "Cohorts")
-
-plot_diagnosis_age_2cat <- ggplot(bdd_cases_tot, aes(x = "", y = diagnosis_age)) +
-  geom_violin(fill = "gray90", color = "gray50", width = 1) +
-  geom_boxplot(width = 0.1, outlier.shape = NA, fill = NA, color = "black") +
-  geom_jitter(aes(color = study_2cat), width = 0.2, alpha = 0.6, size = 1.8) +
-  scale_color_brewer(palette = "Dark2") +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  labs(x = NULL, 
-       y = "Age at diagnosis (years)", 
-       title = "Age at diagnosis",
-       colour = "Cohorts")
-
-plot_baseline_follow_up_2cat <- 
-  bdd_cases_tot |>
-  ggplot() +
-  aes(x = baseline_age, y = follow_up, colour = study_2cat) +
-  geom_point(alpha = 0.6) +
-  scale_color_brewer(palette = "Dark2") +
-  theme_minimal() + 
-  theme(plot.title = element_text(hjust = 0.5)) +
-  geom_rect(aes(xmin = 45, xmax = 66, ymin = 0, ymax = 575),
-            fill = NA, color = "chartreuse3", linetype = "dashed", linewidth = 1) +
-  annotate("text", x = 45.5, y = 575, label = "Stratified to baseline age > 45 years",
-           hjust = 0, vjust = -0.5, size = 4, color = "chartreuse3") +
-  
-  geom_rect(aes(xmin = 15, xmax = 66, ymin = 0, ymax = 300),
-            fill = NA, color = "darkorchid", linetype = "dashed", linewidth = 1) +
-  annotate("text", x = 16, y = 300, label = "Stratified to follow-up < 300 months",
-           hjust = 0, vjust = -0.5, size = 4, color = "darkorchid") +
-  
-  geom_rect(aes(xmin = 40, xmax = 66, ymin = 0, ymax = 350),
-            fill = NA, color = "darksalmon", linetype = "dashed", linewidth = 1) +
-  annotate("text", x = 41, y = 350, label = "Stratified to baseline age > 40 years and follow-up < 350 months",
-           hjust = 0, vjust = -0.5, size = 4, color = "darksalmon") +
-  
-  labs(x = "Age at baseline (years)", 
-       y = "Follow-up (months)", 
-       colour = "Cohorts")
-
-plot_justif_2cat <- (plot_baseline_age_2cat + plot_follow_up_2cat + plot_diagnosis_age_2cat)/plot_baseline_follow_up_2cat + plot_layout()
-
-cor_test_sensi1 <- 
-  bdd_cases_tot |> 
-  select(baseline_age, diagnosis_age, follow_up)
-cor_test_sensi1 <- 
-  cor(cor_test_sensi1, 
-      use = "pairwise.complete.obs", 
-      method = "pearson")
-
-rm(plot_baseline_age, plot_follow_up, plot_diagnosis_age, plot_baseline_follow_up, 
-   plot_baseline_age_2cat, plot_follow_up_2cat,  plot_diagnosis_age_2cat, plot_baseline_follow_up_2cat)
-         
-
-## analysis ----
-### with adjustment for study (4 cat) ----
-model2_cox_sd_sensi1 <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula <- as.formula(paste("surv_obj_tot ~", expl, "+ study +",              # set the formulas              
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_tot) |> summary()            # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi1_tot", 
-    model = "adjusted", 
-    cohort_adj = "adjusted",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi1_sauf_MFH <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula <- as.formula(paste("surv_obj_tot_sauf_MFH ~", expl, "+ study +",            # set the formulas              
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_tot_sauf_MFH) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi1_tot_sauf_MFH", 
-    model = "adjusted", 
-    cohort_adj = "adjusted",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi1_red_purple <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula <- as.formula(paste("surv_obj_red_purple ~", expl, "+ study +",            # set the formulas              
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_red_purple) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi1_red_purple", 
-    model = "adjusted", 
-    cohort_adj = "adjusted",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi1_red_green <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula <- as.formula(paste("surv_obj_red_green ~", expl, "+ study +",            # set the formulas              
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_red_green) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi1_red_green", 
-    model = "adjusted", 
-    cohort_adj = "adjusted",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi1_red_orange <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula <- as.formula(paste("surv_obj_red_orange ~", expl, "+ study +",            # set the formulas              
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_red_orange) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi1_red_orange", 
-    model = "adjusted", 
-    cohort_adj = "adjusted",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-### with adjustment for study (2 cat) ----
-model2_cox_sd_sensi0 <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula <- as.formula(paste("surv_obj_tot ~", expl, "+ study_2cat +",            # set the formulas              
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_tot) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi1_tot", 
-    model = "adjusted", 
-    cohort_adj = "adjusted (2 cat)",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi0_sauf_MFH <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula <- as.formula(paste("surv_obj_tot_sauf_MFH ~", expl, "+ study_2cat +",            # set the formulas              
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_tot_sauf_MFH) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi1_tot_sauf_MFH", 
-    model = "adjusted", 
-    cohort_adj = "adjusted (2 cat)",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi0_red_purple <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula <- as.formula(paste("surv_obj_red_purple ~", expl, "+ study_2cat +",            # set the formulas              
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_red_purple) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi1_red_purple", 
-    model = "adjusted", 
-    cohort_adj = "adjusted (2 cat)",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi0_red_green <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula <- as.formula(paste("surv_obj_red_green ~", expl, "+ study_2cat +",            # set the formulas              
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_red_green) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi1_red_green", 
-    model = "adjusted", 
-    cohort_adj = "adjusted (2 cat)",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi0_red_orange <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula <- as.formula(paste("surv_obj_red_orange ~", expl, "+ study_2cat +",            # set the formulas              
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_red_orange) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi1_red_orange", 
-    model = "adjusted", 
-    cohort_adj = "adjusted (2 cat)",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-
-### without adjustment for study ----
-model2_cox_sd_sensi2 <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula <- as.formula(paste("surv_obj_tot ~", expl, "+",           # set the formulas              
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_tot) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi1_tot", 
-    model = "adjusted", 
-    cohort_adj = "not adjusted",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi2_sauf_MFH <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula <- as.formula(paste("surv_obj_tot_sauf_MFH ~", expl, "+ ",            # set the formulas              
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_tot_sauf_MFH) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi1_tot_sauf_MFH", 
-    model = "adjusted", 
-    cohort_adj = "not adjusted",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi2_red_purple <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula <- as.formula(paste("surv_obj_red_purple ~", expl,  "+",          # set the formulas              
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_red_purple) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi1_red_purple", 
-    model = "adjusted", 
-    cohort_adj = "not adjusted",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi2_red_green <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula <- as.formula(paste("surv_obj_red_green ~", expl,  "+",          # set the formulas              
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_red_green) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi1_red_green", 
-    model = "adjusted", 
-    cohort_adj = "not adjusted",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi2_red_orange <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula <- as.formula(paste("surv_obj_red_orange ~", expl,  "+",           # set the formulas              
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_red_orange) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi1_red_orange", 
-    model = "adjusted", 
-    cohort_adj = "not adjusted",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-### with interaction on cohort ----
-model2_cox_sd_sensi1_interac <- map_dfr(POPs_group_sd_bis, function(expl) {
-  
-  formula <- as.formula(paste("surv_obj_tot ~", expl, "* study +",            # set the formulas              
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_tot) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi1_tot_interaction", 
-    model = "adjusted", 
-    cohort_adj = "interaction",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-
-### assemblage ----
-results_sensi1 <-       
-  bind_rows(
-    model2_cox_sd_danish, # Danish main analysis
-    model2_cox_sd_finnish_raw, 
-    
-    model2_cox_sd_sensi0, 
-    model2_cox_sd_sensi0_sauf_MFH, 
-    model2_cox_sd_sensi0_red_purple, 
-    model2_cox_sd_sensi0_red_green, 
-    model2_cox_sd_sensi0_red_orange, 
-    
-    model2_cox_sd_sensi1, 
-    model2_cox_sd_sensi1_sauf_MFH, 
-    model2_cox_sd_sensi1_red_purple, 
-    model2_cox_sd_sensi1_red_green, 
-    model2_cox_sd_sensi1_red_orange, 
-    
-    model2_cox_sd_sensi2, 
-    model2_cox_sd_sensi2_sauf_MFH, 
-    model2_cox_sd_sensi2_red_purple, 
-    model2_cox_sd_sensi2_red_green, 
-    model2_cox_sd_sensi2_red_orange, 
-    model2_cox_sd_sensi1_interac) |>
-  mutate(
-    HR = exp(coef),
-    lower_CI = exp(coef - 1.96 * se),
-    upper_CI = exp(coef + 1.96 * se)) |>
-  select(study, model, cohort_adj, explanatory, term, HR, lower_CI, upper_CI, "p-value") |>
-  mutate(
-    term = case_when(
-      str_detect(term, "FMC") ~ "FMC",
-      str_detect(term, "FMCF") ~ "FMCF",
-      str_detect(term, "MFH") ~ "MFH", 
-      .default = "Danish"), 
-    explanatory = gsub("_sd", "", explanatory), 
-    explanatory = gsub("_quart", "", explanatory), 
-    HR = as.numeric(sprintf("%.1f", HR)),
-    lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
-    upper_CI = as.numeric(sprintf("%.1f", upper_CI)),, 
-    `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
-    `p-value_raw` = `p-value`, 
-    `p-value_shape` = ifelse(`p-value_raw`<0.05, "p-value<0.05", "p-value≥0.05"), 
-    `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")), 
-    `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
-  select(study, model, cohort_adj, explanatory, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI)
-
-POPs_sd_ALS_figure_sensi1_not_adjusted <- 
-  results_sensi1 |>
-  filter(!explanatory == 'ΣPBDE') |>
-  filter(study %in% c("Danish", "Finnish", "sensi1_tot", "sensi1_red_orange")) |>
-  mutate(
-    study =  fct_relevel(study, 
-                         "Danish", "Finnish", "sensi1_tot", "sensi1_red_orange"
-                         # "sensi1_tot_sauf_MFH", "sensi1_red_purple", "sensi1_red_green", 
-                         ), 
-    study = fct_recode(study, 
-                       "Danish (n=166)\n not adjusted on cohort" = "Danish",
-                       "Finnish (n=97)\n not adjusted on cohort" = "Finnish",
-                       "All cohorts (n=263)\n not adjusted on cohort" = "sensi1_tot", 
-                       "Restricted to follow\nup < 350 months and \nbaseline age > 40 years \n(n=208)\n not adjusted on cohort" = "sensi1_red_orange"
-                       # "Restricted to \nfollow up < 300 months \n(n=204)" = "sensi1_red_purple",
-                       # "Restricted to \nbaseline age > 45 years \n(n=207)" = "sensi1_red_green",
-                       # "All cohorts expect MFH (n=252)" = "sensi1_tot_sauf_MFH"
-                       ),
-    explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
-    explanatory = fct_rev(explanatory),
-    explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish), 
-    cohort_adj = ifelse(is.na(cohort_adj), "not adjusted", cohort_adj), 
-    cohort_adj = factor(cohort_adj, levels = c("adjusted", "not adjusted"))) |>
-  filter(cohort_adj == "not adjusted") |>
-  arrange(explanatory) |> 
-  ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
-  
-  geom_pointrange(position = position_dodge(width = 0.5), size = 0.5) + 
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +                        # , scales = "free_x"
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
-        legend.position = "bottom", 
-        strip.text.y = element_text(hjust = 0.5)) +
-  coord_flip() +
-  facet_grid(~study)
-
-POPs_sd_ALS_figure_sensi1_adjusted <- 
-  results_sensi1 |>
-  filter(!explanatory == 'ΣPBDE') |>
-  filter(study %in% c("sensi1_tot", "sensi1_red_orange")) |>
-  mutate(
-    study =  fct_relevel(study, 
-                          "sensi1_tot", "sensi1_red_orange"
-                         # "sensi1_tot_sauf_MFH", "sensi1_red_purple", "sensi1_red_green", 
-    ), 
-    study = fct_recode(study, 
-                       "All cohorts (n=263)\n adjusted on cohort (4 cat)" = "sensi1_tot", 
-                       "Restricted to \nfollow up < 350 months and \nbaseline age > 40 years \n(n=208)\n adjusted on cohort (4 cat)" = "sensi1_red_orange"
-                       # "Restricted to \nfollow up < 300 months \n(n=204)" = "sensi1_red_purple",
-                       # "Restricted to \nbaseline age > 45 years \n(n=207)" = "sensi1_red_green",
-                       # "All cohorts expect MFH (n=252)" = "sensi1_tot_sauf_MFH"
-    ),
-    explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
-    explanatory = fct_rev(explanatory),
-    explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish), 
-    cohort_adj = ifelse(is.na(cohort_adj), "adjusted", cohort_adj), 
-    cohort_adj = factor(cohort_adj, levels = c("adjusted", "not adjusted"))) |>
-  filter(cohort_adj == "adjusted") |>
-  arrange(explanatory) |> 
-  ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
-  
-  geom_pointrange(position = position_dodge(width = 0.5), size = 0.5) + 
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +                        # , scales = "free_x"
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
-        legend.position = "bottom", 
-        strip.text.y = element_text(hjust = 0.5)) +
-  coord_flip() +
-  facet_grid(~study)
-
-POPs_sd_ALS_figure_sensi1_adjusted_2cat <- 
-  results_sensi1 |>
-  filter(!explanatory == 'ΣPBDE') |>
-  filter(study %in% c( "sensi1_tot", "sensi1_red_orange")) |>
-  mutate(
-    study =  fct_relevel(study, 
-                        "sensi1_tot", "sensi1_red_orange"
-                         # "sensi1_tot_sauf_MFH", "sensi1_red_purple", "sensi1_red_green", 
-    ), 
-    study = fct_recode(study, 
-                       "All cohorts (n=263)\n adjusted on cohort (2 cat)" = "sensi1_tot", 
-                       "Restricted to \nfollow up < 350 months and \nbaseline age > 40 years \n(n=208)\n adjusted on cohort (2 cat)" = "sensi1_red_orange"
-                       # "Restricted to \nfollow up < 300 months \n(n=204)" = "sensi1_red_purple",
-                       # "Restricted to \nbaseline age > 45 years \n(n=207)" = "sensi1_red_green",
-                       # "All cohorts expect MFH (n=252)" = "sensi1_tot_sauf_MFH"
-    ),
-    explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
-    explanatory = fct_rev(explanatory),
-    explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish), 
-    cohort_adj = ifelse(is.na(cohort_adj), "adjusted (2 cat)", cohort_adj), 
-    cohort_adj = factor(cohort_adj, levels = c("adjusted (2 cat)", "not adjusted"))) |>
-  filter(cohort_adj == "adjusted (2 cat)") |>
-  arrange(explanatory) |> 
-  ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
-  
-  geom_pointrange(position = position_dodge(width = 0.5), size = 0.5) + 
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +                        # , scales = "free_x"
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
-        legend.position = "bottom", 
-        strip.text.y = element_text(hjust = 0.5)) +
-  coord_flip() +
-  facet_grid(~study)
-
-
-rm(POPs_group_bis, POPs_group_quart_bis, POPs_group_sd_bis,  
-   bdd_cases_red_purple, bdd_cases_red_green, bdd_cases_red_orange, bdd_cases_tot_sauf_MFH,
-   surv_obj_tot, surv_obj_red_purple, surv_obj_red_green, surv_obj_red_orange, surv_obj_tot_sauf_MFH, 
-   model2_cox_sd_sensi0, model2_cox_sd_sensi0_red_purple, model2_cox_sd_sensi0_red_green, model2_cox_sd_sensi0_red_orange, 
-   model2_cox_sd_sensi1, model2_cox_sd_sensi1_red_purple, model2_cox_sd_sensi1_red_green, model2_cox_sd_sensi1_red_orange, 
-   model2_cox_sd_sensi2, model2_cox_sd_sensi2_red_purple, model2_cox_sd_sensi2_red_green, model2_cox_sd_sensi2_red_orange, 
-   model2_cox_sd_sensi0_sauf_MFH, model2_cox_sd_sensi1_interac, model2_cox_sd_sensi1_sauf_MFH, model2_cox_sd_sensi2_sauf_MFH)
-
-POPs_group_bis <- setdiff(POPs_group_sd, c("PCB_4_sd", 'ΣPBDE_sd'))
-pollutant_labels_bis <- set_names(
-  POPs_group_bis,
-  c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
-    "HCB", "ΣDDT", "β-HCH", "Σchlordane"))
-
-POPs_heatmap_cases_group <- 
-  bdd_cases_danish |> 
-  select(all_of(POPs_group_bis)) |>
-  rename(!!!pollutant_labels_bis) 
-POPs_heatmap_cases_group <- 
-  cor(POPs_heatmap_cases_group, 
-      use = "pairwise.complete.obs", 
-      method = "pearson")
-rm(POPs_group_bis, pollutant_labels_bis)
-
-
-# Sensitivity analysis 2 - effects of baseline age and duration baseline - diagnosis just among the Finnish cohorts ----
-# Testing the effects of age at baseline, diagnosis and duration between the two, just among the finnish cohorts
-bdd_cases_finnish <- bdd_cases_finnish |>
-  mutate(box_orange = ifelse(baseline_age > 40 &
-                        follow_up < 350, "in", "out"), 
-         box_purple = ifelse(follow_up<300, "in", "out"), 
-         box_green = ifelse(baseline_age>45, "in", "out"), 
-         box_orange = fct_relevel(box_orange, "out", "in"),
-         box_purple = fct_relevel(box_purple, "out", "in"), 
-         box_green = fct_relevel(box_green, "out", "in"))
-
-bdd_cases_danish <- bdd_cases_danish |>                                         # all the danish cases are in the boxs
-  mutate(box_orange = ifelse(baseline_age > 40 &
-                               follow_up < 350, "in", "out"), 
-         box_purple = ifelse(follow_up<300, "in", "out"), 
-         box_green = ifelse(baseline_age>45, "in", "out"), 
-         box_orange = fct_relevel(box_orange, "out", "in"),
-         box_purple = fct_relevel(box_purple, "out", "in"), 
-         box_green = fct_relevel(box_green, "out", "in"))
-
-tbl_distrib_among_green_box <- tbl_merge(
-  tbls = list(bdd_cases_finnish |>
-                filter(box_green == "in") |>
-                select(baseline_age) |>
-                tbl_summary(), 
-              bdd_cases_danish |>
-                filter(box_green == "in") |>
-                select(baseline_age) |>
-                tbl_summary()), 
-  tab_spanner = c("**Finnish cases in the green box (baseline age > 45 years)**", 
-                  "**Danish cases among the green box (baseline age > 45 years)**"))
-
-tbl_distrib_among_purple_box <- tbl_merge(
-  tbls = list(bdd_cases_finnish |>
-                filter(box_purple == "in") |>
-                select(follow_up) |>
-                tbl_summary(), 
-              bdd_cases_danish |>
-                filter(box_purple == "in") |>
-                select(follow_up) |>
-                tbl_summary()),
-  tab_spanner = c("**Finnish cases in the purple box (follow-up duration < 300 months)**", 
-                  "**Danish cases in the purple box (follow-up duration < 300 months)**"))
-
-tbl_distrib_among_orange_box <- tbl_merge(
-  tbls = list(
-    tbl_stack(
-      tbls = list(bdd_cases_finnish |>
-                    filter(box_orange == "in") |>
-                    select(baseline_age) |>
-                    tbl_summary(), 
-                  bdd_cases_finnish |>
-                    filter(box_orange == "in") |>
-                    select(follow_up) |>
-                    tbl_summary())), 
-    bdd_cases_danish |>
-      filter(box_orange == "in") |>
-      select(baseline_age, follow_up) |>
-      tbl_summary()), 
-  tab_spanner = c("**Finnish cases in the orange box (baseline age > 40 and follow-up duration < 350 months)**", 
-                  "**Danish cases in the orange box (baseline age > 40 and follow-up duration < 350 months)**"))
-
-
-model2_cox_sd_sensi2_finnish <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  formula <- as.formula(paste("surv_obj_finnish ~", expl, "+ ",                 # set the formulas
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_finnish) |> summary()        # run cox model
-  coefs <- model_summary$coefficients
-  tibble(
-    # creation of a table of results
-    study = "sensi2_finnish",
-    model = "adjusted",
-    box_adj = "not adjusted",
-    term = rownames(coefs),
-    explanatory = expl,
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"],
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-## orange box ----
-model2_cox_sd_sensi2_finnish_adj_orange <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  formula <- as.formula(paste("surv_obj_finnish ~", expl, "+ box_orange +",                    # set the formulas
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_finnish) |> summary()        # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi2_finnish",
-    model = "adjusted",
-    box_adj = "adj_orange",
-    term = rownames(coefs),
-    explanatory = expl,
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"],
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi2_finnish_in_orange <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  formula <- as.formula(paste("surv_obj ~", expl, "+",                          # set the formulas
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  bdd_cases_finnish_in <- bdd_cases_finnish |> filter(box_orange == "in")
-  
-  surv_obj <- Surv(time = bdd_cases_finnish_in$follow_up_death,                 # set the outcomes
-                   event = bdd_cases_finnish_in$status_death)
-  
-  model_summary <- coxph(formula, data = bdd_cases_finnish_in) |> summary()     # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi2_finnish",
-    model = "adjusted",
-    box_adj = "in_orange",
-    term = rownames(coefs),
-    explanatory = expl,
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"],
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi2_finnish_out_orange <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  formula <- as.formula(paste("surv_obj ~", expl, "+",                          # set the formulas
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  bdd_cases_finnish_out <- bdd_cases_finnish |> filter(box_orange == "out")
-  
-  surv_obj <- Surv(time = bdd_cases_finnish_out$follow_up_death,                # set the outcomes
-                   event = bdd_cases_finnish_out$status_death)
-  
-  model_summary <- coxph(formula, data = bdd_cases_finnish_out) |> summary()    # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi2_finnish",
-    model = "adjusted",
-    box_adj = "out_orange",
-    term = rownames(coefs),
-    explanatory = expl,
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"],
-    `p-value` = coefs[, "Pr(>|z|)"] ) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-## purple box ----
-model2_cox_sd_sensi2_finnish_adj_purple <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  formula <- as.formula(paste("surv_obj_finnish ~", expl, "+ box_purple +",                    # set the formulas
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_finnish) |> summary()        # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi2_finnish",
-    model = "adjusted",
-    box_adj = "adj_purple",
-    term = rownames(coefs),
-    explanatory = expl,
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"],
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi2_finnish_in_purple <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  formula <- as.formula(paste("surv_obj ~", expl, "+",                          # set the formulas
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  bdd_cases_finnish_in <- bdd_cases_finnish |> filter(box_purple == "in")
-  
-  surv_obj <- Surv(time = bdd_cases_finnish_in$follow_up_death,                 # set the outcomes
-                   event = bdd_cases_finnish_in$status_death)
-  
-  model_summary <- coxph(formula, data = bdd_cases_finnish_in) |> summary()     # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi2_finnish",
-    model = "adjusted",
-    box_adj = "in_purple",
-    term = rownames(coefs),
-    explanatory = expl,
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"],
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi2_finnish_out_purple <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  formula <- as.formula(paste("surv_obj ~", expl, "+",                          # set the formulas
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  bdd_cases_finnish_out <- bdd_cases_finnish |> filter(box_purple == "out")
-  
-  surv_obj <- Surv(time = bdd_cases_finnish_out$follow_up_death,                # set the outcomes
-                   event = bdd_cases_finnish_out$status_death)
-  
-  model_summary <- coxph(formula, data = bdd_cases_finnish_out) |> summary()    # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi2_finnish",
-    model = "adjusted",
-    box_adj = "out_purple",
-    term = rownames(coefs),
-    explanatory = expl,
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"],
-    `p-value` = coefs[, "Pr(>|z|)"] ) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-## green box ----
-model2_cox_sd_sensi2_finnish_adj_green <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  formula <- as.formula(paste("surv_obj_finnish ~", expl, "+ box_green +",                    # set the formulas
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula, data = bdd_cases_finnish) |> summary()        # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi2_finnish",
-    model = "adjusted",
-    box_adj = "adj_green",
-    term = rownames(coefs),
-    explanatory = expl,
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"],
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi2_finnish_in_green <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  formula <- as.formula(paste("surv_obj ~", expl, "+",                          # set the formulas
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  bdd_cases_finnish_in <- bdd_cases_finnish |> filter(box_green == "in")
-  
-  surv_obj <- Surv(time = bdd_cases_finnish_in$follow_up_death,                 # set the outcomes
-                   event = bdd_cases_finnish_in$status_death)
-  
-  model_summary <- coxph(formula, data = bdd_cases_finnish_in) |> summary()     # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi2_finnish",
-    model = "adjusted",
-    box_adj = "in_green",
-    term = rownames(coefs),
-    explanatory = expl,
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"],
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-model2_cox_sd_sensi2_finnish_out_green <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  formula <- as.formula(paste("surv_obj ~", expl, "+",                          # set the formulas
-                              paste(covariates_finnish, collapse = " + ")))
-  
-  bdd_cases_finnish_out <- bdd_cases_finnish |> filter(box_green == "out")
-  
-  surv_obj <- Surv(time = bdd_cases_finnish_out$follow_up_death,                # set the outcomes
-                   event = bdd_cases_finnish_out$status_death)
-  
-  model_summary <- coxph(formula, data = bdd_cases_finnish_out) |> summary()    # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "sensi2_finnish",
-    model = "adjusted",
-    box_adj = "out_green",
-    term = rownames(coefs),
-    explanatory = expl,
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"],
-    `p-value` = coefs[, "Pr(>|z|)"] ) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results
-})
-
-results_sensi2 <-
-  bind_rows(
-    model2_cox_sd_sensi2_finnish,
-    model2_cox_sd_sensi2_finnish_adj_orange,
-    model2_cox_sd_sensi2_finnish_in_orange,
-    model2_cox_sd_sensi2_finnish_out_orange,
-    model2_cox_sd_sensi2_finnish_adj_purple,
-    model2_cox_sd_sensi2_finnish_in_purple,
-    model2_cox_sd_sensi2_finnish_out_purple,
-    model2_cox_sd_sensi2_finnish_adj_green,
-    model2_cox_sd_sensi2_finnish_in_green,
-    model2_cox_sd_sensi2_finnish_out_green) |>
-  mutate(
-    HR = exp(coef),
-    lower_CI = exp(coef - 1.96 * se),
-    upper_CI = exp(coef + 1.96 * se)) |>
-  mutate(
-    explanatory = gsub("_sd", "", explanatory),
-    HR = as.numeric(sprintf("%.1f", HR)),
-    lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
-    upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
-    `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
-    `p-value_raw` = `p-value`,
-    `p-value_shape` = ifelse(`p-value_raw` < 0.05, "p-value<0.05", "p-value≥0.05"),
-    `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")),
-    `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
-  select(
-    study, model, box_adj, explanatory, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`,
-    lower_CI,  upper_CI)
-
-rm(model2_cox_sd_sensi2_finnish,
-  model2_cox_sd_sensi2_finnish_adj_orange,
-  model2_cox_sd_sensi2_finnish_in_orange,
-  model2_cox_sd_sensi2_finnish_out_orange,
-  model2_cox_sd_sensi2_finnish_adj_purple,
-  model2_cox_sd_sensi2_finnish_in_purple,
-  model2_cox_sd_sensi2_finnish_out_purple,
-  model2_cox_sd_sensi2_finnish_adj_green,
-  model2_cox_sd_sensi2_finnish_in_green,
-  model2_cox_sd_sensi2_finnish_out_green)
-
-POPs_sd_ALS_figure_sensi2_finnish_orange <-
-  results_sensi2 |>
-  filter(box_adj %in% c("not adjusted", "adj_orange", "in_orange", "out_orange")) |>
-  mutate(
-    box_adj =  fct_relevel(box_adj, "not adjusted", "adj_orange", "in_orange", "out_orange"),
-    box_adj = fct_recode(
-      box_adj,
-      "Not adjusted on baseline age>40\n& follow up<350 (Y/N, n=97)\nMain analysis" = "not adjusted",
-      "Adjusted on baseline age>40 &\nfollow up<350 (Y/N, n=97)" = "adj_orange",
-      "Stratified to baseline age>40 &\nfollow up<350 (n=41)" = "in_orange",
-      "Stratified to baseline age<40 &\nfollow up>350 (n=56)" = "out_orange"),
-    explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
-    explanatory = fct_rev(explanatory),
-    explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |>
-  arrange(explanatory) |>
-  ggplot(aes(
-    x = explanatory,
-    y = HR,
-    ymin = lower_CI,
-    ymax = upper_CI,
-    color = `p-value_shape`)) +
-  geom_pointrange(position = position_dodge(width = 0.5), size = 0.5) +
-  geom_hline(yintercept = 1,
-             linetype = "dashed",
-             color = "black") +                        # , scales = "free_x"
-  scale_color_manual(values = c(
-    "p-value<0.05" = "red",
-    "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(
-    strip.text = element_text(face = "bold"),
-    legend.position = "bottom",
-    strip.text.y = element_text(hjust = 0.5)) +
-  coord_flip() +
-  facet_grid( ~ box_adj)
-  
-POPs_sd_ALS_figure_sensi2_finnish_purple <-
-  results_sensi2 |>
-  filter(box_adj %in% c("not adjusted", "adj_purple", "in_purple", "out_purple")) |>
-  mutate(
-    box_adj =  fct_relevel(box_adj, "not adjusted", "adj_purple", "in_purple", "out_purple"),
-    box_adj = fct_recode(
-      box_adj,
-      "Not adjusted on follow up<300\n(Y/N, n=97)\nMain analysis" = "not adjusted",
-      "Adjusted on follow up<300\n(Y/N, n=97)" = "adj_purple",
-      "Stratified to follow up<300 (n=42)" = "in_purple",
-      "Stratified to follow up>300 (n=55)" = "out_purple"),
-    explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
-    explanatory = fct_rev(explanatory),
-    explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |>
-  arrange(explanatory) |>
-  ggplot(aes(
-    x = explanatory,
-    y = HR,
-    ymin = lower_CI,
-    ymax = upper_CI,
-    color = `p-value_shape`)) +
-  geom_pointrange(position = position_dodge(width = 0.5), size = 0.5) +
-  geom_hline(yintercept = 1,
-             linetype = "dashed",
-             color = "black") +                        # , scales = "free_x"
-  scale_color_manual(values = c(
-    "p-value<0.05" = "red",
-    "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(
-    strip.text = element_text(face = "bold"),
-    legend.position = "bottom",
-    strip.text.y = element_text(hjust = 0.5)) +
-  coord_flip() +
-  facet_grid( ~ box_adj)
-
-POPs_sd_ALS_figure_sensi2_finnish_green <-
-  results_sensi2 |>
-  filter(box_adj %in% c("not adjusted", "adj_green", "in_green", "out_green")) |>
-  mutate(
-    box_adj =  fct_relevel(box_adj, "not adjusted", "adj_green", "in_green", "out_green"),
-    box_adj = fct_recode(
-      box_adj,
-      "Not adjusted on baseline\nage>45 (Y/N, n=97)\nMain analysis" = "not adjusted",
-      "Adjusted on baseline\nage>45 (Y/N, n=97)" = "adj_green",
-      "Stratified to baseline age>45\n(n=38)" = "in_green",
-      "Stratified to baseline age>45\n(n=59)" = "out_green"),
-    explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
-    explanatory = fct_rev(explanatory),
-    explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |>
-  arrange(explanatory) |>
-  ggplot(aes(
-    x = explanatory,
-    y = HR,
-    ymin = lower_CI,
-    ymax = upper_CI,
-    color = `p-value_shape`)) +
-  geom_pointrange(position = position_dodge(width = 0.5), size = 0.5) +
-  geom_hline(yintercept = 1,
-             linetype = "dashed",
-             color = "black") +                        # , scales = "free_x"
-  scale_color_manual(values = c(
-    "p-value<0.05" = "red",
-    "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(
-    strip.text = element_text(face = "bold"),
-    legend.position = "bottom",
-    strip.text.y = element_text(hjust = 0.5)) +
-  coord_flip() +
-  facet_grid( ~ box_adj)
-
-# Sensitivity analysis 3 - age at baseline as interaction term in the finnish cohort ----
-sensi3_interac_baseline_age <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  
-  formula_finnish <-                                                             # set the formulas
-    as.formula(paste("surv_obj_finnish ~", expl, "*baseline_age +",  
-                     paste(covariates_finnish, collapse = " + ")))
-  
-  
-  
-  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()# run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "Finnish", 
-    model = "adjusted", 
-    study_design = "interac baseline age continuous", 
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory) | term == "baseline_age")              # remove the covariates results 
-})
-
-sensi3_interac_follow_up <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  
-  bdd_cases_finnish <- bdd_cases_finnish |>
-    mutate(follow_up_years = follow_up / 12)
-  
-  formula_finnish <-                                                             # set the formulas
-    as.formula(paste("surv_obj_finnish ~", expl, "*follow_up_years +",  
-                     paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()# run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "Finnish", 
-    model = "adjusted", 
-    study_design = "interac follow up continuous", 
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory) | term == "follow_up")                 # remove the covariates results 
-})
-
-sensi3_interac_box_orange <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  
-  formula_finnish <-                                                             # set the formulas
-    as.formula(paste("surv_obj_finnish ~", expl, "*box_orange +",  
-                     paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()# run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "Finnish", 
-    model = "adjusted", 
-    study_design = "interac orange", 
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory) | term == "box_orangeout")             # remove the covariates results 
-})
-
-sensi3_interac_box_purple <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  
-  formula_finnish <-                                                             # set the formulas
-    as.formula(paste("surv_obj_finnish ~", expl, "*box_purple +",  
-                     paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()# run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "Finnish", 
-    model = "adjusted", 
-    study_design = "interac purple", 
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory) | term == "box_purpleout")             # remove the covariates results 
-})
-
-sensi3_interac_box_green <- map_dfr(POPs_group_sd_finnish, function(expl) {
-  
-  formula_finnish <-                                                             # set the formulas
-    as.formula(paste("surv_obj_finnish ~", expl, "*box_green +",  
-                     paste(covariates_finnish, collapse = " + ")))
-  
-  model_summary <- coxph(formula_finnish, data = bdd_cases_finnish) |> summary()# run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "Finnish", 
-    model = "adjusted", 
-    study_design = "interac green", 
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory) | term == "box_greenout")              # remove the covariates results 
-})
-
-results_sensi3 <-
-  bind_rows(
-    sensi3_interac_baseline_age,
-    sensi3_interac_follow_up,
-    sensi3_interac_box_orange,
-    sensi3_interac_box_purple,
-    sensi3_interac_box_green) |>
-  mutate(
-    HR = exp(coef),
-    lower_CI = exp(coef - 1.96 * se),
-    upper_CI = exp(coef + 1.96 * se)) |>
-  mutate(
-    explanatory = gsub("_sd", "", explanatory),
-    HR = as.numeric(sprintf("%.1f", HR)),
-    lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
-    upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
-    `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
-    `p-value_raw` = `p-value`,
-    `p-value_shape` = ifelse(`p-value_raw` < 0.05, "p-value<0.05", "p-value≥0.05"),
-    `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")),
-    `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
-  select(
-    study, model, study_design, explanatory, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`,
-    lower_CI,  upper_CI)
-
-rm(sensi3_interac_baseline_age,
-  sensi3_interac_follow_up,
-  sensi3_interac_box_orange,
-  sensi3_interac_box_purple,
-  sensi3_interac_box_green)
-
-POPs_sd_ALS_table_sensi3 <- 
-  results_sensi3 |>
-  filter(study == "Finnish") |>
-  select(study_design, explanatory, term, HR, "95% CI", "p-value_raw") |>
-  mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish), 
-         term = term |>
-           str_replace_all(c(
-             "baseline_age" = "Baseline age",
-             "follow_up" = "Follow-up",
-             "box_orangein" = "In of the orange box",
-             "box_purplein" = "In of the purple box",
-             "box_greenin" = "In of the green box", 
-             "_sd" = "")) |>
-           str_replace_all(setNames(names(POPs_group_labels_finnish), POPs_group_labels_finnish)), 
-         study_design = fct_recode(study_design, 
-                                   "Interaction with baseline age (continuous)" = "interac baseline age continuous",
-                                   "Interaction with follow up (continuous)" = "interac follow up continuous",
-                                   "Interaction with baseline age (categorical)" = "interac green",
-                                   "Interaction with both baseline age and follow-up duration (categorical)" = "interac orange",
-                                   "Interaction with follow-up (categorical)" = "interac purple"), 
-         `p-value` = if_else(sprintf("%.2f", `p-value_raw`) == "0.00", "<0.01", sprintf("%.2f", `p-value_raw`))) 
-
-POPs_sd_ALS_table_sensi3_baseline_age <- POPs_sd_ALS_table_sensi3 |>
-  filter(study_design %in% c("Interaction with baseline age (continuous)", 
-                             "Interaction with baseline age (categorical)")) |>
-  flextable(col_keys = c("study_design", "explanatory", "term",  "HR", "95% CI", "p-value")) |>
-  add_footer_lines(
-    "1All models are adjusted for age at diagnosis, sex, smoking, BMI and marital status. 
-  2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease plasma concentration of POPs.
-  3CI: Confidence interval.") |>
-  add_header(
-    "study_design" = "Study design",
-    "explanatory" = "Exposures", 
-    "term" = "Term") |>
-  merge_h(part = "header") |>
-  merge_v(j = "explanatory") |>
-  merge_v(j = "study_design") |>
-  theme_vanilla() |>
-  bold(j = "explanatory", part = "body") |>
-  bold(j = "study_design", part = "body") |>
-  align(align = "center", part = "all") |>
-  align(j = "explanatory", align = "left", part = "all") |> 
-  merge_at(j = "explanatory", part = "header") |>
-  merge_at(j = "term", part = "header") |>
-  merge_at(j = "study_design", part = "header") |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")|> 
-  color(i = ~ `p-value_raw` < 0.05, color = "red", part = "body")
-
-POPs_sd_ALS_table_sensi3_follow_up <- POPs_sd_ALS_table_sensi3 |>
-  filter(study_design %in% c("Interaction with follow up (continuous)", 
-                             "Interaction with follow-up (categorical)")) |>
-  flextable(col_keys = c("study_design", "explanatory", "term",  "HR", "95% CI", "p-value")) |>
-  add_footer_lines(
-    "1All models are adjusted for age at diagnosis, sex, smoking, BMI and marital status. 
-  2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease plasma concentration of POPs.
-  3CI: Confidence interval.") |>
-  add_header(
-    "study_design" = "Study design",
-    "explanatory" = "Exposures", 
-    "term" = "Term") |>
-  merge_h(part = "header") |>
-  merge_v(j = "explanatory") |>
-  merge_v(j = "study_design") |>
-  theme_vanilla() |>
-  bold(j = "explanatory", part = "body") |>
-  bold(j = "study_design", part = "body") |>
-  align(align = "center", part = "all") |>
-  align(j = "explanatory", align = "left", part = "all") |> 
-  merge_at(j = "explanatory", part = "header") |>
-  merge_at(j = "term", part = "header") |>
-  merge_at(j = "study_design", part = "header") |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")|> 
-  color(i = ~ `p-value_raw` < 0.05, color = "red", part = "body")
-
-
-POPs_sd_ALS_table_sensi3_baseline_age_follow_up <- POPs_sd_ALS_table_sensi3 |>
-  filter(study_design == "Interaction with both baseline age and follow-up duration (categorical)") |>
-  flextable(col_keys = c("study_design", "explanatory", "term",  "HR", "95% CI", "p-value")) |>
-  add_footer_lines(
-    "1All models are adjusted for age at diagnosis, sex, smoking, BMI and marital status. 
-  2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease plasma concentration of POPs.
-  3CI: Confidence interval.") |>
-  add_header(
-    "study_design" = "Study design",
-    "explanatory" = "Exposures", 
-    "term" = "Term") |>
-  merge_h(part = "header") |>
-  merge_v(j = "explanatory") |>
-  merge_v(j = "study_design") |>
-  theme_vanilla() |>
-  bold(j = "explanatory", part = "body") |>
-  bold(j = "study_design", part = "body") |>
-  align(align = "center", part = "all") |>
-  align(j = "explanatory", align = "left", part = "all") |> 
-  merge_at(j = "explanatory", part = "header") |>
-  merge_at(j = "term", part = "header") |>
-  merge_at(j = "study_design", part = "header") |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")|> 
-  color(i = ~ `p-value_raw` < 0.05, color = "red", part = "body")
-rm(POPs_sd_ALS_table_sensi3)
-
-# Sensitivity analysis 4 - effects of survival duration among the Danish population ----
-## justification ----
-bdd_cases_tot |>
-  select(study_2cat, follow_up_death) |>
-  tbl_summary(by = study_2cat)
-
-plot_follow_up_death <- ggplot(bdd_cases_tot, aes(x = "", y = follow_up_death)) +
-  geom_violin(fill = "gray90", color = "gray50", width = 1) +
-  geom_boxplot(width = 0.1, outlier.shape = NA, fill = NA, color = "black") +
-  geom_jitter(aes(color = study), width = 0.2, alpha = 0.6, size = 1.8) +
-  scale_color_brewer(palette = "Dark2") +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        plot.title = element_text(hjust = 0.5)) +
-  labs(x = NULL, y = "Follow-up from diagnosis to death or end of study (months)", title = "Distribution of the duration\nbetween diagnosis and death\nor end fo the study")
-
-plot_diagnosis_age <- ggplot(bdd_cases_tot, aes(x = "", y = diagnosis_age)) +
-  geom_violin(fill = "gray90", color = "gray50", width = 1) +
-  geom_boxplot(width = 0.1, outlier.shape = NA, fill = NA, color = "black") +
-  geom_jitter(aes(color = study), width = 0.2, alpha = 0.6, size = 1.8) +
-  scale_color_brewer(palette = "Dark2") +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  labs(x = NULL, y = "Age at diagnosis (years)", title = "Distribution of the subjects \nage at diagnosis")
-
-plot_diagnosis_follow_up_death <- 
-  ggplot(bdd_cases_tot) +
-  aes(x = diagnosis_age, y = follow_up_death, colour = study) +
-  geom_point(alpha = 0.6) +
-  scale_color_brewer(palette = "Dark2") +
-  theme_minimal() + 
-  theme(plot.title = element_text(hjust = 0.5)) +
-  geom_rect(aes(xmin = 43, xmax = 93, ymin = 0, ymax = 24),
-            fill = NA, color = "darkorchid", linetype = "dashed", linewidth = 1) +
-  annotate("text", x = 45, y = 24, label = "n=85 (51%)",
-           hjust = 0, vjust = -0.5, size = 5, color = "darkorchid") +
-  
-  labs(x = "Age at diagnosis (years)", 
-       y = "Duration between diagnosis and \ndeath or end of study (months)")
-
-plot_justif_sensi4 <- (plot_follow_up_death + plot_diagnosis_age)/plot_diagnosis_follow_up_death
-
-rm(plot_follow_up_death, plot_diagnosis_age, plot_diagnosis_follow_up_death)
-
-bdd_cases_danish <- 
-  bdd_cases_danish |>
-  mutate(follow_up_death_cat = ifelse(follow_up_death>23, "survival ≥ 24 months", "survival <  24 months"))
-
-bdd_cases_danish |> select(follow_up_death_cat) |> tbl_summary()
-
-## analysis ----
-model2_cox_sd_danish_sensi4_in <- map_dfr(POPs_group_sd, function(expl) {
-  
-  bdd_cases_danish <- 
-    bdd_cases_danish |> 
-    mutate(follow_up_death_cat = ifelse(follow_up_death>23, "survival ≥ 24 months", "survival <  24 months")) |>
-    filter(follow_up_death_cat == "survival <  24 months")
-  
-  surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,              # set the outcomes
-                          event = bdd_cases_danish$status_death)
-  
-  formula_danish <-                                                             # set the formulas
-    as.formula(paste("surv_obj_danish ~", expl, "+",  
-                     paste(covariates_danish, collapse = " + ")))
-  
-  model_summary <- coxph(formula_danish, data = bdd_cases_danish) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "Danish", 
-    model = "adjusted", 
-    study_design = "stratified to survival duration\n<  24 months (n=85, 51%)",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results 
-})
-
-
-model2_cox_sd_danish_sensi4_out <- map_dfr(POPs_group_sd, function(expl) {
-  
-  bdd_cases_danish <- 
-    bdd_cases_danish |> 
-    mutate(follow_up_death_cat = ifelse(follow_up_death>23, "survival ≥ 24 months", "survival <  24 months")) |>
-    filter(follow_up_death_cat == "survival ≥ 24 months")
-  
-  surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,                # set the outcomes
-                          event = bdd_cases_danish$status_death)
-  
-  formula_danish <-                                                             # set the formulas
-    as.formula(paste("surv_obj_danish ~", expl, "+",  
-                     paste(covariates_danish, collapse = " + ")))
-  
-  model_summary <- coxph(formula_danish, data = bdd_cases_danish) |> summary()  # run cox model
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    study = "Danish", 
-    model = "adjusted", 
-    study_design = "stratified to survival duration\n≥ 24 months (n=81, 49%)",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results 
-})
-
-
-results_sensi4 <-
-  bind_rows(
-    model2_cox_sd_danish_sensi4_in,
-    model2_cox_sd_danish_sensi4_out) |>
-  mutate(
-    HR = exp(coef),
-    lower_CI = exp(coef - 1.96 * se),
-    upper_CI = exp(coef + 1.96 * se)) |>
-  mutate(
-    explanatory = gsub("_sd", "", explanatory),
-    HR = as.numeric(sprintf("%.1f", HR)),
-    lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
-    upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
-    `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
-    `p-value_raw` = `p-value`,
-    `p-value_shape` = ifelse(`p-value_raw` < 0.05, "p-value<0.05", "p-value≥0.05"),
-    `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")),
-    `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
-  select(
-    study, model, study_design, explanatory, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`,
-    lower_CI,  upper_CI)
-
-rm(model2_cox_sd_danish_sensi4_in,
-  model2_cox_sd_danish_sensi4_out)
-
-## figure ----
-POPs_sd_ALS_figure_sensi4_danish <-
-  results_sensi4 |>
-  mutate(
-    explanatory = factor(explanatory, levels = POPs_group_labels),
-    explanatory = fct_rev(explanatory),
-    explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
-  arrange(explanatory) |>
-  ggplot(aes(
-    x = explanatory,
-    y = HR,
-    ymin = lower_CI,
-    ymax = upper_CI,
-    color = `p-value_shape`)) +
-  geom_pointrange(position = position_dodge(width = 0.5), size = 0.5) +
-  geom_hline(yintercept = 1,
-             linetype = "dashed",
-             color = "black") +                        # , scales = "free_x"
-  scale_color_manual(values = c(
-    "p-value<0.05" = "red",
-    "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(
-    strip.text = element_text(face = "bold"),
-    legend.position = "bottom",
-    strip.text.y = element_text(hjust = 0.5)) +
-  coord_flip() +
-  facet_grid( ~ study_design)
-
-
-# Sensitivity analysis 5 - mixture model in the Danish EPIC cohort ----
+# Sensitivity analysis 1 - mixture model in the Danish EPIC cohort ----
 ## Data prep ----
 bdd_cases_danish_bis <- bdd_danish |>
   filter (als == 1) |>
@@ -4040,7 +1081,7 @@ penalty_factor_quart <-                                                         
 
 ## LASSO POPs selection ----
 set.seed(1996)
-sensi5_lasso_sd_danish <- cv.glmnet(                                             # lasso + cross validation to choose the lamda parameter
+sensi1_lasso_sd_danish <- cv.glmnet(                                             # lasso + cross validation to choose the lamda parameter
   x = X_matrix_sd,                                                              # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -4050,12 +1091,12 @@ sensi5_lasso_sd_danish <- cv.glmnet(                                            
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10.
   penalty.factor = penalty_factor_sd)                                           # pre-set penalty factor because we want to force the model to select at least the covariates
 
-plot(sensi5_lasso_sd_danish)
-coef(sensi5_lasso_sd_danish, s = "lambda.min")                                   # lasso keeps only chlordane 
-coef(sensi5_lasso_sd_danish, s = "lambda.1se")  
+plot(sensi1_lasso_sd_danish)
+coef(sensi1_lasso_sd_danish, s = "lambda.min")                                   # lasso keeps only chlordane 
+coef(sensi1_lasso_sd_danish, s = "lambda.1se")  
 
 set.seed(1996)
-sensi5_lasso_quart_danish <- cv.glmnet(                                          # lasso + cross validation to choose the lamda parameter
+sensi1_lasso_quart_danish <- cv.glmnet(                                          # lasso + cross validation to choose the lamda parameter
   x = X_matrix_quart,                                                           # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -4065,13 +1106,13 @@ sensi5_lasso_quart_danish <- cv.glmnet(                                         
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10.
   penalty.factor = penalty_factor_quart)                                        # pre-set penalty factor because we want to force the model to select at least the covariates
 
-plot(sensi5_lasso_quart_danish)
-coef(sensi5_lasso_quart_danish, s = "lambda.min")                                # lasso doesn't keep any pollutant when they are quartiles
-coef(sensi5_lasso_quart_danish, s = "lambda.1se")  
+plot(sensi1_lasso_quart_danish)
+coef(sensi1_lasso_quart_danish, s = "lambda.min")                                # lasso doesn't keep any pollutant when they are quartiles
+coef(sensi1_lasso_quart_danish, s = "lambda.1se")  
 
 ## Ridge POPs selection ----
 set.seed(1996)
-sensi5_ridge_sd_danish <- cv.glmnet(                                             # ridge + cross validation to choose the lamda parameter
+sensi1_ridge_sd_danish <- cv.glmnet(                                             # ridge + cross validation to choose the lamda parameter
   x = X_matrix_sd,                                                              # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -4081,12 +1122,12 @@ sensi5_ridge_sd_danish <- cv.glmnet(                                            
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10. 
   penalty.factor = penalty_factor_sd)                                             
 
-plot(sensi5_ridge_sd_danish)
-coef(sensi5_ridge_sd_danish, s = "lambda.min")  
-coef(sensi5_ridge_sd_danish, s = "lambda.1se")  
+plot(sensi1_ridge_sd_danish)
+coef(sensi1_ridge_sd_danish, s = "lambda.min")  
+coef(sensi1_ridge_sd_danish, s = "lambda.1se")  
 
 set.seed(1996)
-sensi5_ridge_quart_danish <- cv.glmnet(                                          # ridge + cross validation to choose the lamda parameter
+sensi1_ridge_quart_danish <- cv.glmnet(                                          # ridge + cross validation to choose the lamda parameter
   x = X_matrix_quart,                                                           # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -4096,9 +1137,9 @@ sensi5_ridge_quart_danish <- cv.glmnet(                                         
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10. 
   penalty.factor = penalty_factor_quart)                                             
 
-plot(sensi5_ridge_quart_danish)
-coef(sensi5_ridge_quart_danish, s = "lambda.min")  
-coef(sensi5_ridge_quart_danish, s = "lambda.1se")  
+plot(sensi1_ridge_quart_danish)
+coef(sensi1_ridge_quart_danish, s = "lambda.min")  
+coef(sensi1_ridge_quart_danish, s = "lambda.1se")  
 
 ## Elastic net selection -----
 ### choose the best alpha ----
@@ -4130,7 +1171,7 @@ rm(alpha_grid, cv_results, cvm_min, i, cv_model, best_alpha)
 
 ### analysis ----
 set.seed(1996)
-sensi5_elastic_net_sd_danish <- cv.glmnet(                                       # elastic net + cross validation to choose the lambda parameter
+sensi1_elastic_net_sd_danish <- cv.glmnet(                                       # elastic net + cross validation to choose the lambda parameter
   x = X_matrix_sd,                                                              # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -4140,12 +1181,12 @@ sensi5_elastic_net_sd_danish <- cv.glmnet(                                      
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10. 
   penalty.factor = penalty_factor_sd)                          
 
-plot(sensi5_elastic_net_sd_danish)
-coef(sensi5_elastic_net_sd_danish, s = "lambda.min")                             # Elastic net keeps HCB and Σchlordane
-coef(sensi5_elastic_net_sd_danish, s = "lambda.1se")
+plot(sensi1_elastic_net_sd_danish)
+coef(sensi1_elastic_net_sd_danish, s = "lambda.min")                             # Elastic net keeps HCB and Σchlordane
+coef(sensi1_elastic_net_sd_danish, s = "lambda.1se")
 
 set.seed(1996)
-sensi5_elastic_net_quart_danish <- cv.glmnet(                                    # elastic net + cross validation to choose the lambda parameter
+sensi1_elastic_net_quart_danish <- cv.glmnet(                                    # elastic net + cross validation to choose the lambda parameter
   x = X_matrix_quart,                                                           # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -4155,9 +1196,9 @@ sensi5_elastic_net_quart_danish <- cv.glmnet(                                   
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10. 
   penalty.factor = penalty_factor_quart)                          
 
-plot(sensi5_elastic_net_quart_danish)
-coef(sensi5_elastic_net_quart_danish, s = "lambda.min")                          # elastic net doesn't keep any pollutant when they are quartiles
-coef(sensi5_elastic_net_quart_danish, s = "lambda.1se")
+plot(sensi1_elastic_net_quart_danish)
+coef(sensi1_elastic_net_quart_danish, s = "lambda.min")                          # elastic net doesn't keep any pollutant when they are quartiles
+coef(sensi1_elastic_net_quart_danish, s = "lambda.1se")
 rm(bdd_cases_danish_bis)
 
 ### new copollutant model with selected POPs ----
@@ -4174,7 +1215,7 @@ formula_danish <-                                                               
 model_summary <- 
   coxph(formula_danish, data = bdd_cases_danish) |> summary() 
 coefs <- model_summary$coefficients
-sensi5_model3_cox_sd_elastic_net_danish <- tibble(                                     # creation of a table of results
+sensi1_model3_cox_sd_elastic_net_danish <- tibble(                                     # creation of a table of results
   study = "Danish", 
   model = "copollutant_sd", 
   term = rownames(coefs),
@@ -4197,7 +1238,7 @@ formula_danish <-                                                               
 model_summary <- 
   coxph(formula_danish, data = bdd_cases_danish) |> summary() 
 coefs <- model_summary$coefficients
-sensi5_model3_cox_quart_elastic_net_danish <- tibble(                                  # creation of a table of results
+sensi1_model3_cox_quart_elastic_net_danish <- tibble(                                  # creation of a table of results
   study = "Danish", 
   model = "copollutant_quart", 
   term = rownames(coefs),
@@ -4301,7 +1342,7 @@ trend_copollutant <-
 
 
 ### ERS model avec les POP selectionnés par elastic net 0.4 ----
-coef(sensi5_elastic_net_sd_danish, s = "lambda.min")                            # Elastic net keeps HCB and Σchlordane
+coef(sensi1_elastic_net_sd_danish, s = "lambda.min")                            # Elastic net keeps HCB and Σchlordane
 cox_model <-                                                                    # regular co-pollutant cox model to get unpenalized coefficients 
   coxph(Surv(follow_up_death, status_death) ~ 
           OCP_HCB_sd + Σchlordane_sd + 
@@ -4326,10 +1367,10 @@ bdd_cases_danish <-
              labels = c("Q1", "Q2", "Q3", "Q4")))
 
 
-sensi5_cox_model_ERS_from_elastic_net_sd <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_sd + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
-model_summary <- summary(sensi5_cox_model_ERS_from_elastic_net_sd)
+sensi1_cox_model_ERS_from_elastic_net_sd <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_sd + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
+model_summary <- summary(sensi1_cox_model_ERS_from_elastic_net_sd)
 coefs <- model_summary$coefficients
-sensi5_cox_model_ERS_from_elastic_net_sd <- tibble(                                     # creation of a table of results
+sensi1_cox_model_ERS_from_elastic_net_sd <- tibble(                                     # creation of a table of results
   study = "Danish", 
   model = "ERS_sd", 
   term = rownames(coefs),
@@ -4339,10 +1380,10 @@ sensi5_cox_model_ERS_from_elastic_net_sd <- tibble(                             
   `p-value` = coefs[, "Pr(>|z|)"]) |>
   filter(str_detect(term, "_sd"))
 
-sensi5_cox_model_ERS_from_elastic_net_quart <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_quart + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
-model_summary <- summary(sensi5_cox_model_ERS_from_elastic_net_quart)
+sensi1_cox_model_ERS_from_elastic_net_quart <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_quart + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
+model_summary <- summary(sensi1_cox_model_ERS_from_elastic_net_quart)
 coefs <- model_summary$coefficients
-sensi5_cox_model_ERS_from_elastic_net_quart <- tibble(                                  # creation of a table of results
+sensi1_cox_model_ERS_from_elastic_net_quart <- tibble(                                  # creation of a table of results
   study = "Danish", 
   model = "ERS_quart", 
   term = rownames(coefs),
@@ -4356,11 +1397,11 @@ rm(cox_model, coefs, model_summary, weight_HCB, weight_Σchlordane)
 
 
 ### assemblage ----
-results_sensi5 <-
-  bind_rows(sensi5_model3_cox_sd_elastic_net_danish, 
-            sensi5_model3_cox_quart_elastic_net_danish, 
-            sensi5_cox_model_ERS_from_elastic_net_sd, 
-            sensi5_cox_model_ERS_from_elastic_net_quart) |>
+results_sensi1 <-
+  bind_rows(sensi1_model3_cox_sd_elastic_net_danish, 
+            sensi1_model3_cox_quart_elastic_net_danish, 
+            sensi1_cox_model_ERS_from_elastic_net_sd, 
+            sensi1_cox_model_ERS_from_elastic_net_quart) |>
   mutate(
     HR = exp(coef),
     lower_CI = exp(coef - 1.96 * se),
@@ -4387,14 +1428,14 @@ results_sensi5 <-
     study, model, explanatory, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`,
     lower_CI,  upper_CI)
 
-results_sensi5 <- left_join(results_sensi5, heterogeneity_copollutant_quart, 
+results_sensi1 <- left_join(results_sensi1, heterogeneity_copollutant_quart, 
                             by = c("study", "model", "explanatory"))
 
-results_sensi5 <- 
-  left_join(results_sensi5, trend_copollutant, 
+results_sensi1 <- 
+  left_join(results_sensi1, trend_copollutant, 
             by = c("study", "model", "explanatory")) 
 
-results_sensi5 <- results_sensi5 |>
+results_sensi1 <- results_sensi1 |>
   mutate(
     p.value_heterogeneity = ifelse(p.value_heterogeneity < 0.01, "<0.01", number(p.value_heterogeneity, accuracy = 0.01, decimal.mark = ".")), 
     p.value_heterogeneity = ifelse(p.value_heterogeneity == "1.00", ">0.99", p.value_heterogeneity), 
@@ -4411,11 +1452,11 @@ rm(outcome,
    heterogeneity_copollutant_quart, 
    trend_copollutant, 
    
-   sensi5_cox_model_ERS_from_elastic_net_sd, 
-   sensi5_cox_model_ERS_from_elastic_net_quart)
+   sensi1_cox_model_ERS_from_elastic_net_sd, 
+   sensi1_cox_model_ERS_from_elastic_net_quart)
 
 ### table sd copollutant ----
-POPs_sd_ALS_table_sensi5_danish <- results_sensi5 |>
+POPs_sd_ALS_table_sensi1_danish <- results_sensi1 |>
   filter(study == "Danish") |>
   filter(model == "copollutant_sd") |>
   select(explanatory, HR, "95% CI", "p-value") |>
@@ -4444,7 +1485,7 @@ POPs_sd_ALS_table_sensi5_danish <- results_sensi5 |>
 
 ### table quart copollutant ----
 quartile1_rows <- 
-  results_sensi5 |>
+  results_sensi1 |>
   filter(model == "copollutant_quart") |>
   distinct(model, explanatory) |>
   mutate(
@@ -4458,8 +1499,8 @@ quartile1_rows <-
          "Heterogeneity test" = "p.value_heterogeneity", 
          "Trend test" = "p.value_trend") 
 
-POPs_quart_ALS_table_sensi5_danish <- 
-  results_sensi5 |>
+POPs_quart_ALS_table_sensi1_danish <- 
+  results_sensi1 |>
   filter(study == "Danish") |>
   filter(model == "copollutant_quart") |>
   select("explanatory", "term", "HR", "95% CI", "p-value", 
@@ -4467,8 +1508,8 @@ POPs_quart_ALS_table_sensi5_danish <-
          "Trend test" = "p.value_trend") |>
   mutate(across(everything(), as.character))
 
-POPs_quart_ALS_table_sensi5_danish <- 
-  bind_rows(quartile1_rows, POPs_quart_ALS_table_sensi5_danish) |>
+POPs_quart_ALS_table_sensi1_danish <- 
+  bind_rows(quartile1_rows, POPs_quart_ALS_table_sensi1_danish) |>
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
   group_by(explanatory) |>
@@ -4508,8 +1549,8 @@ rm(quartile1_rows)
 
 
 ### figure sd copollutant ----
-POPs_sd_ALS_figure_sensi5_danish <-
-  results_sensi5 |>
+POPs_sd_ALS_figure_sensi1_danish <-
+  results_sensi1 |>
   filter(model == "copollutant_sd") |>
   mutate(
     # explanatory = factor(explanatory, levels = POPs_sd_selected_labels),
@@ -4538,8 +1579,8 @@ POPs_sd_ALS_figure_sensi5_danish <-
   coord_flip() 
 
 ### figure quart copollutant ----
-POPs_quart_ALS_figure_sensi5_danish <-
-  results_sensi5 |>
+POPs_quart_ALS_figure_sensi1_danish <-
+  results_sensi1 |>
   filter(model == "copollutant_quart") |>
   mutate(
     # explanatory = factor(explanatory, levels = POPs_sd_selected_labels),
@@ -4571,7 +1612,7 @@ POPs_quart_ALS_figure_sensi5_danish <-
   coord_flip() 
 
 ### table sd ERS ----
-POPs_sd_ALS_table_sensi5_ERS_danish <- results_sensi5 |>
+POPs_sd_ALS_table_sensi1_ERS_danish <- results_sensi1 |>
   filter(study == "Danish") |>
   filter(model == "ERS_sd") |>
   select(explanatory, HR, "95% CI", "p-value") |>
@@ -4600,7 +1641,7 @@ POPs_sd_ALS_table_sensi5_ERS_danish <- results_sensi5 |>
 
 ### table quart ERS ----
 quartile1_rows <- 
-  results_sensi5 |>
+  results_sensi1 |>
   filter(model == "ERS_quart") |>
   distinct(model, explanatory) |>
   mutate(
@@ -4610,15 +1651,15 @@ quartile1_rows <-
     `p-value` = "") |>
   select("explanatory", "term", "HR", "95% CI", "p-value") 
 
-POPs_quart_ALS_table_sensi5_ERS_danish <- 
-  results_sensi5 |>
+POPs_quart_ALS_table_sensi1_ERS_danish <- 
+  results_sensi1 |>
   filter(study == "Danish") |>
   filter(model == "ERS_quart") |>
   select("explanatory", "term", "HR", "95% CI", "p-value") |>
   mutate(across(everything(), as.character))
 
-POPs_quart_ALS_table_sensi5_ERS_danish <- 
-  bind_rows(quartile1_rows, POPs_quart_ALS_table_sensi5_ERS_danish) |>
+POPs_quart_ALS_table_sensi1_ERS_danish <- 
+  bind_rows(quartile1_rows, POPs_quart_ALS_table_sensi1_ERS_danish) |>
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99"), 
          explanatory = fct_recode(explanatory, 
                                   "Environmental risk score" = "ERS_score_from_elastic_net")) |>
@@ -4648,8 +1689,8 @@ POPs_quart_ALS_table_sensi5_ERS_danish <-
 rm(quartile1_rows)
 
 ### figure sd ERS ----
-POPs_sd_ALS_figure_sensi5_ERS_danish <-
-  results_sensi5 |>
+POPs_sd_ALS_figure_sensi1_ERS_danish <-
+  results_sensi1 |>
   filter(model == "ERS_sd") |>
   mutate(
     explanatory = fct_recode(explanatory, 
@@ -4677,8 +1718,8 @@ POPs_sd_ALS_figure_sensi5_ERS_danish <-
 
 
 ### figure quart ERS ----
-POPs_quart_ALS_figure_sensi5_ERS_danish <-
-  results_sensi5 |>
+POPs_quart_ALS_figure_sensi1_ERS_danish <-
+  results_sensi1 |>
   filter(model == "ERS_quart") |>
   mutate(
     explanatory = fct_recode(explanatory, 
@@ -4715,14 +1756,14 @@ rm(POPs_group_sd_bis, POPs_group_quart_bis,
    POPs_sd_selected, POPs_sd_selected_labels, 
    POPs_quart_selected, POPs_quart_selected_labels,
    formula_danish, model_summary, coefs, 
-   sensi5_lasso_quart_danish, 
-   sensi5_ridge_quart_danish, 
-   sensi5_elastic_net_quart_danish, 
-   sensi5_model3_cox_sd_elastic_net_danish, 
-   sensi5_model3_cox_quart_elastic_net_danish)
+   sensi1_lasso_quart_danish, 
+   sensi1_ridge_quart_danish, 
+   sensi1_elastic_net_quart_danish, 
+   sensi1_model3_cox_sd_elastic_net_danish, 
+   sensi1_model3_cox_quart_elastic_net_danish)
 
 
-# Sensitivity analysis 6 - elastic net on all the POPs (ungrouped) ----
+# Sensitivity analysis 2 - elastic net on all the POPs (ungrouped) ----
 ## Data prep ----
 bdd_cases_danish_bis <- bdd_danish |>
   filter (als == 1) |>
@@ -4779,7 +1820,7 @@ penalty_factor_quart <-                                                         
 
 ## LASSO POPs selection ----
 set.seed(1996)
-sensi6_lasso_sd_danish <- cv.glmnet(                                             # lasso + cross validation to choose the lamda parameter
+sensi2_lasso_sd_danish <- cv.glmnet(                                             # lasso + cross validation to choose the lamda parameter
   x = X_matrix_sd,                                                              # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -4789,12 +1830,12 @@ sensi6_lasso_sd_danish <- cv.glmnet(                                            
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10.
   penalty.factor = penalty_factor_sd)                                           # pre-set penalty factor because we want to force the model to select at least the covariates
 
-plot(sensi6_lasso_sd_danish)
-coef(sensi6_lasso_sd_danish, s = "lambda.min")                                   # lasso keeps only chlordane 
-coef(sensi6_lasso_sd_danish, s = "lambda.1se")  
+plot(sensi2_lasso_sd_danish)
+coef(sensi2_lasso_sd_danish, s = "lambda.min")                                   # lasso keeps only chlordane 
+coef(sensi2_lasso_sd_danish, s = "lambda.1se")  
 
 set.seed(1996)
-sensi6_lasso_quart_danish <- cv.glmnet(                                          # lasso + cross validation to choose the lamda parameter
+sensi2_lasso_quart_danish <- cv.glmnet(                                          # lasso + cross validation to choose the lamda parameter
   x = X_matrix_quart,                                                           # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -4804,9 +1845,9 @@ sensi6_lasso_quart_danish <- cv.glmnet(                                         
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10.
   penalty.factor = penalty_factor_quart)                                        # pre-set penalty factor because we want to force the model to select at least the covariates
 
-plot(sensi6_lasso_quart_danish)
-coef(sensi6_lasso_quart_danish, s = "lambda.min")                                # lasso doesn't keep any pollutant when they are quartiles
-coef(sensi6_lasso_quart_danish, s = "lambda.1se")  
+plot(sensi2_lasso_quart_danish)
+coef(sensi2_lasso_quart_danish, s = "lambda.min")                                # lasso doesn't keep any pollutant when they are quartiles
+coef(sensi2_lasso_quart_danish, s = "lambda.1se")  
 
 
 ## Elastic net selection -----
@@ -4839,7 +1880,7 @@ rm(alpha_grid, cv_results, cvm_min, i, cv_model, best_alpha)
 
 ### analysis ----
 set.seed(1996)
-sensi6_elastic_net_sd_danish <- cv.glmnet(                                       # elastic net + cross validation to choose the lambda parameter
+sensi2_elastic_net_sd_danish <- cv.glmnet(                                       # elastic net + cross validation to choose the lambda parameter
   x = X_matrix_sd,                                                              # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -4849,12 +1890,12 @@ sensi6_elastic_net_sd_danish <- cv.glmnet(                                      
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10. 
   penalty.factor = penalty_factor_sd)                          
 
-plot(sensi6_elastic_net_sd_danish)
-coef(sensi6_elastic_net_sd_danish, s = "lambda.min")                             # Elastic net keeps HCB, β-HCH and Σchlordane
-coef(sensi6_elastic_net_sd_danish, s = "lambda.1se")
+plot(sensi2_elastic_net_sd_danish)
+coef(sensi2_elastic_net_sd_danish, s = "lambda.min")                             # Elastic net keeps HCB, β-HCH and Σchlordane
+coef(sensi2_elastic_net_sd_danish, s = "lambda.1se")
 
 set.seed(1996)
-sensi6_elastic_net_quart_danish <- cv.glmnet(                                    # elastic net + cross validation to choose the lambda parameter
+sensi2_elastic_net_quart_danish <- cv.glmnet(                                    # elastic net + cross validation to choose the lambda parameter
   x = X_matrix_quart,                                                           # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -4864,9 +1905,9 @@ sensi6_elastic_net_quart_danish <- cv.glmnet(                                   
   nfolds = 10,                                                                  # number of folds for the cross validation process. Default is 10. 
   penalty.factor = penalty_factor_quart)                          
 
-plot(sensi6_elastic_net_quart_danish)
-coef(sensi6_elastic_net_quart_danish, s = "lambda.min")                          # elastic net doesn't keep any pollutant when they are quartiles
-coef(sensi6_elastic_net_quart_danish, s = "lambda.1se")
+plot(sensi2_elastic_net_quart_danish)
+coef(sensi2_elastic_net_quart_danish, s = "lambda.min")                          # elastic net doesn't keep any pollutant when they are quartiles
+coef(sensi2_elastic_net_quart_danish, s = "lambda.1se")
 rm(bdd_cases_danish_bis)
 
 ### new copollutant model with selected POPs ----
@@ -4884,7 +1925,7 @@ formula_danish <-                                                               
 model_summary <- 
   coxph(formula_danish, data = bdd_cases_danish) |> summary() 
 coefs <- model_summary$coefficients
-sensi6_model3_cox_sd_elastic_net_danish <- tibble(                                     # creation of a table of results
+sensi2_model3_cox_sd_elastic_net_danish <- tibble(                                     # creation of a table of results
   study = "Danish", 
   model = "copollutant_sd", 
   term = rownames(coefs),
@@ -4908,7 +1949,7 @@ formula_danish <-                                                               
 model_summary <- 
   coxph(formula_danish, data = bdd_cases_danish) |> summary() 
 coefs <- model_summary$coefficients
-sensi6_model3_cox_quart_elastic_net_danish <- tibble(                                  # creation of a table of results
+sensi2_model3_cox_quart_elastic_net_danish <- tibble(                                  # creation of a table of results
   study = "Danish", 
   model = "copollutant_quart", 
   term = rownames(coefs),
@@ -5124,7 +2165,7 @@ trend_copollutant <-
          study = "Danish")
 
 ### ERS model avec les POP selectionnés par elastic net 0.4 ----
-coef(sensi6_elastic_net_sd_danish, s = "lambda.min")                            # Elastic net keeps HCB and Σchlordane
+coef(sensi2_elastic_net_sd_danish, s = "lambda.min")                            # Elastic net keeps HCB and Σchlordane
 cox_model <-                                                                    # regular co-pollutant cox model to get unpenalized coefficients 
   coxph(Surv(follow_up_death, status_death) ~ 
           PCB_28_sd + PCB_52_sd + OCP_oxychlordane_sd + OCP_transnonachlor_sd + PBDE_47_sd + 
@@ -5146,10 +2187,10 @@ bdd_cases_danish <-
                                                    labels = c("Q1", "Q2", "Q3", "Q4")))
 
 
-sensi6_cox_model_ERS_from_elastic_net_sd <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_sd + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
-model_summary <-  summary(sensi6_cox_model_ERS_from_elastic_net_sd)
+sensi2_cox_model_ERS_from_elastic_net_sd <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_sd + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
+model_summary <-  summary(sensi2_cox_model_ERS_from_elastic_net_sd)
 coefs <- model_summary$coefficients
-sensi6_cox_model_ERS_from_elastic_net_sd <- tibble(                                     # creation of a table of results
+sensi2_cox_model_ERS_from_elastic_net_sd <- tibble(                                     # creation of a table of results
   study = "Danish", 
   model = "ERS_sd", 
   term = rownames(coefs),
@@ -5159,10 +2200,10 @@ sensi6_cox_model_ERS_from_elastic_net_sd <- tibble(                             
   `p-value` = coefs[, "Pr(>|z|)"]) |>
   filter(str_detect(term, "_sd"))
 
-sensi6_cox_model_ERS_from_elastic_net_quart <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_quart + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
-model_summary <- summary(sensi6_cox_model_ERS_from_elastic_net_quart)
+sensi2_cox_model_ERS_from_elastic_net_quart <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_quart + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
+model_summary <- summary(sensi2_cox_model_ERS_from_elastic_net_quart)
 coefs <- model_summary$coefficients
-sensi6_cox_model_ERS_from_elastic_net_quart <- tibble(                                  # creation of a table of results
+sensi2_cox_model_ERS_from_elastic_net_quart <- tibble(                                  # creation of a table of results
   study = "Danish", 
   model = "ERS_quart", 
   term = rownames(coefs),
@@ -5176,11 +2217,11 @@ rm(cox_model, pollutants, scaled_betas, Z, model_summary, coefs)
 
 
 ### assemblage ----
-results_sensi6 <-
-  bind_rows(sensi6_model3_cox_sd_elastic_net_danish, 
-            sensi6_model3_cox_quart_elastic_net_danish,
-            sensi6_cox_model_ERS_from_elastic_net_sd, 
-            sensi6_cox_model_ERS_from_elastic_net_quart) |>
+results_sensi2 <-
+  bind_rows(sensi2_model3_cox_sd_elastic_net_danish, 
+            sensi2_model3_cox_quart_elastic_net_danish,
+            sensi2_cox_model_ERS_from_elastic_net_sd, 
+            sensi2_cox_model_ERS_from_elastic_net_quart) |>
   mutate(
     HR = exp(coef),
     lower_CI = exp(coef - 1.96 * se),
@@ -5208,14 +2249,14 @@ results_sensi6 <-
     lower_CI,  upper_CI)
 
 
-results_sensi6 <- left_join(results_sensi6, heterogeneity_copollutant_quart, 
+results_sensi2 <- left_join(results_sensi2, heterogeneity_copollutant_quart, 
                             by = c("study", "model", "explanatory"))
 
-results_sensi6 <- 
-  left_join(results_sensi6, trend_copollutant, 
+results_sensi2 <- 
+  left_join(results_sensi2, trend_copollutant, 
             by = c("study", "model", "explanatory")) 
 
-results_sensi6 <- results_sensi6 |>
+results_sensi2 <- results_sensi2 |>
   mutate(
     p.value_heterogeneity = ifelse(p.value_heterogeneity < 0.01, "<0.01", number(p.value_heterogeneity, accuracy = 0.01, decimal.mark = ".")), 
     p.value_heterogeneity = ifelse(p.value_heterogeneity == "1.00", ">0.99", p.value_heterogeneity), 
@@ -5237,15 +2278,15 @@ rm(outcome,
    
    heterogeneity_copollutant_quart, 
    trend_copollutant, 
-   sensi6_model3_cox_sd_elastic_net_danish, 
-   sensi6_model3_cox_quart_elastic_net_danish,
-   sensi6_cox_model_ERS_from_elastic_net_sd, 
-   sensi6_cox_model_ERS_from_elastic_net_quart)
+   sensi2_model3_cox_sd_elastic_net_danish, 
+   sensi2_model3_cox_quart_elastic_net_danish,
+   sensi2_cox_model_ERS_from_elastic_net_sd, 
+   sensi2_cox_model_ERS_from_elastic_net_quart)
 
 
 ### table sd copollutant ----
-POPs_sd_ALS_table_sensi6_danish <- 
-  results_sensi6 |>
+POPs_sd_ALS_table_sensi2_danish <- 
+  results_sensi2 |>
   filter(study == "Danish") |>
   filter(model == "copollutant_sd") |>
   select(explanatory, HR, "95% CI", "p-value") |>
@@ -5273,7 +2314,7 @@ POPs_sd_ALS_table_sensi6_danish <-
 
 ### table quart copollutant ----
 quartile1_rows <- 
-  results_sensi6 |>
+  results_sensi2 |>
   filter(model == "copollutant_quart") |>
   distinct(model, explanatory) |>
   mutate(
@@ -5287,8 +2328,8 @@ quartile1_rows <-
          "Heterogeneity test" = "p.value_heterogeneity", 
          "Trend test" = "p.value_trend") 
 
-POPs_quart_ALS_table_sensi6_danish <- 
-  results_sensi6 |>
+POPs_quart_ALS_table_sensi2_danish <- 
+  results_sensi2 |>
   filter(study == "Danish") |>
   filter(model == "copollutant_quart") |>
   select("explanatory", "term", "HR", "95% CI", "p-value", 
@@ -5296,8 +2337,8 @@ POPs_quart_ALS_table_sensi6_danish <-
          "Trend test" = "p.value_trend") |>
   mutate(across(everything(), as.character))
 
-POPs_quart_ALS_table_sensi6_danish <- 
-  bind_rows(quartile1_rows, POPs_quart_ALS_table_sensi6_danish) |>
+POPs_quart_ALS_table_sensi2_danish <- 
+  bind_rows(quartile1_rows, POPs_quart_ALS_table_sensi2_danish) |>
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
   group_by(explanatory) |>
@@ -5336,8 +2377,8 @@ rm(quartile1_rows)
 
 
 ### figure sd copollutant ----
-POPs_sd_ALS_figure_sensi6_danish <-
-  results_sensi6 |>
+POPs_sd_ALS_figure_sensi2_danish <-
+  results_sensi2 |>
   filter(model == "copollutant_sd") |>
   mutate(
     explanatory = factor(explanatory, levels = POPs_sd_selected_labels),
@@ -5366,8 +2407,8 @@ POPs_sd_ALS_figure_sensi6_danish <-
   coord_flip() 
 
 ### figure quart copollutant ----
-POPs_quart_ALS_figure_sensi6_danish <-
-  results_sensi6 |>
+POPs_quart_ALS_figure_sensi2_danish <-
+  results_sensi2 |>
   filter(model == "copollutant_quart") |>
   mutate(
     explanatory = factor(explanatory, levels = POPs_quart_selected_labels),
@@ -5404,13 +2445,13 @@ rm(POPs_sd_selected, POPs_sd_selected_labels,
    X_matrix_sd, X_matrix_quart, 
    penalty_factor_sd, penalty_factor_quart, 
    formula_danish, model_summary, coefs, 
-   sensi6_lasso_quart_danish, 
-   #sensi6_model_ridge_quart_danish, 
-   sensi6_elastic_net_quart_danish)
+   sensi2_lasso_quart_danish, 
+   #sensi2_model_ridge_quart_danish, 
+   sensi2_elastic_net_quart_danish)
 
 
 ### table sd ERS ----
-POPs_sd_ALS_table_sensi6_ERS_danish <- results_sensi6 |>
+POPs_sd_ALS_table_sensi2_ERS_danish <- results_sensi2 |>
   filter(study == "Danish") |>
   filter(model == "ERS_sd") |>
   select(explanatory, HR, "95% CI", "p-value") |>
@@ -5439,7 +2480,7 @@ POPs_sd_ALS_table_sensi6_ERS_danish <- results_sensi6 |>
 
 ### table quart ERS ----
 quartile1_rows <- 
-  results_sensi6 |>
+  results_sensi2 |>
   filter(model == "ERS_quart") |>
   distinct(model, explanatory) |>
   mutate(
@@ -5449,15 +2490,15 @@ quartile1_rows <-
     `p-value` = "") |>
   select("explanatory", "term", "HR", "95% CI", "p-value") 
 
-POPs_quart_ALS_table_sensi6_ERS_danish <- 
-  results_sensi6 |>
+POPs_quart_ALS_table_sensi2_ERS_danish <- 
+  results_sensi2 |>
   filter(study == "Danish") |>
   filter(model == "ERS_quart") |>
   select("explanatory", "term", "HR", "95% CI", "p-value") |>
   mutate(across(everything(), as.character))
 
-POPs_quart_ALS_table_sensi6_ERS_danish <- 
-  bind_rows(quartile1_rows, POPs_quart_ALS_table_sensi6_ERS_danish) |>
+POPs_quart_ALS_table_sensi2_ERS_danish <- 
+  bind_rows(quartile1_rows, POPs_quart_ALS_table_sensi2_ERS_danish) |>
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99"), 
          explanatory = fct_recode(explanatory, 
                                   "Environmental risk score" = "ERS_score_from_elastic_net")) |>
@@ -5487,8 +2528,8 @@ POPs_quart_ALS_table_sensi6_ERS_danish <-
 rm(quartile1_rows)
 
 ### figure sd ERS ----
-POPs_sd_ALS_figure_sensi6_ERS_danish <-
-  results_sensi6 |>
+POPs_sd_ALS_figure_sensi2_ERS_danish <-
+  results_sensi2 |>
   filter(model == "ERS_sd") |>
   mutate(
     explanatory = fct_recode(explanatory, 
@@ -5516,8 +2557,8 @@ POPs_sd_ALS_figure_sensi6_ERS_danish <-
 
 
 ### figure quart ERS ----
-POPs_quart_ALS_figure_sensi6_ERS_danish <-
-  results_sensi6 |>
+POPs_quart_ALS_figure_sensi2_ERS_danish <-
+  results_sensi2 |>
   filter(model == "ERS_quart") |>
   mutate(
     explanatory = fct_recode(explanatory, 
@@ -5547,9 +2588,9 @@ POPs_quart_ALS_figure_sensi6_ERS_danish <-
   coord_flip() 
 
 
-# Sensitivity analysis 7 - follow-up duration ----
+# Sensitivity analysis 3 - follow-up duration ----
 # investigation du probleme de follow-up duration très courte par rapport à la réalité (3-5 ans)
-sensi7_figure <- bdd_cases_danish |>
+sensi3_figure <- bdd_cases_danish |>
   mutate(
     als_year = year(als_date), 
     status_death = as.factor(as.character(status_death)),
@@ -5569,17 +2610,10 @@ sensi7_figure <- bdd_cases_danish |>
     color = "Death statut at the end of the study") +
   theme_minimal()
 
-sensi7_table <- tbl_merge(
-  tbls = list(
-    bdd_cases_danish |> 
+sensi3_table <- bdd_cases_danish |> 
       select(follow_up_death, status_death) |>
       tbl_summary(by = status_death) |>
-      add_overall(), 
-    bdd_cases_finnish |> 
-      select(follow_up_death, status_death) |>
-      tbl_summary(by = status_death) |>
-      add_overall()), 
-  tab_spanner = c('**Danish EPIC**', "**Finnish Health Surveys**"))
+      add_overall()
 
 # Tables and figures ----
 ## Danish ----
@@ -5816,582 +2850,6 @@ POPs_ALS_qgcomp_positive_figure_danish <-
 
 rm(p, POPs_group_bis, pollutant_labels_bis)
 
-## Finnish ----
-### table covariates - als survival ----
-ref_rows <- covar_finnish |>
-  distinct(model, variable) |>
-  arrange(model, variable) |>
-  mutate(
-    term = c("continuous",  "continuous", "continuous", "1", "Married/cohabit","Male","Ever",
-             "continuous",  "continuous", "continuous", "1", "Married/cohabit","Male","Ever"),
-    HR = "-",
-    "95% CI" = "-",
-    `p-value` = "" ,
-    lower_CI = "", 
-    upper_CI = "")
-
-covar_ALS_table_finnish <- covar_finnish |>
-  mutate(
-    term = fct_recode(term, 
-                      "continuous" = "diagnosis_age",
-                      "continuous" = "bmi",
-                      "continuous" = "cholesterol",
-                      "2" = "level_urbanization2",
-                      "3" = "level_urbanization3",
-                      "4" = "level_urbanization4",
-                      "Other" = "marital_status_2catOther",
-                      "Female" = "sexFemale",
-                      "Never" = "smoking_2catNever"),
-    HR = sprintf("%.1f", HR),
-    lower_CI = sprintf("%.1f", lower_CI),
-    upper_CI = sprintf("%.1f", upper_CI), 
-    `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
-    `p-value_raw` = `p-value`, 
-    `p-value_shape` = ifelse(`p-value_raw`<0.05, "p-value<0.05", "p-value≥0.05"), 
-    `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")), 
-    `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) 
-
-covar_ALS_table_finnish <- 
-  bind_rows(ref_rows, covar_ALS_table_finnish) |>
-  mutate(
-    variable = fct_recode(variable, 
-                          "Sex" = "sex", 
-                          "Age at diagnosis (years)" = "diagnosis_age", 
-                          "Boby mass index (kg/m²)" = "bmi", 
-                          "Marital status" = "marital_status_2cat", 
-                          "Smoking status" = "smoking_2cat", 
-                          "Serum cholesterol (mmol/L)" = "cholesterol", 
-                          "Level of urbanization" = "level_urbanization")) |>
-  select(model, variable, term, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI) |>
-  mutate(
-    term = fct_relevel(term, 
-    "1", "2", "3", "4", "continuous", "Ever", "Never", "Male", "Female", "Married/cohabit",  "Other"), 
-    model = fct_relevel(model, "base", "adjusted"))|>
-  arrange(model, variable, term) |>
-  filter(!(term == "continuous" & HR == "-"))
-
-covar_ALS_table_finnish <- covar_ALS_table_finnish |>
-  select(-`p-value_raw`, -`p-value_shape`, -lower_CI, -upper_CI) |>
-  pivot_wider(names_from = model, values_from = c(HR, `95% CI`, `p-value`)) |>
-  select(variable, term, ends_with("base"), ends_with("adjusted")) |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |>
-  flextable() |>
-  add_header(
-    "variable" = "Characteristics", 
-    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model") |>
-  merge_h(part = "header") |>
-  merge_v(j = "variable") |>
-  theme_vanilla() |>
-  bold(j = "variable", part = "body") |>
-  align(align = "center", part = "all") |>
-  align(j = "variable", align = "left", part = "all") |> 
-  merge_at(j = "variable", part = "header") |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")
-  
-rm(ref_rows)
-
-### table POPs (sd) - als survival (meta-analaysis) ----
-POPs_sd_ALS_table_finnish <- main_results_POPs_ALS_survival |>
-  filter(study == "Finnish") |>
-  filter(study_design == "meta-analysis") |>
-  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity") |>
-  filter(term == "Continuous") |>
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity")) |>
-  select(explanatory, contains("base"), contains("adjusted"), contains("copollutant")) |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Hetero-geneity test" = "p.value_heterogeneity_base", 
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "Hetero-geneity test " = "p.value_heterogeneity_adjusted", 
-         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant", " Hetero-geneity test " = "p.value_heterogeneity_copollutant") |>
-  mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |> 
-  flextable() |>
-  add_footer_lines(
-    "1POPs were summed as follows: most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; ΣDDT corresponds to p,p’-DDT and p,p’-DDE, ΣHCH corresponds to β-HCH and γ-HCH and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
-    2All models are adjusted for age at diagnosis and sex. Adjusted models further account for smoking, BMI and marital status. 
-    3Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease serum concentration of POPs
-    4CI: Confidence interval.") |>
-  add_header(
-    "explanatory" = "Exposures", 
-    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", "Hetero-geneity test" = "Base model", 
-    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model", "Hetero-geneity test " = "Adjusted model", 
-    " HR " = "Copollutant model", " 95% CI " = "Copollutant model", " p-value " = "Copollutant model", " Hetero-geneity test " = "Copollutant model") |>
-  merge_h(part = "header") |>
-  merge_v(j = "explanatory") |>
-  theme_vanilla() |>
-  bold(j = "explanatory", part = "body") |>
-  align(align = "center", part = "all") |>
-  align(j = "explanatory", align = "left", part = "all") |> 
-  merge_at(j = "explanatory", part = "header") |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")
-
-### table POPs (quart) - als survival (meta-analaysis) ----
-quartile1_rows <- main_results_POPs_ALS_survival |>
-  filter(study == "Finnish") |>
-  filter(study_design == "meta-analysis") |>
-  distinct(model, explanatory) |>
-  mutate(
-    term = "quartile 1",
-    HR = "-",
-    "95% CI" = "-",
-    `p-value` = "", 
-    "p.value_heterogeneity" = "")
-
-POPs_quart_ALS_table_finnish <- main_results_POPs_ALS_survival |>
-  filter(study == "Finnish") |>
-  filter(study_design == "meta-analysis") |>
-  filter(!term == "Continuous") |>
-  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity") |>
-  mutate(across(everything(), as.character))
-
-POPs_quart_ALS_table_finnish <- 
-  bind_rows(quartile1_rows, POPs_quart_ALS_table_finnish) |>
-  mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
-  arrange(explanatory, term) |>
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity")) |>
-  select(explanatory, term, contains("base"), contains("adjusted"), contains("copollutant")) |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Hetero-geneity test" = "p.value_heterogeneity_base",
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "Hetero-geneity test " = "p.value_heterogeneity_adjusted",
-         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant", " Hetero-geneity test " = "p.value_heterogeneity_copollutant") |>
-  mutate(explanatory = factor(explanatory, levels = POPs_group_labels_finnish), 
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |>
-  arrange(explanatory) |>
-  flextable() |>
-  add_footer_lines(
-    "1POPs were summed as follows: most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; ΣDDT corresponds to p,p’-DDT and p,p’-DDE, ΣHCH corresponds to β-HCH and γ-HCH and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
-    2All models are adjusted for age at diagnosis and sex. Adjusted models further account for smoking, BMI and marital status.
-    3Estimated risk of death after ALS diagnosis when pre-disease serum concentration of POPs compared to quartile 1.
-    4CI: Confidence interval.") |>
-  add_header(
-    "explanatory" = "POPs", 
-    term = "Quartiles",
-    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", "Hetero-geneity test" = "Base model",
-    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model",  "Hetero-geneity test " = "Adjusted model",
-    " HR " = "Copollutant model", " 95% CI " = "Copollutant model", " p-value " = "Copollutant model", " Hetero-geneity test " = "Copollutant model") |>
-  merge_h(part = "header") |>
-  merge_v(j = "explanatory") |>
-  merge_v(j = "term") |>
-  theme_vanilla() |>
-  bold(j = "explanatory", part = "body") |>
-  align(align = "center", part = "all") |>
-  align(j = "explanatory", align = "left", part = "all") |> 
-  align(j = "term", align = "left", part = "all") |> 
-  merge_at(j = "explanatory", part = "header") |>
-  merge_at(j = "term", part = "header") |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")
-rm(quartile1_rows)
-
-### table POPs (sd) - als survival (raw analysis not adjusted on cohort) ----
-POPs_sd_ALS_table_finnish_raw <- main_results_POPs_ALS_survival |>
-  filter(study == "Finnish") |>
-  filter(!study_design == "meta-analysis") |>
-  select(model, explanatory, term, HR, "95% CI", "p-value") |>
-  filter(term == "Continuous") |>
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
-  select(explanatory, contains("base"), contains("adjusted"), contains("copollutant")) |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base",
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", 
-         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant") |>
-  mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |> 
-  flextable() |>
-  add_footer_lines(
-    "1POPs were summed as follows: most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; ΣDDT corresponds to p,p’-DDT and p,p’-DDE, ΣHCH corresponds to β-HCH and γ-HCH and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
-    2All models are adjusted for age and sex. Adjusted models further account for smoking, BMI and marital status. 
-    3Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease serum concentration of POPs.
-    4CI: Confidence interval.") |>
-  add_header(
-    "explanatory" = "Exposures", 
-    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", 
-    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model") |>
-  merge_h(part = "header") |>
-  merge_v(j = "explanatory") |>
-  theme_vanilla() |>
-  bold(j = "explanatory", part = "body") |>
-  align(align = "center", part = "all") |>
-  align(j = "explanatory", align = "left", part = "all") |> 
-  merge_at(j = "explanatory", part = "header") |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")
-
-
-### table POPs (quart) - als survival (raw analysis not adjusted on cohort) ----
-quartile1_rows <- main_results_POPs_ALS_survival |>
-  filter(study == "Finnish") |>
-  distinct(model, explanatory) |>
-  mutate(
-    term = "quartile 1",
-    HR = "-",
-    "95% CI" = "-",
-    `p-value` = "", 
-    "p.value_heterogeneity" = '', 
-    "p.value_trend" = '')
-
-POPs_quart_ALS_table_finnish_raw <- main_results_POPs_ALS_survival |>
-  filter(study == "Finnish") |>
-  filter(!term == "Continuous") |>
-  filter(study_design == "raw unadjusted on cohort") |>
-  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity", "p.value_trend") |>
-  mutate(across(everything(), as.character))
-
-POPs_quart_ALS_table_finnish_raw <- 
-  bind_rows(quartile1_rows, POPs_quart_ALS_table_finnish_raw) |>
-  mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
-  arrange(explanatory, term) |>
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity", "p.value_trend")) |>
-  select(explanatory, term, contains("base"), contains("adjusted"), contains("copollutant")) |>
-  group_by(explanatory) |>
-  mutate(p.value_heterogeneity_base = ifelse(term == 'quartile 1', p.value_heterogeneity_base[term == 'quartile 2'], ''), 
-         p.value_trend_base = ifelse(term == 'quartile 1', p.value_trend_base[term == 'quartile 2'], ''),
-         p.value_heterogeneity_adjusted = ifelse(term == 'quartile 1', p.value_heterogeneity_adjusted[term == 'quartile 2'], ''), 
-         p.value_trend_adjusted = ifelse(term == 'quartile 1', p.value_trend_adjusted[term == 'quartile 2'], ''),
-         p.value_heterogeneity_copollutant = ifelse(term == 'quartile 1', p.value_heterogeneity_copollutant[term == 'quartile 2'], ''), 
-         p.value_trend_copollutant = ifelse(term == 'quartile 1', p.value_trend_copollutant[term == 'quartile 2'], '')) |>
-  ungroup() |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Heterogeneity test" = "p.value_heterogeneity_base", "Trend test" = "p.value_trend_base",
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted",  "Heterogeneity test " = "p.value_heterogeneity_adjusted", "Trend test " = "p.value_trend_adjusted",
-         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant",  " Heterogeneity test " = "p.value_heterogeneity_copollutant", " Trend test " = "p.value_trend_copollutant") |>
-  mutate(explanatory = factor(explanatory, levels = POPs_group_labels_finnish), 
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |>
-  arrange(explanatory) |>
-  flextable() |>
-  add_footer_lines(
-    "1POPs were summed as follows: most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; ΣDDT corresponds to p,p’-DDT and p,p’-DDE, ΣHCH corresponds to β-HCH and γ-HCH and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
-    2All models are adjusted for sex and age at diagnosis. Adjusted models further account for smoking, BMI and marital status.
-    3Estimated risk of ALS death when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
-    4CI: Confidence interval.
-    5Heterogeneity tests in outcome value across POP quartiles, adjusted for sex and age at diagnosis.
-    6Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, adjusted for sex and age at diagnosis.
-    7Heterogeneity tests in outcome value across POP quartiles, adjusted for sex, age at diagnosis, smoking, BMI and marital status.
-    8Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
-  add_header(
-    "explanatory" = "Exposures", 
-    term = "Quartiles",
-    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model",  "Heterogeneity test" = "Base model",  "Trend test" = "Base model",
-    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model",  "Heterogeneity test " = "Adjusted model",  "Trend test " = "Adjusted model", 
-    " HR " = "Copollutant model", " 95% CI " = "Copollutant model", " p-value " = "Copollutant model",  " Heterogeneity test " = "Copollutant model",  " Trend test " = "Copollutant model") |>
-  merge_h(part = "header") |>
-  merge_v(j = "explanatory") |>
-  merge_v(j = "term") |>
-  theme_vanilla() |>
-  bold(j = "explanatory", part = "body") |>
-  align(align = "center", part = "all") |>
-  align(j = "explanatory", align = "left", part = "all") |> 
-  align(j = "term", align = "left", part = "all") |> 
-  merge_at(j = "explanatory", part = "header") |>
-  merge_at(j = "term", part = "header") |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")
-rm(quartile1_rows)
-
-### figure POPs (sd) - als survival (meta-analaysis) ----
-POPs_sd_ALS_figure_finnish <- main_results_POPs_ALS_survival |>
-  filter(study == "Finnish") |>
-  filter(study_design == "meta-analysis") |>
-  filter(term == "Continuous") |>
-  mutate(model = fct_recode(model, 
-                            "Base model" = "base",
-                            "Adjusted model" = "adjusted",
-                            "Copollutant model" = "copollutant"),
-         model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
-         explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
-         explanatory = fct_rev(explanatory),
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |>
-  arrange(explanatory) |> 
-  ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
-  geom_pointrange(size = 0.5) + 
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
-        legend.position = "bottom", 
-        strip.text.y = element_text(hjust = 0.5)) +
-  coord_flip()
-
-### figure POPs (quart) - als survival (meta-analaysis) ----
-POPs_quart_ALS_figure_finnish <- main_results_POPs_ALS_survival |>
-  filter(study == "Finnish") |>
-  filter(study_design == "meta-analysis") |>
-  filter(!term == "Continuous") |>
-  mutate(model = fct_recode(model, 
-                            "Base model" = "base",
-                            "Adjusted model" = "adjusted", 
-                            "Copollutant model" = "copollutant"),
-         model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
-         explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish), 
-         term = fct_rev(term)) |>
-  arrange(explanatory) |> 
-  ggplot(aes(x = term, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
-  geom_pointrange(size = 0.5) + 
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
-        legend.position = "bottom", 
-        strip.text.y.left = element_text(angle = 0, hjust = 0.5, vjust = 0.5)) +
-  coord_flip()
-
-### figure POPs (sd) - als survival (raw analysis not adjusted on cohort) ----
-POPs_sd_ALS_figure_finnish_raw <- main_results_POPs_ALS_survival |>
-  filter(study == "Finnish") |>
-  filter(study_design == "raw unadjusted on cohort") |>
-  filter(term == "Continuous") |>
-  mutate(model = fct_recode(model, 
-                            "Base model" = "base",
-                            "Adjusted model" = "adjusted",
-                            "Copollutant model" = "copollutant"),
-         model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
-         explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
-         explanatory = fct_rev(explanatory),
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish)) |>
-  arrange(explanatory) |> 
-  ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
-  geom_pointrange(size = 0.5) + 
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
-        legend.position = "bottom", 
-        strip.text.y = element_text(hjust = 0.5)) +
-  coord_flip()
-
-
-### figure POPs (quart) - als survival (raw analysis not adjusted on cohort) ----
-POPs_quart_ALS_figure_finnish_raw <- main_results_POPs_ALS_survival |>
-  filter(study == "Finnish") |>
-  filter(!term == "Continuous") |>
-  filter(study_design == "raw unadjusted on cohort") |>
-  mutate(model = fct_recode(model, 
-                            "Base model" = "base",
-                            "Adjusted model" = "adjusted", 
-                            "Copollutant model" = "copollutant"),
-         model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
-         explanatory = factor(explanatory, levels = POPs_group_labels_finnish),
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels_finnish), 
-         term = fct_rev(term)) |>
-  arrange(explanatory) |> 
-  ggplot(aes(x = term, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
-  geom_pointrange(size = 0.5) + 
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y") +  
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
-        legend.position = "bottom", 
-        strip.text.y.left = element_text(angle = 0, hjust = 0.5, vjust = 0.5)) +
-  coord_flip()
-
-
-### table POPs (sd) - ALS survival (qgcomp analysis) ----
-POPs_group_finnish_bis <-                                                 # remove the 4 most abundant PCB because they are already NDL-PCB
-  setdiff(POPs_group_finnish, 
-          c("OCP_β_HCH",  "OCP_γ_HCH", "PCB_4"))                    
-pollutant_labels_finnish_bis <- set_names(
-  c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
-    "HCB", "ΣDDT", "ΣHCH", "Σchlordane", "PeCB"), 
-  POPs_group_finnish_bis)
-
-p <- summary(qgcomp_boot_finnish)
-POPs_ALS_qgcomp_table_finnish <-                                                 # overall results
-  tibble(
-    study = "Finnish", 
-    model = "copollutant", 
-    HR = exp(qgcomp_boot_finnish$psi),
-    lower_CI = exp(qgcomp_boot_finnish$ci[1]), 
-    upper_CI = exp(qgcomp_boot_finnish$ci[2]), 
-    p_value = p$coefficients[1, "Pr(>|z|)"]) |>
-  mutate(
-    HR = sprintf("%.1f", HR),
-    lower_CI = sprintf("%.2f", lower_CI),
-    upper_CI = sprintf("%.2f", upper_CI),
-    `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''), 
-    `p-value` = ifelse(p_value < 0.01, "<0.01", number(p_value, accuracy = 0.01, decimal.mark = ".")), 
-    `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
-  select(study, model, HR, `95% CI`, `p-value`)
-
-### figure POPs (sd) - ALS survival (qgcomp analysis) ----
-POPs_ALS_qgcomp_figure_finnish <- 
-  tibble(
-    pollutant = c(names(qgcomp_noboot_finnish$pos.weights), names(qgcomp_noboot_finnish$neg.weights)),
-    weight = c(qgcomp_noboot_finnish$pos.weights, - qgcomp_noboot_finnish$neg.weights)) |>
-  mutate(
-    pollutant_label = pollutant_labels_finnish_bis[pollutant] %||% pollutant,
-    pollutant_label = factor(pollutant_label, levels = rev(pollutant_labels_finnish_bis))) |>
-  ggplot(
-    aes(x = weight, y = pollutant_label, fill = weight > 0)) +
-  geom_col(show.legend = FALSE) +
-  labs(y = "Exposures", x = "Negative weights                             Positive weights") +
-  scale_fill_manual(values = c("TRUE" = "tomato", "FALSE" = "steelblue")) +
-  theme_lucid()
-
-rm(qgcomp_boot_finnish, qgcomp_noboot_finnish, p, POPs_group_finnish_bis, pollutant_labels_finnish_bis)
-
-
-## Metanalysis ----
-POPs_group_labels_metanalysis <- c(
-  "Most prevalent PCBs" = "PCB_4",
-  "Dioxin-like PCBs" = "PCB_DL",
-  "Non dioxin-like PCBs" = "PCB_NDL",
-  "HCB" = "OCP_HCB",
-  "ΣDDT" = "ΣDDT",
-  "β-HCH" = "OCP_β_HCH",
-  "Σchlordane" = "Σchlordane")
-
-### table POPs (sd) - als survival ----
-POPs_sd_ALS_table_metanalysis <- main_results_POPs_ALS_survival |>
-  filter(study == "Metanalysis") |>
-  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity") |>
-  filter(term == "Continuous") |>
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity")) |>
-  select(explanatory, contains("base"), contains("adjusted"), contains("copollutant")) |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Hetero-geneity test" = "p.value_heterogeneity_base",
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "Hetero-geneity test " = "p.value_heterogeneity_adjusted",
-         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant", " Hetero-geneity test " = "p.value_heterogeneity_copollutant") |>
-  mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels_metanalysis)) |> 
-  flextable() |>
-  add_footer_lines(
-    "1POPs were summed as follows: most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; ΣDDT corresponds to p,p’-DDT and p,p’-DDE, ΣHCH corresponds to β-HCH and γ-HCH, ΣPBDE corresponds to PBDEs 47, 99, 153 and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
-    2Base models were all adjusted for age at diagnosis and sex. Adjusted models all further account for smoking, BMI and marital status. 
-    3Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease serum concentration of POPs.
-    4CI: Confidence interval.") |>
-  add_header(
-    "explanatory" = "Exposures", 
-    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", "Hetero-geneity test" = "Base model",
-    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model", "Hetero-geneity test " = 'Adjusted model',
-    " HR " = "Copollutant model", " 95% CI " = "Copollutant model", " p-value " = "Copollutant model", " Hetero-geneity test " = 'Copollutant model') |>
-  merge_h(part = "header") |>
-  merge_v(j = "explanatory") |>
-  theme_vanilla() |>
-  bold(j = "explanatory", part = "body") |>
-  align(align = "center", part = "all") |>
-  align(j = "explanatory", align = "left", part = "all") |> 
-  merge_at(j = "explanatory", part = "header") |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")
-
-### table POPs (quart) - als survival ----
-quartile1_rows <- main_results_POPs_ALS_survival |>
-  filter(study == "Metanalysis") |>
-  distinct(model, explanatory) |>
-  mutate(
-    term = "quartile 1",
-    HR = "-",
-    "95% CI" = "-",
-    `p-value` = "", 
-    "p.value_heterogeneity" = "")
-
-POPs_quart_ALS_table_metanalysis <- main_results_POPs_ALS_survival |>
-  filter(study == "Metanalysis") |>
-  filter(!term == "Continuous") |>
-  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity") |>
-  mutate(across(everything(), as.character))
-
-POPs_quart_ALS_table_metanalysis <- 
-  bind_rows(quartile1_rows, POPs_quart_ALS_table_metanalysis) |>
-  mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
-  arrange(explanatory, term) |>
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity")) |>
-  select(explanatory, term, contains("base"), contains("adjusted"), contains("copollutant")) |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Hetero-geneity test" = "p.value_heterogeneity_base",
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "Hetero-geneity test " = "p.value_heterogeneity_adjusted",
-         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant", " Hetero-geneity test " = "p.value_heterogeneity_copollutant") |>
-  mutate(explanatory = factor(explanatory, levels = POPs_group_labels_metanalysis), 
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels_metanalysis)) |>
-  arrange(explanatory) |>
-  flextable() |>
-  add_footer_lines(
-  "1POPs were summed as follows: most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; ΣDDT corresponds to p,p’-DDT and p,p’-DDE, ΣHCH corresponds to β-HCH and γ-HCH, ΣPBDE corresponds to PBDEs 47, 99, 153 and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
-  2Base models were all adjusted for age at diagnosis and sex. Adjusted models all further account for smoking, BMI and marital status. 
-  3Estimated risk of death after ALS diagnosis when pre-disease serum concentration of POPs compared to quartile 1.
-  4CI: Confidence interval.") |>
-  add_header(
-    "explanatory" = "POPs", 
-    term = "Quartiles",
-    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", "Hetero-geneity test" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", "Hetero-geneity test " = "Adjusted Model", 
-    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model", " Hetero-geneity test " = "Copollutant Model") |>
-  merge_h(part = "header") |>
-  merge_v(j = "explanatory") |>
-  merge_v(j = "term") |>
-  theme_vanilla() |>
-  bold(j = "explanatory", part = "body") |>
-  align(align = "center", part = "all") |>
-  align(j = "explanatory", align = "left", part = "all") |> 
-  align(j = "term", align = "left", part = "all") |> 
-  merge_at(j = "explanatory", part = "header") |>
-  merge_at(j = "term", part = "header") |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")
-rm(quartile1_rows)
-
-### figure POPs (sd) - als survival ----
-POPs_sd_ALS_figure_metanalysis <- main_results_POPs_ALS_survival |>
-  filter(study == "Metanalysis") |>
-  filter(term == "Continuous") |>
-  mutate(model = fct_recode(model, 
-                            "Base model" = "base",
-                            "Adjusted model" = "adjusted", 
-                            "Copollutant model" = "copollutant"),
-         model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
-         explanatory = factor(explanatory, levels = POPs_group_labels_metanalysis),
-         explanatory = fct_rev(explanatory),
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels_metanalysis)) |>
-  arrange(explanatory) |> 
-  ggplot(aes(x = explanatory, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
-  geom_pointrange(size = 0.5) + 
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(cols = dplyr::vars(model), switch = "y") +  
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
-        legend.position = "bottom", 
-        strip.text.y = element_text(hjust = 0.5)) +
-  coord_flip()
-
-### figure POPs (quart) - als survival ----
-POPs_quart_ALS_figure_metanalysis <- main_results_POPs_ALS_survival |>
-  filter(study == "Metanalysis") |>
-  filter(!term == "Continuous") |>
-  mutate(model = fct_recode(model, 
-                            "Base model" = "base",
-                            "Adjusted model" = "adjusted", 
-                            "Copollutant model" = "copollutant"),
-         model = fct_relevel(model, 'Base model', 'Adjusted model', 'Copollutant model'), 
-         explanatory = factor(explanatory, levels = POPs_group_labels_metanalysis),
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels_metanalysis), 
-         term = fct_rev(term)) |>
-  arrange(explanatory) |> 
-  ggplot(aes(x = term, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
-  geom_pointrange(size = 0.5) + 
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y") +  
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
-        legend.position = "bottom", 
-        strip.text.y.left = element_text(angle = 0, hjust = 0.5, vjust = 0.5)) +
-  coord_flip()
-
-rm(POPs_group_labels_metanalysis)
 
 # Assemblage ----
 results_POPs_ALS_survival <- 
@@ -6401,7 +2859,6 @@ results_POPs_ALS_survival <-
          POPs_sd_ALS_table_danish = POPs_sd_ALS_table_danish, 
          POPs_quart_ALS_table_danish = POPs_quart_ALS_table_danish, 
          POPs_sd_ALS_figure_danish = POPs_sd_ALS_figure_danish, 
-         cheking_model3_cox_sd_danish = cheking_model3_cox_sd_danish, 
          POPs_quart_ALS_figure_danish = POPs_quart_ALS_figure_danish, 
          plot_base_cox_gam_danish = plot_base_cox_gam_danish, 
          plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish, 
@@ -6414,90 +2871,40 @@ results_POPs_ALS_survival <-
                        POPs_ALS_qgcomp_figure_danish = POPs_ALS_qgcomp_figure_danish, 
                        POPs_ALS_qgcomp_positive_table_danish = POPs_ALS_qgcomp_positive_table_danish,
                        POPs_ALS_qgcomp_positive_figure_danish = POPs_ALS_qgcomp_positive_figure_danish)), 
-       finnish = list(
-         covar_finnish = covar_finnish, 
-         covar_ALS_table_finnish = covar_ALS_table_finnish,
-         POPs_sd_ALS_table_finnish = POPs_sd_ALS_table_finnish, 
-         POPs_quart_ALS_table_finnish = POPs_quart_ALS_table_finnish, 
-         POPs_sd_ALS_table_finnish_raw = POPs_sd_ALS_table_finnish_raw, 
-         POPs_quart_ALS_table_finnish_raw = POPs_quart_ALS_table_finnish_raw, 
-         cheking_model3_cox_sd_finnish = cheking_model3_cox_sd_finnish, 
-         POPs_sd_ALS_figure_finnish = POPs_sd_ALS_figure_finnish, 
-         POPs_quart_ALS_figure_finnish = POPs_quart_ALS_figure_finnish, 
-         POPs_sd_ALS_figure_finnish_raw = POPs_sd_ALS_figure_finnish_raw, 
-         POPs_quart_ALS_figure_finnish_raw = POPs_quart_ALS_figure_finnish_raw, 
-         POPs_ALS_qgcomp_table_finnish = POPs_ALS_qgcomp_table_finnish, 
-         POPs_ALS_qgcomp_figure_finnish = POPs_ALS_qgcomp_figure_finnish), 
-       metanalysis = list(
-         POPs_sd_ALS_table_metanalysis = POPs_sd_ALS_table_metanalysis, 
-         POPs_quart_ALS_table_metanalysis = POPs_quart_ALS_table_metanalysis, 
-         POPs_sd_ALS_figure_metanalysis = POPs_sd_ALS_figure_metanalysis, 
-         POPs_quart_ALS_figure_metanalysis = POPs_quart_ALS_figure_metanalysis), 
        sensi1 = list(
-         plot_justif = plot_justif, 
-         plot_justif_2cat = plot_justif_2cat, 
-         cor_test_sensi1 = cor_test_sensi1, 
+         sensi1_lasso_sd_danish = sensi1_lasso_sd_danish, 
+         sensi1_ridge_sd_danish = sensi1_ridge_sd_danish, 
+         sensi1_elastic_net_sd_danish = sensi1_elastic_net_sd_danish, 
          results_sensi1 = results_sensi1, 
-         sample_size_check = sample_size_check, 
-         sample_size_check_2cat = sample_size_check_2cat, 
-         POPs_heatmap_cases_group = POPs_heatmap_cases_group, 
-         POPs_sd_ALS_figure_sensi1_not_adjusted = POPs_sd_ALS_figure_sensi1_not_adjusted, 
-         POPs_sd_ALS_figure_sensi1_adjusted = POPs_sd_ALS_figure_sensi1_adjusted, 
-         POPs_sd_ALS_figure_sensi1_adjusted_2cat = POPs_sd_ALS_figure_sensi1_adjusted_2cat), 
+         POPs_sd_ALS_figure_sensi1_danish = POPs_sd_ALS_figure_sensi1_danish, 
+         POPs_quart_ALS_figure_sensi1_danish = POPs_quart_ALS_figure_sensi1_danish, 
+         POPs_sd_ALS_table_sensi1_danish = POPs_sd_ALS_table_sensi1_danish, 
+         POPs_quart_ALS_table_sensi1_danish = POPs_quart_ALS_table_sensi1_danish, 
+         POPs_sd_ALS_figure_sensi1_ERS_danish = POPs_sd_ALS_figure_sensi1_ERS_danish, 
+         POPs_quart_ALS_figure_sensi1_ERS_danish = POPs_quart_ALS_figure_sensi1_ERS_danish, 
+         POPs_sd_ALS_table_sensi1_ERS_danish = POPs_sd_ALS_table_sensi1_ERS_danish, 
+         POPs_quart_ALS_table_sensi1_ERS_danish = POPs_quart_ALS_table_sensi1_ERS_danish), 
        sensi2 = list(
+         sensi2_lasso_sd_danish = sensi2_lasso_sd_danish, 
+         # sensi2_ridge_sd_danish = sensi2_ridge_sd_danish, 
+         sensi2_elastic_net_sd_danish = sensi2_elastic_net_sd_danish, 
          results_sensi2 = results_sensi2, 
-         POPs_sd_ALS_figure_sensi2_finnish_orange = POPs_sd_ALS_figure_sensi2_finnish_orange, 
-         POPs_sd_ALS_figure_sensi2_finnish_purple = POPs_sd_ALS_figure_sensi2_finnish_purple, 
-         POPs_sd_ALS_figure_sensi2_finnish_green = POPs_sd_ALS_figure_sensi2_finnish_green, 
-         tbl_distrib_among_green_box = tbl_distrib_among_green_box, 
-         tbl_distrib_among_purple_box = tbl_distrib_among_purple_box, 
-         tbl_distrib_among_orange_box = tbl_distrib_among_orange_box), 
+         POPs_sd_ALS_figure_sensi2_danish = POPs_sd_ALS_figure_sensi2_danish, 
+         POPs_quart_ALS_figure_sensi2_danish = POPs_quart_ALS_figure_sensi2_danish, 
+         POPs_sd_ALS_table_sensi2_danish = POPs_sd_ALS_table_sensi2_danish, 
+         POPs_quart_ALS_table_sensi2_danish = POPs_quart_ALS_table_sensi2_danish, 
+         POPs_sd_ALS_figure_sensi2_ERS_danish = POPs_sd_ALS_figure_sensi2_ERS_danish, 
+         POPs_quart_ALS_figure_sensi2_ERS_danish = POPs_quart_ALS_figure_sensi2_ERS_danish, 
+         POPs_sd_ALS_table_sensi2_ERS_danish = POPs_sd_ALS_table_sensi2_ERS_danish, 
+         POPs_quart_ALS_table_sensi2_ERS_danish = POPs_quart_ALS_table_sensi2_ERS_danish), 
        sensi3 = list(
-         results_sensi3 = results_sensi3, 
-         POPs_sd_ALS_table_sensi3_baseline_age = POPs_sd_ALS_table_sensi3_baseline_age, 
-         POPs_sd_ALS_table_sensi3_follow_up = POPs_sd_ALS_table_sensi3_follow_up, 
-         POPs_sd_ALS_table_sensi3_baseline_age_follow_up = POPs_sd_ALS_table_sensi3_baseline_age_follow_up), 
-       sensi4 = list(
-         plot_justif_sensi4 = plot_justif_sensi4, 
-         results_sensi4 = results_sensi4, 
-         POPs_sd_ALS_figure_sensi4_danish = POPs_sd_ALS_figure_sensi4_danish), 
-       sensi5 = list(
-         sensi5_lasso_sd_danish = sensi5_lasso_sd_danish, 
-         sensi5_ridge_sd_danish = sensi5_ridge_sd_danish, 
-         sensi5_elastic_net_sd_danish = sensi5_elastic_net_sd_danish, 
-         results_sensi5 = results_sensi5, 
-         POPs_sd_ALS_figure_sensi5_danish = POPs_sd_ALS_figure_sensi5_danish, 
-         POPs_quart_ALS_figure_sensi5_danish = POPs_quart_ALS_figure_sensi5_danish, 
-         POPs_sd_ALS_table_sensi5_danish = POPs_sd_ALS_table_sensi5_danish, 
-         POPs_quart_ALS_table_sensi5_danish = POPs_quart_ALS_table_sensi5_danish, 
-         POPs_sd_ALS_figure_sensi5_ERS_danish = POPs_sd_ALS_figure_sensi5_ERS_danish, 
-         POPs_quart_ALS_figure_sensi5_ERS_danish = POPs_quart_ALS_figure_sensi5_ERS_danish, 
-         POPs_sd_ALS_table_sensi5_ERS_danish = POPs_sd_ALS_table_sensi5_ERS_danish, 
-         POPs_quart_ALS_table_sensi5_ERS_danish = POPs_quart_ALS_table_sensi5_ERS_danish), 
-       sensi6 = list(
-         sensi6_lasso_sd_danish = sensi6_lasso_sd_danish, 
-         # sensi6_ridge_sd_danish = sensi6_ridge_sd_danish, 
-         sensi6_elastic_net_sd_danish = sensi6_elastic_net_sd_danish, 
-         results_sensi6 = results_sensi6, 
-         POPs_sd_ALS_figure_sensi6_danish = POPs_sd_ALS_figure_sensi6_danish, 
-         POPs_quart_ALS_figure_sensi6_danish = POPs_quart_ALS_figure_sensi6_danish, 
-         POPs_sd_ALS_table_sensi6_danish = POPs_sd_ALS_table_sensi6_danish, 
-         POPs_quart_ALS_table_sensi6_danish = POPs_quart_ALS_table_sensi6_danish, 
-         POPs_sd_ALS_figure_sensi6_ERS_danish = POPs_sd_ALS_figure_sensi6_ERS_danish, 
-         POPs_quart_ALS_figure_sensi6_ERS_danish = POPs_quart_ALS_figure_sensi6_ERS_danish, 
-         POPs_sd_ALS_table_sensi6_ERS_danish = POPs_sd_ALS_table_sensi6_ERS_danish, 
-         POPs_quart_ALS_table_sensi6_ERS_danish = POPs_quart_ALS_table_sensi6_ERS_danish), 
-       sensi7 = list(
-         sensi7_figure = sensi7_figure, 
-         sensi7_table = sensi7_table))
+         sensi3_figure = sensi3_figure, 
+         sensi3_table = sensi3_table))
 
-rm(bdd_cases_tot, 
-   bdd_cases_danish, 
-   bdd_cases_finnish, 
+rm(bdd_cases_danish, 
    main_results_POPs_ALS_survival, 
    covar_danish,
    POPs_sd_ALS_table_danish, 
-   cheking_model3_cox_sd_danish, 
    POPs_quart_ALS_table_danish, 
    POPs_sd_ALS_figure_danish, 
    POPs_quart_ALS_figure_danish, 
@@ -6513,84 +2920,35 @@ rm(bdd_cases_tot,
    qgcomp_positive_boot_danish, 
    qgcomp_positive_noboot_danish, 
    
-   covar_finnish,
-   covar_ALS_table_finnish, 
-   POPs_sd_ALS_table_finnish, 
-   POPs_quart_ALS_table_finnish, 
-   POPs_sd_ALS_table_finnish_raw,
-   POPs_quart_ALS_table_finnish_raw, 
-   POPs_sd_ALS_figure_finnish, 
-   POPs_quart_ALS_figure_finnish,
-   POPs_sd_ALS_figure_finnish_raw,
-   POPs_quart_ALS_figure_finnish_raw, 
-   cheking_model3_cox_sd_finnish, 
-   POPs_ALS_qgcomp_table_finnish,
-   POPs_ALS_qgcomp_figure_finnish, 
-   model2_cox_sd_finnish_raw, 
+   covariates_danish, 
+   surv_obj_danish, 
    
-   POPs_sd_ALS_table_metanalysis, 
-   POPs_quart_ALS_table_metanalysis, 
-   POPs_sd_ALS_figure_metanalysis, 
-   POPs_quart_ALS_figure_metanalysis, 
-   
-   covariates_danish, covariates_finnish, 
-   surv_obj_danish, surv_obj_FMC, surv_obj_FMCF, surv_obj_MFH, surv_obj_finnish, 
-   
-   plot_justif, plot_justif_2cat, results_sensi1, sample_size_check, sample_size_check_2cat, 
-   POPs_heatmap_cases_group, cor_test_sensi1, 
-   model2_cox_sd_danish, 
-   POPs_sd_ALS_figure_sensi1_not_adjusted, 
-   POPs_sd_ALS_figure_sensi1_adjusted, 
-   POPs_sd_ALS_figure_sensi1_adjusted_2cat,
+   results_sensi1, 
+   sensi1_lasso_sd_danish, 
+   sensi1_ridge_sd_danish, 
+   sensi1_elastic_net_sd_danish, 
+   POPs_sd_ALS_figure_sensi1_danish, 
+   POPs_quart_ALS_figure_sensi1_danish, 
+   POPs_sd_ALS_table_sensi1_danish, 
+   POPs_quart_ALS_table_sensi1_danish, 
+   POPs_sd_ALS_figure_sensi1_ERS_danish, 
+   POPs_quart_ALS_figure_sensi1_ERS_danish, 
+   POPs_sd_ALS_table_sensi1_ERS_danish, 
+   POPs_quart_ALS_table_sensi1_ERS_danish,
    
    results_sensi2, 
-   POPs_sd_ALS_figure_sensi2_finnish_orange, 
-   POPs_sd_ALS_figure_sensi2_finnish_purple, 
-   POPs_sd_ALS_figure_sensi2_finnish_green, 
-   tbl_distrib_among_green_box, 
-   tbl_distrib_among_purple_box, 
-   tbl_distrib_among_orange_box, 
+   sensi2_lasso_sd_danish, 
+   #sensi2_ridge_sd_danish, 
+   sensi2_elastic_net_sd_danish, 
+   POPs_sd_ALS_figure_sensi2_danish, 
+   POPs_quart_ALS_figure_sensi2_danish, 
+   POPs_sd_ALS_table_sensi2_danish, 
+   POPs_quart_ALS_table_sensi2_danish, 
+   POPs_sd_ALS_figure_sensi2_ERS_danish, 
+   POPs_quart_ALS_figure_sensi2_ERS_danish, 
+   POPs_sd_ALS_table_sensi2_ERS_danish, 
+   POPs_quart_ALS_table_sensi2_ERS_danish,
    
-   results_sensi3, 
-   POPs_sd_ALS_table_sensi3_baseline_age,
-   POPs_sd_ALS_table_sensi3_follow_up, 
-   POPs_sd_ALS_table_sensi3_baseline_age_follow_up,
-   
-   results_sensi4, 
-   plot_justif_sensi4, 
-   POPs_sd_ALS_figure_sensi4_danish, 
-   
-   results_sensi5, 
-   sensi5_lasso_sd_danish, 
-   sensi5_ridge_sd_danish, 
-   sensi5_elastic_net_sd_danish, 
-   POPs_sd_ALS_figure_sensi5_danish, 
-   POPs_quart_ALS_figure_sensi5_danish, 
-   POPs_sd_ALS_table_sensi5_danish, 
-   POPs_quart_ALS_table_sensi5_danish, 
-   POPs_sd_ALS_figure_sensi5_ERS_danish, 
-   POPs_quart_ALS_figure_sensi5_ERS_danish, 
-   POPs_sd_ALS_table_sensi5_ERS_danish, 
-   POPs_quart_ALS_table_sensi5_ERS_danish,
-   
-   results_sensi6, 
-   sensi6_lasso_sd_danish, 
-   #sensi6_ridge_sd_danish, 
-   sensi6_elastic_net_sd_danish, 
-   POPs_sd_ALS_figure_sensi6_danish, 
-   POPs_quart_ALS_figure_sensi6_danish, 
-   POPs_sd_ALS_table_sensi6_danish, 
-   POPs_quart_ALS_table_sensi6_danish, 
-   
-   POPs_sd_ALS_figure_sensi6_danish, 
-   POPs_quart_ALS_figure_sensi6_danish, 
-   POPs_sd_ALS_table_sensi6_danish, 
-   POPs_quart_ALS_table_sensi6_danish, 
-   POPs_sd_ALS_figure_sensi6_ERS_danish, 
-   POPs_quart_ALS_figure_sensi6_ERS_danish, 
-   POPs_sd_ALS_table_sensi6_ERS_danish, 
-   POPs_quart_ALS_table_sensi6_ERS_danish,
-   
-   sensi7_figure, 
-   sensi7_table)
+   sensi3_figure, 
+   sensi3_table)
 

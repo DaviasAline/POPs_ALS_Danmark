@@ -1314,15 +1314,6 @@ results_POPs_ALS_survival$danish$POPs_sd_ALS_table_danish  |>
 results_POPs_ALS_survival$danish$POPs_sd_ALS_figure_danish
 ```
 
-Checking for the copollutant model
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$danish$cheking_model3_cox_sd_danish
-```
-
 #### Quartiles
 
 ```{r}
@@ -1410,337 +1401,7 @@ results_POPs_ALS_survival$danish$qgcomp$POPs_ALS_qgcomp_positive_table_danish  |
 results_POPs_ALS_survival$danish$qgcomp$POPs_ALS_qgcomp_positive_figure_danish
 ```
 
-## Finnish cohorts
-
-### Effects of subject characteristics on ALS survival
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$finnish$covar_ALS_table_finnish |>
-  set_table_properties(width = 1, layout = "autofit", align = "left")
-```
-
-### Effects of POPs on ALS survival
-
-#### Continuous coding (standardized) - raw analysis not adjusted on cohort
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$finnish$POPs_sd_ALS_table_finnish_raw |>
-  set_table_properties(width = 1, layout = "autofit", align = "left")
-```
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$finnish$POPs_sd_ALS_figure_finnish_raw
-```
-
-#### Quartiles - raw analysis not adjusted on cohort
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-results_POPs_ALS_survival$finnish$POPs_quart_ALS_table_finnish_raw |>
-  set_table_properties(width = 1, layout = "autofit", align = "left")
-```
-
-```{r fig.height=9, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$finnish$POPs_quart_ALS_figure_finnish_raw
-```
-
-#### Continuous coding (standardized) - meta-analaysis
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$finnish$POPs_sd_ALS_table_finnish |>
-  set_table_properties(width = 1, layout = "autofit", align = "left")
-```
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$finnish$POPs_sd_ALS_figure_finnish
-```
-
-#### Quartiles - meta-analaysis
-
-data not shown (instable)
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-#| include: false
-results_POPs_ALS_survival$finnish$POPs_quart_ALS_table_finnish |>
-  set_table_properties(width = 1, layout = "autofit", align = "left")
-```
-
-```{r fig.height=9, fig.width=9}
-#| eval: false
-#| message: false
-#| warning: false
-#| include: false
-results_POPs_ALS_survival$finnish$POPs_quart_ALS_figure_finnish
-```
-
-#### q-gcomp analysis
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$finnish$POPs_ALS_qgcomp_table_finnish  |>
-  flextable() |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left")
-results_POPs_ALS_survival$finnish$POPs_ALS_qgcomp_figure_finnish
-```
-
-## Metanalysis
-
-### Continuous coding (standardized)
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-results_POPs_ALS_survival$metanalysis$POPs_sd_ALS_table_metanalysis |>
-  set_table_properties(width = 1, layout = "autofit", align = "left")
-```
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$metanalysis$POPs_sd_ALS_figure_metanalysis
-```
-
-### Quartiles
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_table_metanalysis |>
-  set_table_properties(width = 1, layout = "autofit", align = "left")
-```
-
-```{r, fig.height=9, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$metanalysis$POPs_quart_ALS_figure_metanalysis
-```
-
 ## Sensitivity analyses 1
-
-The aim of this sensitivity analysis is to investigate if differences observed between the Danish and Finnish cohorts are due to differences in duration of follow-up and age at baseline We re-ran the models by selecting the Finnish cases with follow-up and age at baseline similar to the Danish cases
-
-4 cohorts (EPIC/FMC/FMCF/MFH)
-
-```{r, fig.height=12, fig.width=12}
-#| echo: false
-#| message: false
-#| warning: false
-print(results_POPs_ALS_survival$sensi1$plot_justif)
-```
-
-2 cohorts (Danish/Finnish)
-
-```{r, fig.height=12, fig.width=12}
-#| echo: false
-#| message: false
-#| warning: false
-print(results_POPs_ALS_survival$sensi1$plot_justif_2cat)
-```
-
-Distribution of follow up and age at baseline among the cases within the boxes
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$sensi2$tbl_distrib_among_green_box |>
-  as_flex_table() |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left")
-
-results_POPs_ALS_survival$sensi2$tbl_distrib_among_purple_box |>
-  as_flex_table() |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left")
-
-results_POPs_ALS_survival$sensi2$tbl_distrib_among_orange_box |>
-  as_flex_table() |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left")
-```
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-corrplot(results_POPs_ALS_survival$sensi1$cor_test_sensi1, 
-         method = 'color', 
-         type = "lower", 
-         tl.col = 'black', 
-         tl.srt = 45, 
-         addCoef.col = "black",
-         number.cex = 0.8,
-         number.digits = 1,
-         tl.cex = 1,
-         col = rev(COL2(diverging = "RdYlBu")))
-```
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$sensi1$sample_size_check |>
-  as_flex_table() |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left")
-```
-
-results not adjusted on the cohort, adjusted for sex, diagnosis age, smoking status, bmi and marital_status
-
-```{r, fig.width=8}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_not_adjusted
-```
-
-results adjusted on the cohort (4 categories), adjusted for sex, diagnosis age, smoking status, bmi and marital_status These resuts are not trustful because sample size of MFH is too small (n=11)
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_adjusted
-```
-
-results adjusted on the cohort (2 categories danish or finnish), adjusted for sex, diagnosis age, smoking status, bmi and marital_status
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_adjusted_2cat
-```
-
-Correlation among standardized POPs among Danish ALS cases
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-corrplot(results_POPs_ALS_survival$sensi1$POPs_heatmap_cases_group, 
-         method = 'color', 
-         type = "lower", 
-         tl.col = 'black', 
-         tl.srt = 45, 
-         addCoef.col = "black",
-         number.cex = 0.8,
-         number.digits = 1,
-         tl.cex = 1,
-         col = rev(COL2(diverging = "RdYlBu")))
-```
-
-## Sensitivity analyses 2
-
-Results of sensivitity analysis 1 may be driven by the Danish cases. Here, we ran adjusted and stratified analyses depending on effects of baseline age, follow-up duration just among the Finnish population All models are adjusted for sex, diagnosis age, smoking status, bmi and marital_status
-
-```{r, fig.width=10}
-#| echo: false
-#| message: false
-#| warning: false
-#| column: screen-inset-right
-results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_orange 
-results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_purple
-results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_finnish_green
-```
-
-## Sensitivity analyses 3
-
-Here, we tried baseline age and follow-up duration as interaction terms (continuous and categorical) just among the Finnish cases All models are adjusted for sex, diagnosis age, smoking status, bmi and marital_status
-
-### baseline age
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$sensi3$POPs_sd_ALS_table_sensi3_baseline_age |>
-  set_table_properties(width = 1, layout = "autofit", align = "left")
-```
-
-### follow up duration
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$sensi3$POPs_sd_ALS_table_sensi3_follow_up |>
-  set_table_properties(width = 1, layout = "autofit", align = "left")
-```
-
-### both baseline age and follow up duration
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$sensi3$POPs_sd_ALS_table_sensi3_baseline_age_follow_up |>
-  set_table_properties(width = 1, layout = "autofit", align = "left")
-```
-
-## Sensitivity analyses 4
-
-effects of survival duration among the Danish population
-
-```{r, fig.height=12, fig.width=12}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$sensi4$plot_justif_sensi4
-```
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_survival$sensi4$POPs_sd_ALS_figure_sensi4_danish
-```
-
-## Sensitivity analyses 5
 Mixture models with POPs pre-selection
 
 ### Model forcing the covariates to be included
@@ -1750,7 +1411,7 @@ Using LASSO
 #| echo: false
 #| message: false
 #| warning: false
-plot(results_POPs_ALS_survival$sensi5$sensi5_lasso_sd_danish)  
+plot(results_POPs_ALS_survival$sensi1$sensi1_lasso_sd_danish)  
 ```
 
 Using ridge
@@ -1758,7 +1419,7 @@ Using ridge
 #| echo: false
 #| message: false
 #| warning: false
-plot(results_POPs_ALS_survival$sensi5$sensi5_ridge_sd_danish)  
+plot(results_POPs_ALS_survival$sensi1$sensi1_ridge_sd_danish)  
 ```
 
 Using elastic net
@@ -1766,7 +1427,7 @@ Using elastic net
 #| echo: false
 #| message: false
 #| warning: false
-plot(results_POPs_ALS_survival$sensi5$sensi5_elastic_net_sd_danish)
+plot(results_POPs_ALS_survival$sensi1$sensi1_elastic_net_sd_danish)
 ```
 
 These plot the cross-validation curve (red dotted line) along with upper and lower standard deviation curves along the 𝜆sequence (error bars). Two special values along the 𝜆sequence are indicated by the vertical dotted lines.
@@ -1779,7 +1440,7 @@ Using LASSO
 #| echo: false
 #| message: false
 #| warning: false
-coef(results_POPs_ALS_survival$sensi5$sensi5_lasso_sd_danish, s = "lambda.min")  
+coef(results_POPs_ALS_survival$sensi1$sensi1_lasso_sd_danish, s = "lambda.min")  
 ```
 
 Using ridge
@@ -1787,7 +1448,7 @@ Using ridge
 #| echo: false
 #| message: false
 #| warning: false
-coef(results_POPs_ALS_survival$sensi5$sensi5_ridge_sd_danish, s = "lambda.min")  
+coef(results_POPs_ALS_survival$sensi1$sensi1_ridge_sd_danish, s = "lambda.min")  
 ```
 
 Using elastic net 
@@ -1795,7 +1456,7 @@ Using elastic net
 #| echo: false
 #| message: false
 #| warning: false
-coef(results_POPs_ALS_survival$sensi5$sensi5_elastic_net_sd_danish, s = "lambda.min")
+coef(results_POPs_ALS_survival$sensi1$sensi1_elastic_net_sd_danish, s = "lambda.min")
 ```
 
 while lambda.1se is the value of 𝜆that gives the most regularized model such that the cross-validated error is within one standard error of the minimum.
@@ -1806,7 +1467,7 @@ Using LASSO
 #| echo: false
 #| message: false
 #| warning: false
-coef(results_POPs_ALS_survival$sensi5$sensi5_lasso_sd_danish, s = "lambda.1se")  
+coef(results_POPs_ALS_survival$sensi1$sensi1_lasso_sd_danish, s = "lambda.1se")  
 ```
 
 Using ridge
@@ -1814,7 +1475,7 @@ Using ridge
 #| echo: false
 #| message: false
 #| warning: false
-coef(results_POPs_ALS_survival$sensi5$sensi5_ridge_sd_danish, s = "lambda.1se")  
+coef(results_POPs_ALS_survival$sensi1$sensi1_ridge_sd_danish, s = "lambda.1se")  
 ```
 
 Using elastic net
@@ -1822,7 +1483,7 @@ Using elastic net
 #| echo: false
 #| message: false
 #| warning: false
-coef(results_POPs_ALS_survival$sensi5$sensi5_elastic_net_sd_danish, s = "lambda.1se")
+coef(results_POPs_ALS_survival$sensi1$sensi1_elastic_net_sd_danish, s = "lambda.1se")
 ```
 
 ### New co-pollutant model with selected POPs using elastic net (to get unbiaised coefficients and 95%CI and p-values)
@@ -1831,8 +1492,8 @@ coef(results_POPs_ALS_survival$sensi5$sensi5_elastic_net_sd_danish, s = "lambda.
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi5$POPs_sd_ALS_figure_sensi5_danish
-results_POPs_ALS_survival$sensi5$POPs_sd_ALS_table_sensi5_danish
+results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_danish
+results_POPs_ALS_survival$sensi1$POPs_sd_ALS_table_sensi1_danish
 ```
 
 #### Quartile coding 
@@ -1840,8 +1501,8 @@ results_POPs_ALS_survival$sensi5$POPs_sd_ALS_table_sensi5_danish
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi5$POPs_quart_ALS_figure_sensi5_danish
-results_POPs_ALS_survival$sensi5$POPs_quart_ALS_table_sensi5_danish
+results_POPs_ALS_survival$sensi1$POPs_quart_ALS_figure_sensi1_danish
+results_POPs_ALS_survival$sensi1$POPs_quart_ALS_table_sensi1_danish
 ```
 
 ### ERS model with the POPs selestec with elastic net 
@@ -1850,8 +1511,8 @@ results_POPs_ALS_survival$sensi5$POPs_quart_ALS_table_sensi5_danish
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi5$POPs_sd_ALS_figure_sensi5_ERS_danish
-results_POPs_ALS_survival$sensi5$POPs_sd_ALS_table_sensi5_ERS_danish
+results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_ERS_danish
+results_POPs_ALS_survival$sensi1$POPs_sd_ALS_table_sensi1_ERS_danish
 ```
 
 #### Quartile coding 
@@ -1859,12 +1520,12 @@ results_POPs_ALS_survival$sensi5$POPs_sd_ALS_table_sensi5_ERS_danish
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi5$POPs_quart_ALS_figure_sensi5_ERS_danish
-results_POPs_ALS_survival$sensi5$POPs_quart_ALS_table_sensi5_ERS_danish
+results_POPs_ALS_survival$sensi1$POPs_quart_ALS_figure_sensi1_ERS_danish
+results_POPs_ALS_survival$sensi1$POPs_quart_ALS_table_sensi1_ERS_danish
 ```
 
 
-## Sensitivity analyses 6
+## Sensitivity analyses 2
 ### Model forcing the covariates to be included
 
 coefficients using lambda.min (lambda.min is the value of 𝜆that gives minimum mean cross-validated error)
@@ -1874,7 +1535,7 @@ Using LASSO
 #| echo: false
 #| message: false
 #| warning: false
-coef(results_POPs_ALS_survival$sensi6$sensi6_lasso_sd_danish, s = "lambda.min")  
+coef(results_POPs_ALS_survival$sensi2$sensi2_lasso_sd_danish, s = "lambda.min")  
 ```
 
 Using elastic net 
@@ -1882,7 +1543,7 @@ Using elastic net
 #| echo: false
 #| message: false
 #| warning: false
-coef(results_POPs_ALS_survival$sensi6$sensi6_elastic_net_sd_danish, s = "lambda.min")
+coef(results_POPs_ALS_survival$sensi2$sensi2_elastic_net_sd_danish, s = "lambda.min")
 ```
 
 
@@ -1892,8 +1553,8 @@ coef(results_POPs_ALS_survival$sensi6$sensi6_elastic_net_sd_danish, s = "lambda.
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi6$POPs_sd_ALS_figure_sensi6_danish
-results_POPs_ALS_survival$sensi6$POPs_sd_ALS_table_sensi6_danish
+results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_danish
+results_POPs_ALS_survival$sensi2$POPs_sd_ALS_table_sensi2_danish
 ```
 
 #### Quartile coding 
@@ -1901,8 +1562,8 @@ results_POPs_ALS_survival$sensi6$POPs_sd_ALS_table_sensi6_danish
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi6$POPs_quart_ALS_figure_sensi6_danish
-results_POPs_ALS_survival$sensi6$POPs_quart_ALS_table_sensi6_danish
+results_POPs_ALS_survival$sensi2$POPs_quart_ALS_figure_sensi2_danish
+results_POPs_ALS_survival$sensi2$POPs_quart_ALS_table_sensi2_danish
 ```
 
 ### ERS model with the POPs selestec with elastic net 
@@ -1911,8 +1572,8 @@ results_POPs_ALS_survival$sensi6$POPs_quart_ALS_table_sensi6_danish
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi6$POPs_sd_ALS_figure_sensi6_ERS_danish
-results_POPs_ALS_survival$sensi6$POPs_sd_ALS_table_sensi6_ERS_danish
+results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_ERS_danish
+results_POPs_ALS_survival$sensi2$POPs_sd_ALS_table_sensi2_ERS_danish
 ```
 
 #### Quartile coding 
@@ -1920,16 +1581,16 @@ results_POPs_ALS_survival$sensi6$POPs_sd_ALS_table_sensi6_ERS_danish
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi6$POPs_quart_ALS_figure_sensi6_ERS_danish
-results_POPs_ALS_survival$sensi6$POPs_quart_ALS_table_sensi6_ERS_danish
+results_POPs_ALS_survival$sensi2$POPs_quart_ALS_figure_sensi2_ERS_danish
+results_POPs_ALS_survival$sensi2$POPs_quart_ALS_table_sensi2_ERS_danish
 ```
 
-## Sensitivity analyses 7
+## Sensitivity analyses 3
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi7$sensi7_figure
+results_POPs_ALS_survival$sensi3$sensi3_figure
 ```
 
 
@@ -1937,7 +1598,7 @@ results_POPs_ALS_survival$sensi7$sensi7_figure
 #| echo: false
 #| message: false
 #| warning: false
-results_POPs_ALS_survival$sensi7$sensi7_table
+results_POPs_ALS_survival$sensi3$sensi3_table
 ```
 
 
