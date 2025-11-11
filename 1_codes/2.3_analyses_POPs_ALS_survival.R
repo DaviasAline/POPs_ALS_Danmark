@@ -1035,7 +1035,7 @@ rm(model1_cox_sd_danish,
    heterogeneity_tests, trend_tests)
 
 
-# Sensitivity analysis 1 - mixture model in the Danish EPIC cohort ----
+# Sensitivity analysis 1 - mixture model ----
 ## Data prep ----
 bdd_cases_danish_bis <- bdd_danish |>
   filter (als == 1) |>
@@ -1081,7 +1081,7 @@ penalty_factor_quart <-                                                         
 
 ## LASSO POPs selection ----
 set.seed(1996)
-sensi1_lasso_sd_danish <- cv.glmnet(                                             # lasso + cross validation to choose the lamda parameter
+sensi1_lasso_sd_danish <- cv.glmnet(                                            # lasso + cross validation to choose the lamda parameter
   x = X_matrix_sd,                                                              # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 

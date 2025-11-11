@@ -47,11 +47,11 @@ figure_2 <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_surviv
 
 # Figure 3 - POPs - ALS survival among the Danish cohort (copollutant model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (ridge model; n = 166).
-figure_3 <- results_POPs_ALS_survival$sensi5$POPs_quart_ALS_figure_sensi5_danish
+figure_3 <- results_POPs_ALS_survival$sensi1$POPs_quart_ALS_figure_sensi1_danish
 
 # Figure 4 - POPs - ALS survival among the Danish cohort (mixture model) ----
 # Association between pre-diagnostic POP concentrations and survival among ALS cases from the Danish EPIC cohort using an environmental risk score (cox mixture model; n = 166). 
-figure_4 <- results_POPs_ALS_survival$sensi5$POPs_quart_ALS_figure_sensi5_ERS_danish
+figure_4 <- results_POPs_ALS_survival$sensi1$POPs_quart_ALS_figure_sensi1_ERS_danish
 
 # Table S1 - description of the POP levels (table) ----
 # Distribution of pre-disease POP concentrations in ALS cases from the Danish EPIC, the FMC, the FMCF and the MFH Finnish cohorts (total sample size=263).
@@ -132,19 +132,19 @@ rm(quartile1_rows)
 
 # Table S3 - POPs - ALS survival among the Danish cohort (copollutant model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).
-table_S3 <- results_POPs_ALS_survival$sensi5$POPs_quart_ALS_table_sensi5_danish
+table_S3 <- results_POPs_ALS_survival$sensi1$POPs_quart_ALS_table_sensi1_danish
 
 # Table S4 - POPs - ALS survival among the Danish cohort (mixture model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).
-table_S4 <- results_POPs_ALS_survival$sensi5$POPs_quart_ALS_table_sensi5_ERS_danish
+table_S4 <- results_POPs_ALS_survival$sensi1$POPs_quart_ALS_table_sensi1_ERS_danish
 
 # Table S5 - POPs - ALS survival among the Danish cohort (copollutant model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).
-table_S5 <- results_POPs_ALS_survival$sensi6$POPs_quart_ALS_table_sensi6_danish
+table_S5 <- results_POPs_ALS_survival$sensi2$POPs_quart_ALS_table_sensi2_danish
 
 # Table S6 - POPs - ALS survival among the Danish cohort (mixture model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).
-table_S6 <- results_POPs_ALS_survival$sensi6$POPs_quart_ALS_table_sensi6_ERS_danish
+table_S6 <- results_POPs_ALS_survival$sensi2$POPs_quart_ALS_table_sensi2_ERS_danish
 
 
 # Figure S1 - heatmap of correlation between POP exposures ---- 
@@ -178,11 +178,11 @@ dev.off()
 
 # Figure S2 - Sensitivity analysis - POPs - ALS survival among the Danish cohort (mixture model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).
-figure_S2 <- results_POPs_ALS_survival$sensi6$POPs_quart_ALS_figure_sensi6_danish
+figure_S2 <- results_POPs_ALS_survival$sensi2$POPs_quart_ALS_figure_sensi2_danish
 
 # Figure S3 - Sensitivity analysis - POPs - ALS survival among the Danish cohort (mixture model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).
-figure_S3 <- results_POPs_ALS_survival$sensi6$POPs_quart_ALS_figure_sensi6_ERS_danish
+figure_S3 <- results_POPs_ALS_survival$sensi2$POPs_quart_ALS_figure_sensi2_ERS_danish
 
 
 # Export ----
