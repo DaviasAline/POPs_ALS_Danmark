@@ -361,6 +361,35 @@ proteomic_heatmap_danish <-
       use = "pairwise.complete.obs", 
       method = "pearson")
 
+proteomic_heatmap_danish_neuro_explo <- 
+  bdd_danish |> 
+  select(all_of(proteomic_neuro_explo)) |>
+  rename(!!!proteomic_neuro_explo_labels) 
+proteomic_heatmap_danish_neuro_explo <- 
+  cor(proteomic_heatmap_danish_neuro_explo, 
+      use = "pairwise.complete.obs", 
+      method = "pearson")
+
+proteomic_heatmap_danish_immun_res <- 
+  bdd_danish |> 
+  select(all_of(proteomic_immun_res)) |>
+  rename(!!!proteomic_immun_res_labels) 
+proteomic_heatmap_danish_immun_res <- 
+  cor(proteomic_heatmap_danish_immun_res, 
+      use = "pairwise.complete.obs", 
+      method = "pearson")
+
+proteomic_heatmap_danish_metabolism <- 
+  bdd_danish |> 
+  select(all_of(proteomic_metabolism)) |>
+  rename(!!!proteomic_metabolism_labels) 
+proteomic_heatmap_danish_metabolism <- 
+  cor(proteomic_heatmap_danish_metabolism, 
+      use = "pairwise.complete.obs", 
+      method = "pearson")
+
+
+
 proteomic_boxplot_danish_by_death <- bdd_danish |>
   filter(als == 1) |>
   select(status_death, all_of(proteomic)) |>
@@ -920,6 +949,9 @@ results_descriptive <- list(
     proteomic_boxplot_danish = proteomic_boxplot_danish, 
     proteomic_boxplot_danish_by_als = proteomic_boxplot_danish_by_als, 
     proteomic_heatmap_danish = proteomic_heatmap_danish, 
+    proteomic_heatmap_danish_neuro_explo = proteomic_heatmap_danish_neuro_explo, 
+    proteomic_heatmap_danish_immun_res = proteomic_heatmap_danish_immun_res, 
+    proteomic_heatmap_danish_metabolism = proteomic_heatmap_danish_metabolism, 
     proteomic_boxplot_danish_by_death = proteomic_boxplot_danish_by_death, 
     
     EVs_table_danish = EVs_table_danish, 
@@ -987,6 +1019,9 @@ rm(
   proteomic_boxplot_danish, 
   proteomic_boxplot_danish_by_als, 
   proteomic_heatmap_danish, 
+  proteomic_heatmap_danish_neuro_explo, 
+  proteomic_heatmap_danish_immun_res, 
+  proteomic_heatmap_danish_metabolism,
   proteomic_boxplot_danish_by_death, 
   EVs_table_danish, 
   EVs_table_danish_by_als, 

@@ -420,6 +420,10 @@ proteomic_sd <- paste0(proteomic, "_sd")
 proteomic_quart <- paste0(proteomic, "_quart")
 proteomic_quart_med <- paste0(proteomic, "_quart_med")
 
+proteomic_neuro_explo <- bdd_danish |> select(contains("proteomic_neuro_explo_")) |> colnames()
+proteomic_immun_res <- bdd_danish |> select(contains("proteomic_immun_res_")) |> colnames()
+proteomic_metabolism <- bdd_danish |> select(contains("proteomic_metabolism_")) |> colnames()
+
 ## EVs ----
 EVs <- bdd_danish |> select(starts_with("ev_")) |> colnames()
 
@@ -1290,6 +1294,10 @@ proteomic_sd_labels <- setNames(proteomic_sd, gsub("^proteomic_(immun_res|neuro_
 proteomic_sd_labels <- setNames(proteomic_sd, gsub("_sd", "", proteomic_sd))
 proteomic_quart_labels <- setNames(proteomic_quart, gsub("^proteomic_(immun_res|neuro_explo|metabolism)_", "", proteomic_quart))
 proteomic_quart_labels <- setNames(proteomic_quart, gsub("_quart", "", proteomic_quart))
+
+proteomic_neuro_explo_labels <- setNames(proteomic_neuro_explo, gsub("proteomic_neuro_explo_", "", proteomic_neuro_explo))
+proteomic_immun_res_labels <- setNames(proteomic_immun_res, gsub("proteomic_immun_res_", "", proteomic_immun_res))
+proteomic_metabolism_labels <- setNames(proteomic_metabolism, gsub("proteomic_metabolism_", "", proteomic_metabolism))
 
 ## Evs ----
 EVs_labels <- setNames(EVs, gsub("ev_", "", EVs))

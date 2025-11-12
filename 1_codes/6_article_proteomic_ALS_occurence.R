@@ -5,7 +5,7 @@
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2.7_analyses_proteomic_ALS_occurrence.R")
 
 
-# Table 1 ---- 
+# Table 1 - Subject characteristics description ---- 
 # Description of the subject characteristics of the Danish Diet, Cancer and Health study cohort (sample size: 498).
 table_1 <- bdd |>
   filter(study == "Danish") |>
@@ -35,6 +35,60 @@ table_1 <- bdd |>
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
+# Table 2 - Main results ----
+table_2 <- results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_table_sensi_1
 
-# Figure 1 ----
-wrap_plots(results_proteomic_ALS_occurrence$sensi_1$)
+
+# Figure 1 - Main results (volcano plot) ----
+figure_1 <- wrap_plots(
+  list(results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_base_figure_sensi_1 + theme(legend.position = "none") + labs(title = "Base models"), 
+       results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_1 + theme(legend.position = "bottom") + labs(title = "Adjusted models")), 
+  ncol = 2)
+
+
+# Figure 2 - Sensitivity analysis (volcano plot filtered to > 5 years of follow-up) ----
+figure_2 <- wrap_plots(
+  list(results_proteomic_ALS_occurrence$sensi_1_2$proteomic_sd_ALS_base_figure_sensi_1 + theme(legend.position = "none") + labs(title = "Base models"), 
+       results_proteomic_ALS_occurrence$sensi_1_2$proteomic_sd_ALS_adjusted_figure_sensi_1  + theme(legend.position = "bottom") + labs(title = "Adjusted models")), 
+  ncol = 2)
+
+
+# Figure 3 - Additional analysis (NEFL level over follow-up time) ----
+figure_3 <- results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_over_time_sensi_1
+
+
+# Supplementary table 1 - Sensitivity analysis (volcano plot filtered to > 5 years of follow-up) ----
+table_S1 <- results_proteomic_ALS_occurrence$sensi_1_2$proteomic_sd_ALS_table_sensi_1_2
+
+
+# Export ----
+table_1 <- read_docx() |> body_add_flextable(table_1) 
+print(table_1, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/table_1.docx")
+table_2 <- read_docx() |> body_add_flextable(table_2) 
+print(table_2, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/table_2.docx")
+
+table_S1 <- read_docx() |> body_add_flextable(table_S1)
+print(table_S1, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/table_S1.docx")
+
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_1.tiff",
+  figure_1,
+  height = 8,
+  width = 15,
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_2.tiff",
+  figure_2,
+  height = 8,
+  width = 15,
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_3.tiff",
+  figure_3,
+  height = 4,
+  width = 8,
+  units = "in")
+
