@@ -429,7 +429,7 @@ Neuro explo
 #| message: false
 #| warning: false
 
-corrplot(proteomic_heatmap_danish_neuro_explo, 
+corrplot(results_descriptive$danish$proteomic_heatmap_danish_neuro_explo, 
          method = 'color', 
          type = "lower", 
          tl.col = 'black',
@@ -448,7 +448,7 @@ Immune response
 #| message: false
 #| warning: false
 
-corrplot(proteomic_heatmap_danish_immun_res, 
+corrplot(results_descriptive$danish$proteomic_heatmap_danish_immun_res, 
          method = 'color', 
          type = "lower", 
          tl.col = 'black',
@@ -467,7 +467,7 @@ Metabolism
 #| message: false
 #| warning: false
 
-corrplot(proteomic_heatmap_danish_metabolism, 
+corrplot(results_descriptive$danish$proteomic_heatmap_danish_metabolism, 
          method = 'color', 
          type = "lower", 
          tl.col = 'black',
@@ -1424,42 +1424,69 @@ results_POPs_ALS_survival$danish$POPs_quart_ALS_figure_danish
 
 #### Cox-gam
 
-```{r fig.height=11, fig.width=9}
+```{r fig.height=11, fig.width=8}
 #| echo: false
 #| message: false
 #| warning: false
+# wrap_plots(list(results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$PCB_4, 
+#                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$PCB_4, 
+#                 wrap_elements(grid::nullGrob()),
+#                 results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$PCB_DL, 
+#                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$PCB_DL, 
+#                 results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$PCB_DL, 
+#                 
+#                 results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$PCB_NDL, 
+#                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$PCB_NDL, 
+#                 results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$PCB_NDL, 
+#                 
+#                 results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$OCP_HCB, 
+#                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$OCP_HCB, 
+#                 results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$OCP_HCB), 
+#            ncol = 3)
+# 
+# wrap_plots(list(results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$ΣDDT, 
+#                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$ΣDDT, 
+#                 results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$ΣDDT, 
+#                 
+#                 results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$OCP_β_HCH, 
+#                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$OCP_β_HCH, 
+#                 results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$OCP_β_HCH, 
+#                 
+#                 results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$Σchlordane, 
+#                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$Σchlordane, 
+#                 results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$Σchlordane, 
+#                 
+#                 results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$ΣPBDE, 
+#                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$ΣPBDE, 
+#                 results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$ΣPBDE), 
+#            ncol = 3)
+
 wrap_plots(list(results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$PCB_4, 
                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$PCB_4, 
-                wrap_elements(grid::nullGrob()),
+                
                 results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$PCB_DL, 
                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$PCB_DL, 
-                results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$PCB_DL, 
                 
                 results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$PCB_NDL, 
                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$PCB_NDL, 
-                results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$PCB_NDL, 
                 
                 results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$OCP_HCB, 
-                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$OCP_HCB, 
-                results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$OCP_HCB), 
-           ncol = 3)
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$OCP_HCB), 
+           ncol = 2)
 
 wrap_plots(list(results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$ΣDDT, 
                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$ΣDDT, 
-                results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$ΣDDT, 
                 
                 results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$OCP_β_HCH, 
                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$OCP_β_HCH, 
-                results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$OCP_β_HCH, 
                 
                 results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$Σchlordane, 
                 results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$Σchlordane, 
-                results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$Σchlordane, 
                 
                 results_POPs_ALS_survival$danish$plot_base_cox_gam_danish$ΣPBDE, 
-                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$ΣPBDE, 
-                results_POPs_ALS_survival$danish$plot_copollutant_cox_gam_danish$ΣPBDE), 
-           ncol = 3)
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$ΣPBDE), 
+           ncol = 2)
+
 ```
 
 #### Q-gcomp analysis
@@ -1691,6 +1718,50 @@ results_POPs_ALS_survival$sensi3$sensi3_figure
 results_POPs_ALS_survival$sensi3$sensi3_table
 ```
 
+## Sensitivity analysis 4 
+### Cox models (sd)
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_survival$sensi4$POPs_sd_ALS_table_danish_sensi_4
+results_POPs_ALS_survival$sensi4$POPs_sd_ALS_figure_danish_sensi_4
+```
+
+### Cox-GAMs models 
+```{r fig.height=11, fig.width=8}
+#| echo: false
+#| message: false
+#| warning: false
+
+wrap_plots(list(results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$PCB_4,
+                results_POPs_ALS_survival$sensi4$plot_adjusted_cox_gam_danish_sensi_4$PCB_4,
+                
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$PCB_DL,
+                results_POPs_ALS_survival$sensi4$plot_adjusted_cox_gam_danish_sensi_4$PCB_DL,
+                
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$PCB_NDL,
+                results_POPs_ALS_survival$sensi4$plot_adjusted_cox_gam_danish_sensi_4$PCB_NDL,
+                
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$OCP_HCB,
+                results_POPs_ALS_survival$sensi4$plot_adjusted_cox_gam_danish_sensi_4$OCP_HCB), 
+           ncol = 2)
+
+wrap_plots(list(
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$ΣDDT,
+                results_POPs_ALS_survival$sensi4$plot_adjusted_cox_gam_danish_sensi_4$ΣDDT, 
+                
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$OCP_β_HCH,
+                results_POPs_ALS_survival$sensi4$plot_adjusted_cox_gam_danish_sensi_4$OCP_β_HCH,
+                
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$Σchlordane,
+                results_POPs_ALS_survival$sensi4$plot_adjusted_cox_gam_danish_sensi_4$Σchlordane,
+                
+                results_POPs_ALS_survival$danish$plot_adjusted_cox_gam_danish$ΣPBDE,
+                results_POPs_ALS_survival$sensi4$plot_adjusted_cox_gam_danish_sensi_4$ΣPBDE), 
+           ncol = 2)
+
+```
 
 # Fatty acids and ALS occurence
 
