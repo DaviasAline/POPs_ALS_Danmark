@@ -41,7 +41,8 @@ covar_danish_cases <-
                             bmi ~ 1, 
                             cholesterol ~ 1, 
                             alcohol ~ 1))|>
-  bold_labels()
+  bold_labels() |>
+  add_n(statistic = "{N_miss} ({p_miss}%)", col_label = "**N missing**")
 
 
 covar_danish_by_death <- 

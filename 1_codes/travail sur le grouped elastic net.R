@@ -27,9 +27,6 @@ covariates_danish <- c("sex", "diagnosis_age", "smoking_2cat_i", "bmi", "marital
 # Préparation des matrices
 # -----------------------------
 
-# 1️⃣ Sélectionner les variables pertinentes
-dat <- bdd_cases_danish_bis |>
-  select(als, follow_up_death, all_of(covariates_danish), all_of(POPs_group_quart_bis))
 
 # 2️⃣ Créer les dummies tidyverse-style pour chaque variable
 #    - Les expositions (quartiles) sont encodées en one-hot 4 colonnes

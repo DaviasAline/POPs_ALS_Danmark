@@ -7,7 +7,7 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/2.3_analyses_POPs_ALS_survival.R"
 
 # Table 1 - description of the subjects ----
 # Description of the subject characteristics of the Danish EPIC, the FMC, the FMCF and the MFH Finnish cohorts (total sample size=263)
-table_1 <- results_descriptive$danish$covar_danish_by_death |>
+table_1 <- results_descriptive$danish$covar_danish_cases |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
@@ -47,7 +47,7 @@ figure_2 <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_surviv
 
 # Figure 3 - POPs - ALS survival among the Danish cohort (copollutant model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (ridge model; n = 166).
-figure_3 <- results_POPs_ALS_survival$sensi1$POPs_quart_ALS_figure_sensi1_danish
+figure_3 <- results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_danish
 
 # Figure 4 - POPs - ALS survival among the Danish cohort (mixture model) ----
 # Association between pre-diagnostic POP concentrations and survival among ALS cases from the Danish EPIC cohort using an environmental risk score (cox mixture model; n = 166). 
@@ -66,6 +66,30 @@ table_S1 <- results_descriptive$danish$POPs_table_danish_by_death |>
 
 # Table S2 - POPs - ALS survival among the Danish cohort ----
 # Association between pre-diagnostic POP concentrations and survival among ALS cases from the Danish Diet, Cancer and Health cohort (cox models by exposure quartiles; n = 166).
+
+
+# make_quartile_table <- function(data, POP_quart) {
+#   data %>%
+#     group_by(.data[[POP_quart]]) %>%
+#     summarise(
+#       n = n(),
+#       events = sum(status_death == 1, na.rm = TRUE),
+#       person_time = sum(follow_up_death, na.rm = TRUE)
+#     ) %>%
+#     mutate(variable = POP_quart, .before = 1)
+# }
+# 
+# 
+# tables_all <- map_df(POPs_group_quart, ~ make_quartile_table(bdd_cases_danish, .x)) |>
+#   mutate(quartiles = coalesce(!!!syms(POPs_group_quart))) |>
+#   select(variable, quartiles, n, events, person_time)
+# tables_all
+# 
+# 
+
+
+
+
 quartile1_rows <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_survival |>
   filter(study == "Danish") |>
   distinct(model, explanatory) |>
@@ -74,29 +98,26 @@ quartile1_rows <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_
     HR = "-",
     "95% CI" = "-",
     `p-value` = "", 
-    "p.value_heterogeneity" = '', 
     "p.value_trend" = '')
 
 table_S2 <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_survival |>
   filter(study == "Danish") |>
   filter(!term == "Continuous") |>
-  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity", "p.value_trend") |>
+  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_trend") |>
   mutate(across(everything(), as.character))
 
 table_S2 <- 
   bind_rows(quartile1_rows, table_S2) |>
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity", "p.value_trend")) |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_trend")) |>
   select(explanatory, term, contains("base"), contains("adjusted")) |>
   group_by(explanatory) |>
-  mutate(p.value_heterogeneity_base = ifelse(term == 'quartile 1', p.value_heterogeneity_base[term == 'quartile 2'], ''), 
-         p.value_trend_base = ifelse(term == 'quartile 1', p.value_trend_base[term == 'quartile 2'], ''),
-         p.value_heterogeneity_adjusted = ifelse(term == 'quartile 1', p.value_heterogeneity_adjusted[term == 'quartile 2'], ''), 
+  mutate(p.value_trend_base = ifelse(term == 'quartile 1', p.value_trend_base[term == 'quartile 2'], ''),
          p.value_trend_adjusted = ifelse(term == 'quartile 1', p.value_trend_adjusted[term == 'quartile 2'], '')) |>
   ungroup() |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Heterogeneity test" = "p.value_heterogeneity_base", "Trend test" = "p.value_trend_base",
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted",  "Heterogeneity test " = "p.value_heterogeneity_adjusted", "Trend test " = "p.value_trend_adjusted") |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Trend test" = "p.value_trend_base",
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "Trend test " = "p.value_trend_adjusted") |>
   mutate(explanatory = factor(explanatory, levels = POPs_group_labels), 
          explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
   arrange(explanatory) |>
@@ -106,15 +127,13 @@ table_S2 <-
   2All models are adjusted for sex and age at diagnosis. Adjusted models further account for smoking, BMI and marital status.
   3Estimated risk of ALS death when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
   4CI: Confidence interval.
-  5Heterogeneity tests in outcome value across POP quartiles, adjusted for sex and age at diagnosis.
-  6Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, adjusted for sex and age at diagnosis.
-  7Heterogeneity tests in outcome value across POP quartiles, adjusted for sex, age at diagnosis, smoking, BMI and marital status.
-  8Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
+  5Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, adjusted for sex and age at diagnosis.
+  6Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
   add_header(
     "explanatory" = "Exposures", 
     term = "Quartiles",
-    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model",  "Heterogeneity test" = "Base model",  "Trend test" = "Base model",
-    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model",  "Heterogeneity test " = "Adjusted model",  "Trend test " = "Adjusted model") |>
+    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model",  "Trend test" = "Base model",
+    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model", "Trend test " = "Adjusted model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   merge_v(j = "term") |>
@@ -132,7 +151,8 @@ rm(quartile1_rows)
 
 # Table S3 - POPs - ALS survival among the Danish cohort (copollutant model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).
-table_S3 <- results_POPs_ALS_survival$sensi1$POPs_quart_ALS_table_sensi1_danish
+table_S3 <- results_POPs_ALS_survival$sensi1$POPs_sd_ALS_table_sensi1_danish
+
 
 # Table S4 - POPs - ALS survival among the Danish cohort (mixture model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).
@@ -140,7 +160,8 @@ table_S4 <- results_POPs_ALS_survival$sensi1$POPs_quart_ALS_table_sensi1_ERS_dan
 
 # Table S5 - POPs - ALS survival among the Danish cohort (copollutant model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).
-table_S5 <- results_POPs_ALS_survival$sensi2$POPs_quart_ALS_table_sensi2_danish
+table_S5 <- results_POPs_ALS_survival$sensi2$POPs_sd_ALS_table_sensi2_danish
+
 
 # Table S6 - POPs - ALS survival among the Danish cohort (mixture model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).
@@ -178,7 +199,7 @@ dev.off()
 
 # Figure S2 - Sensitivity analysis - POPs - ALS survival among the Danish cohort (mixture model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).
-figure_S2 <- results_POPs_ALS_survival$sensi2$POPs_quart_ALS_figure_sensi2_danish
+figure_S2 <- results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_danish
 
 # Figure S3 - Sensitivity analysis - POPs - ALS survival among the Danish cohort (mixture model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).
@@ -225,7 +246,7 @@ ggsave(
 ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_survival/figure_3.tiff",
   figure_3,
-  height = 3,
+  height = 2,
   width = 4,
   units = "in")
 
@@ -239,7 +260,7 @@ ggsave(
 ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_survival/figure_S2.tiff",
   figure_S2,
-  height = 6,
+  height = 3,
   width = 5,
   units = "in")
 

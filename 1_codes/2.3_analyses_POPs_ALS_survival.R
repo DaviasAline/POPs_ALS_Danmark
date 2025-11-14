@@ -13,49 +13,29 @@ bdd_cases_danish <- bdd_danish |>
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
          all_of(POPs_group), 
          all_of(POPs_included)) |>
-  mutate(across(all_of(POPs_group), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
-                                             labels = c("Q1", "Q2", "Q3", "Q4")),
+  
+  mutate(across(all_of(c(POPs_group, POPs_included)),                           # creation of cohort and case specific quartiles of exposures
+                ~ cut(.x,
+                      breaks = quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE),
+                      include.lowest = TRUE,
+                      labels = c("Q1", "Q2", "Q3", "Q4")), 
                 .names = "{.col}_quart")) |>
-  mutate(across(all_of(POPs_group),                                             # create cohort and cases specific scaled POPs variables 
+  mutate(across(all_of(c(POPs_group, POPs_included)),                           # creation of cohort and case specific standardized exposures
                   ~as.numeric(scale(.x)),
-                  .names = "{.col}_sd"))  |>
-  replace_with_median(PCB_4, PCB_4_quart) |>
-  replace_with_median(PCB_DL, PCB_DL_quart) |>
-  replace_with_median(PCB_NDL, PCB_NDL_quart) |>
-  replace_with_median(OCP_HCB, OCP_HCB_quart) |>
-  replace_with_median(ΣDDT, ΣDDT_quart) |>
-  replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
-  replace_with_median(Σchlordane, Σchlordane_quart) |>
-  replace_with_median(ΣPBDE, ΣPBDE_quart) |>
-  mutate(across(all_of(POPs_included), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
-                                                labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(all_of(POPs_included),                                             # create cohort and cases specific scaled POPs variables 
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd"))  |>
-  replace_with_median(PCB_28, PCB_28_quart) |>
-  replace_with_median(PCB_52, PCB_52_quart) |>
-  replace_with_median(PCB_74, PCB_74_quart) |>
-  replace_with_median(PCB_99, PCB_99_quart) |>
-  replace_with_median(PCB_101, PCB_101_quart) |>
-  replace_with_median(PCB_118, PCB_118_quart) |>
-  replace_with_median(PCB_138, PCB_138_quart) |>
-  replace_with_median(PCB_153, PCB_153_quart) |>
-  replace_with_median(PCB_156, PCB_156_quart) |>
-  replace_with_median(PCB_170, PCB_170_quart) |>
-  replace_with_median(PCB_180, PCB_180_quart) |>
-  replace_with_median(PCB_183, PCB_183_quart) |>
-  replace_with_median(PCB_187, PCB_187_quart) |>
-  replace_with_median(OCP_pp_DDT, OCP_pp_DDT_quart) |>
-  replace_with_median(OCP_pp_DDE, OCP_pp_DDE_quart) |>
-  replace_with_median(OCP_oxychlordane, OCP_oxychlordane_quart) |>
-  replace_with_median(OCP_transnonachlor, OCP_transnonachlor_quart) |>
-  replace_with_median(PBDE_47, PBDE_47_quart) |>
-  replace_with_median(PBDE_99, PBDE_99_quart) |>
-  replace_with_median(PBDE_153, PBDE_153_quart) |>
-  mutate(sex = fct_relevel(sex, "Male", "Female"), 
-         smoking_2cat_i = fct_relevel(smoking_2cat_i, "Ever", "Never"), 
-         marital_status_2cat_i = fct_relevel(marital_status_2cat_i, "Married/cohabit", "Other"))
+                  .names = "{.col}_sd"))   |>
+  mutate(across(all_of(c(POPs_group, POPs_included)),                           # creation of cohort and case specific quartile mediane exposures
+                ~ {
+                  cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)      
+                  quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
+                  quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
+                  quart_meds[quartiles]       
+                },
+                .names = "{.col}_quart_med")) |>
+
+  mutate(                                                                       # reorder some categorical variables 
+    sex = fct_relevel(sex, "Male", "Female"), 
+    smoking_2cat_i = fct_relevel(smoking_2cat_i, "Ever", "Never"), 
+    marital_status_2cat_i = fct_relevel(marital_status_2cat_i, "Married/cohabit", "Other"))
 
 surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,                # set the outcomes
                         event = bdd_cases_danish$status_death)
@@ -1471,20 +1451,23 @@ bdd_cases_danish_bis <- bdd_danish |>
   select(study, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age,
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
          all_of(POPs_group)) |>
-  mutate(across(all_of(POPs_group), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
-                                             labels = c("Q1", "Q2", "Q3", "Q4")),
+  mutate(across(all_of(POPs_group),                           # creation of cohort and case specific quartiles of exposures
+                ~ cut(.x,
+                      breaks = quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE),
+                      include.lowest = TRUE,
+                      labels = c("Q1", "Q2", "Q3", "Q4")), 
                 .names = "{.col}_quart")) |>
-  mutate(across(all_of(POPs_group),                                             # create cohort and cases specific scaled POPs variables 
+  mutate(across(all_of(POPs_group),                           # creation of cohort and case specific standardized exposures
                 ~as.numeric(scale(.x)),
-                .names = "{.col}_sd"))  |>
-  replace_with_median(PCB_4, PCB_4_quart) |>
-  replace_with_median(PCB_DL, PCB_DL_quart) |>
-  replace_with_median(PCB_NDL, PCB_NDL_quart) |>
-  replace_with_median(OCP_HCB, OCP_HCB_quart) |>
-  replace_with_median(ΣDDT, ΣDDT_quart) |>
-  replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
-  replace_with_median(Σchlordane, Σchlordane_quart) |>
-  replace_with_median(ΣPBDE, ΣPBDE_quart) |>
+                .names = "{.col}_sd"))   |>
+  mutate(across(all_of(POPs_group),                           # creation of cohort and case specific quartile mediane exposures
+                ~ {
+                  cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)      
+                  quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
+                  quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
+                  quart_meds[quartiles]       
+                },
+                .names = "{.col}_quart_med")) |>
   mutate(sex = fct_relevel(sex, "Male", "Female"), 
          smoking_2cat_i = fct_relevel(smoking_2cat_i, "Ever", "Never"), 
          marital_status_2cat_i = fct_relevel(marital_status_2cat_i, "Married/cohabit", "Other"))
@@ -2199,34 +2182,23 @@ bdd_cases_danish_bis <- bdd_danish |>
   select(study, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age,
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
          all_of(POPs_included)) |>
-  mutate(across(all_of(POPs_included), ~ factor(ntile(.x, 4),                      # creation of POPs quartiles (cohort and cases specific)                        
-                                                labels = c("Q1", "Q2", "Q3", "Q4")),
+  mutate(across(all_of(POPs_included),                           # creation of cohort and case specific quartiles of exposures
+                ~ cut(.x,
+                      breaks = quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE),
+                      include.lowest = TRUE,
+                      labels = c("Q1", "Q2", "Q3", "Q4")), 
                 .names = "{.col}_quart")) |>
-  mutate(across(all_of(POPs_included),                                             # create cohort and cases specific scaled POPs variables 
+  mutate(across(all_of(POPs_included),                           # creation of cohort and case specific standardized exposures
                 ~as.numeric(scale(.x)),
-                .names = "{.col}_sd"))  |>
-  replace_with_median(PCB_28, PCB_28_quart) |>
-  replace_with_median(PCB_52, PCB_52_quart) |>
-  replace_with_median(PCB_74, PCB_74_quart) |>
-  replace_with_median(PCB_99, PCB_99_quart) |>
-  replace_with_median(PCB_101, PCB_101_quart) |>
-  replace_with_median(PCB_118, PCB_118_quart) |>
-  replace_with_median(PCB_138, PCB_138_quart) |>
-  replace_with_median(PCB_153, PCB_153_quart) |>
-  replace_with_median(PCB_156, PCB_156_quart) |>
-  replace_with_median(PCB_170, PCB_170_quart) |>
-  replace_with_median(PCB_180, PCB_180_quart) |>
-  replace_with_median(PCB_183, PCB_183_quart) |>
-  replace_with_median(PCB_187, PCB_187_quart) |>
-  replace_with_median(OCP_HCB, OCP_HCB_quart) |>
-  replace_with_median(OCP_β_HCH, OCP_β_HCH_quart) |>
-  replace_with_median(OCP_pp_DDT, OCP_pp_DDT_quart) |>
-  replace_with_median(OCP_pp_DDE, OCP_pp_DDE_quart) |>
-  replace_with_median(OCP_oxychlordane, OCP_oxychlordane_quart) |>
-  replace_with_median(OCP_transnonachlor, OCP_transnonachlor_quart) |>
-  replace_with_median(PBDE_47, PBDE_47_quart) |>
-  replace_with_median(PBDE_99, PBDE_99_quart) |>
-  replace_with_median(PBDE_153, PBDE_153_quart) |>
+                .names = "{.col}_sd"))   |>
+  mutate(across(all_of(POPs_included),                           # creation of cohort and case specific quartile mediane exposures
+                ~ {
+                  cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)      
+                  quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
+                  quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
+                  quart_meds[quartiles]       
+                },
+                .names = "{.col}_quart_med")) |>
   mutate(sex = fct_relevel(sex, "Male", "Female"), 
          smoking_2cat_i = fct_relevel(smoking_2cat_i, "Ever", "Never"), 
          marital_status_2cat_i = fct_relevel(marital_status_2cat_i, "Married/cohabit", "Other"))
