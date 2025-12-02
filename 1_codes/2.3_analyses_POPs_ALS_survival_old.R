@@ -23,11 +23,11 @@ bdd_cases_danish <- bdd_danish |>
   mutate(across(all_of(c(POPs_group, POPs_included)),                           # creation of cohort and case specific standardized exposures
                   ~as.numeric(scale(.x)),
                   .names = "{.col}_sd"))   |>
-  mutate(across(all_of(c(POPs_group, POPs_included)),                           # creation of cohort and case specific quartile mean exposures
+  mutate(across(all_of(c(POPs_group, POPs_included)),                           # creation of cohort and case specific quartile mediane exposures
                 ~ {
                   cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)      
                   quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
-                  quart_meds <- tapply(.x, quartiles, mean, na.rm = TRUE)                 
+                  quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
                   quart_meds[quartiles]       
                 },
                 .names = "{.col}_quart_med")) |>
@@ -1460,11 +1460,11 @@ bdd_cases_danish_bis <- bdd_danish |>
   mutate(across(all_of(POPs_group),                           # creation of cohort and case specific standardized exposures
                 ~as.numeric(scale(.x)),
                 .names = "{.col}_sd"))   |>
-  mutate(across(all_of(POPs_group),                           # creation of cohort and case specific quartile mean exposures
+  mutate(across(all_of(POPs_group),                           # creation of cohort and case specific quartile mediane exposures
                 ~ {
                   cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)      
                   quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
-                  quart_meds <- tapply(.x, quartiles, mean, na.rm = TRUE)                 
+                  quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
                   quart_meds[quartiles]       
                 },
                 .names = "{.col}_quart_med")) |>
@@ -1788,7 +1788,7 @@ bdd_cases_danish <-
       x <- ERS_score_from_elastic_net_sensi_1
       cuts <- quantile(x, probs = seq(0, 1, 0.25), na.rm = TRUE)
       quartiles <- cut(x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
-      quart_meds <- tapply(x, quartiles, mean, na.rm = TRUE)
+      quart_meds <- tapply(x, quartiles, median, na.rm = TRUE)
       quart_meds[quartiles]
     }
   )
@@ -1975,11 +1975,11 @@ bdd_cases_danish_bis <- bdd_danish |>
   mutate(across(all_of(POPs_included),                           # creation of cohort and case specific standardized exposures
                 ~as.numeric(scale(.x)),
                 .names = "{.col}_sd"))   |>
-  mutate(across(all_of(POPs_included),                           # creation of cohort and case specific quartile mean exposures
+  mutate(across(all_of(POPs_included),                           # creation of cohort and case specific quartile mediane exposures
                 ~ {
                   cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)      
                   quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
-                  quart_meds <- tapply(.x, quartiles, mean, na.rm = TRUE)                 
+                  quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
                   quart_meds[quartiles]       
                 },
                 .names = "{.col}_quart_med")) |>
@@ -2378,7 +2378,7 @@ bdd_cases_danish <-
            x <- ERS_score_from_elastic_net_sensi_2
            cuts <- quantile(x, probs = seq(0, 1, 0.25), na.rm = TRUE)
            quartiles <- cut(x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
-           quart_meds <- tapply(x, quartiles, mean, na.rm = TRUE)
+           quart_meds <- tapply(x, quartiles, median, na.rm = TRUE)
            quart_meds[quartiles]
          }
   )
@@ -2587,41 +2587,7 @@ sensi3_table <- bdd_cases_danish |>
       tbl_summary(by = status_death) |>
       add_overall()
 
-# Sensitivity analysis 5 ---- 
-# A copollutant model with just NDL-PCBs, HCB, b-HCH and chlordane
-formula_danish <-                                                             # set the formulas
-  as.formula(paste("surv_obj_danish ~", 
-                   paste(
-                     c("PCB_NDL_sd", "OCP_HCB_sd", "OCP_β_HCH_sd", "Σchlordane_sd", 
-                        covariates_danish), 
-                     collapse = " + ")))
 
-model_summary <- coxph(formula_danish, data = bdd_cases_danish)
-model_summary |> summary()
-
-
-coxph(formula_danish, data = bdd_cases_danish) |> 
-  tbl_regression(exponentiate = TRUE, 
-                 include = c("PCB_NDL_sd", "OCP_HCB_sd", "OCP_β_HCH_sd", "Σchlordane_sd"), 
-                 pvalue_fun = label_style_number(digits = 2)) |>
-  add_n()
-
-formula_danish <-                                                             # set the formulas
-  as.formula(paste("surv_obj_danish ~", 
-                   paste(
-                     c("PCB_NDL_quart", "OCP_HCB_quart", "OCP_β_HCH_quart", "Σchlordane_quart", 
-                       covariates_danish), 
-                     collapse = " + ")))
-
-model_summary <- coxph(formula_danish, data = bdd_cases_danish)
-model_summary |> summary()
-
-
-coxph(formula_danish, data = bdd_cases_danish) |> 
-  tbl_regression(exponentiate = TRUE, 
-                 include = c("PCB_NDL_quart", "OCP_HCB_quart", "OCP_β_HCH_quart", "Σchlordane_quart"), 
-                 pvalue_fun = label_style_number(digits = 2)) |>
-  add_n()
 
 # Tables and figures ----
 
@@ -2709,9 +2675,9 @@ POPs_quart_ALS_table_danish <-
     3Estimated risk of ALS death when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
     4CI: Confidence interval.
     5Heterogeneity tests in outcome value across POP quartiles, adjusted for sex and age at diagnosis.
-    6Trend tests using continuous variables whose values corresponded to the quartile specific mean POP levels, adjusted for sex and age at diagnosis.
+    6Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, adjusted for sex and age at diagnosis.
     7Heterogeneity tests in outcome value across POP quartiles, adjusted for sex, age at diagnosis, smoking, BMI and marital status.
-    8Trend tests using continuous variables whose values corresponded to the quartile specific mean POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
+    8Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
   add_header(
     "explanatory" = "Exposures", 
     term = "Quartiles",
@@ -2760,12 +2726,10 @@ POPs_sd_ALS_figure_danish <- main_results_POPs_ALS_survival |>
   coord_flip()
 
 ## figure POPs (quart) - als survival ----
-POPs_quart_ALS_figure_danish <- 
-  main_results_POPs_ALS_survival |>
+POPs_quart_ALS_figure_danish <- main_results_POPs_ALS_survival |>
   filter(study == "Danish") |>
   filter(!term == "Continuous") |>
   filter(analysis == "main") |>
-  filter(!model == "copollutant") |>
   mutate(model = fct_recode(model, 
                             "Base model" = "base",
                             "Adjusted model" = "adjusted"),
@@ -2794,9 +2758,9 @@ POPs_quart_ALS_figure_danish <-
     aes(
       x = term,
       y = 3,
-      label = paste("p trend: ", p.value_trend)),
+      label = paste("p-value trend: ", p.value_trend)),
     hjust = 0,
-    vjust = 0,
+    vjust = -1,
     size = 3,
     color = "black") +
   
@@ -2974,7 +2938,7 @@ POPs_quart_ALS_table_sensi1_danish <-
     3Estimated risk of ALS death when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
     4CI: Confidence interval.
     5Heterogeneity tests in outcome value across POP quartiles, adjusted for sex, age at diagnosis, smoking, BMI and marital status.
-    6Trend tests using continuous variables whose values corresponded to the quartile specific mean POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
+    6Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
   add_header(
     "explanatory" = "Exposures", term = "Quartiles",
     "HR" = "Copollutant model", "95% CI" = "Copollutant model", "p-value" = "Copollutant model",  
@@ -3147,7 +3111,7 @@ POPs_quart_ALS_table_sensi1_ERS_danish <-
     3Estimated risk of ALS death when environmental risk score is at quartiles 2, 3, and 4, compared to quartile 1.
     4CI: Confidence interval.
     5Heterogeneity tests in outcome value across environmental risk score quartiles, adjusted for sex, age at diagnosis, smoking, BMI and marital status.
-    6Trend tests using continuous environmental risk score whose values corresponded to the quartile specific mean POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
+    6Trend tests using continuous environmental risk score whose values corresponded to the quartile specific median POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
   add_header(
     "explanatory" = "Exposures", term = "Quartiles",
     "HR" = "Environmental risk score model", "95% CI" = "Environmental risk score model", "p-value" = "Environmental risk score model",  
@@ -3329,7 +3293,7 @@ POPs_quart_ALS_table_sensi2_danish <-
     2Estimated risk of ALS death when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
     3CI: Confidence interval.
     4Heterogeneity tests in outcome value across POP quartiles, adjusted for sex, age at diagnosis, smoking, BMI and marital status.
-    5Trend tests using continuous variables whose values corresponded to the quartile specific mean POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
+    5Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
   add_header(
     "explanatory" = "Exposures", term = "Quartiles",
     "HR" = "Copollutant model", "95% CI" = "Copollutant model", "p-value" = "Copollutant model",  
@@ -3504,7 +3468,7 @@ POPs_quart_ALS_table_sensi2_ERS_danish <-
     3Estimated risk of ALS death when the environmental risk score is at quartiles 2, 3, and 4, compared to quartile 1.
     4CI: Confidence interval.
     5Heterogeneity tests in outcome value across environmental risk score quartiles, adjusted for sex, age at diagnosis, smoking, BMI and marital status.
-    6Trend tests using continuous environmental risk score whose values corresponded to the quartile specific mean POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
+    6Trend tests using continuous environmental risk score whose values corresponded to the quartile specific median POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
   add_header(
     "explanatory" = "Exposures", term = "Quartiles",
     "HR" = "Environmental risk score model", "95% CI" = "Environmental risk score model", "p-value" = "Environmental risk score model",  
@@ -3659,60 +3623,58 @@ POPs_sd_ALS_figure_danish_sensi_4 <- main_results_POPs_ALS_survival |>
 
 # Assemblage ----
 results_POPs_ALS_survival <- 
-  list(
-    main_analysis = list(
-      main_results_POPs_ALS_survival = main_results_POPs_ALS_survival, 
-      covar_danish = covar_danish, 
-      POPs_sd_ALS_table_danish = POPs_sd_ALS_table_danish, 
-      POPs_quart_ALS_table_danish = POPs_quart_ALS_table_danish, 
-      POPs_sd_ALS_figure_danish = POPs_sd_ALS_figure_danish, 
-      POPs_quart_ALS_figure_danish = POPs_quart_ALS_figure_danish, 
-      # plot_base_cox_gam_danish = plot_base_cox_gam_danish, 
-      # plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish, 
-      # plot_copollutant_cox_gam_danish = plot_copollutant_cox_gam_danish, 
-      plot_base_cox_gam_danish = plot_base_cox_gam_danish, 
-      plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish, 
-      qgcomp = list(
-        qgcomp_boot_danish = qgcomp_boot_danish, 
-        qgcomp_noboot_danish = qgcomp_noboot_danish, 
-        qgcomp_positive_boot_danish = qgcomp_positive_boot_danish, 
-        qgcomp_positive_noboot_danish = qgcomp_positive_noboot_danish, 
-        POPs_ALS_qgcomp_table_danish = POPs_ALS_qgcomp_table_danish,
-        POPs_ALS_qgcomp_figure_danish = POPs_ALS_qgcomp_figure_danish, 
-        POPs_ALS_qgcomp_positive_table_danish = POPs_ALS_qgcomp_positive_table_danish,
-        POPs_ALS_qgcomp_positive_figure_danish = POPs_ALS_qgcomp_positive_figure_danish)), 
-    sensi1 = list(
-      sensi1_lasso_sd_danish = sensi1_lasso_sd_danish, 
-      sensi1_ridge_sd_danish = sensi1_ridge_sd_danish, 
-      sensi1_elastic_net_sd_danish = sensi1_elastic_net_sd_danish, 
-      POPs_sd_ALS_figure_sensi1_danish = POPs_sd_ALS_figure_sensi1_danish, 
-      POPs_quart_ALS_figure_sensi1_danish = POPs_quart_ALS_figure_sensi1_danish, 
-      POPs_sd_ALS_table_sensi1_danish = POPs_sd_ALS_table_sensi1_danish, 
-      POPs_quart_ALS_table_sensi1_danish = POPs_quart_ALS_table_sensi1_danish, 
-      POPs_sd_ALS_figure_sensi1_ERS_danish = POPs_sd_ALS_figure_sensi1_ERS_danish, 
-      POPs_quart_ALS_figure_sensi1_ERS_danish = POPs_quart_ALS_figure_sensi1_ERS_danish, 
-      POPs_sd_ALS_table_sensi1_ERS_danish = POPs_sd_ALS_table_sensi1_ERS_danish, 
-      POPs_quart_ALS_table_sensi1_ERS_danish = POPs_quart_ALS_table_sensi1_ERS_danish), 
-    sensi2 = list(
-      sensi2_lasso_sd_danish = sensi2_lasso_sd_danish, 
-      # sensi2_ridge_sd_danish = sensi2_ridge_sd_danish, 
-      sensi2_elastic_net_sd_danish = sensi2_elastic_net_sd_danish, 
-      POPs_sd_ALS_figure_sensi2_danish = POPs_sd_ALS_figure_sensi2_danish, 
-      POPs_quart_ALS_figure_sensi2_danish = POPs_quart_ALS_figure_sensi2_danish, 
-      POPs_sd_ALS_table_sensi2_danish = POPs_sd_ALS_table_sensi2_danish, 
-      POPs_quart_ALS_table_sensi2_danish = POPs_quart_ALS_table_sensi2_danish, 
-      POPs_sd_ALS_figure_sensi2_ERS_danish = POPs_sd_ALS_figure_sensi2_ERS_danish, 
-      POPs_quart_ALS_figure_sensi2_ERS_danish = POPs_quart_ALS_figure_sensi2_ERS_danish, 
-      POPs_sd_ALS_table_sensi2_ERS_danish = POPs_sd_ALS_table_sensi2_ERS_danish, 
-      POPs_quart_ALS_table_sensi2_ERS_danish = POPs_quart_ALS_table_sensi2_ERS_danish), 
-    sensi3 = list(
-      sensi3_figure = sensi3_figure, 
-      sensi3_table = sensi3_table), 
-    sensi4 = list(
-      POPs_sd_ALS_table_danish_sensi_4 = POPs_sd_ALS_table_danish_sensi_4, 
-      POPs_sd_ALS_figure_danish_sensi_4 = POPs_sd_ALS_figure_danish_sensi_4, 
-      plot_base_cox_gam_danish_sensi_4 = plot_base_cox_gam_danish_sensi_4, 
-      plot_adjusted_cox_gam_danish_sensi_4 = plot_adjusted_cox_gam_danish_sensi_4))
+  list(main_analysis = list(main_results_POPs_ALS_survival = main_results_POPs_ALS_survival), 
+       danish = list(
+         covar_danish = covar_danish, 
+         POPs_sd_ALS_table_danish = POPs_sd_ALS_table_danish, 
+         POPs_quart_ALS_table_danish = POPs_quart_ALS_table_danish, 
+         POPs_sd_ALS_figure_danish = POPs_sd_ALS_figure_danish, 
+         POPs_quart_ALS_figure_danish = POPs_quart_ALS_figure_danish, 
+         # plot_base_cox_gam_danish = plot_base_cox_gam_danish, 
+         # plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish, 
+         # plot_copollutant_cox_gam_danish = plot_copollutant_cox_gam_danish, 
+         plot_base_cox_gam_danish = plot_base_cox_gam_danish, 
+         plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish, 
+         qgcomp = list(qgcomp_boot_danish = qgcomp_boot_danish, 
+                       qgcomp_noboot_danish = qgcomp_noboot_danish, 
+                       qgcomp_positive_boot_danish = qgcomp_positive_boot_danish, 
+                       qgcomp_positive_noboot_danish = qgcomp_positive_noboot_danish, 
+                       POPs_ALS_qgcomp_table_danish = POPs_ALS_qgcomp_table_danish,
+                       POPs_ALS_qgcomp_figure_danish = POPs_ALS_qgcomp_figure_danish, 
+                       POPs_ALS_qgcomp_positive_table_danish = POPs_ALS_qgcomp_positive_table_danish,
+                       POPs_ALS_qgcomp_positive_figure_danish = POPs_ALS_qgcomp_positive_figure_danish)), 
+       sensi1 = list(
+         sensi1_lasso_sd_danish = sensi1_lasso_sd_danish, 
+         sensi1_ridge_sd_danish = sensi1_ridge_sd_danish, 
+         sensi1_elastic_net_sd_danish = sensi1_elastic_net_sd_danish, 
+         POPs_sd_ALS_figure_sensi1_danish = POPs_sd_ALS_figure_sensi1_danish, 
+         POPs_quart_ALS_figure_sensi1_danish = POPs_quart_ALS_figure_sensi1_danish, 
+         POPs_sd_ALS_table_sensi1_danish = POPs_sd_ALS_table_sensi1_danish, 
+         POPs_quart_ALS_table_sensi1_danish = POPs_quart_ALS_table_sensi1_danish, 
+         POPs_sd_ALS_figure_sensi1_ERS_danish = POPs_sd_ALS_figure_sensi1_ERS_danish, 
+         POPs_quart_ALS_figure_sensi1_ERS_danish = POPs_quart_ALS_figure_sensi1_ERS_danish, 
+         POPs_sd_ALS_table_sensi1_ERS_danish = POPs_sd_ALS_table_sensi1_ERS_danish, 
+         POPs_quart_ALS_table_sensi1_ERS_danish = POPs_quart_ALS_table_sensi1_ERS_danish), 
+       sensi2 = list(
+         sensi2_lasso_sd_danish = sensi2_lasso_sd_danish, 
+         # sensi2_ridge_sd_danish = sensi2_ridge_sd_danish, 
+         sensi2_elastic_net_sd_danish = sensi2_elastic_net_sd_danish, 
+         POPs_sd_ALS_figure_sensi2_danish = POPs_sd_ALS_figure_sensi2_danish, 
+         POPs_quart_ALS_figure_sensi2_danish = POPs_quart_ALS_figure_sensi2_danish, 
+         POPs_sd_ALS_table_sensi2_danish = POPs_sd_ALS_table_sensi2_danish, 
+         POPs_quart_ALS_table_sensi2_danish = POPs_quart_ALS_table_sensi2_danish, 
+         POPs_sd_ALS_figure_sensi2_ERS_danish = POPs_sd_ALS_figure_sensi2_ERS_danish, 
+         POPs_quart_ALS_figure_sensi2_ERS_danish = POPs_quart_ALS_figure_sensi2_ERS_danish, 
+         POPs_sd_ALS_table_sensi2_ERS_danish = POPs_sd_ALS_table_sensi2_ERS_danish, 
+         POPs_quart_ALS_table_sensi2_ERS_danish = POPs_quart_ALS_table_sensi2_ERS_danish), 
+       sensi3 = list(
+         sensi3_figure = sensi3_figure, 
+         sensi3_table = sensi3_table), 
+       sensi4 = list(
+         POPs_sd_ALS_table_danish_sensi_4 = POPs_sd_ALS_table_danish_sensi_4, 
+         POPs_sd_ALS_figure_danish_sensi_4 = POPs_sd_ALS_figure_danish_sensi_4, 
+         plot_base_cox_gam_danish_sensi_4 = plot_base_cox_gam_danish_sensi_4, 
+         plot_adjusted_cox_gam_danish_sensi_4 = plot_adjusted_cox_gam_danish_sensi_4))
 
 rm(bdd_cases_danish, 
    main_results_POPs_ALS_survival, 

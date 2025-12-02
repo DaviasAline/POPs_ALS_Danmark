@@ -17,33 +17,11 @@ table_1 <- results_descriptive$danish$covar_danish_cases |>
 
 # Figure 1 - description of the POP levels (boxplots) ----
 # Distribution of pre-disease POP concentrations in ALS cases from the Danish EPIC, the FMC, the FMCF and the MFH Finnish cohorts (total sample size=263).
-figure_1 <- results_descriptive$danish$POPs_group_boxplot_danish_by_death
+figure_1 <- results_descriptive$main_analysis$POPs_group_boxplot_danish_by_death
 
 # Figure 2 - forest plot expo - ALS survival (danish EPIC cohort) ----
 # Association between pre-diagnostic POP concentrations and survival among ALS cases from the Danish Diet, Cancer and Health cohort (cox models by exposure quartiles; n = 166).
-figure_2 <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_survival |>
-  filter(study == "Danish") |>
-  filter(!term == "Continuous") |>
-  filter(!model == "copollutant") |>
-  mutate(model = fct_recode(model, 
-                            "Base model" = "base",
-                            "Adjusted model" = "adjusted"),
-         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
-         explanatory = factor(explanatory, levels = POPs_group_labels),
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
-         term = fct_rev(term)) |>
-  arrange(explanatory) |> 
-  ggplot(aes(x = term, y = HR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
-  geom_pointrange(size = 0.5) + 
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y") +  
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
-        legend.position = "bottom", 
-        strip.text.y.left = element_text(angle = 0, hjust = 0.5, vjust = 0.5)) +
-  coord_flip()
+figure_2 <- results_POPs_ALS_survival$main_analysis$POPs_quart_ALS_figure_danish
 
 # Figure 3 - POPs - ALS survival among the Danish cohort (copollutant model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (ridge model; n = 166).
@@ -67,31 +45,9 @@ table_S1 <- results_descriptive$danish$POPs_table_danish_by_death |>
 # Table S2 - POPs - ALS survival among the Danish cohort ----
 # Association between pre-diagnostic POP concentrations and survival among ALS cases from the Danish Diet, Cancer and Health cohort (cox models by exposure quartiles; n = 166).
 
-
-# make_quartile_table <- function(data, POP_quart) {
-#   data %>%
-#     group_by(.data[[POP_quart]]) %>%
-#     summarise(
-#       n = n(),
-#       events = sum(status_death == 1, na.rm = TRUE),
-#       person_time = sum(follow_up_death, na.rm = TRUE)
-#     ) %>%
-#     mutate(variable = POP_quart, .before = 1)
-# }
-# 
-# 
-# tables_all <- map_df(POPs_group_quart, ~ make_quartile_table(bdd_cases_danish, .x)) |>
-#   mutate(quartiles = coalesce(!!!syms(POPs_group_quart))) |>
-#   select(variable, quartiles, n, events, person_time)
-# tables_all
-# 
-# 
-
-
-
-
 quartile1_rows <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_survival |>
   filter(study == "Danish") |>
+  filter(analysis == "main") |> 
   distinct(model, explanatory) |>
   mutate(
     term = "quartile 1",
@@ -103,6 +59,7 @@ quartile1_rows <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_
 table_S2 <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_survival |>
   filter(study == "Danish") |>
   filter(!term == "Continuous") |>
+  filter(analysis == "main") |> 
   select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_trend") |>
   mutate(across(everything(), as.character))
 
@@ -117,7 +74,39 @@ table_S2 <-
          p.value_trend_adjusted = ifelse(term == 'quartile 1', p.value_trend_adjusted[term == 'quartile 2'], '')) |>
   ungroup() |>
   rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Trend test" = "p.value_trend_base",
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "Trend test " = "p.value_trend_adjusted") |>
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "Trend test " = "p.value_trend_adjusted") 
+
+# ajout au tableau du nombre d'event et du persone-time
+bdd_cases_danish <- bdd_cases_danish |>
+  mutate(follow_up_death_y = follow_up_death/12) 
+
+make_tab <- function(var){
+  bdd_cases_danish |>
+    group_by(.data[[var]]) |>
+    summarise(
+      Events = sum(status_death == 1, na.rm = TRUE),
+      person_time = sum(follow_up_death_y, na.rm = TRUE),
+      .groups = "drop") |>
+    mutate(explanatory = var) |>
+    select(explanatory, term = .data[[var]], Events, "Person-time" = person_time)
+}
+
+table_all <- map_df(POPs_group_quart, make_tab) 
+
+table_all <- table_all |>
+  mutate(term = fct_recode(term, 
+                           "quartile 1" = "Q1",
+                           "quartile 2" = "Q2",
+                           "quartile 3" = "Q3",
+                           "quartile 4" = "Q4"), 
+         explanatory = str_replace(explanatory, "_quart", ""))
+
+table_S2 <- left_join(table_S2, table_all, by = c('explanatory', 'term')) |>
+  mutate("Person-time" = round(`Person-time`, 0)) |>
+  select(explanatory, term, Events, "Person-time", everything())
+
+table_S2 <- 
+  table_S2 |>
   mutate(explanatory = factor(explanatory, levels = POPs_group_labels), 
          explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
   arrange(explanatory) |>
@@ -132,22 +121,36 @@ table_S2 <-
   add_header(
     "explanatory" = "Exposures", 
     term = "Quartiles",
+    Events = "Events of death",
+    "Person-time" = "Person-year",
     "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model",  "Trend test" = "Base model",
     "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model", "Trend test " = "Adjusted model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   merge_v(j = "term") |>
+  # merge_v(j = "Events") |>
+  # merge_v(j = "Person-time") |>
   theme_vanilla() |>
-  bold(j = "explanatory", part = "body") |>
   align(align = "center", part = "all") |>
+  
   align(j = "explanatory", align = "left", part = "all") |> 
-  align(j = "term", align = "left", part = "all") |> 
+  bold(j = "explanatory", part = "body") |>
   merge_at(j = "explanatory", part = "header") |>
+  
+  align(j = "term", align = "left", part = "all") |> 
   merge_at(j = "term", part = "header") |>
+  
+  align(j = "Events", align = "left", part = "all") |> 
+  merge_at(j = "Events", part = "header") |>
+  
+  align(j = "Person-time", align = "left", part = "all") |> 
+  merge_at(j = "Person-time", part = "header") |>
+  
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
-rm(quartile1_rows)
+rm(quartile1_rows, make_tab, table_all)
+
 
 # Table S3 - POPs - ALS survival among the Danish cohort (copollutant model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).
