@@ -60,6 +60,64 @@ figure_3 <- results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_o
 # Supplementary table 1 - Sensitivity analysis (volcano plot filtered to > 5 years of follow-up) ----
 table_S1 <- results_proteomic_ALS_occurrence$sensi_1_2$proteomic_sd_ALS_table_sensi_1_2
 
+# Supplementary figure 1 - heatmap proteomic neuro explo ----
+plot.new()
+tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_S1.tiff", 
+     units = "mm", 
+     width = 200, 
+     height = 200, 
+     res = 300)
+corrplot(results_descriptive$danish$proteomic_heatmap_danish_neuro_explo, 
+         method = 'color', 
+         type = "lower", 
+         tl.col = 'black',
+         order = "hclust",         # regroupement des variables selon niveau de cor
+         tl.srt = 45, 
+         # addCoef.col = "black",
+         # number.cex = 0.8,
+         # number.digits = 1,
+         tl.cex = 0.4,             # taille police des variables
+         col = rev(COL2(diverging = "RdYlBu")))
+
+
+# Supplementary figure 2 - heatmap proteomic immune response  ----
+plot.new()
+tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_S2.tiff", 
+     units = "mm", 
+     width = 200, 
+     height = 200, 
+     res = 300)
+corrplot(results_descriptive$danish$proteomic_heatmap_danish_immun_res, 
+         method = 'color', 
+         type = "lower", 
+         tl.col = 'black',
+         order = "hclust",         # regroupement des variables selon niveau de cor
+         tl.srt = 45, 
+         # addCoef.col = "black",
+         # number.cex = 0.8,
+         # number.digits = 1,
+         tl.cex = 0.4,             # taille police des variables
+         col = rev(COL2(diverging = "RdYlBu")))
+
+# Supplementary figure 3 - heatmap proteomic metabolism ----
+plot.new()
+tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_S3.tiff", 
+     units = "mm", 
+     width = 200, 
+     height = 200, 
+     res = 300)
+corrplot(results_descriptive$danish$proteomic_heatmap_danish_metabolism, 
+         method = 'color', 
+         type = "lower", 
+         tl.col = 'black',
+         order = "hclust",         # regroupement des variables selon niveau de cor
+         tl.srt = 45, 
+         # addCoef.col = "black",
+         # number.cex = 0.8,
+         # number.digits = 1,
+         tl.cex = 0.4,             # taille police des variables
+         col = rev(COL2(diverging = "RdYlBu")))
+
 
 # Export ----
 table_1 <- read_docx() |> body_add_flextable(table_1) 
@@ -90,5 +148,27 @@ ggsave(
   figure_3,
   height = 4,
   width = 8,
+  units = "in")
+
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_S1.tiff",
+  figure_S1,
+  height = 10,
+  width = 10,
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_S2.tiff",
+  figure_S2,
+  height = 10,
+  width = 10,
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_S3.tiff",
+  figure_S3,
+  height = 10,
+  width = 10,
   units = "in")
 

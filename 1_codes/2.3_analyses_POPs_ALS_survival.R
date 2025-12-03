@@ -2623,6 +2623,8 @@ coxph(formula_danish, data = bdd_cases_danish) |>
                  pvalue_fun = label_style_number(digits = 2)) |>
   add_n()
 
+rm(formula_danish, model_summary)
+
 # Tables and figures ----
 
 ## table covariates - als survival ----

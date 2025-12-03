@@ -2619,6 +2619,36 @@ After removing the NEFL outlier
 results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_over_time_sensi_1 
 ```
 
+## Additionnal analysis 3 
+Testing the distribution of the p-values depending on OR>=1 to the distribution of the p-values depending on OR<1 using a Fasano-Franceschini test
+
+The Fasano–Franceschini test is a multivariate extension of the Kolmogorov–Smirnov test.
+While the classical KS test only compares one-dimensional distributions, the Fasano–Franceschini test can compare two-dimensional or multidimensional distributions.
+
+It works by evaluating, for every point of one dataset, how the cumulative distribution differs from the other dataset in the four quadrants around that point.
+The test statistic D represents the largest difference between the empirical multivariate distributions of the two datasets.
+A large value of D indicates that the two datasets occupy different regions of the multidimensional space (e.g., different shapes, locations, or dispersions).
+
+The null hypothesis (H₀) is:
+H₀: The two datasets come from the same multivariate distribution.
+A small p-value indicates a significant deviation between the two distributions.
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_figure
+results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_results
+```
+
+Because the p-value is 0.00587, which is well below the standard 0.05 threshold, we reject the null hypothesis that the two sets of results (OR ≥ 1 vs. OR < 1) come from the same distribution.
+
+This means that the two groups of proteins, those associated with increased risk and those associated with decreased risk, show significantly different joint distributions of odds ratios and p-values.
+Therefore, the asymmetric patterns we observe are unlikely to be due to random fluctuation caused by multiple testing.
+The results support the idea that the proteins associated with increased disease risk and those associated with decreased disease risk represent genuinely different biological signals, rather than artifacts of high-dimensional multiple testing.
+
+
 # Proteomic and ALS survival
 
 ## Effects of subject characteristics on ALS survival

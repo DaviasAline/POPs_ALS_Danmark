@@ -2635,7 +2635,7 @@ figure_NEFL_over_time <-
     x = "Time to ALS diagnosis (years)",
     y = "Ratio of NEFL in case and matched controls") +
   theme_minimal(base_size = 14)
-rm(ratio)
+rm(ratios)
 
 # Calcul du ratio : proteomic_neuro_explo_NEFL_case / moyenne(proteomic_neuro_explo_NEFL_controls)
 ratios_sensi_1 <- 
@@ -2659,9 +2659,66 @@ figure_NEFL_over_time_sensi_1 <-
     x = "Time to ALS diagnosis (years)",
     y = "Ratio of NEFL in case and matched controls") +
   theme_lucid(base_size = 14)
-rm(ratio_sensi_1)
+rm(ratios_sensi_1)
 
 ## GAM ----
+
+# Additional analysis 3 - test for multiple testing -----
+data_matrix1 <- 
+  main_results |> 
+  filter(analysis == "main") |>
+  filter(model == "adjusted") |>
+  filter(term == "Continuous") |>
+  select(analysis, model, explanatory, term, OR_raw, p_value_raw) |>
+  filter(OR_raw<1) |>
+  mutate(
+    OR_log2 = log2(OR_raw), 
+    OR_log2 = abs(OR_log2), 
+    p_value_log = -log10(p_value_raw)) |>
+  select(OR_log2, p_value_log) # left side mirrored by taking absolute values
+
+data_matrix2 <-
+  main_results |> 
+  filter(analysis == "main") |>
+  filter(model == "adjusted") |>
+  filter(term == "Continuous") |>
+  select(analysis, model, explanatory, term, OR_raw, p_value_raw) |>
+  filter(OR_raw>=1) |>
+  mutate(
+    OR_log2 = log2(OR_raw), 
+    p_value_log = -log10(p_value_raw)) |>
+  select(OR_log2, p_value_log) # right side
+
+plot1 <- ggplot(data_matrix1) +
+  aes(x = OR_log2, y = p_value_log) +
+  geom_point(colour = "#112446") +
+  theme_minimal() +
+  labs(title = "Associations with OR<1", 
+       y = "-log10(p-value)", 
+       x = "abslog2(OR)") + 
+  xlim(0, 0.6) +
+  ylim(0, 3.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
+
+plot2 <- ggplot(data_matrix2) +
+  aes(x = OR_log2, y = p_value_log) +
+  geom_point(colour = "#112446") +
+  theme_minimal() +
+  labs(title = "Associations with OR>=1", 
+       y = "-log10(p-value)", 
+       x = "log2(OR)") + 
+  xlim(0, 0.6) +
+  ylim(0, 3.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
+
+additional_analysis_3_figure <- plot1 + plot2
+
+# test for p-value
+additional_analysis_3_results <- fasano.franceschini.test(data_matrix1, data_matrix2, seed = 0)
+
+rm(data_matrix1, data_matrix2, plot1, plot2)
+
+
 
 # Figures and Tables ----
 ### Table covariates - als survival ----
@@ -4275,7 +4332,10 @@ results_proteomic_ALS_occurrence <-
       densityplot_OR = densityplot_OR), 
     additional_analysis_2 = list(
       figure_NEFL_over_time = figure_NEFL_over_time ,
-      figure_NEFL_over_time_sensi_1 = figure_NEFL_over_time_sensi_1))
+      figure_NEFL_over_time_sensi_1 = figure_NEFL_over_time_sensi_1), 
+    additional_analysis_3 = list(
+      additional_analysis_3_figure = additional_analysis_3_figure, 
+      additional_analysis_3_results = additional_analysis_3_results))
 
 rm(covar, 
    main_results, 
@@ -4335,5 +4395,7 @@ rm(covar,
    boxplot_OR, 
    densityplot_OR, 
    figure_NEFL_over_time, 
-   figure_NEFL_over_time_sensi_1)
+   figure_NEFL_over_time_sensi_1, 
+   additional_analysis_3_figure, 
+   additional_analysis_3_results)
   
