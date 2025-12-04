@@ -804,7 +804,7 @@ rm(pvals, signif_vars,
    signif_vars_labels)
 
 
-# Sensi 2 - Removing cases and their controls with follow_up < 5 years ----
+# Sensi 2 - Filtered cases and their controls with follow_up > 5 years ----
 # bdd_danish |>                                              # have to remove 17 cases with follow-up<60 months (and their controls) -> 51 people
 #   filter(follow_up<60) |>
 #   select(sample, match, follow_up, everything()) |>
@@ -1277,7 +1277,7 @@ rm(pvals, signif_vars,
 
 
 
-# Sensi 1 + sensi 2 - Removing the oulier for NEFL + removing cases and their controls with follow_up < 5 years ----
+# Sensi 1 + sensi 2 - Filtered the oulier for NEFL + removing cases and their controls with follow_up > 5 years ----
 
 # bdd_danish |>                                              # have to remove 17 cases with follow-up<60 months (and their controls) -> 51 people
 #   filter(follow_up<60) |>
@@ -2740,11 +2740,11 @@ proteomic_sd_ALS_table <-                                                       
          "OR " = "OR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p_value_adjusted") |>
   flextable() |>
   add_footer_lines(
-    "1All models are matched on age at baseline and sex. Adjusted models further account for smoking and body mass index. 
-    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease serum concentration of proteins.
+    "1All models are matched on birth year and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
     3CI: Confidence interval.") |>
   add_header(
-    "explanatory" = "Pre-disease serum proteins", 
+    "explanatory" = "Pre-disease plasma proteins", 
     "protein_group" = "Protein group", 
     "OR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", 
     "OR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model") |>
@@ -2775,11 +2775,11 @@ proteomic_sd_ALS_table <-                                                       
 #   rename("OR" = "OR_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base") |>
 #   flextable() |>
 #   add_footer_lines(
-#     "1All models are matched on age at baseline and sex. 
-#     2Estimated risk of ALS associated with a one standard deviation increase in pre-disease serum concentration of proteins.
+#     "1All models are matched on birth year and sex. 
+#     2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
 #     3CI: Confidence interval.") |>
 #   add_header(
-#     "explanatory" = "Pre-disease serum proteins", 
+#     "explanatory" = "Pre-disease plasma proteins", 
 #     "protein_group" = "Protein group", 
 #     "OR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models") |>
 #   theme_vanilla() |>
@@ -2841,15 +2841,15 @@ proteomic_quart_ALS_table <-
   arrange(protein_group, explanatory, quartiles) |>
   flextable() |>
   add_footer_lines(
-    "1All models are matched on age at baseline and sex. Adjusted models further account for smoking and body mass index. 
-    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease serum concentration of proteins.
+    "1All models are matched on birth year and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
     3CI: Confidence interval.
-    4Heterogeneity tests in outcome value across protein quartiles, matched on sex and age at baseline. 
-    5Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and age at baseline. 
-    6Heterogeneity tests in outcome value across POP quartiles, matched on sex and age at baseline, and adjusted for smoking and body mass index.
-    7Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and age at baseline, and adjusted for smoking and body mass index.") |>
+    4Heterogeneity tests in outcome value across protein quartiles, matched on sex and birth year. 
+    5Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and birth year. 
+    6Heterogeneity tests in outcome value across POP quartiles, matched on sex and birth year, and adjusted for smoking and body mass index.
+    7Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and birth year, and adjusted for smoking and body mass index.") |>
   add_header(
-    "explanatory" = "Pre-disease serum proteins", 
+    "explanatory" = "Pre-disease plasma proteins", 
     "protein_group" = "Protein group", 
     "quartiles" = "Quartiles",
     "OR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model",  "Heterogeneity test" = "Base model",   "Trend test" = "Base model", 
@@ -2908,13 +2908,13 @@ rm(extra_rows)
 #   arrange(protein_group, explanatory, quartiles) |>
 #   flextable() |>
 #   add_footer_lines(
-#     "1All models are matched on age at baseline and sex. 
-#     2Estimated risk of ALS associated with a one standard deviation increase in pre-disease serum concentration of proteins.
+#     "1All models are matched on birth year and sex. 
+#     2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
 #     3CI: Confidence interval.
-#     4Heterogeneity tests in outcome value across protein quartiles, matched on sex and age at baseline. 
-#     5Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and age at baseline.") |>
+#     4Heterogeneity tests in outcome value across protein quartiles, matched on sex and birth year. 
+#     5Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and birth year.") |>
 #   add_header(
-#     "explanatory" = "Pre-disease serum proteins", 
+#     "explanatory" = "Pre-disease plasma proteins", 
 #     "protein_group" = "Protein group", 
 #     "quartiles" = "Quartiles",
 #     "OR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models", 
@@ -3172,11 +3172,11 @@ proteomic_sd_ALS_table_sensi_1 <-                                               
          "OR " = "OR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p_value_adjusted") |>
   flextable() |>
   add_footer_lines(
-    "1All models are matched on age at baseline and sex. Adjusted models further account for smoking and body mass index. 
-    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease serum concentration of proteins.
+    "1All models are matched on birth year and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
     3CI: Confidence interval.") |>
   add_header(
-    "explanatory" = "Pre-disease serum proteins", 
+    "explanatory" = "Pre-disease plasma proteins", 
     "protein_group" = "Protein group", 
     "OR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", 
     "OR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model") |>
@@ -3240,15 +3240,15 @@ proteomic_quart_ALS_table_sensi_1 <-
   arrange(protein_group, explanatory, quartiles) |>
   flextable() |>
   add_footer_lines(
-    "1All models are matched on age at baseline and sex. Adjusted models further account for smoking and body mass index. 
-    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease serum concentration of proteins.
+    "1All models are matched on birth year and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
     3CI: Confidence interval.
-    4Heterogeneity tests in outcome value across protein quartiles, matched on sex and age at baseline. 
-    5Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and age at baseline. 
-    6Heterogeneity tests in outcome value across POP quartiles, matched on sex and age at baseline, and adjusted for smoking and body mass index.
-    7Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and age at baseline, and adjusted for smoking and body mass index.") |>
+    4Heterogeneity tests in outcome value across protein quartiles, matched on sex and birth year. 
+    5Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and birth year. 
+    6Heterogeneity tests in outcome value across POP quartiles, matched on sex and birth year, and adjusted for smoking and body mass index.
+    7Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and birth year, and adjusted for smoking and body mass index.") |>
   add_header(
-    "explanatory" = "Pre-disease serum proteins", 
+    "explanatory" = "Pre-disease plasma proteins", 
     "protein_group" = "Protein group", 
     "quartiles" = "Quartiles",
     "OR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model",  "Heterogeneity test" = "Base model",   "Trend test" = "Base model", 
@@ -3328,11 +3328,11 @@ proteomic_sd_ALS_table_sensi_2 <-                                               
          "OR " = "OR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p_value_adjusted") |>
   flextable() |>
   add_footer_lines(
-    "1All models are matched on age at baseline and sex. Adjusted models further account for smoking and body mass index. 
-    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease serum concentration of proteins.
+    "1All models are matched on birth year and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
     3CI: Confidence interval.") |>
   add_header(
-    "explanatory" = "Pre-disease serum proteins", 
+    "explanatory" = "Pre-disease plasma proteins", 
     "protein_group" = "Protein group", 
     "OR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", 
     "OR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model") |>
@@ -3393,15 +3393,15 @@ proteomic_quart_ALS_table_sensi_2 <-
   arrange(protein_group, explanatory, quartiles) |>
   flextable() |>
   add_footer_lines(
-    "1All models are matched on age at baseline and sex. Adjusted models further account for smoking and body mass index. 
-    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease serum concentration of proteins.
+    "1All models are matched on birth year and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
     3CI: Confidence interval.
-    4Heterogeneity tests in outcome value across protein quartiles, matched on sex and age at baseline. 
-    5Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and age at baseline. 
-    6Heterogeneity tests in outcome value across POP quartiles, matched on sex and age at baseline, and adjusted for smoking and body mass index.
-    7Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and age at baseline, and adjusted for smoking and body mass index.") |>
+    4Heterogeneity tests in outcome value across protein quartiles, matched on sex and birth year. 
+    5Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and birth year. 
+    6Heterogeneity tests in outcome value across POP quartiles, matched on sex and birth year, and adjusted for smoking and body mass index.
+    7Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and birth year, and adjusted for smoking and body mass index.") |>
   add_header(
-    "explanatory" = "Pre-disease serum proteins", 
+    "explanatory" = "Pre-disease plasma proteins", 
     "protein_group" = "Protein group", 
     "quartiles" = "Quartiles",
     "OR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model",  "Heterogeneity test" = "Base model",   "Trend test" = "Base model", 
@@ -3484,11 +3484,11 @@ proteomic_sd_ALS_table_sensi_1_2 <-                                             
          "OR " = "OR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p_value_adjusted") |>
   flextable() |>
   add_footer_lines(
-    "1All models are matched on age at baseline and sex. Adjusted models further account for smoking and body mass index. 
-    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease serum concentration of proteins.
+    "1All models are matched on birth year and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
     3CI: Confidence interval.") |>
   add_header(
-    "explanatory" = "Pre-disease serum proteins", 
+    "explanatory" = "Pre-disease plasma proteins", 
     "protein_group" = "Protein group", 
     "OR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", 
     "OR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model") |>
@@ -3551,15 +3551,15 @@ proteomic_quart_ALS_table_sensi_1_2 <-
   arrange(protein_group, explanatory, quartiles) |>
   flextable() |>
   add_footer_lines(
-    "1All models are matched on age at baseline and sex. Adjusted models further account for smoking and body mass index. 
-    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease serum concentration of proteins.
+    "1All models are matched on birth year and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
     3CI: Confidence interval.
-    4Heterogeneity tests in outcome value across protein quartiles, matched on sex and age at baseline. 
-    5Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and age at baseline. 
-    6Heterogeneity tests in outcome value across POP quartiles, matched on sex and age at baseline, and adjusted for smoking and body mass index.
-    7Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and age at baseline, and adjusted for smoking and body mass index.") |>
+    4Heterogeneity tests in outcome value across protein quartiles, matched on sex and birth year. 
+    5Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and birth year. 
+    6Heterogeneity tests in outcome value across POP quartiles, matched on sex and birth year, and adjusted for smoking and body mass index.
+    7Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and birth year, and adjusted for smoking and body mass index.") |>
   add_header(
-    "explanatory" = "Pre-disease serum proteins", 
+    "explanatory" = "Pre-disease plasma proteins", 
     "protein_group" = "Protein group", 
     "quartiles" = "Quartiles",
     "OR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model",  "Heterogeneity test" = "Base model",   "Trend test" = "Base model", 
