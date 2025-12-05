@@ -58,7 +58,45 @@ figure_3 <- results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_o
 
 
 # Supplementary table 1 - Sensitivity analysis (volcano plot filtered to > 5 years of follow-up) ----
-table_S1 <- results_proteomic_ALS_occurrence$sensi_1_2$proteomic_sd_ALS_table_sensi_1_2
+#table_S1 <- results_proteomic_ALS_occurrence$sensi_1_2$proteomic_sd_ALS_table_sensi_1_2
+
+table_S1 <- 
+  results_proteomic_ALS_occurrence$main$main_results |> 
+  filter(term == "Continuous") |>
+  filter(model == "adjusted") |>
+  filter(analysis %in% c("main", "sensi_1_2")) |>
+  group_by(explanatory) |>                                                      # select explanatory vars significant                
+  filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>                     
+  ungroup() |>
+  select(analysis, explanatory, protein_group, OR, "95% CI", "p_value") |>
+  pivot_wider(names_from = "analysis", values_from = c("OR", "95% CI", "p_value")) |>
+  select(protein_group, explanatory, contains("main"), contains("sensi_1_2")) |>
+  rename("OR" = "OR_main", "95% CI" = "95% CI_main", "p-value" = "p_value_main", 
+         "OR " = "OR_sensi_1_2", "95% CI " = "95% CI_sensi_1_2", "p-value " = "p_value_sensi_1_2") |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are matched on birth year and sex, and adjusted for smoking and body mass index. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
+    3CI: Confidence interval.") |>
+  add_header(
+    "explanatory" = "Pre-disease plasma proteins", 
+    "protein_group" = "Protein group", 
+    "OR" = "Main model", "95% CI" = "Main model", "p-value" = "Main model", 
+    "OR " = "Sensitivity model", "95% CI " = "Sensitivity model", "p-value " = "Sensitivity model") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  merge_v(j = "explanatory") |>
+  bold(j = "explanatory", part = "body") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  merge_v(j = "protein_group") |>
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 # Supplementary figure 1 - heatmap proteomic neuro explo ----
 plot.new()
