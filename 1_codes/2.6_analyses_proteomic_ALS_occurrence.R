@@ -2662,34 +2662,52 @@ figure_NEFL_over_time_sensi_1 <-
 rm(ratios_sensi_1)
 
 ## GAM ----
+# to do 
+
+
+
 
 # Additional analysis 3 - test for multiple testing -----
-data_matrix1 <- 
-  main_results |> 
-  filter(analysis == "main") |>
-  filter(model == "adjusted") |>
-  filter(term == "Continuous") |>
-  select(analysis, model, explanatory, term, OR_raw, p_value_raw) |>
-  filter(OR_raw<1) |>
-  mutate(
-    OR_log2 = log2(OR_raw), 
-    OR_log2 = abs(OR_log2), 
-    p_value_log = -log10(p_value_raw)) |>
-  select(OR_log2, p_value_log) # left side mirrored by taking absolute values
+# Fasano–Franceschini and Jackknife Leave-One-Out 
 
-data_matrix2 <-
-  main_results |> 
-  filter(analysis == "main") |>
-  filter(model == "adjusted") |>
-  filter(term == "Continuous") |>
-  select(analysis, model, explanatory, term, OR_raw, p_value_raw) |>
-  filter(OR_raw>=1) |>
-  mutate(
-    OR_log2 = log2(OR_raw), 
-    p_value_log = -log10(p_value_raw)) |>
-  select(OR_log2, p_value_log) # right side
+# Function to compute FF statistic on numeric columns only
+ff_stat <- function(mat1, mat2) {
+  res <- fasano.franceschini.test(mat1[, c("OR_log2", "p_value_log")],
+                                  mat2[, c("OR_log2", "p_value_log")],
+                                  seed = 0)
+  return(res$statistic)
+}
 
-plot1 <- ggplot(data_matrix1) +
+
+## All proteins ----
+### data prep ----
+data_matrix1_all <- 
+  results_proteomic_ALS_occurrence$main$main_results |> 
+  filter(analysis == "main",
+         model == "adjusted",
+         term == "Continuous") |>
+  select(explanatory, OR_raw, p_value_raw) |>
+  filter(OR_raw < 1) |>
+  mutate(
+    OR_log2 = abs(log2(OR_raw)),
+    p_value_log = -log10(p_value_raw)) |>
+  select(explanatory, OR_log2, p_value_log)
+
+data_matrix2_all <- 
+  results_proteomic_ALS_occurrence$main$main_results |> 
+  filter(analysis == "main",
+         model == "adjusted",
+         term == "Continuous") |>
+  select(explanatory, OR_raw, p_value_raw) |>
+  filter(OR_raw >= 1) |>
+  mutate(
+    OR_log2 = log2(OR_raw),
+    p_value_log = -log10(p_value_raw)) |>
+  select(explanatory, OR_log2, p_value_log)
+
+### plots ----
+
+plot1_all <- ggplot(data_matrix1_all) +
   aes(x = OR_log2, y = p_value_log) +
   geom_point(colour = "#112446") +
   theme_minimal() +
@@ -2700,7 +2718,7 @@ plot1 <- ggplot(data_matrix1) +
   ylim(0, 3.5) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
 
-plot2 <- ggplot(data_matrix2) +
+plot2_all <- ggplot(data_matrix2_all) +
   aes(x = OR_log2, y = p_value_log) +
   geom_point(colour = "#112446") +
   theme_minimal() +
@@ -2711,13 +2729,401 @@ plot2 <- ggplot(data_matrix2) +
   ylim(0, 3.5) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
 
-additional_analysis_3_figure <- plot1 + plot2
+additional_analysis_3_all_figure <- plot1_all + plot2_all
 
-# test for p-value
-additional_analysis_3_results <- fasano.franceschini.test(data_matrix1, data_matrix2, seed = 0)
+### Fasano Franceschini test ----
+additional_analysis_3_all_results <- 
+  fasano.franceschini.test(data_matrix1_all[, c("OR_log2", "p_value_log")],
+                           data_matrix2_all[, c("OR_log2", "p_value_log")],
+                           seed = 0)
 
-rm(data_matrix1, data_matrix2, plot1, plot2)
+### Jackknife approach ----
+T0 <- additional_analysis_3_all_results$statistic                               # d statistic from the inital ff test with all observations 
 
+influence_1 <- numeric(nrow(data_matrix1_all))                                  # Initialize vectors
+influence_2 <- numeric(nrow(data_matrix2_all))
+
+for (i in seq_len(nrow(data_matrix1_all))) {                                    # Jackknife for data_matrix1 OR_raw < 1
+  mat1_minus <- data_matrix1_all[-i, ]
+  Ti <- ff_stat(mat1_minus, data_matrix2_all)
+  influence_1[i] <- T0 - Ti
+}
+
+for (j in seq_len(nrow(data_matrix2_all))) {                                    # Jackknife for data_matrix2 OR_raw >= 1
+  mat2_minus <- data_matrix2_all[-j, ]
+  Tj <- ff_stat(data_matrix1_all, mat2_minus)
+  influence_2[j] <- T0 - Tj
+}
+
+jackknife_all_results <- tibble(                                                # Assemble results 
+  group = c(rep("OR<1", nrow(data_matrix1_all)),
+            rep("OR>=1", nrow(data_matrix2_all))),
+  
+  explanatory = c(data_matrix1_all$explanatory,
+                  data_matrix2_all$explanatory),
+  
+  influence = c(influence_1, influence_2))
+
+
+proteomic_influence <- jackknife_results |>                                     # selection of the prot with highest influence to the ff test
+  filter(influence == 259 | influence == 111) |> 
+  pull(explanatory) 
+proteomic_influence <- sort(proteomic_influence)
+
+proteomic_selected <-                                                           # selection des prot avec p<0.05
+  results_proteomic_ALS_occurrence$main$main_results |> 
+  filter(analysis == "main", 
+         model == "adjusted", 
+         term == "Continuous", 
+         p_value_raw<0.05) |> 
+  pull(explanatory) 
+proteomic_selected <- sort(proteomic_selected)
+
+valeurs_communes <- intersect(proteomic_influence, proteomic_selected)          # check the commune proteins 
+
+
+rm(data_matrix1_all, data_matrix2_all, 
+   plot1_all, plot2_all, 
+   T0, influence_1, influence_2, i, j, mat1_minus, mat2_minus, Ti, Tj, 
+   proteomic_influence, proteomic_selected, valeurs_communes)
+
+## Immune response ----
+### data prep ----
+data_matrix1_immune <- 
+  results_proteomic_ALS_occurrence$main$main_results |> 
+  filter(analysis == "main",
+         model == "adjusted",
+         term == "Continuous", 
+         protein_group == "Immune response") |>
+  select(explanatory, OR_raw, p_value_raw) |>
+  filter(OR_raw < 1) |>
+  mutate(
+    OR_log2 = abs(log2(OR_raw)),
+    p_value_log = -log10(p_value_raw)) |>
+  select(explanatory, OR_log2, p_value_log)
+
+data_matrix2_immune <- 
+  results_proteomic_ALS_occurrence$main$main_results |> 
+  filter(analysis == "main",
+         model == "adjusted",
+         term == "Continuous", 
+         protein_group == "Immune response") |>
+  select(explanatory, OR_raw, p_value_raw) |>
+  filter(OR_raw >= 1) |>
+  mutate(
+    OR_log2 = log2(OR_raw),
+    p_value_log = -log10(p_value_raw)) |>
+  select(explanatory, OR_log2, p_value_log)
+
+### plots ----
+
+plot1_immune <- ggplot(data_matrix1_immune) +
+  aes(x = OR_log2, y = p_value_log) +
+  geom_point(colour = "#112446") +
+  theme_minimal() +
+  labs(title = "Associations with OR<1", 
+       y = "-log10(p-value)", 
+       x = "abslog2(OR)") + 
+  xlim(0, 0.6) +
+  ylim(0, 3.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
+
+plot2_immune <- ggplot(data_matrix2_immune) +
+  aes(x = OR_log2, y = p_value_log) +
+  geom_point(colour = "#112446") +
+  theme_minimal() +
+  labs(title = "Associations with OR>=1", 
+       y = "-log10(p-value)", 
+       x = "log2(OR)") + 
+  xlim(0, 0.6) +
+  ylim(0, 3.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
+
+additional_analysis_3_immune_figure <- plot1_immune + plot2_immune
+
+### Fasano Franceschini test ----
+additional_analysis_3_immune_results <- 
+  fasano.franceschini.test(data_matrix1_immune[, c("OR_log2", "p_value_log")],
+                           data_matrix2_immune[, c("OR_log2", "p_value_log")],
+                           seed = 0)
+
+### Jackknife approach ----
+T0 <- additional_analysis_3_immune_results$statistic                               # d statistic from the inital ff test with all observations 
+
+influence_1 <- numeric(nrow(data_matrix1_immune))                                      # Initialize vectors
+influence_2 <- numeric(nrow(data_matrix2_immune))
+
+for (i in seq_len(nrow(data_matrix1_immune))) {                                        # Jackknife for data_matrix1 OR_raw < 1
+  mat1_minus <- data_matrix1_immune[-i, ]
+  Ti <- ff_stat(mat1_minus, data_matrix2_immune)
+  influence_1[i] <- T0 - Ti
+}
+
+for (j in seq_len(nrow(data_matrix2_immune))) {                                        # Jackknife for data_matrix2 OR_raw >= 1
+  mat2_minus <- data_matrix2_immune[-j, ]
+  Tj <- ff_stat(data_matrix1_immune, mat2_minus)
+  influence_2[j] <- T0 - Tj
+}
+
+jackknife_immune_results <- tibble(                                                # Assemble results 
+  group = c(rep("OR<1", nrow(data_matrix1_immune)),
+            rep("OR>=1", nrow(data_matrix2_immune))),
+  
+  explanatory = c(data_matrix1_immune$explanatory,
+                  data_matrix2_immune$explanatory),
+  
+  influence = c(influence_1, influence_2)) |> 
+  arrange(desc(influence))
+
+
+proteomic_influence <- jackknife_immune_results |>                              # selection of the prot with highest influence to the ff test
+  filter(influence == 108 | influence == 32) |> 
+  pull(explanatory) 
+proteomic_influence <- sort(proteomic_influence)
+
+proteomic_selected <-                                                           # selection des prot avec p<0.05
+  results_proteomic_ALS_occurrence$main$main_results |> 
+  filter(analysis == "main", 
+         model == "adjusted", 
+         term == "Continuous", 
+         protein_group == "Immune response",
+         p_value_raw<0.05) |> 
+  pull(explanatory) 
+proteomic_selected <- sort(proteomic_selected)
+
+valeurs_communes <- intersect(proteomic_influence, proteomic_selected)          # check the commune proteins 
+
+
+rm(data_matrix1_immune, data_matrix2_immune, 
+   plot1_immune, plot2_immune, 
+   T0, influence_1, influence_2, i, j, mat1_minus, mat2_minus, Ti, Tj, 
+   proteomic_influence, proteomic_selected, valeurs_communes)
+
+
+
+## Metabolism ----
+### data prep ----
+data_matrix1_metabolism <- 
+  results_proteomic_ALS_occurrence$main$main_results |> 
+  filter(analysis == "main",
+         model == "adjusted",
+         term == "Continuous", 
+         protein_group == "Metabolism") |>
+  select(explanatory, OR_raw, p_value_raw) |>
+  filter(OR_raw < 1) |>
+  mutate(
+    OR_log2 = abs(log2(OR_raw)),
+    p_value_log = -log10(p_value_raw)) |>
+  select(explanatory, OR_log2, p_value_log)
+
+data_matrix2_metabolism <- 
+  results_proteomic_ALS_occurrence$main$main_results |> 
+  filter(analysis == "main",
+         model == "adjusted",
+         term == "Continuous", 
+         protein_group == "Metabolism") |>
+  select(explanatory, OR_raw, p_value_raw) |>
+  filter(OR_raw >= 1) |>
+  mutate(
+    OR_log2 = log2(OR_raw),
+    p_value_log = -log10(p_value_raw)) |>
+  select(explanatory, OR_log2, p_value_log)
+
+### plots ----
+
+plot1_metabolism <- ggplot(data_matrix1_metabolism) +
+  aes(x = OR_log2, y = p_value_log) +
+  geom_point(colour = "#112446") +
+  theme_minimal() +
+  labs(title = "Associations with OR<1", 
+       y = "-log10(p-value)", 
+       x = "abslog2(OR)") + 
+  xlim(0, 0.6) +
+  ylim(0, 3.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
+
+plot2_metabolism <- ggplot(data_matrix2_metabolism) +
+  aes(x = OR_log2, y = p_value_log) +
+  geom_point(colour = "#112446") +
+  theme_minimal() +
+  labs(title = "Associations with OR>=1", 
+       y = "-log10(p-value)", 
+       x = "log2(OR)") + 
+  xlim(0, 0.6) +
+  ylim(0, 3.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
+
+additional_analysis_3_metabolism_figure <- plot1_metabolism + plot2_metabolism
+
+### Fasano Franceschini test ----
+additional_analysis_3_metabolism_results <- 
+  fasano.franceschini.test(data_matrix1_metabolism[, c("OR_log2", "p_value_log")],
+                           data_matrix2_metabolism[, c("OR_log2", "p_value_log")],
+                           seed = 0)
+
+### Jackknife approach ----
+T0 <- additional_analysis_3_metabolism_results$statistic                        # d statistic from the inital ff test with all observations 
+
+influence_1 <- numeric(nrow(data_matrix1_metabolism))                           # Initialize vectors
+influence_2 <- numeric(nrow(data_matrix2_metabolism))
+
+for (i in seq_len(nrow(data_matrix1_metabolism))) {                             # Jackknife for data_matrix1 OR_raw < 1
+  mat1_minus <- data_matrix1_metabolism[-i, ]
+  Ti <- ff_stat(mat1_minus, data_matrix2_metabolism)
+  influence_1[i] <- T0 - Ti
+}
+
+for (j in seq_len(nrow(data_matrix2_metabolism))) {                             # Jackknife for data_matrix2 OR_raw >= 1
+  mat2_minus <- data_matrix2_metabolism[-j, ]
+  Tj <- ff_stat(data_matrix1_metabolism, mat2_minus)
+  influence_2[j] <- T0 - Tj
+}
+
+jackknife_metabolism_results <- tibble(                                         # Assemble results 
+  group = c(rep("OR<1", nrow(data_matrix1_metabolism)),
+            rep("OR>=1", nrow(data_matrix2_metabolism))),
+  
+  explanatory = c(data_matrix1_metabolism$explanatory,
+                  data_matrix2_metabolism$explanatory),
+  
+  influence = c(influence_1, influence_2)) |> 
+  arrange(desc(influence))
+
+
+proteomic_influence <- jackknife_metabolism_results |>                          # selection of the prot with highest influence to the ff test
+  filter(influence == 136 | influence == 52) |> 
+  pull(explanatory) 
+proteomic_influence <- sort(proteomic_influence)
+
+proteomic_selected <-                                                           # selection des prot avec p<0.05
+  results_proteomic_ALS_occurrence$main$main_results |> 
+  filter(analysis == "main", 
+         model == "adjusted", 
+         term == "Continuous", 
+         protein_group == "Metabolism",
+         p_value_raw<0.05) |> 
+  pull(explanatory) 
+proteomic_selected <- sort(proteomic_selected)
+
+valeurs_communes <- intersect(proteomic_influence, proteomic_selected)          # check the commune proteins 
+
+
+rm(data_matrix1_metabolism, data_matrix2_metabolism, 
+   plot1_metabolism, plot2_metabolism, 
+   T0, influence_1, influence_2, i, j, mat1_minus, mat2_minus, Ti, Tj, 
+   proteomic_influence, proteomic_selected, valeurs_communes)
+
+
+## Neuro-exploratory ----
+### data prep ----
+data_matrix1_neuro <- 
+  results_proteomic_ALS_occurrence$main$main_results |> 
+  filter(analysis == "main",
+         model == "adjusted",
+         term == "Continuous", 
+         protein_group == "Neuro-exploratory") |>
+  select(explanatory, OR_raw, p_value_raw) |>
+  filter(OR_raw < 1) |>
+  mutate(
+    OR_log2 = abs(log2(OR_raw)),
+    p_value_log = -log10(p_value_raw)) |>
+  select(explanatory, OR_log2, p_value_log)
+
+data_matrix2_neuro <- 
+  results_proteomic_ALS_occurrence$main$main_results |> 
+  filter(analysis == "main",
+         model == "adjusted",
+         term == "Continuous", 
+         protein_group == "Neuro-exploratory") |>
+  select(explanatory, OR_raw, p_value_raw) |>
+  filter(OR_raw >= 1) |>
+  mutate(
+    OR_log2 = log2(OR_raw),
+    p_value_log = -log10(p_value_raw)) |>
+  select(explanatory, OR_log2, p_value_log)
+
+### plots ----
+plot1_neuro <- ggplot(data_matrix1_neuro) +
+  aes(x = OR_log2, y = p_value_log) +
+  geom_point(colour = "#112446") +
+  theme_minimal() +
+  labs(title = "Associations with OR<1", 
+       y = "-log10(p-value)", 
+       x = "abslog2(OR)") + 
+  xlim(0, 0.6) +
+  ylim(0, 3.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
+
+plot2_neuro <- ggplot(data_matrix2_neuro) +
+  aes(x = OR_log2, y = p_value_log) +
+  geom_point(colour = "#112446") +
+  theme_minimal() +
+  labs(title = "Associations with OR>=1", 
+       y = "-log10(p-value)", 
+       x = "log2(OR)") + 
+  xlim(0, 0.6) +
+  ylim(0, 3.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
+
+additional_analysis_3_neuro_figure <- plot1_neuro + plot2_neuro
+
+### Fasano Franceschini test ----
+additional_analysis_3_neuro_results <- 
+  fasano.franceschini.test(data_matrix1_neuro[, c("OR_log2", "p_value_log")],
+                           data_matrix2_neuro[, c("OR_log2", "p_value_log")],
+                           seed = 0)
+
+### Jackknife approach ----
+T0 <- additional_analysis_3_neuro_results$statistic                             # d statistic from the inital ff test with all observations 
+
+influence_1 <- numeric(nrow(data_matrix1_neuro))                                # Initialize vectors
+influence_2 <- numeric(nrow(data_matrix2_neuro))
+
+for (i in seq_len(nrow(data_matrix1_neuro))) {                                  # Jackknife for data_matrix1 OR_raw < 1
+  mat1_minus <- data_matrix1_neuro[-i, ]
+  Ti <- ff_stat(mat1_minus, data_matrix2_neuro)
+  influence_1[i] <- T0 - Ti
+}
+
+for (j in seq_len(nrow(data_matrix2_neuro))) {                                  # Jackknife for data_matrix2 OR_raw >= 1
+  mat2_minus <- data_matrix2_neuro[-j, ]
+  Tj <- ff_stat(data_matrix1_neuro, mat2_minus)
+  influence_2[j] <- T0 - Tj
+}
+
+jackknife_neuro_results <- tibble(                                              # Assemble results 
+  group = c(rep("OR<1", nrow(data_matrix1_neuro)),
+            rep("OR>=1", nrow(data_matrix2_neuro))),
+  
+  explanatory = c(data_matrix1_neuro$explanatory,
+                  data_matrix2_neuro$explanatory),
+  
+  influence = c(influence_1, influence_2)) |> 
+  arrange(desc(influence))
+
+
+proteomic_influence <- jackknife_neuro_results |>                               # selection of the prot with highest influence to the ff test
+  filter(influence == 98 | influence == 56) |> 
+  pull(explanatory) 
+proteomic_influence <- sort(proteomic_influence)
+
+proteomic_selected <-                                                           # selection des prot avec p<0.05
+  results_proteomic_ALS_occurrence$main$main_results |> 
+  filter(analysis == "main", 
+         model == "adjusted", 
+         term == "Continuous", 
+         protein_group == "Neuro-exploratory",
+         p_value_raw<0.05) |> 
+  pull(explanatory) 
+proteomic_selected <- sort(proteomic_selected)
+
+valeurs_communes <- intersect(proteomic_influence, proteomic_selected)          # check the commune proteins 
+
+
+rm(data_matrix1_neuro, data_matrix2_neuro, 
+   plot1_neuro, plot2_neuro, 
+   T0, influence_1, influence_2, i, j, mat1_minus, mat2_minus, Ti, Tj, 
+   proteomic_influence, proteomic_selected, valeurs_communes)
 
 
 # Figures and Tables ----
@@ -4334,8 +4740,21 @@ results_proteomic_ALS_occurrence <-
       figure_NEFL_over_time = figure_NEFL_over_time ,
       figure_NEFL_over_time_sensi_1 = figure_NEFL_over_time_sensi_1), 
     additional_analysis_3 = list(
-      additional_analysis_3_figure = additional_analysis_3_figure, 
-      additional_analysis_3_results = additional_analysis_3_results))
+      additional_analysis_3_all_figure = additional_analysis_3_all_figure, 
+      additional_analysis_3__all_results = additional_analysis_3_all_results, 
+      jackknife_all_results = jackknife_all_results, 
+      
+      additional_analysis_3_immune_figure = additional_analysis_3_immune_figure, 
+      additional_analysis_3_immune_results = additional_analysis_3_immune_results, 
+      jackknife_immune_results = jackknife_immune_results, 
+      
+      additional_analysis_3_metabolism_figure = additional_analysis_3_metabolism_figure, 
+      additional_analysis_3_metabolism_results = additional_analysis_3_metabolism_results, 
+      jackknife_metabolism_results = jackknife_metabolism_results, 
+      
+      additional_analysis_3_neuro_figure = additional_analysis_3_neuro_figure, 
+      additional_analysis_3_neuro_results = additional_analysis_3_neuro_results, 
+      jackknife_neuro_results = jackknife_neuro_results))
 
 rm(covar, 
    main_results, 
@@ -4396,6 +4815,20 @@ rm(covar,
    densityplot_OR, 
    figure_NEFL_over_time, 
    figure_NEFL_over_time_sensi_1, 
-   additional_analysis_3_figure, 
-   additional_analysis_3_results)
+   
+   additional_analysis_3_all_figure, 
+   additional_analysis_3__all_results, 
+   jackknife_all_results, 
+   
+   additional_analysis_3_immune_figure, 
+   additional_analysis_3_immune_results, 
+   jackknife_immune_results, 
+   
+   additional_analysis_3_metabolism_figure, 
+   additional_analysis_3_metabolism_results, 
+   jackknife_metabolism_results, 
+   
+   additional_analysis_3_neuro_figure, 
+   additional_analysis_3_neuro_results, 
+   jackknife_neuro_results)
   
