@@ -2637,6 +2637,28 @@ figure_NEFL_over_time <-
   theme_minimal(base_size = 14)
 rm(ratios)
 
+# Regression lineaire with x = time to diag and y = ratio NEFL
+ggplot(ratios) +
+  aes(x = ratio_proteomic_neuro_explo_NEFL) +
+  geom_histogram(bins = 30L, fill = "#112446") +
+  theme_minimal()
+
+lm(ratio_proteomic_neuro_explo_NEFL ~ follow_up_neg, data = ratios) |> 
+  tbl_regression()
+
+ratios_sensi <- ratios |>
+  filter(match != 159) 
+
+ggplot(ratios_sensi) +
+  aes(x = ratio_proteomic_neuro_explo_NEFL) +
+  geom_histogram(bins = 30L, fill = "#112446") +
+  theme_minimal()
+
+lm(ratio_proteomic_neuro_explo_NEFL ~ follow_up_neg, data = ratios_sensi) |> 
+  tbl_regression()
+  
+
+
 # Calcul du ratio : proteomic_neuro_explo_NEFL_case / moyenne(proteomic_neuro_explo_NEFL_controls)
 ratios_sensi_1 <- 
   bdd_danish |>
