@@ -7,7 +7,8 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/2.6_analyses_proteomic_ALS_occurr
 
 # Creation of cases specific datasets ----
 bdd_cases_danish <- bdd_danish |>
-  filter (als == 1) |>
+  filter (als == 1) |>   # remove controls 
+  filter(match != 159) |>    # remove NEFL outlier
   select(sample, als, als_date, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
          all_of(proteomic)) |>
@@ -30,7 +31,7 @@ bdd_cases_danish <- bdd_danish |>
 surv_obj <- Surv(time = bdd_cases_danish$follow_up_death,                       # set the outcomes
                         event = bdd_cases_danish$status_death)
 covariates <-                                                                   # set the covariates 
-  c("sex", "diagnosis_age", "smoking_2cat_i", "bmi", "marital_status_2cat_i")
+  c("sex", "diagnosis_age", "smoking_2cat_i", "bmi")
 
 
 # Effects of the covariates on ALS survival ----
@@ -51,7 +52,7 @@ covar <- tbl_merge(tbls = list(
     bold_p()), 
   tab_spanner = c("**Crude**", "**Adjusted**"))
 
-# Main analysis 
+# Main analysis ----
 ## Cox model (sd) ----
 ### Base ----
 model1_cox_sd <- map_dfr(proteomic_sd, function(expl) {
@@ -230,41 +231,81 @@ rm(heterogeneity_base_quart, heterogeneity_adjusted_quart,
 
 
 ## Cox model (GAMs) ----
-### Base ----
-model1_gam <- list()
+vars_labels <- set_names(str_replace(proteomic, 
+                                     "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
+                                     ""), 
+                         proteomic)
 
-for (var in proteomic) {
-  
+
+### Base model ----
+fit_cox_gam_base <- function(var, data = bdd_cases_danish) {
+
   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
-  formula <- as.formula(paste("outcome ~ s(", var, ") + diagnosis_age + sex")) 
+  formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age")
+  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
   
-  model <- gam(formula,                                                         # run the cox-gam model
-               family = cox.ph(), 
-               method = "ML", 
-               data = bdd_cases_danish)    
-  model_summary <- summary(model)
-  model1_gam[[var]] <- model_summary
+  smry <- summary(model)
+  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
+  pval <- case_when(pval < 0.01 ~ "< 0.01", 
+                    pval >0.99 ~ "> 0.99",
+                    .default = format(pval, nsmall =2, digits = 2))
+  x_label <- vars_labels[[var]] 
+  
+  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
+  smooth_df <- data.frame(
+    x = plot_data$x,
+    fit = plot_data$fit,
+    se = plot_data$se)
+  
+  list(
+    model = model,
+    plot_data = smooth_df,
+    edf = edf,
+    pval = pval,
+    var = var,
+    x_label = x_label)
 }
 
-rm(var, outcome, formula, model, model_summary)
+cox_gam_results_base <- map(proteomic, fit_cox_gam_base)
+rm(fit_cox_gam_base)
 
-### Adjusted ----
-model2_gam <- list()
 
-for (var in proteomic) {
+
+### Adjusted model ----
+fit_cox_gam_adjusted <- function(var, data = bdd_cases_danish) {
   
   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
-  formula <- as.formula(paste("outcome ~ s(", var, ") + ", paste(covariates, collapse = "+")))  
+  formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age + smoking_2cat_i + bmi")
+  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
   
-  model <- gam(formula,                                                         # run the cox-gam model
-               family = cox.ph(), 
-               method = "ML", 
-               data = bdd_cases_danish)    
-  model_summary <- summary(model)
-  model2_gam[[var]] <- model_summary
+  smry <- summary(model)
+  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
+  pval <- case_when(pval < 0.01 ~ "< 0.01", 
+                    pval >0.99 ~ "> 0.99",
+                    .default = format(pval, nsmall =2, digits = 2))
+  x_label <- vars_labels[[var]] 
+  
+  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
+  smooth_df <- data.frame(
+    x = plot_data$x,
+    fit = plot_data$fit,
+    se = plot_data$se)
+  
+  list(
+    model = model,
+    plot_data = smooth_df,
+    edf = edf,
+    pval = pval,
+    var = var, 
+    x_label = x_label)
 }
 
-rm(var, outcome, formula, model, model_summary)
+cox_gam_results_adjusted <- map(proteomic, fit_cox_gam_adjusted)
+rm(fit_cox_gam_adjusted, vars_labels)
+
+
 
 # Assemblage main analyses ----
 main_results <-       
@@ -327,6 +368,7 @@ proteomic_sd_ALS_table <-
   filter(model %in% c("base", "adjusted") & term == "Continuous") |>            # select continuous results
   group_by(explanatory) |>                                                      # select explanatory vars significant 
   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
+  ungroup() |>
   select(model, explanatory, protein_group, term, HR, "95% CI", "p_value") |>
   arrange(protein_group, explanatory) |>
   pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p_value")) |>
@@ -335,11 +377,11 @@ proteomic_sd_ALS_table <-
          "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p_value_adjusted") |>
   flextable() |>
   add_footer_lines(
-    "1All models are adjusted for age at diagnosis and sex. Adjusted models further account for smoking, BMI and marital status. 
-    2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease serum concentration of proteins. 
+    "1All models are adjusted for age at diagnosis and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease plasma concentration of proteins. 
     3CI: Confidence interval.") |>
   add_header(
-    "explanatory" = "Pre-disease serum proteins", 
+    "explanatory" = "Pre-disease plasma proteins", 
     "protein_group" = "Protein group", 
     "HR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models", 
     "HR " = "Adjusted models", "95% CI " = "Adjusted models", "p-value " = "Adjusted models") |>
@@ -358,39 +400,6 @@ proteomic_sd_ALS_table <-
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
-proteomic_sd_ALS_table <- 
-  main_results |>
-  filter(model == "base" & term == "Continuous") |>            # select continuous results
-  group_by(explanatory) |>                                                      # select explanatory vars significant 
-  filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
-  select(model, explanatory, protein_group, term, HR, "95% CI", "p_value") |>
-  arrange(protein_group, explanatory) |>
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p_value")) |>
-  select(protein_group, explanatory, contains("base")) |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base") |>
-  flextable() |>
-  add_footer_lines(
-    "1All models are adjusted for age at diagnosis and sex. 
-    2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease serum concentration of proteins. 
-    3CI: Confidence interval.") |>
-  add_header(
-    "explanatory" = "Pre-disease serum proteins", 
-    "protein_group" = "Protein group", 
-    "HR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models") |>
-  theme_vanilla() |>
-  merge_h(part = "header") |>
-  align(align = "center", part = "all") |>
-  bold(j = "protein_group", part = "body") |>
-  align(j = "protein_group", align = "left", part = "all") |> 
-  merge_at(j = "protein_group", part = "header") |>
-  merge_v(j = "protein_group") |>
-  merge_v(j = "explanatory") |>
-  bold(j = "explanatory", part = "body") |>
-  align(j = "explanatory", align = "left", part = "all") |> 
-  merge_at(j = "explanatory", part = "header") |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 ## Table proteomic (quart) - als survival ----
 extra_rows <- 
@@ -398,6 +407,7 @@ extra_rows <-
   filter(model %in% c("base", "adjusted") & term != "Continuous") |>            # select quartile results
   group_by(explanatory) |>                                                      # select explanatory vars with at least one quartile significant 
   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
+  ungroup() |>
   distinct(protein_group, explanatory) |> 
   mutate(
     quartiles = "Quartile 1",
@@ -429,11 +439,11 @@ proteomic_quart_ALS_table <-
   arrange(protein_group, explanatory, quartiles) |>
   flextable() |>
   add_footer_lines(
-    "1All models are adjusted for age at baseline and sex. Adjusted models further account for smoking, BMI, cholesterol, marital status and education. 
-    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease serum concentration of proteins.
+    "1All models are adjusted for age at baseline and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
     3CI: Confidence interval.") |>
   add_header(
-    "explanatory" = "Pre-disease serum proteins", 
+    "explanatory" = "Pre-disease plasma proteins", 
     "protein_group" = "Protein group", 
     "quartiles" = "Quartiles",
     "HR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models", 
@@ -491,11 +501,11 @@ proteomic_quart_ALS_table <-
   arrange(protein_group, explanatory, quartiles) |>
   flextable() |>
   add_footer_lines(
-    "1All models are adjusted for age at baseline and sex. Adjusted models further account for smoking, BMI, cholesterol, marital status and education. 
-    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease serum concentration of proteins.
+    "1All models are adjusted for age at baseline and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
     3CI: Confidence interval.") |>
   add_header(
-    "explanatory" = "Pre-disease serum proteins", 
+    "explanatory" = "Pre-disease plasma proteins", 
     "protein_group" = "Protein group", 
     "quartiles" = "Quartiles",
     "HR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models", 
@@ -590,145 +600,252 @@ proteomic_sd_ALS_adjusted_figure <-
 
 
 ## Figure proteomic - als survival - base gam ----
-pvals <- sapply(model1_gam, function(m) m$s.table[1, "p-value"])
-signif_vars <- names(pvals)[pvals < 0.05]
+# pvals <- sapply(model1_gam, function(m) m$s.table[1, "p-value"])
+# signif_vars <- names(pvals)[pvals < 0.05]
+# signif_vars_labels <- set_names(str_replace(signif_vars, 
+#                                             "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
+#                                             ""), 
+#                                 signif_vars)
+# 
+# plot_base_gam <- map(signif_vars, function(var) {
+#   
+#   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
+#   formula <- as.formula(paste("outcome ~ s(", var, ") + diagnosis_age + sex")) 
+#   
+#   model <- gam(formula,                                                         # run the cox-gam model
+#                family = cox.ph(), 
+#                method = "ML", 
+#                data = bdd_cases_danish)            
+#   
+#   bdd_pred <- bdd_cases_danish |>                                               # création bdd avec protein + covariables ramenées à leur moyenne
+#     mutate(
+#       adj_diagnosis_age = mean(diagnosis_age, na.rm = TRUE),
+#       adj_sex = names(which.max(table(sex)))) |>
+#     select(all_of(var), starts_with("adj_")) |>
+#     rename_with(~ gsub("adj_", "", .x)) 
+#   
+#   pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+#   
+#   bdd_pred <- bdd_pred |>
+#     mutate(
+#       hazard_ratio = exp(pred$fit),
+#       hazard_lower = exp(pred$fit - 1.96 * pred$se.fit),
+#       hazard_upper = exp(pred$fit + 1.96 * pred$se.fit))
+#   
+#   model_summary <- summary(model)
+#   edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
+#   p_value <- model_summary$s.table[1, "p-value"]
+#   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
+#   x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
+#   x_label <- signif_vars_labels[var] 
+#   
+#   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
+#     geom_line(color = "blue", size = 1) +
+#     geom_ribbon(aes(ymin = hazard_lower, ymax = hazard_upper), fill = "blue", alpha = 0.2) +
+#     labs(x = var, y = "Hazard Ratio (HR)") +
+#     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+#              hjust = 1, vjust = 1.2, size = 4, color = "black") +
+#     theme_minimal() + 
+#     scale_y_log10(limits = c(10, 15000)) +
+#     theme(axis.text.x = element_text(color = 'white'),
+#           axis.title.x = element_blank(),
+#           axis.line.x = element_blank(),
+#           axis.ticks.x = element_blank()) +
+#     ggtitle("Base model")
+#   # distribution of the non-scaled protein variables 
+#   p2 <- bdd_cases_danish |>
+#     ggplot() +
+#     aes(x = "", y = .data[[var]]) +
+#     geom_boxplot(fill = "blue") +
+#     coord_flip() +
+#     ylab(x_label) + 
+#     xlab("") + 
+#     theme_minimal()
+#   
+#   p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
+#                            guides = 'collect') + 
+#     theme_minimal()
+#   p
+# }) |>
+#   set_names(signif_vars_labels)
+# rm(pvals, signif_vars, signif_vars_labels)
 
-plot_base_gam <- map(signif_vars, function(var) {
+vars_labels <- set_names(str_replace(proteomic, 
+                                     "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
+                                     ""), 
+                         proteomic)
+
+all_fits_base <- map_dfr(cox_gam_results_base, "plot_data", .id = "var")
+y_range_base <- range(all_fits_base$fit - 2 * all_fits_base$se,
+                      all_fits_base$fit + 2 * all_fits_base$se, na.rm = TRUE)
+
+plot_base_cox_gam_danish <- map(cox_gam_results_base, function(res) {
   
-  outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
-  formula <- as.formula(paste("outcome ~ s(", var, ") + diagnosis_age + sex")) 
-  
-  model <- gam(formula,                                                         # run the cox-gam model
-               family = cox.ph(), 
-               method = "ML", 
-               data = bdd_cases_danish)            
-  
-  bdd_pred <- bdd_cases_danish |>                                               # création bdd avec protein + covariables ramenées à leur moyenne
-    mutate(
-      adj_diagnosis_age = mean(diagnosis_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(
-      hazard_ratio = exp(pred$fit),
-      hazard_lower = exp(pred$fit - 1.96 * pred$se.fit),
-      hazard_upper = exp(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
-  # x_label <- POPs_group_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = hazard_lower, ymax = hazard_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Hazard Ratio (HR)") +
-    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 1, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() + 
-    scale_y_log10(limits = c(10, 15000)) +
-    theme(axis.text.x = element_text(color = 'white'),
+  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
+    geom_line(size = 1.2, color = "steelblue") +
+    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
+                alpha = 0.2, fill = "steelblue") +
+    labs(
+      title = "Base model", 
+      x = NULL,
+      y = "LogHR (smooth estimate)") +
+    annotate(
+      "text",
+      x = -Inf, y = Inf,
+      hjust = -0.1, vjust = 1.5,
+      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
+      size = 4.2,
+      color = "black") +
+    theme_minimal() +
+    scale_y_continuous(limits = c(-12, 12)) +
+    scale_x_continuous(limits = c(1, 5))  +
+    theme(axis.text.x = element_blank(),
           axis.title.x = element_blank(),
           axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Base model")
-  # distribution of the non-scaled protein variables 
-  p2 <- bdd_cases_danish |>
-    ggplot() +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    # ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
+          axis.ticks.x = element_blank())
   
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) 
-# |> 
-#   set_names(POPs_group)
-rm(pvals, signif_vars)
+  p2 <- ggplot(bdd_cases_danish, aes_string(x = res$var, y = 1)) +
+    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
+    theme_minimal() +
+    labs(x = res$x_label) +
+    #coord_cartesian(xlim = range(res$plot_data$x, na.rm = TRUE)) +
+    scale_x_continuous(limits = c(1, 5)) +
+    theme(axis.text.y = element_blank(),
+          axis.title.y = element_blank(),
+          axis.ticks.y = element_blank())
+  
+  p1 / p2 + plot_layout(heights = c(10, 1))
+}) |> 
+  set_names(vars_labels)
+
+rm(all_fits_base, y_range_base, cox_gam_results_base)
 
 ## Figure proteomic - als survival - adjusted gam ----
-pvals <- sapply(model2_gam, function(m) m$s.table[1, "p-value"])
-signif_vars <- names(pvals)[pvals < 0.05]
+# pvals <- sapply(model2_gam, function(m) m$s.table[1, "p-value"])
+# signif_vars <- names(pvals)[pvals < 0.05]
+# signif_vars_labels <- set_names(str_replace(signif_vars, 
+#                                             "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
+#                                             ""), 
+#                                 signif_vars)
+# 
+# plot_adjusted_gam <- map(signif_vars, function(var) {
+#   
+#   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
+#   formula <- as.formula(paste("outcome ~ s(", var, ") + ", paste(covariates, collapse = "+"))) 
+#   
+#   model <- gam(formula,                                                         # run the cox-gam model
+#                family = cox.ph(), 
+#                method = "ML", 
+#                data = bdd_cases_danish)     
+#   
+#   bdd_pred <- bdd_cases_danish |>                                               # création bdd avec protein + covariables ramenées à leur moyenne
+#     mutate(
+#       adj_diagnosis_age = mean(diagnosis_age, na.rm = TRUE),
+#       adj_sex = names(which.max(table(sex))), 
+#       adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i))), 
+#       adj_bmi = mean(bmi, na.rm = TRUE)) |>
+#     select(all_of(var), starts_with("adj_")) |>
+#     rename_with(~ gsub("adj_", "", .x)) 
+#   
+#   pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+#   
+#   bdd_pred <- bdd_pred |>
+#     mutate(
+#       hazard_ratio = exp(pred$fit),
+#       hazard_lower = exp(pred$fit - 1.96 * pred$se.fit),
+#       hazard_upper = exp(pred$fit + 1.96 * pred$se.fit))
+#   
+#   model_summary <- summary(model)
+#   edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
+#   p_value <- model_summary$s.table[1, "p-value"]
+#   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
+#   x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
+#   x_label <- signif_vars_labels[var] 
+#   
+#   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
+#     geom_line(color = "blue", size = 1) +
+#     geom_ribbon(aes(ymin = hazard_lower, ymax = hazard_upper), fill = "blue", alpha = 0.2) +
+#     labs(x = var, y = "Hazard Ratio (HR)") +
+#     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
+#              hjust = 1, vjust = 1.2, size = 4, color = "black") +
+#     theme_minimal() + 
+#     scale_y_log10(limits = c(100, 100000),
+#                   labels = scales::label_number(accuracy = 1)) +
+#     theme(axis.text.x = element_text(color = 'white'),
+#           axis.title.x = element_blank(),
+#           axis.line.x = element_blank(),
+#           axis.ticks.x = element_blank()) +
+#     ggtitle("Adjusted model")
+#   # distribution of non-scaled protein variables 
+#   p2 <- bdd_cases_danish |>
+#     ggplot() +
+#     aes(x = "", y = .data[[var]]) +
+#     geom_boxplot(fill = "blue") +
+#     coord_flip() +
+#     ylab(x_label) + 
+#     xlab("") + 
+#     theme_minimal()
+#   
+#   p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
+#                            guides = 'collect') + 
+#     theme_minimal()
+#   p
+# }) |>
+#   set_names(signif_vars_labels)
+# rm(pvals, signif_vars, signif_vars_labels)
 
-plot_adjusted_gam <- map(signif_vars, function(var) {
+
+all_fits_adjusted <- map_dfr(cox_gam_results_adjusted, "plot_data", .id = "var")
+y_range_adjusted <- range(all_fits_adjusted$fit - 2 * all_fits_adjusted$se,
+                          all_fits_adjusted$fit + 2 * all_fits_adjusted$se, na.rm = TRUE)
+
+
+plot_adjusted_cox_gam_danish <- map(cox_gam_results_adjusted, function(res) {
   
-  outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
-  formula <- as.formula(paste("outcome ~ s(", var, ") + ", paste(covariates, collapse = "+"))) 
-  
-  model <- gam(formula,                                                         # run the cox-gam model
-               family = cox.ph(), 
-               method = "ML", 
-               data = bdd_cases_danish)     
-  
-  bdd_pred <- bdd_cases_danish |>                                               # création bdd avec protein + covariables ramenées à leur moyenne
-    mutate(
-      adj_diagnosis_age = mean(diagnosis_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex))), 
-      adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i))), 
-      adj_bmi = mean(bmi, na.rm = TRUE),  
-      adj_marital_status_2cat_i = names(which.max(table(marital_status_2cat_i)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(
-      hazard_ratio = exp(pred$fit),
-      hazard_lower = exp(pred$fit - 1.96 * pred$se.fit),
-      hazard_upper = exp(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
-  # x_label <- POPs_group_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = hazard_lower, ymax = hazard_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Hazard Ratio (HR)") +
-    annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 1, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() + 
-    scale_y_log10(limits = c(100, 100000),
-                  labels = scales::label_number(accuracy = 1)) +
-    theme(axis.text.x = element_text(color = 'white'),
+  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
+    geom_line(size = 1.2, color = "steelblue") +
+    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
+                alpha = 0.2, fill = "steelblue") +
+    labs(
+      title = "Adjusted model", 
+      x = NULL,
+      y = "LogHR (smooth estimate)") +
+    annotate(
+      "text",
+      x = -Inf, y = Inf,
+      hjust = -0.1, vjust = 1.5,
+      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
+      size = 4.2,
+      color = "black") +
+    theme_minimal() +
+    scale_y_continuous(limits = c(-12, 12)) +  
+    scale_x_continuous(limits = c(1, 5))  +  
+    theme(axis.text.x = element_blank(),
           axis.title.x = element_blank(),
           axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Adjusted model")
-  # distribution of non-scaled protein variables 
-  p2 <- bdd_cases_danish |>
-    ggplot() +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    # ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
+          axis.ticks.x = element_blank())
   
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) 
-# |> 
-#   set_names(POPs_group)
-rm(pvals, signif_vars)
+  p2 <- ggplot(bdd_cases_danish, aes_string(x = res$var, y = 1)) +
+    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
+    theme_minimal() +
+    labs(x = res$x_label) +
+    #coord_cartesian(xlim = range(res$plot_data$x, na.rm = TRUE)) +
+    scale_x_continuous(limits = c(1, 5)) +
+    theme(axis.text.y = element_blank(),
+          axis.title.y = element_blank(),
+          axis.ticks.y = element_blank())
+  
+  p1 / p2 + plot_layout(heights = c(10, 1))
+}) |> 
+  set_names(vars_labels)
 
+
+rm(vars_labels, all_fits_adjusted, y_range_adjusted, cox_gam_results_adjusted)
+
+
+wrap_plots(plot_base_cox_gam_danish$NEFL, 
+           plot_adjusted_cox_gam_danish$NEFL, 
+           ncol = 2)
 
 
 # Assemblage ----
@@ -743,10 +860,8 @@ results_proteomic_ALS_survival <-
     proteomic_sd_ALS_base_figure = proteomic_sd_ALS_base_figure, 
     proteomic_sd_ALS_adjusted_figure = proteomic_sd_ALS_adjusted_figure, 
     
-    model1_gam = model1_gam, 
-    model2_gam = model2_gam,
-    plot_base_gam = plot_base_gam, 
-    plot_adjusted_gam = plot_adjusted_gam)
+    plot_base_cox_gam_danish = plot_base_cox_gam_danish, 
+    plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish)
 
 rm(bdd_cases_danish, 
    surv_obj, 
@@ -757,9 +872,7 @@ rm(bdd_cases_danish,
    proteomic_quart_ALS_table, 
    proteomic_sd_ALS_base_figure, 
    proteomic_sd_ALS_adjusted_figure, 
-   model1_gam, 
-   model2_gam,
-   plot_base_gam, 
-   plot_adjusted_gam)
+   plot_base_cox_gam_danish, 
+   plot_adjusted_cox_gam_danish)
 
 

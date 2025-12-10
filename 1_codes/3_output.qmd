@@ -513,6 +513,15 @@ Comparison between alive/deceased status at the end of the follow-up (among case
 results_descriptive$danish$proteomic_boxplot_danish_by_death
 ```
 
+### NEFL 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_descriptive$danish$figure_NEFL
+```
+
+
 ## EVs
 
 ### Distribution tables
@@ -1075,6 +1084,14 @@ corrplot(results_descriptive$comp$POPs_heatmap_cases,
          tl.cex = 1,
          col = rev(COL2(diverging = "RdYlBu")))
 ```
+
+# NEFL and ALS 
+```{r}
+wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_neuro_explo_NEFL_sensi_1, 
+           results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_neuro_explo_NEFL_sensi_1)
+```
+
+
 
 # POPs and ALS occurence
 

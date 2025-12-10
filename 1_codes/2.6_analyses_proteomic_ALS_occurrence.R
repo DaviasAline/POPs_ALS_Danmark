@@ -179,7 +179,6 @@ for (var in proteomic) {
 rm(var, formula, model, model_summary)
 
 ## model 2 sd ----
-
 model2_sd <- data.frame(explanatory = character(),
                            term = integer(),
                            OR = numeric(),
@@ -2635,7 +2634,6 @@ figure_NEFL_over_time <-
     x = "Time to ALS diagnosis (years)",
     y = "Ratio of NEFL in case and matched controls") +
   theme_minimal(base_size = 14)
-rm(ratios)
 
 # Regression lineaire with x = time to diag and y = ratio NEFL
 ggplot(ratios) +
@@ -2657,7 +2655,7 @@ ggplot(ratios_sensi) +
 lm(ratio_proteomic_neuro_explo_NEFL ~ follow_up_neg, data = ratios_sensi) |> 
   tbl_regression()
   
-
+rm(ratios, ratios_sensi)
 
 # Calcul du ratio : proteomic_neuro_explo_NEFL_case / moyenne(proteomic_neuro_explo_NEFL_controls)
 ratios_sensi_1 <- 
@@ -2704,7 +2702,7 @@ ff_stat <- function(mat1, mat2) {
 ## All proteins ----
 ### data prep ----
 data_matrix1_all <- 
-  results_proteomic_ALS_occurrence$main$main_results |> 
+  main_results |> 
   filter(analysis == "main",
          model == "adjusted",
          term == "Continuous") |>
@@ -2716,7 +2714,7 @@ data_matrix1_all <-
   select(explanatory, OR_log2, p_value_log)
 
 data_matrix2_all <- 
-  results_proteomic_ALS_occurrence$main$main_results |> 
+  main_results |> 
   filter(analysis == "main",
          model == "adjusted",
          term == "Continuous") |>
@@ -2787,13 +2785,13 @@ jackknife_all_results <- tibble(                                                
   influence = c(influence_1, influence_2))
 
 
-proteomic_influence <- jackknife_results |>                                     # selection of the prot with highest influence to the ff test
+proteomic_influence <- jackknife_all_results |>                                     # selection of the prot with highest influence to the ff test
   filter(influence == 259 | influence == 111) |> 
   pull(explanatory) 
 proteomic_influence <- sort(proteomic_influence)
 
 proteomic_selected <-                                                           # selection des prot avec p<0.05
-  results_proteomic_ALS_occurrence$main$main_results |> 
+  main_results |> 
   filter(analysis == "main", 
          model == "adjusted", 
          term == "Continuous", 
@@ -2812,7 +2810,7 @@ rm(data_matrix1_all, data_matrix2_all,
 ## Immune response ----
 ### data prep ----
 data_matrix1_immune <- 
-  results_proteomic_ALS_occurrence$main$main_results |> 
+  main_results |> 
   filter(analysis == "main",
          model == "adjusted",
          term == "Continuous", 
@@ -2825,7 +2823,7 @@ data_matrix1_immune <-
   select(explanatory, OR_log2, p_value_log)
 
 data_matrix2_immune <- 
-  results_proteomic_ALS_occurrence$main$main_results |> 
+  main_results |> 
   filter(analysis == "main",
          model == "adjusted",
          term == "Continuous", 
@@ -2904,7 +2902,7 @@ proteomic_influence <- jackknife_immune_results |>                              
 proteomic_influence <- sort(proteomic_influence)
 
 proteomic_selected <-                                                           # selection des prot avec p<0.05
-  results_proteomic_ALS_occurrence$main$main_results |> 
+  main_results |> 
   filter(analysis == "main", 
          model == "adjusted", 
          term == "Continuous", 
@@ -2926,7 +2924,7 @@ rm(data_matrix1_immune, data_matrix2_immune,
 ## Metabolism ----
 ### data prep ----
 data_matrix1_metabolism <- 
-  results_proteomic_ALS_occurrence$main$main_results |> 
+  main_results |> 
   filter(analysis == "main",
          model == "adjusted",
          term == "Continuous", 
@@ -2939,7 +2937,7 @@ data_matrix1_metabolism <-
   select(explanatory, OR_log2, p_value_log)
 
 data_matrix2_metabolism <- 
-  results_proteomic_ALS_occurrence$main$main_results |> 
+  main_results |> 
   filter(analysis == "main",
          model == "adjusted",
          term == "Continuous", 
@@ -3018,7 +3016,7 @@ proteomic_influence <- jackknife_metabolism_results |>                          
 proteomic_influence <- sort(proteomic_influence)
 
 proteomic_selected <-                                                           # selection des prot avec p<0.05
-  results_proteomic_ALS_occurrence$main$main_results |> 
+  main_results |> 
   filter(analysis == "main", 
          model == "adjusted", 
          term == "Continuous", 
@@ -3039,7 +3037,7 @@ rm(data_matrix1_metabolism, data_matrix2_metabolism,
 ## Neuro-exploratory ----
 ### data prep ----
 data_matrix1_neuro <- 
-  results_proteomic_ALS_occurrence$main$main_results |> 
+  main_results |> 
   filter(analysis == "main",
          model == "adjusted",
          term == "Continuous", 
@@ -3052,7 +3050,7 @@ data_matrix1_neuro <-
   select(explanatory, OR_log2, p_value_log)
 
 data_matrix2_neuro <- 
-  results_proteomic_ALS_occurrence$main$main_results |> 
+  main_results |> 
   filter(analysis == "main",
          model == "adjusted",
          term == "Continuous", 
@@ -3130,7 +3128,7 @@ proteomic_influence <- jackknife_neuro_results |>                               
 proteomic_influence <- sort(proteomic_influence)
 
 proteomic_selected <-                                                           # selection des prot avec p<0.05
-  results_proteomic_ALS_occurrence$main$main_results |> 
+  main_results |> 
   filter(analysis == "main", 
          model == "adjusted", 
          term == "Continuous", 
@@ -4763,7 +4761,7 @@ results_proteomic_ALS_occurrence <-
       figure_NEFL_over_time_sensi_1 = figure_NEFL_over_time_sensi_1), 
     additional_analysis_3 = list(
       additional_analysis_3_all_figure = additional_analysis_3_all_figure, 
-      additional_analysis_3__all_results = additional_analysis_3_all_results, 
+      additional_analysis_3_all_results = additional_analysis_3_all_results, 
       jackknife_all_results = jackknife_all_results, 
       
       additional_analysis_3_immune_figure = additional_analysis_3_immune_figure, 
@@ -4839,7 +4837,7 @@ rm(covar,
    figure_NEFL_over_time_sensi_1, 
    
    additional_analysis_3_all_figure, 
-   additional_analysis_3__all_results, 
+   additional_analysis_3_all_results, 
    jackknife_all_results, 
    
    additional_analysis_3_immune_figure, 

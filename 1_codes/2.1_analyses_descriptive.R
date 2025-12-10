@@ -299,6 +299,7 @@ POPs_fattyacids_heatmap_danish <-
   heatmap_cor_pairwise(fattyacids_tot, POPs, decimal = 1, data = bdd_danish)
 
 ## proteomic ----
+### all ----
 proteomic_table_danish <- descrip_num(data = bdd_danish, vars = proteomic) |>
   mutate(variable = gsub("^proteomic_(immun_res|neuro_explo|metabolism)_", "", variable))
 
@@ -413,6 +414,108 @@ proteomic_boxplot_danish_by_death <- bdd_danish |>
   labs(x = "proteomic", y = "Pre-disease serum concentrations (unit?)", fill = "") +
   coord_flip() +
   theme_lucid()
+
+### NEFL ----
+bdd_danish_sensi_3 <- 
+  bdd_danish |>                                                                 # densityplot all prot
+  filter(match != 159) |>
+  group_by(match) |>
+  mutate(follow_up_ter = follow_up[als == 1]) |>
+  ungroup() |>
+  mutate(
+    follow_up_ter = cut(
+      follow_up_ter,
+      breaks = quantile(follow_up_ter, probs = c(0, 1/3, 2/3, 1), na.rm = TRUE),
+      include.lowest = TRUE, 
+      labels = c("Filtered to follow-up < 11.2\nyears (tertile 1)", "Filtered to follow-up 11.2-16.2\nyears (tertile 2)", "Filtered to follow-up > 16.2\nyears (tertile 3)"))) |>
+  select(proteomic_neuro_explo_NEFL, als, follow_up_ter) |>
+  mutate(als = factor(as.character(als)), 
+         als = fct_recode(als, "Controls" = "0", "Cases" = "1")) 
+
+
+figure_NEFL <- 
+  
+  bdd_danish |>                                                                 # densityplot all prot
+  filter(match != 159) |>
+  select(proteomic_neuro_explo_NEFL, als) |>
+  mutate(als = factor(as.character(als)), 
+         als = fct_recode(als, "Controls" = "0", "Cases" = "1")) |>
+  ggplot() +
+  aes(x = proteomic_neuro_explo_NEFL, fill = als) +
+  geom_density(alpha = 0.4) +
+  scale_fill_hue(direction = -1) + 
+  scale_x_continuous(limits = c(1, 5)) +
+  scale_y_continuous(limits = c(0, 1)) +
+  labs(y = "Density", title = "All", fill = "ALS") +
+  theme_minimal() +
+  theme(axis.title.x = element_blank(), 
+        axis.text.x = element_blank(), 
+        axis.ticks.x = element_blank(), 
+        axis.title.y = element_text(size = 12), 
+        axis.text.y = element_text(size = 8),
+        title = element_text(size = 14))  +
+
+
+  bdd_danish |>                                                                 # boxplot all prot
+  filter(match != 159) |>
+  select(proteomic_neuro_explo_NEFL, als) |>
+  mutate(als = factor(as.character(als)), 
+         als = fct_recode(als, "Controls" = "0", "Cases" = "1")) |>
+  ggplot() +
+  aes(x = proteomic_neuro_explo_NEFL, fill = als) +
+  geom_boxplot(alpha = 0.4) +
+  scale_fill_hue(direction = -1) +
+  scale_x_continuous(limits = c(1, 5)) +
+  labs(x = "Neurofilament light polypeptide (NPX)", fill = "ALS") +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        axis.title.x = element_blank(),  
+        axis.text.y = element_blank())  +
+
+
+bdd_danish_sensi_3 |>                                                           # densityplot par tertile
+  ggplot() +
+  aes(x = proteomic_neuro_explo_NEFL, fill = als) +
+  geom_density(alpha = 0.4) +
+  scale_fill_hue(direction = -1) +
+  labs(
+    x = "Neurofilament light polypeptide (NPX)",
+    y = "Density",
+    fill = "ALS") +
+  theme_minimal() +
+  facet_wrap(vars(follow_up_ter)) +
+  xlim(1, 5) +
+  ylim(0, 1)  +
+  theme(axis.title.x = element_blank(), 
+        axis.text.x = element_blank(), 
+        axis.ticks.x = element_blank(),  
+        legend.position = "none", 
+        strip.text = element_text(hjust = 0, size = 14), 
+        axis.title.y = element_text(size = 12), 
+        axis.text.y = element_text(size = 8)) +
+  
+  
+  bdd_danish_sensi_3 |>
+  ggplot() +
+  aes(x = proteomic_neuro_explo_NEFL, fill = als) +
+  geom_boxplot(alpha = 0.4) +
+  scale_fill_hue(direction = -1) +
+  labs(
+    x = "Neurofilament light polypeptide (NPX)",
+    fill = "ALS") +
+  theme_minimal() +
+  facet_wrap(vars(follow_up_ter)) +
+  xlim(1, 5)  + 
+  theme(strip.text = element_blank(), 
+        legend.position = "none", 
+        axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank()) +
+  
+  plot_layout(heights = c(5, 1, 5, 1 ), ncol = 1)
+
+rm(bdd_danish_sensi_3)
+
+
 
 
 ## EVs ----
@@ -954,6 +1057,7 @@ results_descriptive <- list(
     proteomic_heatmap_danish_immun_res = proteomic_heatmap_danish_immun_res, 
     proteomic_heatmap_danish_metabolism = proteomic_heatmap_danish_metabolism, 
     proteomic_boxplot_danish_by_death = proteomic_boxplot_danish_by_death, 
+    figure_NEFL = figure_NEFL, 
     
     EVs_table_danish = EVs_table_danish, 
     EVs_table_danish_by_als = EVs_table_danish_by_als, 
@@ -1024,6 +1128,7 @@ rm(
   proteomic_heatmap_danish_immun_res, 
   proteomic_heatmap_danish_metabolism,
   proteomic_boxplot_danish_by_death, 
+  figure_NEFL, 
   EVs_table_danish, 
   EVs_table_danish_by_als, 
   EVs_boxplot_danish, 
