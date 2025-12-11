@@ -2725,31 +2725,7 @@ data_matrix2_all <-
     p_value_log = -log10(p_value_raw)) |>
   select(explanatory, OR_log2, p_value_log)
 
-### plots ----
 
-plot1_all <- ggplot(data_matrix1_all) +
-  aes(x = OR_log2, y = p_value_log) +
-  geom_point(colour = "#112446") +
-  theme_minimal() +
-  labs(title = "Associations with OR<1", 
-       y = "-log10(p-value)", 
-       x = "abslog2(OR)") + 
-  xlim(0, 0.6) +
-  ylim(0, 3.5) +
-  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
-
-plot2_all <- ggplot(data_matrix2_all) +
-  aes(x = OR_log2, y = p_value_log) +
-  geom_point(colour = "#112446") +
-  theme_minimal() +
-  labs(title = "Associations with OR>=1", 
-       y = "-log10(p-value)", 
-       x = "log2(OR)") + 
-  xlim(0, 0.6) +
-  ylim(0, 3.5) +
-  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
-
-additional_analysis_3_all_figure <- plot1_all + plot2_all
 
 ### Fasano Franceschini test ----
 additional_analysis_3_all_results <- 
@@ -2782,11 +2758,15 @@ jackknife_all_results <- tibble(                                                
   explanatory = c(data_matrix1_all$explanatory,
                   data_matrix2_all$explanatory),
   
-  influence = c(influence_1, influence_2))
+  influence = c(influence_1, influence_2), 
+  
+  d_stat_percent = influence/T0*100) |>
+  arrange(desc(influence))
 
 
-proteomic_influence <- jackknife_all_results |>                                     # selection of the prot with highest influence to the ff test
-  filter(influence == 259 | influence == 111) |> 
+proteomic_influence <- 
+  jackknife_all_results |>                                                      # selection of the prot with highest influence to the ff test
+  filter(d_stat_percent>2) |>                                                   # filter to prot that if removed, modify the D stat of at least 2%
   pull(explanatory) 
 proteomic_influence <- sort(proteomic_influence)
 
@@ -2800,6 +2780,45 @@ proteomic_selected <-                                                           
 proteomic_selected <- sort(proteomic_selected)
 
 valeurs_communes <- intersect(proteomic_influence, proteomic_selected)          # check the commune proteins 
+
+### plots ----
+plot1_all <- 
+  data_matrix1_all |>
+  mutate(influence_flag = ifelse(explanatory %in% proteomic_influence,
+                                 "influence > 2%",
+                                 "influence < 2%")) |>
+  ggplot() +
+  aes(x = OR_log2, y = p_value_log, color = influence_flag) +
+  geom_point() +
+  scale_color_manual(values = c("influence > 2%" = "red",
+                                "influence < 2%" = "black")) +
+  theme_minimal() +
+  labs(title = "Associations with OR<1", 
+       y = "-log10(p-value)", 
+       x = "abslog2(OR)") + 
+  xlim(0, 0.6) +
+  ylim(0, 3.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
+
+plot2_all <- 
+  data_matrix2_all |>
+  mutate(influence_flag = ifelse(explanatory %in% proteomic_influence,
+                                 "influence > 2%",
+                                 "influence < 2%")) |>
+  ggplot() +
+  aes(x = OR_log2, y = p_value_log, color = influence_flag) +
+  geom_point() +
+  scale_color_manual(values = c("influence > 2%" = "red",
+                                "influence < 2%" = "black")) +
+  theme_minimal() +
+  labs(title = "Associations with OR>=1", 
+       y = "-log10(p-value)", 
+       x = "log2(OR)") + 
+  xlim(0, 0.6) +
+  ylim(0, 3.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
+
+additional_analysis_3_all_figure <- plot1_all + plot2_all
 
 
 rm(data_matrix1_all, data_matrix2_all, 
@@ -2835,31 +2854,6 @@ data_matrix2_immune <-
     p_value_log = -log10(p_value_raw)) |>
   select(explanatory, OR_log2, p_value_log)
 
-### plots ----
-
-plot1_immune <- ggplot(data_matrix1_immune) +
-  aes(x = OR_log2, y = p_value_log) +
-  geom_point(colour = "#112446") +
-  theme_minimal() +
-  labs(title = "Associations with OR<1", 
-       y = "-log10(p-value)", 
-       x = "abslog2(OR)") + 
-  xlim(0, 0.6) +
-  ylim(0, 3.5) +
-  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
-
-plot2_immune <- ggplot(data_matrix2_immune) +
-  aes(x = OR_log2, y = p_value_log) +
-  geom_point(colour = "#112446") +
-  theme_minimal() +
-  labs(title = "Associations with OR>=1", 
-       y = "-log10(p-value)", 
-       x = "log2(OR)") + 
-  xlim(0, 0.6) +
-  ylim(0, 3.5) +
-  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
-
-additional_analysis_3_immune_figure <- plot1_immune + plot2_immune
 
 ### Fasano Franceschini test ----
 additional_analysis_3_immune_results <- 
@@ -2892,12 +2886,16 @@ jackknife_immune_results <- tibble(                                             
   explanatory = c(data_matrix1_immune$explanatory,
                   data_matrix2_immune$explanatory),
   
-  influence = c(influence_1, influence_2)) |> 
+  influence = c(influence_1, influence_2), 
+  
+  d_stat_percent = influence/T0*100) |>
+  
   arrange(desc(influence))
 
 
-proteomic_influence <- jackknife_immune_results |>                              # selection of the prot with highest influence to the ff test
-  filter(influence == 108 | influence == 32) |> 
+proteomic_influence <- 
+  jackknife_immune_results |>                              # selection of the prot with highest influence to the ff test
+  filter(d_stat_percent>2) |>   
   pull(explanatory) 
 proteomic_influence <- sort(proteomic_influence)
 
@@ -2912,6 +2910,47 @@ proteomic_selected <-                                                           
 proteomic_selected <- sort(proteomic_selected)
 
 valeurs_communes <- intersect(proteomic_influence, proteomic_selected)          # check the commune proteins 
+
+
+### plots ----
+
+plot1_immune <- 
+  data_matrix1_immune |>
+  mutate(influence_flag = ifelse(explanatory %in% proteomic_influence,
+                                 "influence > 2%",
+                                 "influence < 2%")) |>
+  ggplot() +
+  aes(x = OR_log2, y = p_value_log) +
+  geom_point() +
+  scale_color_manual(values = c("influence > 2%" = "red",
+                                "influence < 2%" = "black")) +
+  theme_minimal() +
+  labs(title = "Associations with OR<1", 
+       y = "-log10(p-value)", 
+       x = "abslog2(OR)") + 
+  xlim(0, 0.6) +
+  ylim(0, 3.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
+
+plot2_immune <- 
+  data_matrix2_immune |> 
+  mutate(influence_flag = ifelse(explanatory %in% proteomic_influence,
+                                 "influence > 2%",
+                                 "influence < 2%")) |>
+  ggplot() +
+  aes(x = OR_log2, y = p_value_log, color = influence_flag) +
+  geom_point() +
+  scale_color_manual(values = c("influence > 2%" = "red",
+                                "influence < 2%" = "black")) +
+  theme_minimal() +
+  labs(title = "Associations with OR>=1", 
+       y = "-log10(p-value)", 
+       x = "log2(OR)") + 
+  xlim(0, 0.6) +
+  ylim(0, 3.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
+
+additional_analysis_3_immune_figure <- plot1_immune + plot2_immune
 
 
 rm(data_matrix1_immune, data_matrix2_immune, 
@@ -2949,31 +2988,6 @@ data_matrix2_metabolism <-
     p_value_log = -log10(p_value_raw)) |>
   select(explanatory, OR_log2, p_value_log)
 
-### plots ----
-
-plot1_metabolism <- ggplot(data_matrix1_metabolism) +
-  aes(x = OR_log2, y = p_value_log) +
-  geom_point(colour = "#112446") +
-  theme_minimal() +
-  labs(title = "Associations with OR<1", 
-       y = "-log10(p-value)", 
-       x = "abslog2(OR)") + 
-  xlim(0, 0.6) +
-  ylim(0, 3.5) +
-  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
-
-plot2_metabolism <- ggplot(data_matrix2_metabolism) +
-  aes(x = OR_log2, y = p_value_log) +
-  geom_point(colour = "#112446") +
-  theme_minimal() +
-  labs(title = "Associations with OR>=1", 
-       y = "-log10(p-value)", 
-       x = "log2(OR)") + 
-  xlim(0, 0.6) +
-  ylim(0, 3.5) +
-  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
-
-additional_analysis_3_metabolism_figure <- plot1_metabolism + plot2_metabolism
 
 ### Fasano Franceschini test ----
 additional_analysis_3_metabolism_results <- 
@@ -3006,12 +3020,16 @@ jackknife_metabolism_results <- tibble(                                         
   explanatory = c(data_matrix1_metabolism$explanatory,
                   data_matrix2_metabolism$explanatory),
   
-  influence = c(influence_1, influence_2)) |> 
+  influence = c(influence_1, influence_2), 
+  
+  d_stat_percent = influence/T0*100) |>
+  
   arrange(desc(influence))
 
 
-proteomic_influence <- jackknife_metabolism_results |>                          # selection of the prot with highest influence to the ff test
-  filter(influence == 136 | influence == 52) |> 
+proteomic_influence <- 
+  jackknife_metabolism_results |>                          # selection of the prot with highest influence to the ff test
+  filter(d_stat_percent>2) |>   
   pull(explanatory) 
 proteomic_influence <- sort(proteomic_influence)
 
@@ -3028,11 +3046,50 @@ proteomic_selected <- sort(proteomic_selected)
 valeurs_communes <- intersect(proteomic_influence, proteomic_selected)          # check the commune proteins 
 
 
+### plots ----
+
+plot1_metabolism <- 
+  data_matrix1_metabolism |>
+  mutate(influence_flag = ifelse(explanatory %in% proteomic_influence,
+                                 "influence > 2%",
+                                 "influence < 2%")) |>
+  ggplot() +
+  aes(x = OR_log2, y = p_value_log, color = influence_flag) +
+  geom_point() +
+  scale_color_manual(values = c("influence > 2%" = "red",
+                                "influence < 2%" = "black")) +
+  theme_minimal() +
+  labs(title = "Associations with OR<1", 
+       y = "-log10(p-value)", 
+       x = "abslog2(OR)") + 
+  xlim(0, 0.6) +
+  ylim(0, 3.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
+
+plot2_metabolism <- 
+  data_matrix2_metabolism |>
+  mutate(influence_flag = ifelse(explanatory %in% proteomic_influence,
+                                 "influence > 2%",
+                                 "influence < 2%")) |>
+  ggplot() +
+  aes(x = OR_log2, y = p_value_log, color = influence_flag) +
+  geom_point() +
+  scale_color_manual(values = c("influence > 2%" = "red",
+                                "influence < 2%" = "black")) +
+  theme_minimal() +
+  labs(title = "Associations with OR>=1", 
+       y = "-log10(p-value)", 
+       x = "log2(OR)") + 
+  xlim(0, 0.6) +
+  ylim(0, 3.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
+
+additional_analysis_3_metabolism_figure <- plot1_metabolism + plot2_metabolism
+
 rm(data_matrix1_metabolism, data_matrix2_metabolism, 
    plot1_metabolism, plot2_metabolism, 
    T0, influence_1, influence_2, i, j, mat1_minus, mat2_minus, Ti, Tj, 
    proteomic_influence, proteomic_selected, valeurs_communes)
-
 
 ## Neuro-exploratory ----
 ### data prep ----
@@ -3061,31 +3118,6 @@ data_matrix2_neuro <-
     OR_log2 = log2(OR_raw),
     p_value_log = -log10(p_value_raw)) |>
   select(explanatory, OR_log2, p_value_log)
-
-### plots ----
-plot1_neuro <- ggplot(data_matrix1_neuro) +
-  aes(x = OR_log2, y = p_value_log) +
-  geom_point(colour = "#112446") +
-  theme_minimal() +
-  labs(title = "Associations with OR<1", 
-       y = "-log10(p-value)", 
-       x = "abslog2(OR)") + 
-  xlim(0, 0.6) +
-  ylim(0, 3.5) +
-  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
-
-plot2_neuro <- ggplot(data_matrix2_neuro) +
-  aes(x = OR_log2, y = p_value_log) +
-  geom_point(colour = "#112446") +
-  theme_minimal() +
-  labs(title = "Associations with OR>=1", 
-       y = "-log10(p-value)", 
-       x = "log2(OR)") + 
-  xlim(0, 0.6) +
-  ylim(0, 3.5) +
-  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
-
-additional_analysis_3_neuro_figure <- plot1_neuro + plot2_neuro
 
 ### Fasano Franceschini test ----
 additional_analysis_3_neuro_results <- 
@@ -3118,12 +3150,16 @@ jackknife_neuro_results <- tibble(                                              
   explanatory = c(data_matrix1_neuro$explanatory,
                   data_matrix2_neuro$explanatory),
   
-  influence = c(influence_1, influence_2)) |> 
+  influence = c(influence_1, influence_2), 
+  
+  d_stat_percent = influence/T0*100) |>
+  
   arrange(desc(influence))
 
 
-proteomic_influence <- jackknife_neuro_results |>                               # selection of the prot with highest influence to the ff test
-  filter(influence == 98 | influence == 56) |> 
+proteomic_influence <- 
+  jackknife_neuro_results |>                               # selection of the prot with highest influence to the ff test
+  filter(d_stat_percent>2) |>   
   pull(explanatory) 
 proteomic_influence <- sort(proteomic_influence)
 
@@ -3139,6 +3175,48 @@ proteomic_selected <- sort(proteomic_selected)
 
 valeurs_communes <- intersect(proteomic_influence, proteomic_selected)          # check the commune proteins 
 
+
+### plots ----
+plot1_neuro <- 
+  data_matrix1_neuro |>
+  mutate(influence_flag = ifelse(explanatory %in% proteomic_influence,
+                                 "influence > 2%",
+                                 "influence < 2%")) |>
+  ggplot() +
+  aes(x = OR_log2, y = p_value_log, color = influence_flag) +
+  geom_point() +
+  scale_color_manual(values = c("influence > 2%" = "red",
+                                "influence < 2%" = "black")) +
+  theme_minimal() +
+  labs(title = "Associations with OR<1", 
+       y = "-log10(p-value)", 
+       x = "abslog2(OR)", 
+       color = "Influence") + 
+  xlim(0, 0.6) +
+  ylim(0, 3.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
+
+plot2_neuro <- 
+  data_matrix2_neuro |>
+  mutate(influence_flag = ifelse(explanatory %in% proteomic_influence,
+                                 "influence > 2%",
+                                 "influence < 2%")) |>
+  ggplot() +
+  aes(x = OR_log2, y = p_value_log, color = influence_flag) +
+  geom_point() +
+  scale_color_manual(values = c("influence > 2%" = "red",
+                                "influence < 2%" = "black")) +
+  theme_minimal() +
+  labs(title = "Associations with OR>=1", 
+       y = "-log10(p-value)", 
+       x = "log2(OR)", 
+       color = "Influence") + 
+  xlim(0, 0.6) +
+  ylim(0, 3.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
+
+additional_analysis_3_neuro_figure <- plot1_neuro + plot2_neuro
+  
 
 rm(data_matrix1_neuro, data_matrix2_neuro, 
    plot1_neuro, plot2_neuro, 

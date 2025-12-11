@@ -246,6 +246,7 @@ fit_cox_gam_base <- function(var, data = bdd_cases_danish) {
   
   smry <- summary(model)
   edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  pval_raw <- smry$s.table[1, "p-value"]
   pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
   pval <- case_when(pval < 0.01 ~ "< 0.01", 
                     pval >0.99 ~ "> 0.99",
@@ -262,6 +263,7 @@ fit_cox_gam_base <- function(var, data = bdd_cases_danish) {
     model = model,
     plot_data = smooth_df,
     edf = edf,
+    pval_raw = pval_raw,  
     pval = pval,
     var = var,
     x_label = x_label)
@@ -707,8 +709,7 @@ plot_base_cox_gam_danish <- map(cox_gam_results_base, function(res) {
   p2 <- ggplot(bdd_cases_danish, aes_string(x = res$var, y = 1)) +
     geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
     theme_minimal() +
-    labs(x = res$x_label) +
-    #coord_cartesian(xlim = range(res$plot_data$x, na.rm = TRUE)) +
+    labs(x = "Neurofilament light polypeptide (NPX)") +
     scale_x_continuous(limits = c(1, 5)) +
     theme(axis.text.y = element_blank(),
           axis.title.y = element_blank(),
@@ -828,8 +829,7 @@ plot_adjusted_cox_gam_danish <- map(cox_gam_results_adjusted, function(res) {
   p2 <- ggplot(bdd_cases_danish, aes_string(x = res$var, y = 1)) +
     geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
     theme_minimal() +
-    labs(x = res$x_label) +
-    #coord_cartesian(xlim = range(res$plot_data$x, na.rm = TRUE)) +
+    labs(x = "Neurofilament light polypeptide (NPX)") +
     scale_x_continuous(limits = c(1, 5)) +
     theme(axis.text.y = element_blank(),
           axis.title.y = element_blank(),
@@ -841,12 +841,6 @@ plot_adjusted_cox_gam_danish <- map(cox_gam_results_adjusted, function(res) {
 
 
 rm(vars_labels, all_fits_adjusted, y_range_adjusted, cox_gam_results_adjusted)
-
-
-wrap_plots(plot_base_cox_gam_danish$NEFL, 
-           plot_adjusted_cox_gam_danish$NEFL, 
-           ncol = 2)
-
 
 # Assemblage ----
 results_proteomic_ALS_survival <- 

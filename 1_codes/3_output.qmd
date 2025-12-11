@@ -1085,13 +1085,6 @@ corrplot(results_descriptive$comp$POPs_heatmap_cases,
          col = rev(COL2(diverging = "RdYlBu")))
 ```
 
-# NEFL and ALS 
-```{r}
-wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_neuro_explo_NEFL_sensi_1, 
-           results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_neuro_explo_NEFL_sensi_1)
-```
-
-
 
 # POPs and ALS occurence
 
@@ -2041,6 +2034,48 @@ results_fattyacids_ALS_survival$finnish$fattyacids_quart_als_figure_finnish
 results_fattyacids_ALS_survival$comp_results_danish_finnish
 ```
 
+
+# NEFL and ALS 
+## NEFL and ALS risk
+### Main analysis
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_neuro_explo_NEFL_sensi_1, 
+           results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_neuro_explo_NEFL_sensi_1)
+```
+
+### Sensitivity analysis
+Filtering the data to follow-up > 5 years
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_neuro_explo_NEFL_sensi_1, 
+           results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_neuro_explo_NEFL_sensi_1_2)
+```
+
+### Additional analysis 
+NEFL over time
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_over_time_sensi_1
+```
+
+## NEFL and ALS survival 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+wrap_plots(results_proteomic_ALS_survival$plot_base_cox_gam_danish$NEFL, 
+           results_proteomic_ALS_survival$plot_adjusted_cox_gam_danish$NEFL)
+```
+
+
+
 # Proteomic and ALS occurrence
 
 ## Effects of subject characterist on ALS occurence in the Danish cohort
@@ -2650,13 +2685,20 @@ The null hypothesis (H₀) is:
 H₀: The two datasets come from the same multivariate distribution.
 A small p-value indicates a significant deviation between the two distributions.
 
-
+### all proteins 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_figure
-results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_results
+results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_all_figure
+results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_all_results
+
+results_proteomic_ALS_occurrence$additional_analysis_3$jackknife_all_results |> 
+  select(d_stat_percent) |> 
+  mutate(d_stat_percent = round(d_stat_percent, 1)) |>
+  tbl_summary()
+
+
 ```
 
 Because the p-value is 0.00587, which is well below the standard 0.05 threshold, we reject the null hypothesis that the two sets of results (OR ≥ 1 vs. OR < 1) come from the same distribution.
@@ -2664,6 +2706,50 @@ Because the p-value is 0.00587, which is well below the standard 0.05 threshold,
 This means that the two groups of proteins, those associated with increased risk and those associated with decreased risk, show significantly different joint distributions of odds ratios and p-values.
 Therefore, the asymmetric patterns we observe are unlikely to be due to random fluctuation caused by multiple testing.
 The results support the idea that the proteins associated with increased disease risk and those associated with decreased disease risk represent genuinely different biological signals, rather than artifacts of high-dimensional multiple testing.
+
+### Immune response 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_immune_figure
+results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_immune_results
+
+results_proteomic_ALS_occurrence$additional_analysis_3$jackknife_immune_results |> 
+  select(d_stat_percent) |> 
+  mutate(d_stat_percent = round(d_stat_percent, 1)) |>
+  tbl_summary()
+```
+
+### Metbolism
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_metabolism_figure
+results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_metabolism_results
+
+results_proteomic_ALS_occurrence$additional_analysis_3$jackknife_metabolism_results |> 
+  select(d_stat_percent) |> 
+  mutate(d_stat_percent = round(d_stat_percent, 1)) |>
+  tbl_summary()
+
+```
+
+
+### Neuro explo 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_neuro_figure
+results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_neuro_results
+
+results_proteomic_ALS_occurrence$additional_analysis_3$jackknife_neuro_results |> 
+  select(d_stat_percent) |> 
+  mutate(d_stat_percent = round(d_stat_percent, 1)) |>
+  tbl_summary()
+```
 
 
 # Proteomic and ALS survival
@@ -2709,10 +2795,11 @@ results_proteomic_ALS_survival$proteomic_quart_ALS_table  |>
 
 ### GAMs
 
-```{r, fig.height=21, fig.width=9}
-#| echo: false
+```{r fig.height=21, fig.width=9}
+#| eval: false
 #| message: false
 #| warning: false
-wrap_plots(results_proteomic_ALS_survival$plot_base_gam, ncol = 3)
-# wrap_plots(results_proteomic_ALS_survival$plot_adjusted_gam, ncol = 3)
+#| include: false
+wrap_plots(results_proteomic_ALS_survival$plot_base_cox_gam_danish, ncol = 5)
+wrap_plots(results_proteomic_ALS_survival$plot_adjusted_cox_gam_danish, ncol = 5)
 ```
