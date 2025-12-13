@@ -286,7 +286,7 @@ rm(extra_rows)
 # Figure S1 - heatmap of correlation between POP exposures ---- 
 # Pearson correlations between pre-disease POP plasma concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498). 
 plot.new()
-tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S1a.tiff", units = "mm", width = 300, height = 270, res = 300)
+tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/1.Article_POPs_ALS_occurence/figure_S1a.tiff", units = "mm", width = 300, height = 270, res = 300)
 corrplot(results_descriptive$danish$POPs_heatmap_danish, 
          method = 'color', 
          type = "lower", 
@@ -298,7 +298,7 @@ corrplot(results_descriptive$danish$POPs_heatmap_danish,
          tl.cex = 1,
          col = rev(COL2(diverging = "RdYlBu"))) 
 dev.off()
-tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S1b.tiff", units = "mm", width = 130, height = 120, res = 300)
+tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/1.Article_POPs_ALS_occurence/figure_S1b.tiff", units = "mm", width = 130, height = 120, res = 300)
 corrplot(results_descriptive$danish$POPs_heatmap_danish_group, 
          method = 'color', 
          type = "lower", 
@@ -360,54 +360,54 @@ figure_S3 <- results_POPs_ALS_occurrence$sensitivity_not_summed$sensitivity_resu
 
 # Export ----
 table_1 <- read_docx() |> body_add_flextable(table_1) 
-print(table_1, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/table_1.docx")
+print(table_1, target = "~/Documents/POP_ALS_2025_02_03/2_output/1.Article_POPs_ALS_occurence/table_1.docx")
 
 table_S1 <- read_docx() |> body_add_flextable(table_S1)
-print(table_S1, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/table_S1.docx")
+print(table_S1, target = "~/Documents/POP_ALS_2025_02_03/2_output/1.Article_POPs_ALS_occurence/table_S1.docx")
 table_S2 <- read_docx() |> body_add_flextable(table_S2)
-print(table_S2, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/table_S2.docx")
+print(table_S2, target = "~/Documents/POP_ALS_2025_02_03/2_output/1.Article_POPs_ALS_occurence/table_S2.docx")
 table_S3 <- read_docx() |> body_add_flextable(table_S3)
-print(table_S3, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/table_S3.docx")
+print(table_S3, target = "~/Documents/POP_ALS_2025_02_03/2_output/1.Article_POPs_ALS_occurence/table_S3.docx")
 table_S4 <- read_docx() |> body_add_flextable(table_S4)
-print(table_S4, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/table_S4.docx")
+print(table_S4, target = "~/Documents/POP_ALS_2025_02_03/2_output/1.Article_POPs_ALS_occurence/table_S4.docx")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_1.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/1.Article_POPs_ALS_occurence/figure_1.tiff",
   figure_1,
   height = 4,
   width = 8,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_2.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/1.Article_POPs_ALS_occurence/figure_2.tiff",
   figure_2,
   height = 8,
   width = 9,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_3.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/1.Article_POPs_ALS_occurence/figure_3.tiff",
   figure_3,
   height = 8,
   width = 7,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_4.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/1.Article_POPs_ALS_occurence/figure_4.tiff",
   figure_4,
   height = 7,
   width = 9,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S2.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/1.Article_POPs_ALS_occurence/figure_S2.tiff",
   figure_S2,
   height = 15,
   width = 8,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_POPs_ALS_occurence/figure_S3.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/1.Article_POPs_ALS_occurence/figure_S3.tiff",
   figure_S3,
   height = 7,
   width = 6,

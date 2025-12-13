@@ -702,40 +702,40 @@ rm(plot_base_cox_gam_danish, plot_adjusted_cox_gam_danish)
 # Export ----
 ## tables ----
 table_1 <- read_docx() |> body_add_flextable(table_1) 
-print(table_1, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_NEFL_ALS/table_1.docx")
+print(table_1, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/table_1.docx")
 
 
 ## figures ----
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_NEFL_ALS/figure_1.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/figure_1.tiff",
   figure_1,
   height = 8,
   width = 10,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_NEFL_ALS/figure_2.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/figure_2.tiff",
   figure_2,
   height = 5,
   width = 10,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_NEFL_ALS/figure_3.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/figure_3.tiff",
   figure_3,
   height = 5,
   width = 10,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_NEFL_ALS/figure_4.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/figure_4.tiff",
   figure_4,
   height = 4,
   width = 8,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_NEFL_ALS/figure_5.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/figure_5.tiff",
   figure_5,
   height = 5,
   width = 10,

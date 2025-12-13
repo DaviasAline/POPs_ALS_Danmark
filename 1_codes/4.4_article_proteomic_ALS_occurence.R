@@ -100,7 +100,7 @@ table_S1 <-
 
 # Supplementary figure 1 - heatmap proteomic neuro explo ----
 plot.new()
-tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_S1.tiff", 
+tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/figure_S1.tiff", 
      units = "mm", 
      width = 200, 
      height = 200, 
@@ -120,7 +120,7 @@ corrplot(results_descriptive$danish$proteomic_heatmap_danish_neuro_explo,
 
 # Supplementary figure 2 - heatmap proteomic immune response  ----
 plot.new()
-tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_S2.tiff", 
+tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/figure_S2.tiff", 
      units = "mm", 
      width = 200, 
      height = 200, 
@@ -139,7 +139,7 @@ corrplot(results_descriptive$danish$proteomic_heatmap_danish_immun_res,
 
 # Supplementary figure 3 - heatmap proteomic metabolism ----
 plot.new()
-tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_S3.tiff", 
+tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/figure_S3.tiff", 
      units = "mm", 
      width = 200, 
      height = 200, 
@@ -159,30 +159,30 @@ corrplot(results_descriptive$danish$proteomic_heatmap_danish_metabolism,
 
 # Export ----
 table_1 <- read_docx() |> body_add_flextable(table_1) 
-print(table_1, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/table_1.docx")
+print(table_1, target = "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/table_1.docx")
 table_2 <- read_docx() |> body_add_flextable(table_2) 
-print(table_2, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/table_2.docx")
+print(table_2, target = "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/table_2.docx")
 
 table_S1 <- read_docx() |> body_add_flextable(table_S1)
-print(table_S1, target = "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/table_S1.docx")
+print(table_S1, target = "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/table_S1.docx")
 
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_1.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/figure_1.tiff",
   figure_1,
   height = 8,
   width = 15,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_2.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/figure_2.tiff",
   figure_2,
   height = 8,
   width = 15,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_3.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/figure_3.tiff",
   figure_3,
   height = 4,
   width = 8,
@@ -190,21 +190,21 @@ ggsave(
 
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_S1.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/figure_S1.tiff",
   figure_S1,
   height = 10,
   width = 10,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_S2.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/figure_S2.tiff",
   figure_S2,
   height = 10,
   width = 10,
   units = "in")
 
 ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/Article_proteomics_ALS_occurence/figure_S3.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/figure_S3.tiff",
   figure_S3,
   height = 10,
   width = 10,
