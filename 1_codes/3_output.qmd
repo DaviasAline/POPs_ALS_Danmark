@@ -2241,11 +2241,11 @@ results_proteomic_ALS_occurrence$sensi_2$proteomic_sd_ALS_table_sensi_2 |>
 
 
 results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_base_figure + labs(title = "Main analysis - Base model") + theme(legend.position = "none") + 
-  results_proteomic_ALS_occurrence$sensi_2$proteomic_sd_ALS_base_figure_sensi_2 + labs(title = "Filtered to follow-up>5years - Base model") + theme(legend.position = "bottom") +
+  results_proteomic_ALS_occurrence$sensi_2$proteomic_sd_ALS_base_figure_sensi_2 + labs(title = "Filtered to follow-up < 5 years - Base model") + theme(legend.position = "bottom") +
   plot_layout(ncol = 2)
 
 results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_adjusted_figure + labs(title = "Main analysis - Adjusted model") + theme(legend.position = "none") + 
-  results_proteomic_ALS_occurrence$sensi_2$proteomic_sd_ALS_adjusted_figure_sensi_2 + labs(title = "Filtered to follow-up>5years - Adjusted model") + theme(legend.position = "bottom") +
+  results_proteomic_ALS_occurrence$sensi_2$proteomic_sd_ALS_adjusted_figure_sensi_2 + labs(title = "Filtered to follow-up < 5 years - Adjusted model") + theme(legend.position = "bottom") +
   plot_layout(ncol = 2)
 ```
 
@@ -2261,7 +2261,7 @@ results_proteomic_ALS_occurrence$sensi_3$proteomic_quart_ALS_table_sensi_3 |>
 ```
 
 ### GAMs
-```{r fig.height=30, fig.width=9}
+```{r fig.height=60, fig.width=9}
 #| echo: false
 #| message: false
 #| warning: false
@@ -2309,11 +2309,11 @@ results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_table_sensi_3 |>
 
 
 results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_base_figure + labs(title = "Main analysis - Base model") + theme(legend.position = "none") + 
-  results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_base_figure_sensi_3 + labs(title = "Filtered to follow-up>5years - Base model") + theme(legend.position = "bottom") +
+  results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_base_figure_sensi_3 + labs(title = "Filtered to follow-up > 5 years - Base model") + theme(legend.position = "bottom") +
   plot_layout(ncol = 2)
 
 results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_adjusted_figure + labs(title = "Main analysis - Adjusted model") + theme(legend.position = "none") + 
-  results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_adjusted_figure_sensi_3 + labs(title = "Filtered to follow-up>5years - Adjusted model") + theme(legend.position = "bottom") +
+  results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_adjusted_figure_sensi_3 + labs(title = "Filtered to follow-up > 5years - Adjusted model") + theme(legend.position = "bottom") +
   plot_layout(ncol = 2)
 ```
 
@@ -2329,7 +2329,7 @@ results_proteomic_ALS_occurrence$sensi_3$proteomic_quart_ALS_table_sensi_3 |>
 ```
 
 ### GAMs
-```{r fig.height=30, fig.width=9}
+```{r fig.height=60, fig.width=9}
 #| echo: false
 #| message: false
 #| warning: false
@@ -2732,6 +2732,7 @@ A small p-value indicates a significant deviation between the two distributions.
 #| echo: false
 #| message: false
 #| warning: false
+#| column: screen-inset-right
 results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_all_figure
 results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_all_results
 
@@ -2754,6 +2755,7 @@ The results support the idea that the proteins associated with increased disease
 #| echo: false
 #| message: false
 #| warning: false
+#| column: screen-inset-right
 results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_immune_figure
 results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_immune_results
 
@@ -2768,6 +2770,7 @@ results_proteomic_ALS_occurrence$additional_analysis_3$jackknife_immune_results 
 #| echo: false
 #| message: false
 #| warning: false
+#| column: screen-inset-right
 results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_metabolism_figure
 results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_metabolism_results
 
@@ -2784,6 +2787,7 @@ results_proteomic_ALS_occurrence$additional_analysis_3$jackknife_metabolism_resu
 #| echo: false
 #| message: false
 #| warning: false
+#| column: screen-inset-right
 results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_neuro_figure
 results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_neuro_results
 
