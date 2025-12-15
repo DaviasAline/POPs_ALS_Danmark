@@ -74,6 +74,39 @@ proteomic_sensi_1 <-
 
 
 ## main base ----
+test <- results_proteomic_ALS_occurrence$main$main_results |>
+  filter(analysis %in% c("sensi_1", "sensi_2", "sensi_1_3", "sensi_1_3_4", "sensi_1_3_5"), 
+         term == "Continuous", 
+         explanatory == "NEFL") |>
+  mutate(signif = ifelse(p_value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
+         model = fct_recode(model, 
+                            "Adjusted models" = "adjusted",
+                            "Base models" = "base"), 
+         model = fct_relevel(model, "Base models", "Adjusted models"), 
+         analysis = fct_recode(analysis, 
+             "Main analyis\n(n=495)" = "sensi_1",
+             "Filtered to\nfollow-up < 5 years\n (n=51)" = "sensi_2"), 
+             "Filtered to\nfollow-up > 5 years\n (n=447)" = "sensi_1_3",
+             "Filtered to follow-up\nbetween 5 and 14.6 years\n(n=225)" = "sensi_1_3_4",
+             "Filtered to\nfollow-up > 14.6 years\n (n=227)" = "sensi_1_3_5",
+         analysis = fct_relevel(analysis, 
+             "Main analyis (n=495)", 
+             "Filtered to\nfollow-up < 5 years\n (n=51)",
+             "Filtered to\nfollow-up > 5 years\n (n=447)", 
+             "Filtered to follow-up\nbetween 5 and 14.6 years\n(n=225)",
+             "Filtered to\nfollow-up > 14.6 years\n (n=227)")) |> 
+  ggplot(aes(x = explanatory, y = OR_raw, ymin = lower_CI, ymax = upper_CI, color = signif)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(rows = dplyr::vars(analysis), cols = dplyr::vars(model), switch = "y") +                         # , scales = "free_x"
+  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  labs(x = "", y = "Odd ratios (OR)", color = "p-value") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip()
+test
 
 model1_gam_sensi_1 <- list()
 

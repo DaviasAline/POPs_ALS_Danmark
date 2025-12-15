@@ -2042,8 +2042,8 @@ results_fattyacids_ALS_survival$comp_results_danish_finnish
 #| echo: false
 #| message: false
 #| warning: false
-wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_neuro_explo_NEFL_sensi_1, 
-           results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_neuro_explo_NEFL_sensi_1)
+wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$signif$proteomic_neuro_explo_NEFL_sensi_1,  
+           results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$signif$proteomic_neuro_explo_NEFL_sensi_1)
 ```
 
 ### Sensitivity analysis
@@ -2052,8 +2052,11 @@ Filtering the data to follow-up > 5 years
 #| echo: false
 #| message: false
 #| warning: false
-wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_neuro_explo_NEFL_sensi_1, 
-           results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_neuro_explo_NEFL_sensi_1_2)
+wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$signif$proteomic_neuro_explo_NEFL_sensi_1, 
+           results_proteomic_ALS_occurrence$sensi_2$plot_adjusted_gam_sensi_2$signif$proteomic_neuro_explo_NEFL, 
+           results_proteomic_ALS_occurrence$sensi_1_3$plot_adjusted_gam_sensi_1_3$signif$proteomic_neuro_explo_NEFL_sensi_1_3, 
+           results_proteomic_ALS_occurrence$sensi_1_3_4$plot_adjusted_gam_sensi_1_3_4$signif$proteomic_neuro_explo_NEFL_sensi_1_3_4, 
+           results_proteomic_ALS_occurrence$sensi_1_3_5$plot_adjusted_gam_sensi_1_3_5$not_signif$proteomic_neuro_explo_NEFL_sensi_1_3_5)
 ```
 
 ### Additional analysis 
@@ -2135,80 +2138,30 @@ Generalized additive models modeling proteins as smooth terms (thin plate spline
 #| echo: false
 #| message: false
 #| warning: false
-# wrap_plots(results_proteomic_ALS_occurrence$main$plot_base_gam, ncol = 3)
-# wrap_plots(results_proteomic_ALS_occurrence$main$plot_adjusted_gam, ncol = 3)
+
+plots_lists <- list(
+  sensi_1_base = results_proteomic_ALS_occurrence$main$plot_base_gam$signif,
+  sensi_1_adj  = results_proteomic_ALS_occurrence$main$plot_adjusted_gam$signif)
+
+all_proteins <- sort(unique(unlist(lapply(plots_lists, names))))
+
+plot_grid <- lapply(all_proteins, function(prot) {
+  lapply(plots_lists, function(lst) {
+    if (prot %in% names(lst)) {
+      lst[[prot]]
+    } else {
+      wrap_elements(grid::nullGrob())
+    }
+  })
+})
+
+wrap_plots(
+  unlist(plot_grid, recursive = FALSE),
+  ncol = 2) 
+
+rm(plots_lists, all_proteins, plot_grid)
 
 
-wrap_plots(list(results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_immun_res_PSIP1,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_immun_res_PSIP1,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_immun_res_PIK3AP1,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_immun_res_PIK3AP1,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_immun_res_ICA1,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_immun_res_ICA1,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_immun_res_DFFA,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_immun_res_DFFA,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_neuro_explo_CD33,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_neuro_explo_CD33,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_neuro_explo_NPM1,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_neuro_explo_NPM1,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_neuro_explo_MAD1L1,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_neuro_explo_MAD1L1,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_neuro_explo_AKT1S1,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_neuro_explo_AKT1S1,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_neuro_explo_IL32,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_neuro_explo_IL32,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_neuro_explo_NEFL,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_neuro_explo_NEFL,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_CLMP,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_metabolism_CLMP,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_NPTXR,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_metabolism_NPTXR,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_ANGPTL7,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_metabolism_ANGPTL7,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_GLRX,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_metabolism_GLRX,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_QDPR,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_metabolism_QDPR,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_APEX1,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_metabolism_APEX1,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_HDGF,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_metabolism_HDGF,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_LRP11,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_metabolism_LRP11,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_ARG1,
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_metabolism_ARG1,
-
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_immun_res_HNMT,
-
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_immun_res_SH2D1A,
-
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_metabolism_CD164,
-
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_metabolism_MCFD2),
-
-ncol = 2, nrow = 23)
 ```
 
 ## Sensitivity 1: Removing NEFL outlier
@@ -2258,8 +2211,8 @@ Generalized additive models modeling proteins as smooth terms (thin plate spline
 #| echo: false
 #| message: false
 #| warning: false
-wrap_plots(results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_neuro_explo_NEFL,
-           results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_neuro_explo_NEFL_sensi_1, 
+wrap_plots(results_proteomic_ALS_occurrence$main$plot_base_gam$signif$proteomic_neuro_explo_NEFL,
+           results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$signif$proteomic_neuro_explo_NEFL_sensi_1, 
            ncol = 2)
 ```
 
@@ -2267,20 +2220,19 @@ wrap_plots(results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_neuro_e
 #| echo: false
 #| message: false
 #| warning: false
-wrap_plots(results_proteomic_ALS_occurrence$main$plot_adjusted_gam$proteomic_neuro_explo_NEFL,
-           results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_neuro_explo_NEFL_sensi_1, 
+wrap_plots(results_proteomic_ALS_occurrence$main$plot_adjusted_gam$signif$proteomic_neuro_explo_NEFL,
+           results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$signif$proteomic_neuro_explo_NEFL_sensi_1, 
            ncol = 2)
 ```
 
-## Sensitivity 2: Removing cases and their controls with follow-up \< 5 years
 
-Data not shown because of merging sensi 1 and sensi 2
+## Sensitivity 2: Filtering to cases and their controls with follow-up < 5 years
 
-```{r fig.width=15, fig.height=6}
-#| eval: false
+### Logistic regressions 
+```{r fig.height=6, fig.width=15}
+#| echo: false
 #| message: false
 #| warning: false
-#| include: false
 
 ### Logistic regressions
 # Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
@@ -2298,95 +2250,120 @@ results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_adjusted_figure + labs(ti
 ```
 
 ```{r}
-#| eval: false
+#| echo: false
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-#| include: false
 
 # Conditional logistic regressions (quartiles), matched on age at baseline and sex (further adjusted for smoking and body mass index)
-results_proteomic_ALS_occurrence$sensi_2$proteomic_quart_ALS_table_sensi_2 |>
+results_proteomic_ALS_occurrence$sensi_3$proteomic_quart_ALS_table_sensi_3 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
+### GAMs
 ```{r fig.height=30, fig.width=9}
-#| eval: false
+#| echo: false
 #| message: false
 #| warning: false
-#| include: false
 ### GAMs 
 # Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
-wrap_plots(list(results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_immun_res_PIK3AP1,
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_immun_res_PIK3AP1,
 
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_immun_res_ICA1,
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_immun_res_ICA1,
+plots_lists <- list(
+  sensi_1_base = results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$signif,
+  sensi_1_adj  = results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$signif,
+  sensi_2_base = results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$signif,
+  sensi_2_adj  = results_proteomic_ALS_occurrence$sensi_2$plot_adjusted_gam_sensi_2$signif)
 
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_immun_res_DFFA,
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_immun_res_DFFA,
+all_proteins <- sort(unique(unlist(lapply(plots_lists, names))))
 
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_neuro_explo_NPM1,
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_neuro_explo_NPM1,
+plot_grid <- lapply(all_proteins, function(prot) {
+  lapply(plots_lists, function(lst) {
+    if (prot %in% names(lst)) {
+      lst[[prot]]
+    } else {
+      wrap_elements(grid::nullGrob())
+    }
+  })
+})
 
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_neuro_explo_MAD1L1 ,
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_neuro_explo_MAD1L1,
+wrap_plots(
+  unlist(plot_grid, recursive = FALSE),
+  ncol = 4) 
 
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_neuro_explo_AKT1S1 ,
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_neuro_explo_AKT1S1,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_neuro_explo_IL32 ,
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_neuro_explo_IL32,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_neuro_explo_NEFL ,
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_neuro_explo_NEFL,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_CLMP ,
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_metabolism_CLMP,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_NPTXR ,
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_metabolism_NPTXR,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_GLRX,
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_metabolism_GLRX,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_APEX1 ,
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_metabolism_APEX1,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_HDGF ,
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_metabolism_HDGF,
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_ARG1 ,
-wrap_elements(grid::nullGrob()),
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_immun_res_PSIP1,
-wrap_elements(grid::nullGrob()),
-
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_neuro_explo_CD33,
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_ANGPTL7,
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_QDPR,
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$main$plot_base_gam$proteomic_metabolism_LRP11,
-wrap_elements(grid::nullGrob()),
-
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_metabolism_ARG1,
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_immun_res_DCTN1,
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_neuro_explo_SRP14,
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_metabolism_CLEC5A,
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_metabolism_MCFD2,
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_2$plot_base_gam_sensi_2$proteomic_metabolism_PAG1), 
-ncol = 2, nrow = 25)
+rm(plots_lists, all_proteins, plot_grid)
 
 ```
 
-## Sensitivity 1 + 2: Removing NEFL outlier + removing cases and their controls with follow_up \< 5 years
+## Sensitivity 3: Filtering to cases and their controls with follow-up > 5 years
+
+### Logistic regressions 
+```{r fig.height=6, fig.width=15}
+#| echo: false
+#| message: false
+#| warning: false
+
+### Logistic regressions
+# Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_table_sensi_3 |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
+
+
+results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_base_figure + labs(title = "Main analysis - Base model") + theme(legend.position = "none") + 
+  results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_base_figure_sensi_3 + labs(title = "Filtered to follow-up>5years - Base model") + theme(legend.position = "bottom") +
+  plot_layout(ncol = 2)
+
+results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_adjusted_figure + labs(title = "Main analysis - Adjusted model") + theme(legend.position = "none") + 
+  results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_adjusted_figure_sensi_3 + labs(title = "Filtered to follow-up>5years - Adjusted model") + theme(legend.position = "bottom") +
+  plot_layout(ncol = 2)
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+
+# Conditional logistic regressions (quartiles), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+results_proteomic_ALS_occurrence$sensi_3$proteomic_quart_ALS_table_sensi_3 |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
+```
+
+### GAMs
+```{r fig.height=30, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+### GAMs 
+# Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
+plots_lists <- list(
+  sensi_1_base = results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$signif,
+  sensi_1_adj  = results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$signif,
+  sensi_3_base = results_proteomic_ALS_occurrence$sensi_3$plot_base_gam_sensi_3$signif,
+  sensi_3_adj  = results_proteomic_ALS_occurrence$sensi_3$plot_adjusted_gam_sensi_3$signif)
+
+all_proteins <- sort(unique(unlist(lapply(plots_lists, names))))
+
+plot_grid <- lapply(all_proteins, function(prot) {
+  lapply(plots_lists, function(lst) {
+    if (prot %in% names(lst)) {
+      lst[[prot]]
+    } else {
+      wrap_elements(grid::nullGrob())
+    }
+  })
+})
+
+wrap_plots(
+  unlist(plot_grid, recursive = FALSE),
+  ncol = 4) 
+
+rm(plots_lists, all_proteins, plot_grid)
+
+
+
+```
+
+## Sensitivity 1 + 3: Removing NEFL outlier + filtering cases and their controls with follow-up > 5 years
 
 ### Logistic regressions
 
@@ -2397,7 +2374,7 @@ Conditional logistic regressions (continuous standardized), matched on age at ba
 #| message: false
 #| warning: false
 
-results_proteomic_ALS_occurrence$sensi_1_2$proteomic_sd_ALS_table_sensi_1_2 |>
+results_proteomic_ALS_occurrence$sensi_1_3$proteomic_sd_ALS_table_sensi_1_3 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
@@ -2409,7 +2386,7 @@ results_proteomic_ALS_occurrence$sensi_1_2$proteomic_sd_ALS_table_sensi_1_2 |>
 results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_base_figure_sensi_1 + 
   labs(title = "NEFL outlier removed \n Base model") + 
   theme(legend.position = "none") + 
-  results_proteomic_ALS_occurrence$sensi_1_2$proteomic_sd_ALS_base_figure_sensi_1_2 + 
+  results_proteomic_ALS_occurrence$sensi_1_3$proteomic_sd_ALS_base_figure_sensi_1_3 + 
   labs(title = "Filtered to follow-up>5years\n+ NEFL outlier excluded \n Base model") + 
   theme(legend.position = "bottom") +
   plot_layout(ncol = 2)
@@ -2417,7 +2394,7 @@ results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_base_figure_sensi_1 +
 results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_1 + 
   labs(title = "NEFL outlier removed \n Adjusted model") + 
   theme(legend.position = "none") + 
-  results_proteomic_ALS_occurrence$sensi_1_2$proteomic_sd_ALS_adjusted_figure_sensi_1_2 + 
+  results_proteomic_ALS_occurrence$sensi_1_3$proteomic_sd_ALS_adjusted_figure_sensi_1_3 + 
   labs(title = "Filtered to follow-up>5years\n+ NEFL outlier excluded \n Adjusted model") + 
   theme(legend.position = "bottom") +
   plot_layout(ncol = 2)
@@ -2431,7 +2408,7 @@ Conditional logistic regressions (quartiles), matched on age at baseline and sex
 #| warning: false
 #| column: screen-inset-right
 
-results_proteomic_ALS_occurrence$sensi_1_2$proteomic_quart_ALS_table_sensi_1_2 |>
+results_proteomic_ALS_occurrence$sensi_1_3$proteomic_quart_ALS_table_sensi_1_3 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
@@ -2444,148 +2421,213 @@ Generalized additive models modeling proteins as smooth terms (thin plate spline
 #| message: false
 #| warning: false
 #| column: screen-inset-right
-wrap_plots(list(
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_immun_res_PIK3AP1,
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_immun_res_PIK3AP1,
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_immun_res_PIK3AP1, 
-results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_immun_res_PIK3AP1, 
 
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_immun_res_ICA1,
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_immun_res_ICA1,
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_immun_res_ICA1, 
-results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_immun_res_ICA1, 
+plots_lists <- list(
+  sensi_1_base = results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$signif,
+  sensi_1_adj  = results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$signif,
+  sensi_1_3_base = results_proteomic_ALS_occurrence$sensi_1_3$plot_base_gam_sensi_1_3$signif,
+  sensi_1_3_adj  = results_proteomic_ALS_occurrence$sensi_1_3$plot_adjusted_gam_sensi_1_3$signif)
 
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_immun_res_DFFA,
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_immun_res_DFFA,
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_immun_res_DFFA, 
-results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_immun_res_DFFA, 
+all_proteins <- sort(unique(unlist(lapply(plots_lists, names))))
 
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_neuro_explo_NPM1,
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_neuro_explo_NPM1,
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_neuro_explo_NPM1, 
-results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_neuro_explo_NPM1, 
+plot_grid <- lapply(all_proteins, function(prot) {
+  lapply(plots_lists, function(lst) {
+    if (prot %in% names(lst)) {
+      lst[[prot]]
+    } else {
+      wrap_elements(grid::nullGrob())
+    }
+  })
+})
 
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_neuro_explo_IL32,
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_neuro_explo_IL32,
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_neuro_explo_IL32, 
-results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_neuro_explo_IL32, 
+wrap_plots(
+  unlist(plot_grid, recursive = FALSE),
+  ncol = 4) 
 
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_neuro_explo_NEFL_sensi_1,
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_neuro_explo_NEFL_sensi_1_2,
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_neuro_explo_NEFL_sensi_1, 
-results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_neuro_explo_NEFL_sensi_1_2, 
+rm(plots_lists, all_proteins, plot_grid)
 
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_metabolism_CLMP,
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_metabolism_CLMP,
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_metabolism_CLMP, 
-results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_metabolism_CLMP, 
 
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_metabolism_NPTXR,
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_metabolism_NPTXR,
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_metabolism_NPTXR, results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_metabolism_NPTXR, 
-
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_metabolism_GLRX,
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_metabolism_GLRX,
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_metabolism_GLRX, 
-results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_metabolism_GLRX, 
-
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_metabolism_APEX1,
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_metabolism_APEX1,
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_metabolism_APEX1, 
-results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_metabolism_APEX1, 
-
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_neuro_explo_MAD1L1,
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_neuro_explo_MAD1L1,
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_neuro_explo_MAD1L1,
-wrap_elements(grid::nullGrob()),
-
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_neuro_explo_AKT1S1,
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_neuro_explo_AKT1S1,
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_neuro_explo_AKT1S1, 
-results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_neuro_explo_AKT1S1, 
-
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_metabolism_HDGF,
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_metabolism_HDGF,
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_metabolism_HDGF, 
-wrap_elements(grid::nullGrob()),
-
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_metabolism_ARG1,
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_metabolism_ARG1,
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_metabolism_ARG1, 
-results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_metabolism_ARG1, 
-
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_immun_res_PSIP1,
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_immun_res_PSIP1, 
-wrap_elements(grid::nullGrob()),
-
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_neuro_explo_CD33,
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_neuro_explo_CD33, 
-wrap_elements(grid::nullGrob()),
-
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_metabolism_ANGPTL7,
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_metabolism_ANGPTL7, 
-wrap_elements(grid::nullGrob()),
-
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_metabolism_QDPR,
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_metabolism_QDPR,
-wrap_elements(grid::nullGrob()),
-
-results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$proteomic_metabolism_LRP11,
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_metabolism_LRP11, 
-wrap_elements(grid::nullGrob()),
-
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_immun_res_DCTN1,
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_immun_res_DCTN1,
-
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_neuro_explo_SRP14,
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_neuro_explo_SRP14,
-
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_metabolism_CLEC5A,
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_metabolism_CLEC5A,
-
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_metabolism_MCFD2,
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_metabolism_MCFD2, 
-results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_metabolism_MCFD2, 
-
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1_2$plot_base_gam_sensi_1_2$proteomic_metabolism_PAG1, 
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1_2$plot_adjusted_gam_sensi_1_2$proteomic_metabolism_PAG1, 
-
-wrap_elements(grid::nullGrob()),
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_immun_res_HNMT,
-wrap_elements(grid::nullGrob()),
-  
-wrap_elements(grid::nullGrob()),
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_immun_res_SH2D1A, 
-wrap_elements(grid::nullGrob()),
-
-wrap_elements(grid::nullGrob()),
-wrap_elements(grid::nullGrob()),
-results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$proteomic_metabolism_CD164, 
-wrap_elements(grid::nullGrob())), 
-
-ncol = 4, nrow = 27)
 
 ```
 
-## Sensitivity 3: stratifiyng the analysis in tertiles of follow-up duration
 
-Data not shown because of merging sensi 1 and sensi 3
+
+## Sensitivity 1 + 3 + 4: Removing NEFL outlier + filtering cases and their controls with follow-up > 5 years + filtering follow-up < 50%
+
+### Logistic regressions
+
+Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+
+```{r, fig.width=15, fig.height=6}
+#| echo: false
+#| message: false
+#| warning: false
+
+results_proteomic_ALS_occurrence$sensi_1_3_4$proteomic_sd_ALS_table_sensi_1_3_4 |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
+```
+
+```{r, fig.width=15, fig.height=6}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_base_figure_sensi_1 + 
+  labs(title = "NEFL outlier removed \n Base model") + 
+  theme(legend.position = "none") + 
+  results_proteomic_ALS_occurrence$sensi_1_3_4$proteomic_sd_ALS_base_figure_sensi_1_3_4 + 
+  labs(title = "NEFL outlier excluded\n+Filtered to follow-up>5years\n+Filtered to follow-up<50%\nBase model") + 
+  theme(legend.position = "bottom") +
+  plot_layout(ncol = 2)
+  
+results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_1 + 
+  labs(title = "NEFL outlier removed \n Adjusted model") + 
+  theme(legend.position = "none") + 
+  results_proteomic_ALS_occurrence$sensi_1_3_4$proteomic_sd_ALS_adjusted_figure_sensi_1_3_4 + 
+  labs(title = "NEFL outlier excluded\n+Filtered to follow-up>5years\n+Filtered to follow-up<50%\nAdjusted model") + 
+  theme(legend.position = "bottom") +
+  plot_layout(ncol = 2)
+```
+
+Conditional logistic regressions (quartiles), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+
+results_proteomic_ALS_occurrence$sensi_1_3_4$proteomic_quart_ALS_table_sensi_1_3_4 |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
+```
+
+### GAMs
+
+Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
+
+```{r fig.width=12, fig.height=60}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+
+plots_lists <- list(
+  sensi_1_base = results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$signif,
+  sensi_1_adj  = results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$signif,
+  sensi_1_3_4_base = results_proteomic_ALS_occurrence$sensi_1_3_4$plot_base_gam_sensi_1_3_4$signif,
+  sensi_1_3_4_adj  = results_proteomic_ALS_occurrence$sensi_1_3_4$plot_adjusted_gam_sensi_1_3_4$signif)
+
+all_proteins <- sort(unique(unlist(lapply(plots_lists, names))))
+
+plot_grid <- lapply(all_proteins, function(prot) {
+  lapply(plots_lists, function(lst) {
+    if (prot %in% names(lst)) {
+      lst[[prot]]
+    } else {
+      wrap_elements(grid::nullGrob())
+    }
+  })
+})
+
+wrap_plots(
+  unlist(plot_grid, recursive = FALSE),
+  ncol = 4) 
+
+rm(plots_lists, all_proteins, plot_grid)
+
+```
+
+
+
+
+## Sensitivity 1 + 3 + 5: Removing NEFL outlier + filtering cases and their controls with follow-up > 5 years + filtering follow-up > 50%
+
+### Logistic regressions
+
+Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+
+```{r, fig.width=15, fig.height=6}
+#| echo: false
+#| message: false
+#| warning: false
+
+results_proteomic_ALS_occurrence$sensi_1_3_5$proteomic_sd_ALS_table_sensi_1_3_5 |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
+```
+
+```{r, fig.width=15, fig.height=6}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_base_figure_sensi_1 + 
+  labs(title = "NEFL outlier removed \n Base model") + 
+  theme(legend.position = "none") + 
+  results_proteomic_ALS_occurrence$sensi_1_3_5$proteomic_sd_ALS_base_figure_sensi_1_3_5 + 
+  labs(title = "NEFL outlier excluded\n+Filtered to follow-up>5years\n+Filtered to follow-up>50%\nBase model") + 
+  theme(legend.position = "bottom") +
+  plot_layout(ncol = 2)
+  
+results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_1 + 
+  labs(title = "NEFL outlier removed \n Adjusted model") + 
+  theme(legend.position = "none") + 
+  results_proteomic_ALS_occurrence$sensi_1_3_5$proteomic_sd_ALS_adjusted_figure_sensi_1_3_5 + 
+  labs(title = "NEFL outlier excluded\n+Filtered to follow-up>5years\n+Filtered to follow-up>50%\nAdjusted model") + 
+  theme(legend.position = "bottom") +
+  plot_layout(ncol = 2)
+```
+
+Conditional logistic regressions (quartiles), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+
+results_proteomic_ALS_occurrence$sensi_1_3_5$proteomic_quart_ALS_table_sensi_1_3_5 |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
+```
+
+### GAMs
+
+Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
+
+```{r fig.width=12, fig.height=60}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+
+plots_lists <- list(
+  sensi_1_base = results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$signif,
+  sensi_1_adj  = results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$signif,
+  sensi_1_3_5_base = results_proteomic_ALS_occurrence$sensi_1_3_5$plot_base_gam_sensi_1_3_5$signif,
+  sensi_1_3_5_adj  = results_proteomic_ALS_occurrence$sensi_1_3_5$plot_adjusted_gam_sensi_1_3_5$signif)
+
+all_proteins <- sort(unique(unlist(lapply(plots_lists, names))))
+
+plot_grid <- lapply(all_proteins, function(prot) {
+  lapply(plots_lists, function(lst) {
+    if (prot %in% names(lst)) {
+      lst[[prot]]
+    } else {
+      wrap_elements(grid::nullGrob())
+    }
+  })
+})
+
+wrap_plots(
+  unlist(plot_grid, recursive = FALSE),
+  ncol = 4) 
+
+rm(plots_lists, all_proteins, plot_grid)
+
+```
+
+## Sensitivity 6: stratifiyng the analysis in tertiles of follow-up duration
+
+Data not shown because of merging sensi 1 and sensi 6
 
 ```{r fig.width=15, fig.height=12}
 #| eval: false
@@ -2596,24 +2638,24 @@ Data not shown because of merging sensi 1 and sensi 3
 ### Logistic regressions
 # Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_base_figure + labs(title = "Main analysis - full sample size") + theme(legend.position = "none") +
-  results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_base_figure_sensi_3_T1 + labs(title = "Filtered to follow-up T1 (<11 years)") + theme(legend.position = "none") +
-  results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_base_figure_sensi_3_T2 + labs(title = "Filtered to follow-up T2 (11-16 years)") + theme(legend.position = "none") +
-  results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_base_figure_sensi_3_T3 + labs(title = "Filtered to follow-up T3 (>16 years)") + theme(legend.position = "bottom") 
+  results_proteomic_ALS_occurrence$sensi_6$proteomic_sd_ALS_base_figure_sensi_6_T1 + labs(title = "Filtered to follow-up T1 (<11 years)") + theme(legend.position = "none") +
+  results_proteomic_ALS_occurrence$sensi_6$proteomic_sd_ALS_base_figure_sensi_6_T2 + labs(title = "Filtered to follow-up T2 (11-16 years)") + theme(legend.position = "none") +
+  results_proteomic_ALS_occurrence$sensi_6$proteomic_sd_ALS_base_figure_sensi_6_T3 + labs(title = "Filtered to follow-up T3 (>16 years)") + theme(legend.position = "bottom") 
   
 results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_adjusted_figure + labs(title = "Main analysis - full sample size") + theme(legend.position = "none") +
-  results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_adjusted_figure_sensi_3_T1 + labs(title = "Filtered to follow-up T1 (<11 years)") + theme(legend.position = "none") +
-  results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_adjusted_figure_sensi_3_T2 + labs(title = "Filtered to follow-up T2 (11-16 years)") + theme(legend.position = "none") +
-  results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_adjusted_figure_sensi_3_T3 + labs(title = "Filtered to follow-up T3 (>16 years)") + theme(legend.position = "bottom") 
+  results_proteomic_ALS_occurrence$sensi_6$proteomic_sd_ALS_adjusted_figure_sensi_6_T1 + labs(title = "Filtered to follow-up T1 (<11 years)") + theme(legend.position = "none") +
+  results_proteomic_ALS_occurrence$sensi_6$proteomic_sd_ALS_adjusted_figure_sensi_6_T2 + labs(title = "Filtered to follow-up T2 (11-16 years)") + theme(legend.position = "none") +
+  results_proteomic_ALS_occurrence$sensi_6$proteomic_sd_ALS_adjusted_figure_sensi_6_T3 + labs(title = "Filtered to follow-up T3 (>16 years)") + theme(legend.position = "bottom") 
 ```
 
-## Sensitivity 1 + 3: Removing NEFL outlier + stratifiyng the analysis in tertiles of follow-up duration
+## Sensitivity 1 + 6: Removing NEFL outlier + stratifiyng the analysis in tertiles of follow-up duration
 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-results_proteomic_ALS_occurrence$sensi_3$sensi_3_table_follow_up
-results_proteomic_ALS_occurrence$sensi_3$sensi_3_densityplot_follow_up
+results_proteomic_ALS_occurrence$sensi_6$sensi_6_table_follow_up
+results_proteomic_ALS_occurrence$sensi_6$sensi_6_densityplot_follow_up
 ```
 
 ### Logistic regressions
@@ -2626,15 +2668,15 @@ Conditional logistic regressions (continuous standardized), matched on age at ba
 #| warning: false
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_base_figure_sensi_1 + labs(title = "NEFL outlier removed \n Base model") + theme(legend.position = "none") +
-results_proteomic_ALS_occurrence$sensi_1_3$proteomic_sd_ALS_base_figure_sensi_1_3_T1 + labs(title = "Filtered to follow-up T1 (<11 years)\n+ NEFL outlier excluded \n Base model") + theme(legend.position = "none") +
-results_proteomic_ALS_occurrence$sensi_1_3$proteomic_sd_ALS_base_figure_sensi_1_3_T2 + labs(title = "Filtered to follow-up T2 (11-16 years)\n+ NEFL outlier excluded \n Base model") + theme(legend.position = "none") +
-results_proteomic_ALS_occurrence$sensi_1_3$proteomic_sd_ALS_base_figure_sensi_1_3_T3 + labs(title = "Filtered to follow-up T3 (>16 years)\n+ NEFL outlier excluded \n Base model") + theme(legend.position = "bottom")  
+results_proteomic_ALS_occurrence$sensi_1_6$proteomic_sd_ALS_base_figure_sensi_1_6_T1 + labs(title = "Filtered to follow-up T1 (<11 years)\n+ NEFL outlier excluded \n Base model") + theme(legend.position = "none") +
+results_proteomic_ALS_occurrence$sensi_1_6$proteomic_sd_ALS_base_figure_sensi_1_6_T2 + labs(title = "Filtered to follow-up T2 (11-16 years)\n+ NEFL outlier excluded \n Base model") + theme(legend.position = "none") +
+results_proteomic_ALS_occurrence$sensi_1_6$proteomic_sd_ALS_base_figure_sensi_1_6_T3 + labs(title = "Filtered to follow-up T3 (>16 years)\n+ NEFL outlier excluded \n Base model") + theme(legend.position = "bottom")  
   
   
 results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_1 + labs(title = "NEFL outlier removed \n Adjusted model") + theme(legend.position = "none") +
-results_proteomic_ALS_occurrence$sensi_1_3$proteomic_sd_ALS_adjusted_figure_sensi_1_3_T1 + labs(title = "Filtered to follow-up T1 (<11 years)\n+ NEFL outlier excluded \n Adjusted model") + theme(legend.position = "none") +
-results_proteomic_ALS_occurrence$sensi_1_3$proteomic_sd_ALS_adjusted_figure_sensi_1_3_T2 + labs(title = "Filtered to follow-up T2 (11-16 years)\n+ NEFL outlier excluded \n Adjusted model") + theme(legend.position = "none") +
-results_proteomic_ALS_occurrence$sensi_1_3$proteomic_sd_ALS_adjusted_figure_sensi_1_3_T3 + labs(title = "Filtered to follow-up T3 (>16 years)\n+ NEFL outlier excluded \n Adjusted model") + theme(legend.position = "bottom")  
+results_proteomic_ALS_occurrence$sensi_1_6$proteomic_sd_ALS_adjusted_figure_sensi_1_6_T1 + labs(title = "Filtered to follow-up T1 (<11 years)\n+ NEFL outlier excluded \n Adjusted model") + theme(legend.position = "none") +
+results_proteomic_ALS_occurrence$sensi_1_6$proteomic_sd_ALS_adjusted_figure_sensi_1_6_T2 + labs(title = "Filtered to follow-up T2 (11-16 years)\n+ NEFL outlier excluded \n Adjusted model") + theme(legend.position = "none") +
+results_proteomic_ALS_occurrence$sensi_1_6$proteomic_sd_ALS_adjusted_figure_sensi_1_6_T3 + labs(title = "Filtered to follow-up T3 (>16 years)\n+ NEFL outlier excluded \n Adjusted model") + theme(legend.position = "bottom")  
 ```
 
 NEFL is not significantly associated with ALS occurence when the follow-up duration is \>16 years. We don't see many associations in the follow-up group T1: I suspect that it is because of high heterogeneity in follow-up duration among this sub-group (0-11 years). --\> then I trust more the sensi 2 results where we just remove the cases (and their controls) with follow-up \<5 years.

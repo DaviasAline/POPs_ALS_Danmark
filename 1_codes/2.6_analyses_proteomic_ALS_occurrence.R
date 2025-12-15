@@ -317,7 +317,7 @@ for (var in proteomic) {
 rm(var, formula, model, model_summary)
 
 
-# Sensitivity 1 - Removing the oulier for NEFL ----
+# Sensi 1 - Removing NEFL outlier ----
 bdd_danish_sensi_1 <- 
   bdd_danish  |> 
   mutate(
@@ -511,74 +511,6 @@ for (var in proteomic_sensi_1) {
 
 rm(var, formula, model, model_summary)
 
-
-pvals <- sapply(model1_gam_sensi_1, function(m) m$s.table[1, "p-value"])
-signif_vars <- names(pvals)[pvals < 0.05]
-signif_vars_labels <- set_names(str_replace(signif_vars, 
-                                            "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                            ""), 
-                                signif_vars)
-
-plot_base_gam_sensi_1 <- map(signif_vars, function(var) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
-  
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish_sensi_1)
-  
-  bdd_pred <- bdd_danish_sensi_1 |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_min <- min(bdd_danish_sensi_1[[var]], na.rm = TRUE)
-  x_label <- signif_vars_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 0, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_text(color = 'white'),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Base model excluding NEFL oulier")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) |>
-  set_names(signif_vars)
-
-rm(pvals, signif_vars, signif_vars_labels)
-
-
-
 ### model 2 sd ----
 
 model2_sd_sensi_1 <- data.frame(explanatory = character(),
@@ -732,87 +664,352 @@ for (var in proteomic_sensi_1) {
 rm(var, formula, model, model_summary)
 
 
-pvals <- sapply(model2_gam_sensi_1, function(m) m$s.table[1, "p-value"])
-signif_vars <- names(pvals)[pvals < 0.05]
-signif_vars_labels <- set_names(str_replace(signif_vars, 
-                                            "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                            ""), 
-                                signif_vars)
 
-plot_adjusted_gam_sensi_1 <- map(signif_vars, function(var) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age + smoking_2cat_i + bmi"))
-  
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish_sensi_1)
-  
-  bdd_pred <- bdd_danish_sensi_1 |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex))), 
-      adj_bmi = mean(bmi, na.rm = TRUE),
-      adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_min <- min(bdd_danish_sensi_1[[var]], na.rm = TRUE)
-  x_label <- signif_vars_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 0, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_text(color = 'white'),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Adjusted model excluding NEFL oulier")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) |>
-  set_names(signif_vars)
-
-
-rm(pvals, signif_vars, 
-   bdd_danish_sensi_1, proteomic_sensi_1, proteomic_sd_sensi_1, proteomic_quart_sensi_1, proteomic_quart_med_sensi_1, 
-   signif_vars_labels)
-
-
-# Sensi 2 - Filtered cases and their controls with follow_up > 5 years ----
-# bdd_danish |>                                              # have to remove 17 cases with follow-up<60 months (and their controls) -> 51 people
-#   filter(follow_up<60) |>
-#   select(sample, match, follow_up, everything()) |>
-#   arrange(follow_up) 
+# Sensi 2 - Filtering to cases and their controls with follow-up < 5 years ----
 
 bdd_danish_sensi_2 <- 
   bdd_danish |>
+  group_by(match) |>                                                             
+  filter(any(als == 1 & follow_up < 60)) |>                                     # sensi 2 : we remove cases (and their controls) with follow-up > 60 months 
+  ungroup()|>
+  mutate(across(all_of(proteomic),
+                ~as.numeric(scale(.x)),
+                .names = "{.col}_sd")) |>
+  mutate(across(all_of(proteomic), ~ factor(ntile(.x, 4),                           
+                                            labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) |>
+  mutate(across(
+    all_of(proteomic),
+    ~ {
+      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
+      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
+      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
+      quart_meds[quartiles]                                                     
+    },
+    .names = "{.col}_quart_med"
+  ))
+
+
+
+### model 1 sd ----
+
+model1_sd_sensi_2 <- data.frame(explanatory = character(),
+                                  term = integer(),
+                                  OR = numeric(),
+                                  lower_CI = numeric(),
+                                  upper_CI = numeric(),
+                                  p_value = numeric(),
+                                  stringsAsFactors = FALSE)
+
+for (var in proteomic_sd) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_2)
+  
+  model_summary <- tidy(model)
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model1_sd_sensi_2 <- rbind(model1_sd_sensi_2, data.frame(explanatory = var,
+                                                               term = term, 
+                                                               OR = OR,
+                                                               lower_CI = lower_CI,
+                                                               upper_CI = upper_CI,
+                                                               p_value = p_value))
+}
+
+model1_sd_sensi_2 <- model1_sd_sensi_2 |> 
+  mutate(
+    term = case_when(
+      grepl("_sd", term) ~ "Continuous",
+      TRUE ~ NA_character_),
+    model = "base", 
+    analysis = "sensi_2") |>
+  select(explanatory, model, everything())
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
+
+
+## model 1 quartiles ----
+
+model1_quart_sensi_2 <- data.frame(explanatory = character(),
+                                     term = integer(),
+                                     OR = numeric(),
+                                     lower_CI = numeric(),
+                                     upper_CI = numeric(),
+                                     p_value = numeric(),
+                                     stringsAsFactors = FALSE)
+
+for (var in proteomic_quart) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_2)
+  
+  model_summary <- tidy(model)
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model1_quart_sensi_2 <- rbind(model1_quart_sensi_2, data.frame(explanatory = var,
+                                                                     term = term, 
+                                                                     OR = OR,
+                                                                     lower_CI = lower_CI,
+                                                                     upper_CI = upper_CI,
+                                                                     p_value = p_value))
+}
+
+model1_quart_sensi_2 <- model1_quart_sensi_2 |> 
+  mutate(
+    term = case_when(
+      grepl("_quart_sensi_2Q2", term) ~ "Quartile 2",
+      grepl("_quart_sensi_2Q3", term) ~ "Quartile 3",
+      grepl("_quart_sensi_2Q4", term) ~ "Quartile 4",
+      grepl("_quartQ2", term) ~ "Quartile 2",
+      grepl("_quartQ3", term) ~ "Quartile 3",
+      grepl("_quartQ4", term) ~ "Quartile 4",
+      TRUE ~ NA_character_),
+    model = "base", 
+    analysis = "sensi_2") |>
+  select(explanatory, model, everything())
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
+
+
+#### heterogeneity test 
+heterogeneity_base_sensi_2 <- data.frame(explanatory = character(),
+                                           model = factor(),
+                                           p_value_heterogeneity = numeric(), 
+                                           stringsAsFactors = FALSE)
+
+for (var in proteomic_quart) {
+  
+  test_1 <- clogit(als ~ strata(match), data = bdd_danish_sensi_2)
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  test_2 <- clogit(formula, data = bdd_danish_sensi_2)
+  
+  anova <- anova(test_1, test_2, test = "LR")
+  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
+  
+  heterogeneity_base_sensi_2 <- rbind(heterogeneity_base_sensi_2, 
+                                        data.frame(explanatory = var,
+                                                   model = "base", 
+                                                   analysis = "sensi_2",
+                                                   p_value_heterogeneity = p_value_heterogeneity))
+}
+rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
+
+
+#### trend test 
+trend_base_sensi_2 <- data.frame(explanatory = character(),
+                                   model = factor(), 
+                                   p_value_trend = numeric(), 
+                                   stringsAsFactors = FALSE)
+
+for (var in proteomic_quart_med) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  test <- 
+    clogit(formula, data = bdd_danish_sensi_2) |>
+    summary() 
+  p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
+  
+  trend_base_sensi_2 <- rbind(trend_base_sensi_2, 
+                                data.frame(explanatory = var,
+                                           model = "base", 
+                                           analysis = "sensi_2",
+                                           p_value_trend = p_value_trend))
+}
+rm(var, test, formula, p_value_trend)
+
+
+
+
+
+### model 1 gams ---- 
+
+
+model1_gam_sensi_2 <- list()
+
+for (var in proteomic) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
+  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_2)
+  model_summary <- summary(model)
+  model1_gam_sensi_2[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
+
+
+
+### model 2 sd ----
+
+
+model2_sd_sensi_2 <- data.frame(explanatory = character(),
+                                  term = integer(),
+                                  OR = numeric(),
+                                  lower_CI = numeric(),
+                                  upper_CI = numeric(),
+                                  p_value = numeric(),
+                                  stringsAsFactors = FALSE)
+
+for (var in proteomic_sd) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_2)
+  
+  model_summary <- tidy(model)  |> filter(grepl(paste0("^", var), term))
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model2_sd_sensi_2 <- rbind(model2_sd_sensi_2, data.frame(explanatory = var,
+                                                               term = term, 
+                                                               OR = OR,
+                                                               lower_CI = lower_CI,
+                                                               upper_CI = upper_CI,
+                                                               p_value = p_value))
+}
+
+model2_sd_sensi_2 <- model2_sd_sensi_2 |> 
+  mutate(
+    term = case_when(
+      grepl("_sd", term) ~ "Continuous",
+      TRUE ~ NA_character_),
+    model = "adjusted", 
+    analysis = "sensi_2") |>
+  select(explanatory, model, everything())
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
+
+
+
+## model 2 quartiles ----
+model2_quart_sensi_2 <- data.frame(explanatory = character(),
+                                     term = integer(),
+                                     OR = numeric(),
+                                     lower_CI = numeric(),
+                                     upper_CI = numeric(),
+                                     p_value = numeric(),
+                                     stringsAsFactors = FALSE)
+
+for (var in proteomic_quart) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  model <- clogit(formula, data = bdd_danish_sensi_2)
+  model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  model2_quart_sensi_2 <- rbind(model2_quart_sensi_2, data.frame(explanatory = var,
+                                                                     term = term, 
+                                                                     OR = OR,
+                                                                     lower_CI = lower_CI,
+                                                                     upper_CI = upper_CI,
+                                                                     p_value = p_value))
+}
+
+model2_quart_sensi_2 <- model2_quart_sensi_2 |> 
+  mutate(
+    term = case_when(
+      grepl("_quart_sensi_2Q2", term) ~ "Quartile 2",
+      grepl("_quart_sensi_2Q3", term) ~ "Quartile 3",
+      grepl("_quart_sensi_2Q4", term) ~ "Quartile 4",
+      grepl("_quartQ2", term) ~ "Quartile 2",
+      grepl("_quartQ3", term) ~ "Quartile 3",
+      grepl("_quartQ4", term) ~ "Quartile 4",
+      TRUE ~ NA_character_),
+    model = "adjusted", 
+    analysis = "sensi_2") |>
+  select(explanatory, model, everything())
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
+
+### heterogeneity tests
+
+heterogeneity_adjusted_sensi_2 <- data.frame(explanatory = character(),
+                                               model = factor(), 
+                                               p_value_heterogeneity = numeric(), 
+                                               stringsAsFactors = FALSE)
+
+for (var in proteomic_quart) {
+  
+  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi, data = bdd_danish_sensi_2)
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  test_2 <- clogit(formula, data = bdd_danish_sensi_2)
+  
+  anova <- anova(test_1, test_2, test = "LR")
+  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
+  
+  heterogeneity_adjusted_sensi_2 <- rbind(heterogeneity_adjusted_sensi_2, 
+                                            data.frame(explanatory = var,
+                                                       model = "adjusted", 
+                                                       analysis = "sensi_2",
+                                                       p_value_heterogeneity = p_value_heterogeneity))
+}
+rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
+
+
+
+### trend tests
+
+trend_adjusted_sensi_2 <- data.frame(explanatory = character(),
+                                       model = factor(), 
+                                       p_value_trend = numeric(), 
+                                       stringsAsFactors = FALSE)
+
+for (var in proteomic_quart_med) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  test <- clogit(formula, data = bdd_danish_sensi_2) |> summary()
+  p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
+  
+  trend_adjusted_sensi_2 <- rbind(trend_adjusted_sensi_2, 
+                                    data.frame(explanatory = var,
+                                               model = "adjusted", 
+                                               analysis = "sensi_2",
+                                               p_value_trend = p_value_trend))
+}
+rm(var, test, formula, p_value_trend)
+
+
+
+
+
+### model 2 gams ---- 
+
+model2_gam_sensi_2 <- list()
+
+for (var in proteomic) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi"))
+  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_2)
+  model_summary <- summary(model)
+  model2_gam_sensi_2[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
+
+
+# Sensi 3 - Filtering to cases and their controls with follow_up > 5 years ----
+
+bdd_danish_sensi_3 <- 
+  bdd_danish |>
   group_by(match) |>
-  filter(any(als == 1 & follow_up > 60)) |>
+  filter(any(als == 1 & follow_up > 60)) |>                                     # had to remove 17 cases with follow-up<60 months (and their controls) -> 51 people
   ungroup() |>
   mutate(across(all_of(proteomic),
                 ~as.numeric(scale(.x)),
@@ -835,8 +1032,7 @@ bdd_danish_sensi_2 <-
 
 ### model 1 sd ----
 
-
-model1_sd_sensi_2 <- data.frame(explanatory = character(),
+model1_sd_sensi_3 <- data.frame(explanatory = character(),
                                 term = integer(),
                                 OR = numeric(),
                                 lower_CI = numeric(),
@@ -848,7 +1044,7 @@ for (var in proteomic_sd) {
   
   formula <- as.formula(paste("als ~", var, "+ strata(match)"))
   
-  model <- clogit(formula, data = bdd_danish_sensi_2)
+  model <- clogit(formula, data = bdd_danish_sensi_3)
   
   model_summary <- tidy(model)
   
@@ -858,7 +1054,7 @@ for (var in proteomic_sd) {
   p_value <- model_summary$p.value
   term <- model_summary$term
   
-  model1_sd_sensi_2 <- rbind(model1_sd_sensi_2, data.frame(explanatory = var,
+  model1_sd_sensi_3 <- rbind(model1_sd_sensi_3, data.frame(explanatory = var,
                                                            term = term, 
                                                            OR = OR,
                                                            lower_CI = lower_CI,
@@ -866,20 +1062,20 @@ for (var in proteomic_sd) {
                                                            p_value = p_value))
 }
 
-model1_sd_sensi_2 <- model1_sd_sensi_2 |> 
+model1_sd_sensi_3 <- model1_sd_sensi_3 |> 
   mutate(
     term = case_when(
       grepl("_sd", term) ~ "Continuous",
       TRUE ~ NA_character_),
     model = "base", 
-    analysis = "sensi_2") |>
+    analysis = "sensi_3") |>
   select(explanatory, model, everything())
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 ## model 1 quartiles ----
 
-model1_quart_sensi_2 <- data.frame(explanatory = character(),
+model1_quart_sensi_3 <- data.frame(explanatory = character(),
                                    term = integer(),
                                    OR = numeric(),
                                    lower_CI = numeric(),
@@ -891,7 +1087,7 @@ for (var in proteomic_quart) {
   
   formula <- as.formula(paste("als ~", var, "+ strata(match)"))
   
-  model <- clogit(formula, data = bdd_danish_sensi_2)
+  model <- clogit(formula, data = bdd_danish_sensi_3)
   
   model_summary <- tidy(model)
   
@@ -901,7 +1097,7 @@ for (var in proteomic_quart) {
   p_value <- model_summary$p.value
   term <- model_summary$term
   
-  model1_quart_sensi_2 <- rbind(model1_quart_sensi_2, data.frame(explanatory = var,
+  model1_quart_sensi_3 <- rbind(model1_quart_sensi_3, data.frame(explanatory = var,
                                                                  term = term, 
                                                                  OR = OR,
                                                                  lower_CI = lower_CI,
@@ -909,7 +1105,7 @@ for (var in proteomic_quart) {
                                                                  p_value = p_value))
 }
 
-model1_quart_sensi_2 <- model1_quart_sensi_2 |> 
+model1_quart_sensi_3 <- model1_quart_sensi_3 |> 
   mutate(
     term = case_when(
       grepl("_quartQ2", term) ~ "Quartile 2",
@@ -917,146 +1113,79 @@ model1_quart_sensi_2 <- model1_quart_sensi_2 |>
       grepl("_quartQ4", term) ~ "Quartile 4",
       TRUE ~ NA_character_),
     model = "base", 
-    analysis = "sensi_2") |>
+    analysis = "sensi_3") |>
   select(explanatory, model, everything())
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 #### heterogeneity test 
-heterogeneity_base_sensi_2 <- data.frame(explanatory = character(),
-                                        model = factor(),
-                                        p_value_heterogeneity = numeric(), 
-                                        stringsAsFactors = FALSE)
+heterogeneity_base_sensi_3 <- data.frame(explanatory = character(),
+                                         model = factor(),
+                                         p_value_heterogeneity = numeric(), 
+                                         stringsAsFactors = FALSE)
 
 for (var in proteomic_quart) {
   
-  test_1 <- clogit(als ~ strata(match), data = bdd_danish_sensi_2)
+  test_1 <- clogit(als ~ strata(match), data = bdd_danish_sensi_3)
   
   formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  test_2 <- clogit(formula, data = bdd_danish_sensi_2)
+  test_2 <- clogit(formula, data = bdd_danish_sensi_3)
   
   anova <- anova(test_1, test_2, test = "LR")
   p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
   
-  heterogeneity_base_sensi_2 <- rbind(heterogeneity_base_sensi_2, 
-                                     data.frame(explanatory = var,
-                                                model = "base", 
-                                                analysis = "sensi_2",
-                                                p_value_heterogeneity = p_value_heterogeneity))
+  heterogeneity_base_sensi_3 <- rbind(heterogeneity_base_sensi_3, 
+                                      data.frame(explanatory = var,
+                                                 model = "base", 
+                                                 analysis = "sensi_3",
+                                                 p_value_heterogeneity = p_value_heterogeneity))
 }
 rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
 
 
 #### trend test 
-trend_base_sensi_2 <- data.frame(explanatory = character(),
-                                model = factor(), 
-                                p_value_trend = numeric(), 
-                                stringsAsFactors = FALSE)
+trend_base_sensi_3 <- data.frame(explanatory = character(),
+                                 model = factor(), 
+                                 p_value_trend = numeric(), 
+                                 stringsAsFactors = FALSE)
 
 for (var in proteomic_quart_med) {
   
   formula <- as.formula(paste("als ~", var, "+ strata(match)"))
   test <- 
-    clogit(formula, data = bdd_danish_sensi_2) |>
+    clogit(formula, data = bdd_danish_sensi_3) |>
     summary() 
   p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
   
-  trend_base_sensi_2 <- rbind(trend_base_sensi_2, 
-                             data.frame(explanatory = var,
-                                        model = "base", 
-                                        analysis = "sensi_2",
-                                        p_value_trend = p_value_trend))
+  trend_base_sensi_3 <- rbind(trend_base_sensi_3, 
+                              data.frame(explanatory = var,
+                                         model = "base", 
+                                         analysis = "sensi_3",
+                                         p_value_trend = p_value_trend))
 }
 rm(var, test, formula, p_value_trend)
 
 
 
 ### model 1 gams ----
-model1_gam_sensi_2 <- list()
+model1_gam_sensi_3 <- list()
 
 for (var in proteomic) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_2)
+  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_3)
   model_summary <- summary(model)
-  model1_gam_sensi_2[[var]] <- model_summary
+  model1_gam_sensi_3[[var]] <- model_summary
 }
 
 rm(var, formula, model, model_summary)
-
-
-pvals <- sapply(model1_gam_sensi_2, function(m) m$s.table[1, "p-value"])
-signif_vars <- names(pvals)[pvals < 0.05]
-signif_vars_labels <- set_names(str_replace(signif_vars, 
-                                            "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                            ""), 
-                                signif_vars)
-
-plot_base_gam_sensi_2 <- map(signif_vars, function(var) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
-  
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish_sensi_2)
-  
-  bdd_pred <- bdd_danish_sensi_2 |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_min <- min(bdd_danish_sensi_2[[var]], na.rm = TRUE)
-  x_label <- signif_vars_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 0, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_text(color = 'white'),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Base model stratified to follow-up>5years")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) |>
-  set_names(signif_vars)
-
-rm(pvals, signif_vars, 
-   signif_vars_labels)
 
 
 
 
 ### model 2 sd ----
 
-model2_sd_sensi_2 <- data.frame(explanatory = character(),
+model2_sd_sensi_3 <- data.frame(explanatory = character(),
                                 term = integer(),
                                 OR = numeric(),
                                 lower_CI = numeric(),
@@ -1068,7 +1197,7 @@ for (var in proteomic_sd) {
   
   formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
   
-  model <- clogit(formula, data = bdd_danish_sensi_2)
+  model <- clogit(formula, data = bdd_danish_sensi_3)
   
   model_summary <- tidy(model)  |> filter(grepl(paste0("^", var), term))
   
@@ -1078,7 +1207,7 @@ for (var in proteomic_sd) {
   p_value <- model_summary$p.value
   term <- model_summary$term
   
-  model2_sd_sensi_2 <- rbind(model2_sd_sensi_2, data.frame(explanatory = var,
+  model2_sd_sensi_3 <- rbind(model2_sd_sensi_3, data.frame(explanatory = var,
                                                            term = term, 
                                                            OR = OR,
                                                            lower_CI = lower_CI,
@@ -1086,13 +1215,13 @@ for (var in proteomic_sd) {
                                                            p_value = p_value))
 }
 
-model2_sd_sensi_2 <- model2_sd_sensi_2 |> 
+model2_sd_sensi_3 <- model2_sd_sensi_3 |> 
   mutate(
     term = case_when(
       grepl("_sd", term) ~ "Continuous",
       TRUE ~ NA_character_),
     model = "adjusted", 
-    analysis = "sensi_2") |>
+    analysis = "sensi_3") |>
   select(explanatory, model, everything())
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
@@ -1101,33 +1230,33 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 ## model 2 quartiles ----
-model2_quart_sensi_2 <- data.frame(explanatory = character(),
-                                  term = integer(),
-                                  OR = numeric(),
-                                  lower_CI = numeric(),
-                                  upper_CI = numeric(),
-                                  p_value = numeric(),
-                                  stringsAsFactors = FALSE)
+model2_quart_sensi_3 <- data.frame(explanatory = character(),
+                                   term = integer(),
+                                   OR = numeric(),
+                                   lower_CI = numeric(),
+                                   upper_CI = numeric(),
+                                   p_value = numeric(),
+                                   stringsAsFactors = FALSE)
 
 for (var in proteomic_quart) {
   
   formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  model <- clogit(formula, data = bdd_danish_sensi_2)
+  model <- clogit(formula, data = bdd_danish_sensi_3)
   model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
   OR <- exp(model_summary$estimate)
   lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
   upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
   p_value <- model_summary$p.value
   term <- model_summary$term
-  model2_quart_sensi_2 <- rbind(model2_quart_sensi_2, data.frame(explanatory = var,
-                                                               term = term, 
-                                                               OR = OR,
-                                                               lower_CI = lower_CI,
-                                                               upper_CI = upper_CI,
-                                                               p_value = p_value))
+  model2_quart_sensi_3 <- rbind(model2_quart_sensi_3, data.frame(explanatory = var,
+                                                                 term = term, 
+                                                                 OR = OR,
+                                                                 lower_CI = lower_CI,
+                                                                 upper_CI = upper_CI,
+                                                                 p_value = p_value))
 }
 
-model2_quart_sensi_2 <- model2_quart_sensi_2 |> 
+model2_quart_sensi_3 <- model2_quart_sensi_3 |> 
   mutate(
     term = case_when(
       grepl("_quartQ2", term) ~ "Quartile 2",
@@ -1135,32 +1264,32 @@ model2_quart_sensi_2 <- model2_quart_sensi_2 |>
       grepl("_quartQ4", term) ~ "Quartile 4",
       TRUE ~ NA_character_),
     model = "adjusted", 
-    analysis = "sensi_2") |>
+    analysis = "sensi_3") |>
   select(explanatory, model, everything())
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 ### heterogeneity tests
 
-heterogeneity_adjusted_sensi_2 <- data.frame(explanatory = character(),
-                                            model = factor(), 
-                                            p_value_heterogeneity = numeric(), 
-                                            stringsAsFactors = FALSE)
+heterogeneity_adjusted_sensi_3 <- data.frame(explanatory = character(),
+                                             model = factor(), 
+                                             p_value_heterogeneity = numeric(), 
+                                             stringsAsFactors = FALSE)
 
 for (var in proteomic_quart) {
   
-  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi, data = bdd_danish_sensi_2)
+  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi, data = bdd_danish_sensi_3)
   
   formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  test_2 <- clogit(formula, data = bdd_danish_sensi_2)
+  test_2 <- clogit(formula, data = bdd_danish_sensi_3)
   
   anova <- anova(test_1, test_2, test = "LR")
   p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
   
-  heterogeneity_adjusted_sensi_2 <- rbind(heterogeneity_adjusted_sensi_2, 
-                                         data.frame(explanatory = var,
-                                                    model = "adjusted", 
-                                                    analysis = "sensi_2",
-                                                    p_value_heterogeneity = p_value_heterogeneity))
+  heterogeneity_adjusted_sensi_3 <- rbind(heterogeneity_adjusted_sensi_3, 
+                                          data.frame(explanatory = var,
+                                                     model = "adjusted", 
+                                                     analysis = "sensi_3",
+                                                     p_value_heterogeneity = p_value_heterogeneity))
 }
 rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
 
@@ -1168,22 +1297,22 @@ rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
 
 ### trend tests
 
-trend_adjusted_sensi_2 <- data.frame(explanatory = character(),
-                                    model = factor(), 
-                                    p_value_trend = numeric(), 
-                                    stringsAsFactors = FALSE)
+trend_adjusted_sensi_3 <- data.frame(explanatory = character(),
+                                     model = factor(), 
+                                     p_value_trend = numeric(), 
+                                     stringsAsFactors = FALSE)
 
 for (var in proteomic_quart_med) {
   
   formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  test <- clogit(formula, data = bdd_danish_sensi_2) |> summary()
+  test <- clogit(formula, data = bdd_danish_sensi_3) |> summary()
   p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
   
-  trend_adjusted_sensi_2 <- rbind(trend_adjusted_sensi_2, 
-                                 data.frame(explanatory = var,
-                                            model = "adjusted", 
-                                            analysis = "sensi_2",
-                                            p_value_trend = p_value_trend))
+  trend_adjusted_sensi_3 <- rbind(trend_adjusted_sensi_3, 
+                                  data.frame(explanatory = var,
+                                             model = "adjusted", 
+                                             analysis = "sensi_3",
+                                             p_value_trend = p_value_trend))
 }
 rm(var, test, formula, p_value_trend)
 
@@ -1192,589 +1321,17 @@ rm(var, test, formula, p_value_trend)
 
 
 ### model 2 gams ----
-model2_gam_sensi_2 <- list()
+model2_gam_sensi_3 <- list()
 
 for (var in proteomic) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_2)
+  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_3)
   model_summary <- summary(model)
-  model2_gam_sensi_2[[var]] <- model_summary
+  model2_gam_sensi_3[[var]] <- model_summary
 }
 
 rm(var, formula, model, model_summary)
-
-
-pvals <- sapply(model2_gam_sensi_2, function(m) m$s.table[1, "p-value"])
-signif_vars <- names(pvals)[pvals < 0.05]
-signif_vars_labels <- set_names(str_replace(signif_vars, 
-                                            "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                            ""), 
-                                signif_vars)
-
-plot_adjusted_gam_sensi_2 <- map(signif_vars, function(var) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age + smoking_2cat_i + bmi"))
-  
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish_sensi_2)
-  
-  bdd_pred <- bdd_danish_sensi_2 |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex))), 
-      adj_bmi = mean(bmi, na.rm = TRUE),
-      adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_min <- min(bdd_danish_sensi_2[[var]], na.rm = TRUE)
-  x_label <- signif_vars_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 0, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_text(color = 'white'),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Adjusted model stratified to follow-up>5years")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) |>
-  set_names(signif_vars)
-
-rm(pvals, signif_vars, 
-   bdd_danish_sensi_2, 
-   signif_vars_labels)
-
-
-
-# Sensi 1 + sensi 2 - Removing the oulier for NEFL + filtering cases and their controls with follow_up < 5 years ----
-
-bdd_danish_sensi_1_2 <- 
-  bdd_danish |>
-  group_by(match) |>                                                            # sensi 2 : we remove cases (and their controls) with follow-up > 60 months  
-  filter(any(als == 1 & follow_up < 60)) |>
-  ungroup()|>
-  mutate(                                                                       # sensi 1 : we remove NEFL in match 159 because it's an outlier
-    proteomic_neuro_explo_NEFL_sd_sensi_1_2 = 
-      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd), 
-    proteomic_neuro_explo_NEFL_sensi_1_2 = 
-      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
-  mutate(across(all_of(proteomic),
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd_sensi_1_2")) |>
-  mutate(across(all_of(proteomic), ~ factor(ntile(.x, 4),                           
-                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart_sensi_1_2")) |>
-  mutate(across(
-    all_of(proteomic),
-    ~ {
-      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
-      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
-      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
-      quart_meds[quartiles]                                                     
-    },
-    .names = "{.col}_quart_med_sensi_1_2"
-  ))
-
-
-proteomic_sensi_1_2 <-
-  proteomic |> 
-  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_2")
-proteomic_sd_sensi_1_2 <-
-  proteomic_sd |> 
-  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sd_sensi_1_2")
-proteomic_quart_sensi_1_2 <-
-  proteomic_quart |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_quart_sensi_1_2")
-proteomic_quart_med_sensi_1_2 <-
-  proteomic_quart_med |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_quart_med_sensi_1_2")
-
-
-
-### model 1 sd ----
-
-model1_sd_sensi_1_2 <- data.frame(explanatory = character(),
-                                  term = integer(),
-                                  OR = numeric(),
-                                  lower_CI = numeric(),
-                                  upper_CI = numeric(),
-                                  p_value = numeric(),
-                                  stringsAsFactors = FALSE)
-
-for (var in proteomic_sd_sensi_1_2) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  
-  model <- clogit(formula, data = bdd_danish_sensi_1_2)
-  
-  model_summary <- tidy(model)
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  term <- model_summary$term
-  
-  model1_sd_sensi_1_2 <- rbind(model1_sd_sensi_1_2, data.frame(explanatory = var,
-                                                               term = term, 
-                                                               OR = OR,
-                                                               lower_CI = lower_CI,
-                                                               upper_CI = upper_CI,
-                                                               p_value = p_value))
-}
-
-model1_sd_sensi_1_2 <- model1_sd_sensi_1_2 |> 
-  mutate(
-    term = case_when(
-      grepl("_sd", term) ~ "Continuous",
-      TRUE ~ NA_character_),
-    model = "base", 
-    analysis = "sensi_1_2") |>
-  select(explanatory, model, everything())
-rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
-
-
-## model 1 quartiles ----
-
-model1_quart_sensi_1_2 <- data.frame(explanatory = character(),
-                                     term = integer(),
-                                     OR = numeric(),
-                                     lower_CI = numeric(),
-                                     upper_CI = numeric(),
-                                     p_value = numeric(),
-                                     stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_sensi_1_2) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  
-  model <- clogit(formula, data = bdd_danish_sensi_1_2)
-  
-  model_summary <- tidy(model)
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  term <- model_summary$term
-  
-  model1_quart_sensi_1_2 <- rbind(model1_quart_sensi_1_2, data.frame(explanatory = var,
-                                                                     term = term, 
-                                                                     OR = OR,
-                                                                     lower_CI = lower_CI,
-                                                                     upper_CI = upper_CI,
-                                                                     p_value = p_value))
-}
-
-model1_quart_sensi_1_2 <- model1_quart_sensi_1_2 |> 
-  mutate(
-    term = case_when(
-      grepl("_quart_sensi_1_2Q2", term) ~ "Quartile 2",
-      grepl("_quart_sensi_1_2Q3", term) ~ "Quartile 3",
-      grepl("_quart_sensi_1_2Q4", term) ~ "Quartile 4",
-      grepl("_quartQ2", term) ~ "Quartile 2",
-      grepl("_quartQ3", term) ~ "Quartile 3",
-      grepl("_quartQ4", term) ~ "Quartile 4",
-      TRUE ~ NA_character_),
-    model = "base", 
-    analysis = "sensi_1_2") |>
-  select(explanatory, model, everything())
-rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
-
-
-#### heterogeneity test 
-heterogeneity_base_sensi_1_2 <- data.frame(explanatory = character(),
-                                           model = factor(),
-                                           p_value_heterogeneity = numeric(), 
-                                           stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_sensi_1_2) {
-  
-  test_1 <- clogit(als ~ strata(match), data = bdd_danish_sensi_1_2)
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  test_2 <- clogit(formula, data = bdd_danish_sensi_1_2)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_base_sensi_1_2 <- rbind(heterogeneity_base_sensi_1_2, 
-                                        data.frame(explanatory = var,
-                                                   model = "base", 
-                                                   analysis = "sensi_1_2",
-                                                   p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
-
-
-#### trend test 
-trend_base_sensi_1_2 <- data.frame(explanatory = character(),
-                                   model = factor(), 
-                                   p_value_trend = numeric(), 
-                                   stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_med_sensi_1_2) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  test <- 
-    clogit(formula, data = bdd_danish_sensi_1_2) |>
-    summary() 
-  p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
-  
-  trend_base_sensi_1_2 <- rbind(trend_base_sensi_1_2, 
-                                data.frame(explanatory = var,
-                                           model = "base", 
-                                           analysis = "sensi_1_2",
-                                           p_value_trend = p_value_trend))
-}
-rm(var, test, formula, p_value_trend)
-
-
-
-
-
-### model 1 gams ---- 
-
-
-model1_gam_sensi_1_2 <- list()
-
-for (var in proteomic_sensi_1_2) {
-  
-  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_2)
-  model_summary <- summary(model)
-  model1_gam_sensi_1_2[[var]] <- model_summary
-}
-
-rm(var, formula, model, model_summary)
-
-
-pvals <- sapply(model1_gam_sensi_1_2, function(m) m$s.table[1, "p-value"])
-signif_vars <- names(pvals)[pvals < 0.05]
-signif_vars_labels <- set_names(str_replace(signif_vars, 
-                                            "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                            ""), 
-                                signif_vars)
-
-plot_base_gam_sensi_1_2 <- map(signif_vars, function(var) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
-  
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish_sensi_1_2)
-  
-  bdd_pred <- bdd_danish_sensi_1_2 |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_min <- min(bdd_danish_sensi_1_2[[var]], na.rm = TRUE)
-  x_label <- signif_vars_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 0, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_text(color = 'white'),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Base model stratified to follow-up>5years")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) |>
-  set_names(signif_vars)
-
-rm(pvals, signif_vars, 
-   signif_vars_labels)
-
-
-
-
-### model 2 sd ----
-
-
-model2_sd_sensi_1_2 <- data.frame(explanatory = character(),
-                                  term = integer(),
-                                  OR = numeric(),
-                                  lower_CI = numeric(),
-                                  upper_CI = numeric(),
-                                  p_value = numeric(),
-                                  stringsAsFactors = FALSE)
-
-for (var in proteomic_sd_sensi_1_2) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  
-  model <- clogit(formula, data = bdd_danish_sensi_1_2)
-  
-  model_summary <- tidy(model)  |> filter(grepl(paste0("^", var), term))
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  term <- model_summary$term
-  
-  model2_sd_sensi_1_2 <- rbind(model2_sd_sensi_1_2, data.frame(explanatory = var,
-                                                               term = term, 
-                                                               OR = OR,
-                                                               lower_CI = lower_CI,
-                                                               upper_CI = upper_CI,
-                                                               p_value = p_value))
-}
-
-model2_sd_sensi_1_2 <- model2_sd_sensi_1_2 |> 
-  mutate(
-    term = case_when(
-      grepl("_sd", term) ~ "Continuous",
-      TRUE ~ NA_character_),
-    model = "adjusted", 
-    analysis = "sensi_1_2") |>
-  select(explanatory, model, everything())
-rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
-
-
-
-## model 2 quartiles ----
-model2_quart_sensi_1_2 <- data.frame(explanatory = character(),
-                                     term = integer(),
-                                     OR = numeric(),
-                                     lower_CI = numeric(),
-                                     upper_CI = numeric(),
-                                     p_value = numeric(),
-                                     stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_sensi_1_2) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  model <- clogit(formula, data = bdd_danish_sensi_1_2)
-  model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  term <- model_summary$term
-  model2_quart_sensi_1_2 <- rbind(model2_quart_sensi_1_2, data.frame(explanatory = var,
-                                                                     term = term, 
-                                                                     OR = OR,
-                                                                     lower_CI = lower_CI,
-                                                                     upper_CI = upper_CI,
-                                                                     p_value = p_value))
-}
-
-model2_quart_sensi_1_2 <- model2_quart_sensi_1_2 |> 
-  mutate(
-    term = case_when(
-      grepl("_quart_sensi_1_2Q2", term) ~ "Quartile 2",
-      grepl("_quart_sensi_1_2Q3", term) ~ "Quartile 3",
-      grepl("_quart_sensi_1_2Q4", term) ~ "Quartile 4",
-      grepl("_quartQ2", term) ~ "Quartile 2",
-      grepl("_quartQ3", term) ~ "Quartile 3",
-      grepl("_quartQ4", term) ~ "Quartile 4",
-      TRUE ~ NA_character_),
-    model = "adjusted", 
-    analysis = "sensi_1_2") |>
-  select(explanatory, model, everything())
-rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
-
-### heterogeneity tests
-
-heterogeneity_adjusted_sensi_1_2 <- data.frame(explanatory = character(),
-                                               model = factor(), 
-                                               p_value_heterogeneity = numeric(), 
-                                               stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_sensi_1_2) {
-  
-  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi, data = bdd_danish_sensi_1_2)
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  test_2 <- clogit(formula, data = bdd_danish_sensi_1_2)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_adjusted_sensi_1_2 <- rbind(heterogeneity_adjusted_sensi_1_2, 
-                                            data.frame(explanatory = var,
-                                                       model = "adjusted", 
-                                                       analysis = "sensi_1_2",
-                                                       p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
-
-
-
-### trend tests
-
-trend_adjusted_sensi_1_2 <- data.frame(explanatory = character(),
-                                       model = factor(), 
-                                       p_value_trend = numeric(), 
-                                       stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_med_sensi_1_2) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  test <- clogit(formula, data = bdd_danish_sensi_1_2) |> summary()
-  p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
-  
-  trend_adjusted_sensi_1_2 <- rbind(trend_adjusted_sensi_1_2, 
-                                    data.frame(explanatory = var,
-                                               model = "adjusted", 
-                                               analysis = "sensi_1_2",
-                                               p_value_trend = p_value_trend))
-}
-rm(var, test, formula, p_value_trend)
-
-
-
-
-
-### model 2 gams ---- 
-
-model2_gam_sensi_1_2 <- list()
-
-for (var in proteomic_sensi_1_2) {
-  
-  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_2)
-  model_summary <- summary(model)
-  model2_gam_sensi_1_2[[var]] <- model_summary
-}
-
-rm(var, formula, model, model_summary)
-
-
-pvals <- sapply(model2_gam_sensi_1_2, function(m) m$s.table[1, "p-value"])
-signif_vars <- names(pvals)[pvals < 0.05]
-signif_vars_labels <- set_names(str_replace(signif_vars, 
-                                            "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                            ""), 
-                                signif_vars)
-
-plot_adjusted_gam_sensi_1_2 <- map(signif_vars, function(var) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age + smoking_2cat_i + bmi"))
-  
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish_sensi_1_2)
-  
-  bdd_pred <- bdd_danish_sensi_1_2 |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex))), 
-      adj_bmi = mean(bmi, na.rm = TRUE),
-      adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_min <- min(bdd_danish_sensi_1_2[[var]], na.rm = TRUE)
-  x_label <- signif_vars_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 0, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_text(color = 'white'),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Adjusted model stratified to follow-up>5years")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) |>
-  set_names(signif_vars)
-
-rm(pvals, signif_vars, 
-   bdd_danish_sensi_1_2, 
-   proteomic_sensi_1_2,
-   proteomic_sd_sensi_1_2,
-   proteomic_quart_sensi_1_2, 
-   proteomic_quart_med_sensi_1_2,
-   signif_vars_labels)
-
 
 
 
@@ -1786,9 +1343,9 @@ bdd_danish_sensi_1_3 <-
   filter(any(als == 1 & follow_up > 60)) |>
   ungroup()|>
   mutate(                                                                       # sensi 1 : we remove NEFL in match 159 because it's an outlier
-    proteomic_neuro_explo_NEFL_sd_sensi_1_3 = 
-      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd), 
-    proteomic_neuro_explo_NEFL_sensi_1_3 = 
+    proteomic_neuro_explo_NEFL_sd_sensi_1_3 =
+      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd),
+    proteomic_neuro_explo_NEFL_sensi_1_3 =
       ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
   mutate(across(all_of(proteomic),
                 ~as.numeric(scale(.x)),
@@ -1981,73 +1538,6 @@ for (var in proteomic_sensi_1_3) {
 rm(var, formula, model, model_summary)
 
 
-pvals <- sapply(model1_gam_sensi_1_3, function(m) m$s.table[1, "p-value"])
-signif_vars <- names(pvals)[pvals < 0.05]
-signif_vars_labels <- set_names(str_replace(signif_vars, 
-                                            "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                            ""), 
-                                signif_vars)
-
-plot_base_gam_sensi_1_3 <- map(signif_vars, function(var) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
-  
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish_sensi_1_3)
-  
-  bdd_pred <- bdd_danish_sensi_1_3 |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_min <- min(bdd_danish_sensi_1_3[[var]], na.rm = TRUE)
-  x_label <- signif_vars_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 0, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_text(color = 'white'),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Base model stratified to follow-up>5years")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) |>
-  set_names(signif_vars)
-
-rm(pvals, signif_vars, 
-   signif_vars_labels)
-
-
 
 
 ### model 2 sd ----
@@ -2204,87 +1694,14 @@ for (var in proteomic_sensi_1_3) {
 rm(var, formula, model, model_summary)
 
 
-pvals <- sapply(model2_gam_sensi_1_3, function(m) m$s.table[1, "p-value"])
-signif_vars <- names(pvals)[pvals < 0.05]
-signif_vars_labels <- set_names(str_replace(signif_vars, 
-                                            "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                            ""), 
-                                signif_vars)
-
-plot_adjusted_gam_sensi_1_3 <- map(signif_vars, function(var) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age + smoking_2cat_i + bmi"))
-  
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish_sensi_1_3)
-  
-  bdd_pred <- bdd_danish_sensi_1_3 |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex))), 
-      adj_bmi = mean(bmi, na.rm = TRUE),
-      adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_min <- min(bdd_danish_sensi_1_3[[var]], na.rm = TRUE)
-  x_label <- signif_vars_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 0, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_text(color = 'white'),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Adjusted model stratified to follow-up>5years")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) |>
-  set_names(signif_vars)
-
-rm(pvals, signif_vars, 
-   bdd_danish_sensi_1_3, 
-   proteomic_sensi_1_3,
-   proteomic_sd_sensi_1_3,
-   proteomic_quart_sensi_1_3, 
-   proteomic_quart_med_sensi_1_3,
-   signif_vars_labels)
 
 
-
-# Sensi 1 + sensi 3 + sensi 4 - Removing the oulier for NEFL + filtering cases and their controls with follow_up < 5 years + filtering ----
+# Sensi 1 + sensi 3 + sensi 4 - Removing NEFL outlier + filtering cases and their controls with follow- up < 5 years + filtering follow-up <= 50%----
 
 bdd_danish_sensi_1_3_4 <- 
   bdd_danish |>
-  group_by(match) |>                                                            # sensi 3 : we remove cases (and their controls) with follow-up < 60 months  
-  filter(any(als == 1 & follow_up > 60)) |>
+  group_by(match) |>                                                              
+  filter(any(als == 1 & follow_up > 60)) |>                                     # sensi 3 : we remove cases (and their controls) with follow-up < 60 months
   ungroup()|>
   mutate(                                                                       # sensi 1 : we remove NEFL in match 159 because it's an outlier
     proteomic_neuro_explo_NEFL_sd_sensi_1_3_4 = 
@@ -2292,7 +1709,9 @@ bdd_danish_sensi_1_3_4 <-
     proteomic_neuro_explo_NEFL_sensi_1_3_4 = 
       ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
   mutate(seuil = quantile(follow_up, 0.5, na.rm = TRUE)) |>                     # sensi 4 : we remove 50% of the highest values of follow-up (after removing the follow-up<5years)
-  filter(follow_up <= seuil) %>%
+  group_by(match) |>
+  filter(any(als == 1 & follow_up <= seuil)) |>
+  ungroup() |>
   select(-seuil) |>
   mutate(across(all_of(proteomic),
                 ~as.numeric(scale(.x)),
@@ -2485,73 +1904,6 @@ for (var in proteomic_sensi_1_3_4) {
 rm(var, formula, model, model_summary)
 
 
-pvals <- sapply(model1_gam_sensi_1_3_4, function(m) m$s.table[1, "p-value"])
-signif_vars <- names(pvals)[pvals < 0.05]
-signif_vars_labels <- set_names(str_replace(signif_vars, 
-                                            "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                            ""), 
-                                signif_vars)
-
-plot_base_gam_sensi_1_3_4 <- map(signif_vars, function(var) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
-  
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish_sensi_1_3_4)
-  
-  bdd_pred <- bdd_danish_sensi_1_3_4 |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_min <- min(bdd_danish_sensi_1_3_4[[var]], na.rm = TRUE)
-  x_label <- signif_vars_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 0, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_text(color = 'white'),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Base model stratified to follow-up>5years")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) |>
-  set_names(signif_vars)
-
-rm(pvals, signif_vars, 
-   signif_vars_labels)
-
-
 
 
 ### model 2 sd ----
@@ -2708,81 +2060,8 @@ for (var in proteomic_sensi_1_3_4) {
 rm(var, formula, model, model_summary)
 
 
-pvals <- sapply(model2_gam_sensi_1_3_4, function(m) m$s.table[1, "p-value"])
-signif_vars <- names(pvals)[pvals < 0.05]
-signif_vars_labels <- set_names(str_replace(signif_vars, 
-                                            "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                            ""), 
-                                signif_vars)
 
-plot_adjusted_gam_sensi_1_3_4 <- map(signif_vars, function(var) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age + smoking_2cat_i + bmi"))
-  
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish_sensi_1_3_4)
-  
-  bdd_pred <- bdd_danish_sensi_1_3_4 |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex))), 
-      adj_bmi = mean(bmi, na.rm = TRUE),
-      adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_min <- min(bdd_danish_sensi_1_3_4[[var]], na.rm = TRUE)
-  x_label <- signif_vars_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 0, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_text(color = 'white'),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Adjusted model stratified to follow-up>5years")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) |>
-  set_names(signif_vars)
-
-rm(pvals, signif_vars, 
-   bdd_danish_sensi_1_3_4, 
-   proteomic_sensi_1_3_4,
-   proteomic_sd_sensi_1_3_4,
-   proteomic_quart_sensi_1_3_4, 
-   proteomic_quart_med_sensi_1_3_4,
-   signif_vars_labels)
-
-
-# Sensi 1 + sensi 3 + sensi 5 - Removing the oulier for NEFL + filtering cases and their controls with follow_up < 5 years + filtering ----
+# Sensi 1 + sensi 3 + sensi 5 - Removing NEFL outlier + filtering cases and their controls with follow-up < 5 years + filtering follow-up > 50%----
 
 bdd_danish_sensi_1_3_5 <- 
   bdd_danish |>
@@ -2794,10 +2073,12 @@ bdd_danish_sensi_1_3_5 <-
       ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd), 
     proteomic_neuro_explo_NEFL_sensi_1_3_5 = 
       ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
-  mutate(seuil = quantile(follow_up, 0.5, na.rm = TRUE)) |>                     # sensi 5 : we remove 50% of the highest values of follow-up (after removing the follow-up<5years)
-  filter(follow_up > seuil) |>
-  select(-seuil)
-mutate(across(all_of(proteomic),
+  mutate(seuil = quantile(follow_up, 0.5, na.rm = TRUE)) |>                     # sensi 5 : we remove 50% of the lowest values of follow-up (after removing the follow-up<5years)
+  group_by(match) |>
+  filter(any(als == 1 & follow_up > seuil)) |>
+  ungroup() |>
+  select(-seuil) |>
+  mutate(across(all_of(proteomic),
               ~as.numeric(scale(.x)),
               .names = "{.col}_sd_sensi_1_3_5")) |>
   mutate(across(all_of(proteomic), ~ factor(ntile(.x, 4),                           
@@ -2988,74 +2269,6 @@ for (var in proteomic_sensi_1_3_5) {
 rm(var, formula, model, model_summary)
 
 
-pvals <- sapply(model1_gam_sensi_1_3_5, function(m) m$s.table[1, "p-value"])
-signif_vars <- names(pvals)[pvals < 0.05]
-signif_vars_labels <- set_names(str_replace(signif_vars, 
-                                            "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                            ""), 
-                                signif_vars)
-
-plot_base_gam_sensi_1_3_5 <- map(signif_vars, function(var) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
-  
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish_sensi_1_3_5)
-  
-  bdd_pred <- bdd_danish_sensi_1_3_5 |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_min <- min(bdd_danish_sensi_1_3_5[[var]], na.rm = TRUE)
-  x_label <- signif_vars_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 0, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_text(color = 'white'),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Base model stratified to follow-up>5years")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) |>
-  set_names(signif_vars)
-
-rm(pvals, signif_vars, 
-   signif_vars_labels)
-
-
-
 
 ### model 2 sd ----
 
@@ -3210,79 +2423,6 @@ for (var in proteomic_sensi_1_3_5) {
 
 rm(var, formula, model, model_summary)
 
-
-pvals <- sapply(model2_gam_sensi_1_3_5, function(m) m$s.table[1, "p-value"])
-signif_vars <- names(pvals)[pvals < 0.05]
-signif_vars_labels <- set_names(str_replace(signif_vars, 
-                                            "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                            ""), 
-                                signif_vars)
-
-plot_adjusted_gam_sensi_1_3_5 <- map(signif_vars, function(var) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age + smoking_2cat_i + bmi"))
-  
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish_sensi_1_3_5)
-  
-  bdd_pred <- bdd_danish_sensi_1_3_5 |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex))), 
-      adj_bmi = mean(bmi, na.rm = TRUE),
-      adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_min <- min(bdd_danish_sensi_1_3_5[[var]], na.rm = TRUE)
-  x_label <- signif_vars_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 0, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_text(color = 'white'),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Adjusted model stratified to follow-up>5years")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) |>
-  set_names(signif_vars)
-
-rm(pvals, signif_vars, 
-   bdd_danish_sensi_1_3_5, 
-   proteomic_sensi_1_3_5,
-   proteomic_sd_sensi_1_3_5,
-   proteomic_quart_sensi_1_3_5, 
-   proteomic_quart_med_sensi_1_3_5,
-   signif_vars_labels)
 
 
 
@@ -3898,11 +3038,11 @@ main_results <- bind_rows(model1_sd,                                            
                           model2_sd_sensi_2,
                           model1_quart_sensi_2,
                           model2_quart_sensi_2,
-
-                          model1_sd_sensi_1_2,                                  # sensi 1_2
-                          model2_sd_sensi_1_2,
-                          model1_quart_sensi_1_2,
-                          model2_quart_sensi_1_2,
+                          
+                          model1_sd_sensi_3,                                    # sensi 3
+                          model2_sd_sensi_3,
+                          model1_quart_sensi_3,
+                          model2_quart_sensi_3,
                           
                           model1_sd_sensi_1_3,                                  # sensi 1_3
                           model2_sd_sensi_1_3,
@@ -3931,17 +3071,35 @@ main_results <- bind_rows(model1_sd,                                            
                           model1_sd_sensi_1_6_T3,
                           model2_sd_sensi_1_6_T1,
                           model2_sd_sensi_1_6_T2,
-                          model2_sd_sensi_1_6_T3
-                          ) |> 
-  mutate(explanatory = gsub("_quart_med_sensi_1_2", "", explanatory), 
-         explanatory = gsub("_quart_sensi_1_2", "", explanatory), 
+                          model2_sd_sensi_1_6_T3) |>
+  
+  mutate(explanatory = gsub("_quart_med_sensi_1_3_5", "", explanatory), 
+         explanatory = gsub("_quart_sensi_1_3_5", "", explanatory), 
+         explanatory = gsub("_sd_sensi_1_3_5", "", explanatory),
+         
+         explanatory = gsub("_quart_med_sensi_1_3_4", "", explanatory), 
+         explanatory = gsub("_quart_sensi_1_3_4", "", explanatory), 
+         explanatory = gsub("_sd_sensi_1_3_4", "", explanatory),
+         
+         explanatory = gsub("_quart_med_sensi_1_3", "", explanatory), 
+         explanatory = gsub("_quart_sensi_1_3", "", explanatory), 
+         explanatory = gsub("_sd_sensi_1_3", "", explanatory),
+         
+         explanatory = gsub("_quart_med_sensi_3", "", explanatory), 
+         explanatory = gsub("_quart_sensi_3", "", explanatory), 
+         explanatory = gsub("_sd_sensi_3", "", explanatory),
+         
+         explanatory = gsub("_quart_med_sensi_2", "", explanatory), 
+         explanatory = gsub("_quart_sensi_2", "", explanatory), 
+         explanatory = gsub("_sd_sensi_2", "", explanatory),
+         
          explanatory = gsub("_quart_med_sensi_1", "", explanatory), 
          explanatory = gsub("_quart_sensi_1", "", explanatory), 
-         explanatory = gsub("_quart", "", explanatory), 
-         
-         explanatory = gsub("_sd_sensi_1_2", "", explanatory),
          explanatory = gsub("_sd_sensi_1", "", explanatory),
+         
+         explanatory = gsub("_quart", "", explanatory), 
          explanatory = gsub("_sd", "", explanatory), 
+         
          OR_raw = OR, 
          OR = as.numeric(sprintf("%.1f", OR)),
          lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
@@ -3964,7 +3122,7 @@ main_results <- bind_rows(model1_sd,                                            
       p.adjust(p_value_raw, method = "fdr"),
       p_value_fdr), 
     p_value_fdr = if_else(
-      term == "Continuous" & analysis == "sensi_1_2" & model == "base",                            
+      term == "Continuous" & analysis == "sensi_1_3" & model == "base",                            
       p.adjust(p_value_raw, method = "fdr"),
       p_value_fdr), 
     p_value_fdr = if_else(
@@ -3980,7 +3138,7 @@ main_results <- bind_rows(model1_sd,                                            
       p.adjust(p_value_raw, method = "fdr"),
       p_value_fdr), 
     p_value_fdr = if_else(
-      term == "Continuous" & analysis == "sensi_1_2" & model == "adjusted",                            
+      term == "Continuous" & analysis == "sensi_1_3" & model == "adjusted",                            
       p.adjust(p_value_raw, method = "fdr"),
       p_value_fdr)) |>
   ungroup() |>
@@ -3996,15 +3154,15 @@ main_results <- bind_rows(model1_sd,                                            
 
 
 
-heterogeneity_tests <- 
+heterogeneity_tests <-                                                          # main
   bind_rows(heterogeneity_base, heterogeneity_adjusted)  |>
   mutate(explanatory = gsub("_quart", "", explanatory))
 
-trend_tests <- 
+trend_tests <-      
   bind_rows(trend_base, trend_adjusted) |>
   mutate(explanatory = gsub("_quart_med", "", explanatory))
 
-heterogeneity_tests_sensi_1 <- 
+heterogeneity_tests_sensi_1 <-                                                  # sensi 1 
   bind_rows(heterogeneity_base_sensi_1, heterogeneity_adjusted_sensi_1) |>
   mutate(explanatory = gsub("_quart", "", explanatory))
 
@@ -4012,7 +3170,7 @@ trend_tests_sensi_1 <-
   bind_rows(trend_base_sensi_1, trend_adjusted_sensi_1) |>
   mutate(explanatory = gsub("_quart_med", "", explanatory))
 
-heterogeneity_tests_sensi_2 <- 
+heterogeneity_tests_sensi_2 <-                                                  # sensi 2 
   bind_rows(heterogeneity_base_sensi_2, heterogeneity_adjusted_sensi_2) |>
   mutate(explanatory = gsub("_quart", "", explanatory))
 
@@ -4020,15 +3178,15 @@ trend_tests_sensi_2 <-
   bind_rows(trend_base_sensi_2, trend_adjusted_sensi_2) |>
   mutate(explanatory = gsub("_quart_med", "", explanatory))
 
-heterogeneity_tests_sensi_1_2 <- 
-  bind_rows(heterogeneity_base_sensi_1_2, heterogeneity_adjusted_sensi_1_2) |>
+heterogeneity_tests_sensi_3 <-                                                  # sensi 3
+  bind_rows(heterogeneity_base_sensi_3, heterogeneity_adjusted_sensi_3) |>
   mutate(explanatory = gsub("_quart", "", explanatory))
 
-trend_tests_sensi_1_2 <- 
-  bind_rows(trend_base_sensi_1_2, trend_adjusted_sensi_1_2) |>
+trend_tests_sensi_3 <- 
+  bind_rows(trend_base_sensi_3, trend_adjusted_sensi_3) |>
   mutate(explanatory = gsub("_quart_med", "", explanatory))
 
-heterogeneity_tests_sensi_1_3 <- 
+heterogeneity_tests_sensi_1_3 <-                                                # sensi 1 3 
   bind_rows(heterogeneity_base_sensi_1_3, heterogeneity_adjusted_sensi_1_3) |>
   mutate(explanatory = gsub("_quart", "", explanatory))
 
@@ -4036,7 +3194,7 @@ trend_tests_sensi_1_3 <-
   bind_rows(trend_base_sensi_1_3, trend_adjusted_sensi_1_3) |>
   mutate(explanatory = gsub("_quart_med", "", explanatory))
 
-heterogeneity_tests_sensi_1_3_4 <- 
+heterogeneity_tests_sensi_1_3_4 <-                                              # sensi 1 3 4 
   bind_rows(heterogeneity_base_sensi_1_3_4, heterogeneity_adjusted_sensi_1_3_4) |>
   mutate(explanatory = gsub("_quart", "", explanatory))
 
@@ -4044,7 +3202,7 @@ trend_tests_sensi_1_3_4 <-
   bind_rows(trend_base_sensi_1_3_4, trend_adjusted_sensi_1_3_4) |>
   mutate(explanatory = gsub("_quart_med", "", explanatory))
 
-heterogeneity_tests_sensi_1_3_5 <- 
+heterogeneity_tests_sensi_1_3_5 <-                                              # sensi 1 3 5 
   bind_rows(heterogeneity_base_sensi_1_3_5, heterogeneity_adjusted_sensi_1_3_5) |>
   mutate(explanatory = gsub("_quart", "", explanatory))
 
@@ -4054,14 +3212,14 @@ trend_tests_sensi_1_3_5 <-
 
 heterogeneity_tests <- bind_rows(heterogeneity_tests, heterogeneity_tests_sensi_1)
 heterogeneity_tests <- bind_rows(heterogeneity_tests, heterogeneity_tests_sensi_2)
-heterogeneity_tests <- bind_rows(heterogeneity_tests, heterogeneity_tests_sensi_1_2)
+heterogeneity_tests <- bind_rows(heterogeneity_tests, heterogeneity_tests_sensi_3)
 heterogeneity_tests <- bind_rows(heterogeneity_tests, heterogeneity_tests_sensi_1_3)
 heterogeneity_tests <- bind_rows(heterogeneity_tests, heterogeneity_tests_sensi_1_3_4)
 heterogeneity_tests <- bind_rows(heterogeneity_tests, heterogeneity_tests_sensi_1_3_5)
 
 trend_tests <- bind_rows(trend_tests, trend_tests_sensi_1)
 trend_tests <- bind_rows(trend_tests, trend_tests_sensi_2)
-trend_tests <- bind_rows(trend_tests, trend_tests_sensi_1_2)
+trend_tests <- bind_rows(trend_tests, trend_tests_sensi_3)
 trend_tests <- bind_rows(trend_tests, trend_tests_sensi_1_3)
 trend_tests <- bind_rows(trend_tests, trend_tests_sensi_1_3_4)
 trend_tests <- bind_rows(trend_tests, trend_tests_sensi_1_3_5)
@@ -4085,8 +3243,8 @@ rm(model1_sd, model1_quart, model2_sd, model2_quart,
    
    model1_sd_sensi_1, model1_quart_sensi_1, model2_sd_sensi_1, model2_quart_sensi_1, 
    model1_sd_sensi_2, model1_quart_sensi_2, model2_sd_sensi_2, model2_quart_sensi_2, 
-   model1_sd_sensi_1_2, model1_quart_sensi_1_2, model2_sd_sensi_1_2, model2_quart_sensi_1_2, 
-   model1_sd_sensi_1_2, model1_quart_sensi_1_3, model2_sd_sensi_1_3, model2_quart_sensi_1_3, 
+   model1_sd_sensi_3, model1_quart_sensi_3, model2_sd_sensi_3, model2_quart_sensi_3, 
+   model1_sd_sensi_1_3, model1_quart_sensi_1_3, model2_sd_sensi_1_3, model2_quart_sensi_1_3, 
    model1_sd_sensi_1_3_4, model1_quart_sensi_1_3_4, model2_sd_sensi_1_3_4, model2_quart_sensi_1_3_4, 
    model1_sd_sensi_1_3_5, model1_quart_sensi_1_3_5, model2_sd_sensi_1_3_5, model2_quart_sensi_1_3_5, 
 
@@ -4116,9 +3274,9 @@ rm(model1_sd, model1_quart, model2_sd, model2_quart,
    trend_base_sensi_2, trend_adjusted_sensi_2, 
    heterogeneity_tests_sensi_2, trend_tests_sensi_2, 
    
-   heterogeneity_base_sensi_1_2, heterogeneity_adjusted_sensi_1_2, 
-   trend_base_sensi_1_2, trend_adjusted_sensi_1_2, 
-   heterogeneity_tests_sensi_1_2, trend_tests_sensi_1_2, 
+   heterogeneity_base_sensi_3, heterogeneity_adjusted_sensi_3, 
+   trend_base_sensi_3, trend_adjusted_sensi_3, 
+   heterogeneity_tests_sensi_3, trend_tests_sensi_3, 
    
    heterogeneity_base_sensi_1_3, heterogeneity_adjusted_sensi_1_3, 
    trend_base_sensi_1_3, trend_adjusted_sensi_1_3, 
@@ -4787,6 +3945,139 @@ rm(data_matrix1_neuro, data_matrix2_neuro,
 
 
 # Figures and Tables ----
+
+make_gam_plot_base <- function(var, data) {
+  
+  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
+  
+  model <- gam(formula, family = binomial, method = "REML", data = data)
+  
+  bdd_pred <- data |>
+    mutate(
+      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
+      adj_sex = names(which.max(table(sex)))) |>
+    select(all_of(var), starts_with("adj_")) |>
+    rename_with(~ gsub("adj_", "", .x))
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred |>
+    mutate(
+      prob = plogis(pred$fit),
+      prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+      prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1)
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01",
+                         format(p_value, nsmall = 2, digits = 2))
+  
+  x_min <- min(data[[var]], na.rm = TRUE)
+  x_label <- all_vars_labels[var]
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "steelblue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper),
+                fill = "steelblue", alpha = 0.2) +
+    labs(y = "Predicted probability of ALS") +
+    annotate(
+      "text", x = x_min, y = Inf,
+      label = paste("EDF:", edf, "\np-value:", p_value_text),
+      hjust = 0, vjust = 1.2, size = 4) +
+    scale_y_continuous(limits = c(0, 1)) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_blank(),
+      axis.title.x = element_blank(),
+      axis.line.x = element_blank(),
+      axis.ticks.x = element_blank()) +
+    ggtitle("Base model")
+  
+  p2 <- ggplot(bdd_pred, aes(x = "", y = .data[[var]])) +
+    geom_boxplot(fill = "steelblue") +
+    coord_flip() +
+    ylab(x_label) +
+    xlab("") +
+    theme_minimal()
+  
+  p <- p1 / p2 +
+    plot_layout(heights = c(10, 1), guides = "collect")
+  
+  list(
+    plot = p,
+    p_value = p_value)
+}
+
+
+make_gam_plot_adjusted <- function(var, data) {
+  
+  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age  + smoking_2cat_i + bmi"))
+  
+  model <- gam(formula, family = binomial, method = "REML", data = data)
+  
+  bdd_pred <- data |>
+    mutate(
+      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
+      adj_sex = names(which.max(table(sex))), 
+      adj_bmi = mean(bmi, na.rm = TRUE),
+      adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i)))) |>
+    select(all_of(var), starts_with("adj_")) |>
+    rename_with(~ gsub("adj_", "", .x))
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred |>
+    mutate(
+      prob = plogis(pred$fit),
+      prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+      prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1)
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01",
+                         format(p_value, nsmall = 2, digits = 2))
+  
+  x_min <- min(data[[var]], na.rm = TRUE)
+  x_label <- all_vars_labels[var]
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "steelblue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper),
+                fill = "steelblue", alpha = 0.2) +
+    labs(y = "Predicted probability of ALS") +
+    annotate(
+      "text", x = x_min, y = Inf,
+      label = paste("EDF:", edf, "\np-value:", p_value_text),
+      hjust = 0, vjust = 1.2, size = 4) +
+    scale_y_continuous(limits = c(0, 1)) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_blank(),
+      axis.title.x = element_blank(),
+      axis.line.x = element_blank(),
+      axis.ticks.x = element_blank()) +
+    ggtitle("Adjusted model")
+  
+  p2 <- ggplot(bdd_pred, aes(x = "", y = .data[[var]])) +
+    geom_boxplot(fill = "steelblue") +
+    coord_flip() +
+    ylab(x_label) +
+    xlab("") +
+    theme_minimal()
+  
+  p <- p1 / p2 +
+    plot_layout(heights = c(10, 1), guides = "collect")
+  
+  list(
+    plot = p,
+    p_value = p_value)
+}
+
+
+
+
 ## Main ----
 ### Table covariates - als survival ----
 covar
@@ -5089,138 +4380,27 @@ proteomic_sd_ALS_adjusted_figure <-
 
 
 ### Figure proteomic - als occurrence - base gam ----
-pvals <- sapply(model1_gam, function(m) m$s.table[1, "p-value"])
-signif_vars <- names(pvals)[pvals < 0.05]
-signif_vars_labels <- set_names(str_replace(signif_vars, 
-                                            "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                            ""), 
-                                signif_vars)
+all_vars_labels <- set_names(
+  str_replace(proteomic,
+              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
+              ""),
+  proteomic)
 
-plot_base_gam <- map(signif_vars, function(var) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
-  
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
-  
-  bdd_pred <- bdd_danish |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_min <- min(bdd_danish[[var]], na.rm = TRUE)
-  x_label <- signif_vars_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 0, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_text(color = 'white'),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Base model")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) |>
-  set_names(signif_vars)
-
-rm(pvals, signif_vars, signif_vars_labels)
+plot_base_gam <- map(proteomic, make_gam_plot_base, data = bdd_danish)
+names(plot_base_gam) <- proteomic
+plot_base_gam <- list(
+  signif = keep(plot_base_gam, ~ .x$p_value <= 0.05) |> map("plot"),
+  not_signif = keep(plot_base_gam, ~ .x$p_value > 0.05) |> map("plot"))
 
 ### Figure proteomic - als occurrence - adjusted gam ----
-pvals <- sapply(model2_gam, function(m) m$s.table[1, "p-value"])
-signif_vars <- names(pvals)[pvals < 0.05]
-signif_vars_labels <- set_names(str_replace(signif_vars, 
-                                            "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                            ""), 
-                                signif_vars)
+plot_adjusted_gam <- map(proteomic, make_gam_plot_adjusted, data = bdd_danish)
+names(plot_adjusted_gam) <- proteomic
+plot_adjusted_gam <- list(
+  signif = keep(plot_adjusted_gam, ~ .x$p_value <= 0.05) |> map("plot"),
+  not_signif = keep(plot_adjusted_gam, ~ .x$p_value > 0.05) |> map("plot"))
 
-plot_adjusted_gam <- map(signif_vars, function(var) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age + smoking_2cat_i + bmi"))   # ou {paste(covariates, collapse = ' + ')}
-  
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
-  
-  bdd_pred <- bdd_danish |>                                                    # création bdd avec expo + covariables ramenées à leur moyenne
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex))), 
-      adj_bmi = mean(bmi, na.rm = TRUE),
-      adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x)) 
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(prob = plogis(pred$fit),                                             # plogit does exp(pred$fit) / (1 + exp(pred$fit))
-           prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-           prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-  x_min <- min(bdd_danish[[var]], na.rm = TRUE)
-  x_label <- signif_vars_labels[var] 
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
-    labs(x = var, y = "Predicted probability of ALS") +
-    annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-             hjust = 0, vjust = 1.2, size = 4, color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, 1)) +  
-    theme(axis.text.x = element_text(color = 'white'),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank()) +
-    ggtitle("Adjusted model")
-  
-  p2 <- ggplot(bdd_pred) +
-    aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
-    coord_flip() +
-    ylab(x_label) + 
-    xlab("") + 
-    theme_minimal()
-  
-  p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-                           guides = 'collect') + 
-    theme_minimal()
-  p
-}) |> 
-  set_names(signif_vars)
+rm(all_vars_labels)
 
-rm(pvals, signif_vars, signif_vars_labels)
 
 ## Sensi_1 ----
 ### Table proteomic - als occurence - base and adjusted sd (sensi_1) ----
@@ -5420,6 +4600,37 @@ proteomic_sd_ALS_adjusted_figure_sensi_1 <-
     color = "")+
   scale_x_continuous(limits = c(0, 2.5)) +
   scale_y_continuous(limits = c(0, 4.5))
+
+
+
+
+### Figure proteomic - als occurrence - base gam (sensi_1) ----
+all_vars_labels <- set_names(
+  str_replace(proteomic_sensi_1,
+              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
+              ""),
+  proteomic_sensi_1)
+
+plot_base_gam_sensi_1 <- map(proteomic_sensi_1, make_gam_plot_base, data = bdd_danish_sensi_1)
+names(plot_base_gam_sensi_1) <- proteomic_sensi_1
+plot_base_gam_sensi_1 <- list(
+  signif = keep(plot_base_gam_sensi_1, ~ .x$p_value <= 0.05) |> map("plot"),
+  not_signif = keep(plot_base_gam_sensi_1, ~ .x$p_value > 0.05) |> map("plot"))
+
+
+### Figure proteomic - als occurrence - adjusted gam (sensi_1) ----
+plot_adjusted_gam_sensi_1 <- map(proteomic_sensi_1, make_gam_plot_adjusted, data = bdd_danish_sensi_1)
+names(plot_adjusted_gam_sensi_1) <- proteomic_sensi_1
+plot_adjusted_gam_sensi_1 <- list(
+  signif = keep(plot_adjusted_gam_sensi_1, ~ .x$p_value <= 0.05) |> map("plot"),
+  not_signif = keep(plot_adjusted_gam_sensi_1, ~ .x$p_value > 0.05) |> map("plot"))
+
+rm(all_vars_labels, 
+   bdd_danish_sensi_1, 
+   proteomic_sensi_1, 
+   proteomic_sd_sensi_1, 
+   proteomic_quart_sensi_1, 
+   proteomic_quart_med_sensi_1)
 
 
 ## Sensi_2 ----
@@ -5623,14 +4834,39 @@ proteomic_sd_ALS_adjusted_figure_sensi_2 <-
 
 
 
+### Figure proteomic - als occurrence - base gam (sensi_2) ----
+all_vars_labels <- set_names(
+  str_replace(proteomic,
+              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
+              ""),
+  proteomic)
 
-## Sensi_1_2 ----
-### Table proteomic - als occurence - base and adjusted sd (sensi_1_2) ----
-proteomic_sd_ALS_table_sensi_1_2 <-                                                       # select both base and adjusted results
+plot_base_gam_sensi_2 <- map(proteomic, make_gam_plot_base, data = bdd_danish_sensi_2)
+names(plot_base_gam_sensi_2) <- proteomic
+plot_base_gam_sensi_2 <- list(
+  signif = keep(plot_base_gam_sensi_2, ~ .x$p_value <= 0.05) |> map("plot"),
+  not_signif = keep(plot_base_gam_sensi_2, ~ .x$p_value > 0.05) |> map("plot"))
+
+
+
+### Figure proteomic - als occurrence - adjusted gam (sensi_2) ----
+plot_adjusted_gam_sensi_2 <- map(proteomic, make_gam_plot_adjusted, data = bdd_danish_sensi_2)
+names(plot_adjusted_gam_sensi_2) <- proteomic
+plot_adjusted_gam_sensi_2 <- list(
+  signif = keep(plot_adjusted_gam_sensi_2, ~ .x$p_value <= 0.05) |> map("plot"),
+  not_signif = keep(plot_adjusted_gam_sensi_2, ~ .x$p_value > 0.05) |> map("plot"))
+
+rm(bdd_danish_sensi_2, all_vars_labels)
+
+
+
+## Sensi_3 ----
+### Table proteomic - als occurence - base and adjusted sd (sensi_3) ----
+proteomic_sd_ALS_table_sensi_3 <-                                               # select both base and adjusted results
   main_results |>
   filter(model %in% c("base", "adjusted") &                                     # select only continuous results
            term == "Continuous" & 
-           analysis == "sensi_1_2") |>            
+           analysis == "sensi_3") |>            
   group_by(explanatory) |>                                                      # select explanatory vars significant                
   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>                     
   ungroup() |>
@@ -5665,14 +4901,12 @@ proteomic_sd_ALS_table_sensi_1_2 <-                                             
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 
-
-
-### Table proteomic - als occurence - base and adjusted quart (sensi_1_2) ----
+### Table proteomic - als occurence - base and adjusted quart (sensi_3) ----
 extra_rows <- 
   main_results |>
   filter(model %in% c("base", "adjusted") &                                     # select only quartile results
            term != "Continuous" & 
-           analysis == "sensi_1_2") |>           
+           analysis == "sensi_3") |>           
   group_by(explanatory) |>                                                      # select explanatory vars with at least one quartile significant 
   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
   distinct(protein_group, explanatory) |> 
@@ -5681,11 +4915,11 @@ extra_rows <-
     "OR_base" = '-', "95% CI_base" = '-', "p_value_base" = '', "p_value_heterogeneity_base" = '', "p_value_trend_base" = '',
     "OR_adjusted" = '-', "95% CI_adjusted" = '-', "p_value_adjusted" = '', "p_value_heterogeneity_adjusted" = '', "p_value_trend_adjusted" = '')
 
-proteomic_quart_ALS_table_sensi_1_2 <- 
+proteomic_quart_ALS_table_sensi_3 <- 
   main_results |>
   filter(model %in% c("base", "adjusted") &                                     # select quartile results
            term != "Continuous" & 
-           analysis == "sensi_1_2") |>             
+           analysis == "sensi_3") |>             
   group_by(explanatory) |>                                                      # select explanatory var s with at least one quartile significant 
   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
   ungroup() |>
@@ -5693,8 +4927,8 @@ proteomic_quart_ALS_table_sensi_1_2 <-
   pivot_wider(names_from = "model", values_from = c("OR", "95% CI", "p_value", "p_value_heterogeneity", "p_value_trend")) |>
   select(protein_group, explanatory, quartiles = term, contains("base"), contains("adjusted")) 
 
-proteomic_quart_ALS_table_sensi_1_2 <- 
-  proteomic_quart_ALS_table_sensi_1_2 |>
+proteomic_quart_ALS_table_sensi_3 <- 
+  proteomic_quart_ALS_table_sensi_3 |>
   mutate_if(is.numeric, as.character) |>
   bind_rows(extra_rows) |>
   group_by(explanatory) |>
@@ -5740,13 +4974,12 @@ proteomic_quart_ALS_table_sensi_1_2 <-
 rm(extra_rows)
 
 
-
-### Figure proteomic - als occurence - base sd (sensi_1_2) ----
-proteomic_sd_ALS_base_figure_sensi_1_2 <- 
+### Figure proteomic - als occurence - base sd (sensi_3) ----
+proteomic_sd_ALS_base_figure_sensi_3 <- 
   main_results |>
   filter(model == "base" & 
            term == "Continuous" & 
-           analysis == "sensi_1_2") |>
+           analysis == "sensi_3") |>
   mutate(
     log2OR = log2(OR_raw),
     neg_log10_p = -log10(p_value_raw),
@@ -5783,12 +5016,13 @@ proteomic_sd_ALS_base_figure_sensi_1_2 <-
   scale_y_continuous(limits = c(0, 4.5))
 
 
-### Figure proteomic - als occurence - adjusted sd (sensi_1_2) ----
-proteomic_sd_ALS_adjusted_figure_sensi_1_2 <- 
+
+### Figure proteomic - als occurence - adjusted sd (sensi_3) ----
+proteomic_sd_ALS_adjusted_figure_sensi_3 <- 
   main_results |>
   filter(model == "adjusted" & 
            term == "Continuous" & 
-           analysis == "sensi_1_2") |>
+           analysis == "sensi_3") |>
   mutate(
     log2OR = log2(OR_raw),
     neg_log10_p = -log10(p_value_raw),
@@ -5826,9 +5060,38 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_2 <-
 
 
 
+
+### Figure proteomic - als occurrence - base gam (sensi_3) ----
+all_vars_labels <- set_names(
+  str_replace(proteomic,
+              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
+              ""),
+  proteomic)
+
+plot_base_gam_sensi_3 <- map(proteomic, make_gam_plot_base, data = bdd_danish_sensi_3)
+names(plot_base_gam_sensi_3) <- proteomic
+plot_base_gam_sensi_3 <- list(
+  signif = keep(plot_base_gam_sensi_3, ~ .x$p_value <= 0.05) |> map("plot"),
+  not_signif = keep(plot_base_gam_sensi_3, ~ .x$p_value > 0.05) |> map("plot"))
+
+
+### Figure proteomic - als occurrence - adjusted gam (sensi_3) ----
+plot_adjusted_gam_sensi_3 <- map(proteomic, make_gam_plot_adjusted, data = bdd_danish_sensi_3)
+names(plot_adjusted_gam_sensi_3) <- proteomic
+plot_adjusted_gam_sensi_3 <- list(
+  signif = keep(plot_adjusted_gam_sensi_3, ~ .x$p_value <= 0.05) |> map("plot"),
+  not_signif = keep(plot_adjusted_gam_sensi_3, ~ .x$p_value > 0.05) |> map("plot"))
+
+rm(bdd_danish_sensi_3, all_vars_labels)
+
+
+
+
+
+
 ## Sensi_1_3 ----
 ### Table proteomic - als occurence - base and adjusted sd (sensi_1_3) ----
-proteomic_sd_ALS_table_sensi_1_3 <-                                             # select both base and adjusted results
+proteomic_sd_ALS_table_sensi_1_3 <-                                               # select both base and adjusted results
   main_results |>
   filter(model %in% c("base", "adjusted") &                                     # select only continuous results
            term == "Continuous" & 
@@ -5865,8 +5128,6 @@ proteomic_sd_ALS_table_sensi_1_3 <-                                             
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
-
-
 
 
 ### Table proteomic - als occurence - base and adjusted quart (sensi_1_3) ----
@@ -5942,7 +5203,6 @@ proteomic_quart_ALS_table_sensi_1_3 <-
 rm(extra_rows)
 
 
-
 ### Figure proteomic - als occurence - base sd (sensi_1_3) ----
 proteomic_sd_ALS_base_figure_sensi_1_3 <- 
   main_results |>
@@ -5983,6 +5243,7 @@ proteomic_sd_ALS_base_figure_sensi_1_3 <-
     color = "")+
   scale_x_continuous(limits = c(0, 2.5)) +
   scale_y_continuous(limits = c(0, 4.5))
+
 
 
 ### Figure proteomic - als occurence - adjusted sd (sensi_1_3) ----
@@ -6028,9 +5289,40 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3 <-
 
 
 
+
+### Figure proteomic - als occurrence - base gam (sensi_1_3) ----
+all_vars_labels <- set_names(
+  str_replace(proteomic_sensi_1_3,
+              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
+              ""),
+  proteomic_sensi_1_3)
+
+plot_base_gam_sensi_1_3 <- map(proteomic_sensi_1_3, make_gam_plot_base, data = bdd_danish_sensi_1_3)
+names(plot_base_gam_sensi_1_3) <- proteomic_sensi_1_3
+plot_base_gam_sensi_1_3 <- list(
+  signif = keep(plot_base_gam_sensi_1_3, ~ .x$p_value <= 0.05) |> map("plot"),
+  not_signif = keep(plot_base_gam_sensi_1_3, ~ .x$p_value > 0.05) |> map("plot"))
+
+
+### Figure proteomic - als occurrence - adjusted gam (sensi_1_3) ----
+plot_adjusted_gam_sensi_1_3 <- map(proteomic_sensi_1_3, make_gam_plot_adjusted, data = bdd_danish_sensi_1_3)
+names(plot_adjusted_gam_sensi_1_3) <- proteomic_sensi_1_3
+plot_adjusted_gam_sensi_1_3 <- list(
+  signif = keep(plot_adjusted_gam_sensi_1_3, ~ .x$p_value <= 0.05) |> map("plot"),
+  not_signif = keep(plot_adjusted_gam_sensi_1_3, ~ .x$p_value > 0.05) |> map("plot"))
+
+rm(bdd_danish_sensi_1_3, 
+   all_vars_labels, 
+   proteomic_sensi_1_3,
+   proteomic_sd_sensi_1_3,
+   proteomic_quart_sensi_1_3, 
+   proteomic_quart_med_sensi_1_3)
+
+
+
 ## Sensi_1_3_4 ----
 ### Table proteomic - als occurence - base and adjusted sd (sensi_1_3_4) ----
-proteomic_sd_ALS_table_sensi_1_3_4 <-                                             # select both base and adjusted results
+proteomic_sd_ALS_table_sensi_1_3_4 <-                                               # select both base and adjusted results
   main_results |>
   filter(model %in% c("base", "adjusted") &                                     # select only continuous results
            term == "Continuous" & 
@@ -6067,8 +5359,6 @@ proteomic_sd_ALS_table_sensi_1_3_4 <-                                           
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
-
-
 
 
 ### Table proteomic - als occurence - base and adjusted quart (sensi_1_3_4) ----
@@ -6144,7 +5434,6 @@ proteomic_quart_ALS_table_sensi_1_3_4 <-
 rm(extra_rows)
 
 
-
 ### Figure proteomic - als occurence - base sd (sensi_1_3_4) ----
 proteomic_sd_ALS_base_figure_sensi_1_3_4 <- 
   main_results |>
@@ -6185,6 +5474,7 @@ proteomic_sd_ALS_base_figure_sensi_1_3_4 <-
     color = "")+
   scale_x_continuous(limits = c(0, 2.5)) +
   scale_y_continuous(limits = c(0, 4.5))
+
 
 
 ### Figure proteomic - als occurence - adjusted sd (sensi_1_3_4) ----
@@ -6230,9 +5520,39 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3_4 <-
 
 
 
+
+### Figure proteomic - als occurrence - base gam (sensi_1_3_4) ----
+all_vars_labels <- set_names(
+  str_replace(proteomic_sensi_1_3_4,
+              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
+              ""),
+  proteomic_sensi_1_3_4)
+
+plot_base_gam_sensi_1_3_4 <- map(proteomic_sensi_1_3_4, make_gam_plot_base, data = bdd_danish_sensi_1_3_4)
+names(plot_base_gam_sensi_1_3_4) <- proteomic_sensi_1_3_4
+plot_base_gam_sensi_1_3_4 <- list(
+  signif = keep(plot_base_gam_sensi_1_3_4, ~ .x$p_value <= 0.05) |> map("plot"),
+  not_signif = keep(plot_base_gam_sensi_1_3_4, ~ .x$p_value > 0.05) |> map("plot"))
+
+
+### Figure proteomic - als occurrence - adjusted gam (sensi_1_3_4) ----
+plot_adjusted_gam_sensi_1_3_4 <- map(proteomic_sensi_1_3_4, make_gam_plot_adjusted, data = bdd_danish_sensi_1_3_4)
+names(plot_adjusted_gam_sensi_1_3_4) <- proteomic_sensi_1_3_4
+plot_adjusted_gam_sensi_1_3_4 <- list(
+  signif = keep(plot_adjusted_gam_sensi_1_3_4, ~ .x$p_value <= 0.05) |> map("plot"),
+  not_signif = keep(plot_adjusted_gam_sensi_1_3_4, ~ .x$p_value > 0.05) |> map("plot"))
+
+rm(all_vars_labels, 
+   proteomic_sensi_1_3_4,
+   proteomic_sd_sensi_1_3_4,
+   proteomic_quart_sensi_1_3_4, 
+   proteomic_quart_med_sensi_1_3_4, 
+   bdd_danish_sensi_1_3_4)
+
+
 ## Sensi_1_3_5 ----
 ### Table proteomic - als occurence - base and adjusted sd (sensi_1_3_5) ----
-proteomic_sd_ALS_table_sensi_1_3_5 <-                                           # select both base and adjusted results
+proteomic_sd_ALS_table_sensi_1_3_5 <-                                               # select both base and adjusted results
   main_results |>
   filter(model %in% c("base", "adjusted") &                                     # select only continuous results
            term == "Continuous" & 
@@ -6269,8 +5589,6 @@ proteomic_sd_ALS_table_sensi_1_3_5 <-                                           
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
-
-
 
 
 ### Table proteomic - als occurence - base and adjusted quart (sensi_1_3_5) ----
@@ -6346,7 +5664,6 @@ proteomic_quart_ALS_table_sensi_1_3_5 <-
 rm(extra_rows)
 
 
-
 ### Figure proteomic - als occurence - base sd (sensi_1_3_5) ----
 proteomic_sd_ALS_base_figure_sensi_1_3_5 <- 
   main_results |>
@@ -6387,6 +5704,7 @@ proteomic_sd_ALS_base_figure_sensi_1_3_5 <-
     color = "")+
   scale_x_continuous(limits = c(0, 2.5)) +
   scale_y_continuous(limits = c(0, 4.5))
+
 
 
 ### Figure proteomic - als occurence - adjusted sd (sensi_1_3_5) ----
@@ -6432,13 +5750,45 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3_5 <-
 
 
 
+
+### Figure proteomic - als occurrence - base gam (sensi_1_3_5) ----
+all_vars_labels <- set_names(
+  str_replace(proteomic_sensi_1_3_5,
+              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
+              ""),
+  proteomic_sensi_1_3_5)
+
+plot_base_gam_sensi_1_3_5 <- map(proteomic_sensi_1_3_5, make_gam_plot_base, data = bdd_danish_sensi_1_3_5)
+names(plot_base_gam_sensi_1_3_5) <- proteomic_sensi_1_3_5
+plot_base_gam_sensi_1_3_5 <- list(
+  signif = keep(plot_base_gam_sensi_1_3_5, ~ .x$p_value <= 0.05) |> map("plot"),
+  not_signif = keep(plot_base_gam_sensi_1_3_5, ~ .x$p_value > 0.05) |> map("plot"))
+
+### Figure proteomic - als occurrence - adjusted gam (sensi_1_3_5) ----
+plot_adjusted_gam_sensi_1_3_5 <- map(proteomic_sensi_1_3_5, make_gam_plot_adjusted, data = bdd_danish_sensi_1_3_5)
+names(plot_adjusted_gam_sensi_1_3_5) <- proteomic_sensi_1_3_5
+plot_adjusted_gam_sensi_1_3_5 <- list(
+  signif = keep(plot_adjusted_gam_sensi_1_3_5, ~ .x$p_value <= 0.05) |> map("plot"),
+  not_signif = keep(plot_adjusted_gam_sensi_1_3_5, ~ .x$p_value > 0.05) |> map("plot"))
+
+rm(all_vars_labels, 
+   proteomic_sensi_1_3_5,
+   proteomic_sd_sensi_1_3_5,
+   proteomic_quart_sensi_1_3_5, 
+   proteomic_quart_med_sensi_1_3_5, 
+   bdd_danish_sensi_1_3_5)
+
+
+
+
+
 ## Sensi_6 ----
 ### Figure proteomic - als occurence - base sd (sensi_6) ----
-proteomic_sd_ALS_base_figure_sensi_3_T1 <- 
+proteomic_sd_ALS_base_figure_sensi_6_T1 <- 
   main_results |>
   filter(model == "base" & 
            term == "Continuous" & 
-           analysis == "sensi_3_T1") |>
+           analysis == "sensi_6_T1") |>
   mutate(
     log2OR = log2(OR_raw),
     neg_log10_p = -log10(p_value_raw),
@@ -6474,11 +5824,11 @@ proteomic_sd_ALS_base_figure_sensi_3_T1 <-
   scale_x_continuous(limits = c(0, 2.5)) +
   scale_y_continuous(limits = c(0, 4.5))
 
-proteomic_sd_ALS_base_figure_sensi_3_T2 <- 
+proteomic_sd_ALS_base_figure_sensi_6_T2 <- 
   main_results |>
   filter(model == "base" & 
            term == "Continuous" & 
-           analysis == "sensi_3_T2") |>
+           analysis == "sensi_6_T2") |>
   mutate(
     log2OR = log2(OR_raw),
     neg_log10_p = -log10(p_value_raw),
@@ -6514,11 +5864,11 @@ proteomic_sd_ALS_base_figure_sensi_3_T2 <-
   scale_x_continuous(limits = c(0, 2.5)) +
   scale_y_continuous(limits = c(0, 4.5))
 
-proteomic_sd_ALS_base_figure_sensi_3_T3 <- 
+proteomic_sd_ALS_base_figure_sensi_6_T3 <- 
   main_results |>
   filter(model == "base" & 
            term == "Continuous" & 
-           analysis == "sensi_3_T3") |>
+           analysis == "sensi_6_T3") |>
   mutate(
     log2OR = log2(OR_raw),
     neg_log10_p = -log10(p_value_raw),
@@ -6556,11 +5906,11 @@ proteomic_sd_ALS_base_figure_sensi_3_T3 <-
 
 
 ### Figure proteomic - als occurence - adjusted sd (sensi_6) ----
-proteomic_sd_ALS_adjusted_figure_sensi_3_T1 <- 
+proteomic_sd_ALS_adjusted_figure_sensi_6_T1 <- 
   main_results |>
   filter(model == "adjusted" & 
            term == "Continuous" & 
-           analysis == "sensi_3_T1") |>
+           analysis == "sensi_6_T1") |>
   mutate(
     log2OR = log2(OR_raw),
     neg_log10_p = -log10(p_value_raw),
@@ -6596,11 +5946,11 @@ proteomic_sd_ALS_adjusted_figure_sensi_3_T1 <-
   scale_x_continuous(limits = c(0, 2.5)) +
   scale_y_continuous(limits = c(0, 4.5))
 
-proteomic_sd_ALS_adjusted_figure_sensi_3_T2 <- 
+proteomic_sd_ALS_adjusted_figure_sensi_6_T2 <- 
   main_results |>
   filter(model == "adjusted" & 
            term == "Continuous" & 
-           analysis == "sensi_3_T2") |>
+           analysis == "sensi_6_T2") |>
   mutate(
     log2OR = log2(OR_raw),
     neg_log10_p = -log10(p_value_raw),
@@ -6636,11 +5986,11 @@ proteomic_sd_ALS_adjusted_figure_sensi_3_T2 <-
   scale_x_continuous(limits = c(0, 2.5)) +
   scale_y_continuous(limits = c(0, 4.5))
 
-proteomic_sd_ALS_adjusted_figure_sensi_3_T3 <- 
+proteomic_sd_ALS_adjusted_figure_sensi_6_T3 <- 
   main_results |>
   filter(model == "adjusted" & 
            term == "Continuous" & 
-           analysis == "sensi_3_T3") |>
+           analysis == "sensi_6_T3") |>
   mutate(
     log2OR = log2(OR_raw),
     neg_log10_p = -log10(p_value_raw),
@@ -6679,11 +6029,11 @@ proteomic_sd_ALS_adjusted_figure_sensi_3_T3 <-
 
 ## Sensi_1_6 ----
 ### Figure proteomic - als occurence - base sd (sensi_1_6) ----
-proteomic_sd_ALS_base_figure_sensi_1_3_T1 <- 
+proteomic_sd_ALS_base_figure_sensi_1_6_T1 <- 
   main_results |>
   filter(model == "base" & 
            term == "Continuous" & 
-           analysis == "sensi_1_3_T1") |>
+           analysis == "sensi_1_6_T1") |>
   mutate(
     log2OR = log2(OR_raw),
     neg_log10_p = -log10(p_value_raw),
@@ -6719,11 +6069,11 @@ proteomic_sd_ALS_base_figure_sensi_1_3_T1 <-
   scale_x_continuous(limits = c(0, 2.5)) +
   scale_y_continuous(limits = c(0, 4.5))
 
-proteomic_sd_ALS_base_figure_sensi_1_3_T2 <- 
+proteomic_sd_ALS_base_figure_sensi_1_6_T2 <- 
   main_results |>
   filter(model == "base" & 
            term == "Continuous" & 
-           analysis == "sensi_1_3_T2") |>
+           analysis == "sensi_1_6_T2") |>
   mutate(
     log2OR = log2(OR_raw),
     neg_log10_p = -log10(p_value_raw),
@@ -6759,11 +6109,11 @@ proteomic_sd_ALS_base_figure_sensi_1_3_T2 <-
   scale_x_continuous(limits = c(0, 2.5)) +
   scale_y_continuous(limits = c(0, 4.5))
 
-proteomic_sd_ALS_base_figure_sensi_1_3_T3 <- 
+proteomic_sd_ALS_base_figure_sensi_1_6_T3 <- 
   main_results |>
   filter(model == "base" & 
            term == "Continuous" & 
-           analysis == "sensi_1_3_T3") |>
+           analysis == "sensi_1_6_T3") |>
   mutate(
     log2OR = log2(OR_raw),
     neg_log10_p = -log10(p_value_raw),
@@ -6804,11 +6154,11 @@ proteomic_sd_ALS_base_figure_sensi_1_3_T3 <-
 
 
 ### Figure proteomic - als occurence - adjusted sd (sensi_1_6) ----
-proteomic_sd_ALS_adjusted_figure_sensi_1_3_T1 <- 
+proteomic_sd_ALS_adjusted_figure_sensi_1_6_T1 <- 
   main_results |>
   filter(model == "adjusted" & 
            term == "Continuous" & 
-           analysis == "sensi_1_3_T1") |>
+           analysis == "sensi_1_6_T1") |>
   mutate(
     log2OR = log2(OR_raw),
     neg_log10_p = -log10(p_value_raw),
@@ -6844,11 +6194,11 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3_T1 <-
   scale_x_continuous(limits = c(0, 2.5)) +
   scale_y_continuous(limits = c(0, 4.5))
 
-proteomic_sd_ALS_adjusted_figure_sensi_1_3_T2 <- 
+proteomic_sd_ALS_adjusted_figure_sensi_1_6_T2 <- 
   main_results |>
   filter(model == "adjusted" & 
            term == "Continuous" & 
-           analysis == "sensi_1_3_T2") |>
+           analysis == "sensi_1_6_T2") |>
   mutate(
     log2OR = log2(OR_raw),
     neg_log10_p = -log10(p_value_raw),
@@ -6884,11 +6234,11 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3_T2 <-
   scale_x_continuous(limits = c(0, 2.5)) +
   scale_y_continuous(limits = c(0, 4.5))
 
-proteomic_sd_ALS_adjusted_figure_sensi_1_3_T3 <- 
+proteomic_sd_ALS_adjusted_figure_sensi_1_6_T3 <- 
   main_results |>
   filter(model == "adjusted" & 
            term == "Continuous" & 
-           analysis == "sensi_1_3_T3") |>
+           analysis == "sensi_1_6_T3") |>
   mutate(
     log2OR = log2(OR_raw),
     neg_log10_p = -log10(p_value_raw),
@@ -6969,18 +6319,17 @@ results_proteomic_ALS_occurrence <-
       model2_gam_sensi_2 = model2_gam_sensi_2, 
       plot_adjusted_gam_sensi_2 = plot_adjusted_gam_sensi_2), 
     
-    sensi_1_2 = list(
-      proteomic_sd_ALS_table_sensi_1_2 = proteomic_sd_ALS_table_sensi_1_2, 
-      proteomic_quart_ALS_table_sensi_1_2 = proteomic_quart_ALS_table_sensi_1_2, 
+    sensi_3 = list(
+      proteomic_sd_ALS_table_sensi_3 = proteomic_sd_ALS_table_sensi_3, 
+      proteomic_quart_ALS_table_sensi_3 = proteomic_quart_ALS_table_sensi_3, 
       
-      proteomic_sd_ALS_base_figure_sensi_1_2 = proteomic_sd_ALS_base_figure_sensi_1_2, 
-      model1_gam_sensi_1_2 = model1_gam_sensi_1_2, 
-      plot_base_gam_sensi_1_2 = plot_base_gam_sensi_1_2, 
+      proteomic_sd_ALS_base_figure_sensi_3 = proteomic_sd_ALS_base_figure_sensi_3, 
+      model1_gam_sensi_3 = model1_gam_sensi_3, 
+      plot_base_gam_sensi_3 = plot_base_gam_sensi_3, 
       
-      
-      proteomic_sd_ALS_adjusted_figure_sensi_1_2 = proteomic_sd_ALS_adjusted_figure_sensi_1_2, 
-      model2_gam_sensi_1_2 = model2_gam_sensi_1_2, 
-      plot_adjusted_gam_sensi_1_2 = plot_adjusted_gam_sensi_1_2), 
+      proteomic_sd_ALS_adjusted_figure_sensi_3 = proteomic_sd_ALS_adjusted_figure_sensi_3, 
+      model2_gam_sensi_3 = model2_gam_sensi_3, 
+      plot_adjusted_gam_sensi_3 = plot_adjusted_gam_sensi_3), 
     
     sensi_1_3 = list(
       proteomic_sd_ALS_table_sensi_1_3 = proteomic_sd_ALS_table_sensi_1_3, 
@@ -6989,7 +6338,6 @@ results_proteomic_ALS_occurrence <-
       proteomic_sd_ALS_base_figure_sensi_1_3 = proteomic_sd_ALS_base_figure_sensi_1_3, 
       model1_gam_sensi_1_3 = model1_gam_sensi_1_3, 
       plot_base_gam_sensi_1_3 = plot_base_gam_sensi_1_3, 
-      
       
       proteomic_sd_ALS_adjusted_figure_sensi_1_3 = proteomic_sd_ALS_adjusted_figure_sensi_1_3, 
       model2_gam_sensi_1_3 = model2_gam_sensi_1_3, 
@@ -7097,14 +6445,41 @@ rm(covar,
    model2_gam_sensi_2, 
    plot_adjusted_gam_sensi_2, 
    
-   proteomic_sd_ALS_table_sensi_1_2, 
-   proteomic_quart_ALS_table_sensi_1_2, 
-   proteomic_sd_ALS_base_figure_sensi_1_2,
-   model1_gam_sensi_1_2, 
-   plot_base_gam_sensi_1_2, 
-   proteomic_sd_ALS_adjusted_figure_sensi_1_2,
-   model2_gam_sensi_1_2, 
-   plot_adjusted_gam_sensi_1_2, 
+   proteomic_sd_ALS_table_sensi_3, 
+   proteomic_quart_ALS_table_sensi_3, 
+   proteomic_sd_ALS_base_figure_sensi_3,
+   model1_gam_sensi_3, 
+   plot_base_gam_sensi_3, 
+   proteomic_sd_ALS_adjusted_figure_sensi_3,
+   model2_gam_sensi_3, 
+   plot_adjusted_gam_sensi_3, 
+   
+   proteomic_sd_ALS_table_sensi_1_3, 
+   proteomic_quart_ALS_table_sensi_1_3, 
+   proteomic_sd_ALS_base_figure_sensi_1_3,
+   model1_gam_sensi_1_3, 
+   plot_base_gam_sensi_1_3, 
+   proteomic_sd_ALS_adjusted_figure_sensi_1_3,
+   model2_gam_sensi_1_3, 
+   plot_adjusted_gam_sensi_1_3, 
+   
+   proteomic_sd_ALS_table_sensi_1_3_4, 
+   proteomic_quart_ALS_table_sensi_1_3_4, 
+   proteomic_sd_ALS_base_figure_sensi_1_3_4,
+   model1_gam_sensi_1_3_4, 
+   plot_base_gam_sensi_1_3_4, 
+   proteomic_sd_ALS_adjusted_figure_sensi_1_3_4,
+   model2_gam_sensi_1_3_4, 
+   plot_adjusted_gam_sensi_1_3_4, 
+   
+   proteomic_sd_ALS_table_sensi_1_3_5, 
+   proteomic_quart_ALS_table_sensi_1_3_5, 
+   proteomic_sd_ALS_base_figure_sensi_1_3_5,
+   model1_gam_sensi_1_3_5, 
+   plot_base_gam_sensi_1_3_5, 
+   proteomic_sd_ALS_adjusted_figure_sensi_1_3_5,
+   model2_gam_sensi_1_3_5, 
+   plot_adjusted_gam_sensi_1_3_5, 
    
    sensi_6_table_follow_up, 
    sensi_6_densityplot_follow_up, 
@@ -7142,5 +6517,8 @@ rm(covar,
    
    additional_analysis_3_neuro_figure, 
    additional_analysis_3_neuro_results, 
-   jackknife_neuro_results)
+   jackknife_neuro_results, 
+   
+   make_gam_plot_base, 
+   make_gam_plot_adjusted)
   
