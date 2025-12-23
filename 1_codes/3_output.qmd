@@ -1104,11 +1104,11 @@ results_POPs_ALS_occurrence$main$covar |>
   set_table_properties(align = "left")
 ```
 
-### Effects of POPs on ALS occurence
 
+
+
+### Main analysis
 #### Quartile models
-
-##### Main analysis
 
 In the copollutant models, the pollutant of interest is quartile while the others are s() in a GAM model
 
@@ -1123,6 +1123,7 @@ results_POPs_ALS_occurrence$main$plot_quart
 #| echo: false
 #| message: false
 #| warning: false
+#| column: screen-inset-right
 extra_rows <- results_POPs_ALS_occurrence$main$results_quart |>
   distinct(variable) |> 
   mutate(
@@ -1203,7 +1204,7 @@ table_S2
 rm(extra_rows, table_S2)
 ```
 
-##### q-gcomp analysis
+#### q-gcomp analysis
 
 ```{r}
 #| echo: false
@@ -1218,20 +1219,12 @@ results_POPs_ALS_occurrence$main$POPs_ALS_qgcomp_table_danish |>
 results_POPs_ALS_occurrence$main$POPs_ALS_qgcomp_figure_danish
 ```
 
-##### Sensitivity analysis POPs not summed
-
-```{r,  fig.height=15, fig.width=10}
-#| echo: false
-#| message: false
-#| warning: false
-results_POPs_ALS_occurrence$sensitivity_not_summed$plot_quart_sensi_not_summed
-```
 
 #### GAM models
 
 Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive model (gam) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. All models were adjusted for sex and age. Adjusted models further account for serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a gam that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
 
-##### Main analyses
+
 
 ```{r, fig.height=3.5, fig.width=9}
 #| echo: false
@@ -1279,7 +1272,59 @@ wrap_plots(
   nrow = 1)
 ```
 
-##### Sensitivity analysis POPs not summed
+
+
+### Sensitivity analysis total lipid instead of total cholesterol 
+
+```{r fig.height=9, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_occurrence$main$plot_quart_sensi_lipid
+```
+
+
+```{r fig.height=9, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+
+results_POPs_ALS_occurrence$main$table_quart_sensi_lipid
+
+```
+
+
+### Sensitivity analysis about diabetes
+
+```{r fig.height=9, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_occurrence$main$plot_quart_sensi_diabetes
+```
+
+
+```{r fig.height=9, fig.width=9}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+
+results_POPs_ALS_occurrence$main$table_quart_sensi_diabetes
+
+```
+
+### Sensitivity analysis POPs not summed
+#### quartiles
+```{r,  fig.height=15, fig.width=10}
+#| echo: false
+#| message: false
+#| warning: false
+results_POPs_ALS_occurrence$sensitivity_not_summed$plot_quart_sensi_not_summed
+```
+
+#### GAMs
 
 ```{r, fig.height=6, fig.width=15}
 #| column: screen-inset-right
@@ -1290,6 +1335,8 @@ wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_
 wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_not_summed[9:16], ncol = 4)
 wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_not_summed[17:22], ncol = 4)
 ```
+
+
 
 ## Metanalysis (quartiles)
 

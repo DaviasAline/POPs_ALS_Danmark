@@ -536,8 +536,10 @@ bdd_danish <- bdd_danish |>
       quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
       quart_meds[quartiles]                                                     
     },
-    .names = "{.col}_quart_med"
-  ))
+    .names = "{.col}_quart_med")) |>
+  mutate(lipid_tot_phillips_g_L = 2.27*0.3866*fS_Kol + 0.885*fS_Trigly + 0.623, # conversion avec la masse molaire (estimation trouvé sur google car les valeurs initiales sont en mmol/L)
+         diabetes_rec = ifelse(diabetes == 8, NA, diabetes), 
+         diabetes_rec = as.factor(as.character(diabetes_rec)))
 
 
 bdd_danish <- bdd_danish|>
@@ -640,13 +642,13 @@ bdd_finnish <- bdd_finnish|>
 # missing values imputation (covariates) ----
 ## danish data ----
 covar_a_imputer <- bdd_danish|> 
-  select(marital_status_2cat, smoking, smoking_2cat, cholesterol, education)|>
+  select(marital_status_2cat, smoking, smoking_2cat, cholesterol, education, diabetes_rec)|>
   colnames()
 
 bdd_danish_i <- bdd_danish|>
   select(sample, all_of(POPs), all_of(fattyacids_tot), 
          "sex", "baseline_age", "smoking", "smoking_2cat", "bmi", "cholesterol", 
-         "marital_status_2cat", "education", als) 
+         "marital_status_2cat", "education", "diabetes_rec", als) 
 
 bdd_danish_ii <- mice(bdd_danish_i, seed = 1996, maxit = 0)
 
@@ -690,7 +692,8 @@ bdd_danish_ii <-
          education_i = education, 
          smoking_i = smoking, 
          smoking_2cat_i = smoking_2cat, 
-         cholesterol_i = cholesterol)
+         cholesterol_i = cholesterol, 
+         diabetes_i = diabetes_rec)
 
 bdd_danish <- bdd_danish_ii|>
   select("sample",
@@ -698,7 +701,8 @@ bdd_danish <- bdd_danish_ii|>
          "education_i", 
          "smoking_i", 
          "smoking_2cat_i", 
-         "cholesterol_i")|>
+         "cholesterol_i", 
+         "diabetes_i")|>
   left_join(bdd_danish, by = "sample")
 
 rm(pred, method, bdd_danish_i, bdd_danish_ii, covar_a_imputer)
@@ -710,11 +714,11 @@ rm(pred, method, bdd_danish_i, bdd_danish_ii, covar_a_imputer)
 # merged dataset ----
 bdd_danish_red <- bdd_danish |> 
   select(sample, als, study, study_2cat, match, 
-         sex, baseline_age, smoking_2cat_i, bmi, marital_status_2cat_i, education_merged, education_i, cholesterol_i, fS_Kol,
+         sex, baseline_age, smoking_2cat_i, bmi, marital_status_2cat_i, education_merged, education_i, cholesterol_i, fS_Kol, lipid_tot_phillips_g_L, 
          baseline_age, death_age, diagnosis_age, birth_year, 
          time_baseline_diagnosis, time_baseline_death, time_diagnosis_death,
         follow_up,  follow_up_death, status_death, 
-         alcohol, smoking, marital_status_2cat, blod_sys, blod_dias, 
+         alcohol, smoking, marital_status_2cat, blod_sys, blod_dias,
          all_of(POPs), 
          all_of(POPs_group), ΣHCH, 
          all_of(POPs_group_quart), 
@@ -765,6 +769,7 @@ var_label(bdd_danish) <- list(
   education_merged = "Education", 
   bmi = "Body mass index (kg/m²)",
   fS_Kol = "Serum cholesterol (mmol/L)",
+  lipid_tot_phillips_g_L = "Serum total lipids (g/L)",
   cholesterol = "Serum cholesterol (mmol/L)",
   cholesterol_i = "Serum cholesterol (mmol/L)",
   blod_sys = "Systolic blood presure (mmHg)",

@@ -29,6 +29,8 @@ covar <- tbl_merge(
   bold_labels()), 
   tab_spanner = c("**Univariate**", "**Adjusted**"))
 
+
+
 # main analysis ----
 ### model 1 ----
 #### quartiles ----
@@ -281,7 +283,7 @@ rm(POPs_group_bis)
 
 ### heterogeneity tests ----
 #### model 1 quartile ----
-heterogeneity_base_quart <- data.frame(variable = character(),
+heterogeneity_base <- data.frame(variable = character(),
                                        model = factor(),
                                        p.value_heterogeneity = numeric(), 
                                        stringsAsFactors = FALSE)
@@ -296,7 +298,7 @@ for (var in POPs_group_quart) {
   anova <- anova(test_1, test_2, test = "LR")
   p.value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
   
-  heterogeneity_base_quart <- rbind(heterogeneity_base_quart, 
+  heterogeneity_base <- rbind(heterogeneity_base, 
                                     data.frame(variable = var,
                                                model = "base_quart",
                                                p.value_heterogeneity = p.value_heterogeneity))
@@ -304,7 +306,7 @@ for (var in POPs_group_quart) {
 rm(var, test_1, test_2, formula, anova, p.value_heterogeneity)
 
 #### model 2 quartile ----
-heterogeneity_adjusted_quart <- data.frame(variable = character(),
+heterogeneity_adjusted <- data.frame(variable = character(),
                                            model = factor(), 
                                            p.value_heterogeneity = numeric(), 
                                            stringsAsFactors = FALSE)
@@ -319,7 +321,7 @@ for (var in POPs_group_quart) {
   anova <- anova(test_1, test_2, test = "LR")
   p.value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
   
-  heterogeneity_adjusted_quart <- rbind(heterogeneity_adjusted_quart, 
+  heterogeneity_adjusted <- rbind(heterogeneity_adjusted, 
                                         data.frame(variable = var,
                                                    model = "adjusted_quart",
                                                    p.value_heterogeneity = p.value_heterogeneity))
@@ -466,8 +468,8 @@ rm(test_1, test_2, anova,
    p.value_heterogeneity_ΣPBDE)
 
 heterogeneity_tests <- 
-  bind_rows(heterogeneity_base_quart, 
-            heterogeneity_adjusted_quart, 
+  bind_rows(heterogeneity_base, 
+            heterogeneity_adjusted, 
             heterogeneity_copollutant) |>
   mutate(variable = gsub("_quart", "", variable))
 
@@ -1150,10 +1152,358 @@ metanalysis_quart <- bind_rows(metanalysis_base_quart, metanalysis_adjusted_quar
 
 rm(metanalysis_base_quart, metanalysis_adjusted_quart, metanalysis_copollutant_quart, run_clogit, POPs_group_metanalysis, POPs_group_metanalysis_quart)
 
-### merging the main results ----
+# sensitivity analyses adjusted on total lipids instead of total cholesterol ----
+### model 2 ----
+# matched on sex and age, adjusted on for smoking_2cat_i, BMI, serum total lipid_tot_phillips_g_L, marital status and education
+
+#### quartiles ----
+model2_quart_sensi_lipid <- data.frame(variable = character(),
+                                       df = integer(),
+                                       OR = numeric(),
+                                       lower_CI = numeric(),
+                                       upper_CI = numeric(),
+                                       p_value = numeric(),
+                                       stringsAsFactors = FALSE)
+
+for (var in POPs_group_quart) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + lipid_tot_phillips_g_L + marital_status_2cat_i + education_i"))
+  model <- clogit(formula, data = bdd_danish)
+  model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  df_value <- model_summary$term
+  model2_quart_sensi_lipid <- rbind(model2_quart_sensi_lipid, data.frame(variable = var,
+                                                                         df = df_value, 
+                                                                         OR = OR,
+                                                                         lower_CI = lower_CI,
+                                                                         upper_CI = upper_CI,
+                                                                         "p-value" = p_value))
+}
+
+model2_quart_sensi_lipid <- model2_quart_sensi_lipid |> 
+  mutate(
+    df = case_when(
+      grepl("_quartQ2", df) ~ "Quartile 2",
+      grepl("_quartQ3", df) ~ "Quartile 3",
+      grepl("_quartQ4", df) ~ "Quartile 4",
+      TRUE ~ NA_character_),
+    model = "adjusted_quart_sensi_lipid") |>
+  select(variable, model, everything())
+rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
+
+#### gams ----
+model2_gam_sensi_lipid <- list()
+
+for (var in POPs_group) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi + lipid_tot_phillips_g_L + marital_status_2cat_i + education_i"))
+  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model_summary <- summary(model)
+  model2_gam_sensi_lipid[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
+
+
+### heterogeneity tests ----
+
+#### model 2 quartile ----
+heterogeneity_adjusted_sensi_lipid <- data.frame(variable = character(),
+                                                 model = factor(), 
+                                                 p.value_heterogeneity = numeric(), 
+                                                 stringsAsFactors = FALSE)
+
+for (var in POPs_group_quart) {
+  
+  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi + lipid_tot_phillips_g_L + marital_status_2cat_i + education_i, data = bdd_danish)
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + lipid_tot_phillips_g_L + marital_status_2cat_i + education_i"))
+  test_2 <- clogit(formula, data = bdd_danish)
+  
+  anova <- anova(test_1, test_2, test = "LR")
+  p.value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
+  
+  heterogeneity_adjusted_sensi_lipid <- rbind(heterogeneity_adjusted_sensi_lipid, 
+                                              data.frame(variable = var,
+                                                         model = "adjusted_quart_sensi_lipid",
+                                                         p.value_heterogeneity = p.value_heterogeneity))
+}
+rm(var, test_1, test_2, formula, anova, p.value_heterogeneity)
+
+
+heterogeneity_adjusted_sensi_lipid <- 
+  heterogeneity_adjusted_sensi_lipid |>
+  mutate(variable = gsub("_quart", "", variable))
+
+### trend tests ----
+
+#### model 2 quartile ----
+trend_adjusted_sensi_lipid <- data.frame(variable = character(),
+                                         model = factor(), 
+                                         p.value_trend = numeric(), 
+                                         stringsAsFactors = FALSE)
+
+for (var in POPs_group_quart_med) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + lipid_tot_phillips_g_L + marital_status_2cat_i + education_i"))
+  test <- clogit(formula, data = bdd_danish) |> summary()
+  p.value_trend <- test$coefficients[var, "Pr(>|z|)"]
+  
+  trend_adjusted_sensi_lipid <- rbind(trend_adjusted_sensi_lipid, 
+                                      data.frame(variable = var,
+                                                 model = "adjusted_quart_sensi_lipid",
+                                                 p.value_trend = p.value_trend))
+}
+rm(var, test, formula, p.value_trend)
+
+
+trend_adjusted_sensi_lipid <- 
+  trend_adjusted_sensi_lipid |>
+  mutate(variable = gsub("_quart_med", "", variable))
+
+
+
+
+# sensitivity analyses further adjusting on diabetes in addition to cholesterol ----
+### model 2 ----
+# matched on sex and age, adjusted on for smoking_2cat_i, BMI, serum total fS_Kol, marital status and education
+
+#### quartiles ----
+model2_quart_sensi_diabetes_chol <- data.frame(variable = character(),
+                                          df = integer(),
+                                          OR = numeric(),
+                                          lower_CI = numeric(),
+                                          upper_CI = numeric(),
+                                          p_value = numeric(),
+                                          stringsAsFactors = FALSE)
+
+for (var in POPs_group_quart) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i + diabetes_i"))
+  model <- clogit(formula, data = bdd_danish)
+  model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  df_value <- model_summary$term
+  model2_quart_sensi_diabetes_chol <- rbind(model2_quart_sensi_diabetes_chol, data.frame(variable = var,
+                                                                               df = df_value, 
+                                                                               OR = OR,
+                                                                               lower_CI = lower_CI,
+                                                                               upper_CI = upper_CI,
+                                                                               "p-value" = p_value))
+}
+
+model2_quart_sensi_diabetes_chol <- model2_quart_sensi_diabetes_chol |> 
+  mutate(
+    df = case_when(
+      grepl("_quartQ2", df) ~ "Quartile 2",
+      grepl("_quartQ3", df) ~ "Quartile 3",
+      grepl("_quartQ4", df) ~ "Quartile 4",
+      TRUE ~ NA_character_),
+    model = "adjusted_quart_sensi_diabetes_chol") |>
+  select(variable, model, everything())
+rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
+
+#### gams ----
+model2_gam_sensi_diabetes_chol <- list()
+
+for (var in POPs_group) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i + diabetes_i"))
+  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model_summary <- summary(model)
+  model2_gam_sensi_diabetes_chol[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
+
+
+### heterogeneity tests ----
+
+#### model 2 quartile ----
+heterogeneity_adjusted_sensi_diabetes_chol <- data.frame(variable = character(),
+                                                    model = factor(), 
+                                                    p.value_heterogeneity = numeric(), 
+                                                    stringsAsFactors = FALSE)
+
+for (var in POPs_group_quart) {
+  
+  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, data = bdd_danish)
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i + diabetes_i"))
+  test_2 <- clogit(formula, data = bdd_danish)
+  
+  anova <- anova(test_1, test_2, test = "LR")
+  p.value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
+  
+  heterogeneity_adjusted_sensi_diabetes_chol <- rbind(heterogeneity_adjusted_sensi_diabetes_chol, 
+                                                 data.frame(variable = var,
+                                                            model = "adjusted_quart_sensi_diabetes_chol",
+                                                            p.value_heterogeneity = p.value_heterogeneity))
+}
+rm(var, test_1, test_2, formula, anova, p.value_heterogeneity)
+
+
+heterogeneity_adjusted_sensi_diabetes_chol <- 
+  heterogeneity_adjusted_sensi_diabetes_chol |>
+  mutate(variable = gsub("_quart", "", variable))
+
+### trend tests ----
+
+#### model 2 quartile ----
+trend_adjusted_sensi_diabetes_chol <- data.frame(variable = character(),
+                                            model = factor(), 
+                                            p.value_trend = numeric(), 
+                                            stringsAsFactors = FALSE)
+
+for (var in POPs_group_quart_med) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i + diabetes_i"))
+  test <- clogit(formula, data = bdd_danish) |> summary()
+  p.value_trend <- test$coefficients[var, "Pr(>|z|)"]
+  
+  trend_adjusted_sensi_diabetes_chol <- rbind(trend_adjusted_sensi_diabetes_chol, 
+                                         data.frame(variable = var,
+                                                    model = "adjusted_quart_sensi_diabetes_chol",
+                                                    p.value_trend = p.value_trend))
+}
+rm(var, test, formula, p.value_trend)
+
+
+trend_adjusted_sensi_diabetes_chol <- 
+  trend_adjusted_sensi_diabetes_chol |>
+  mutate(variable = gsub("_quart_med", "", variable))
+
+
+
+
+# sensitivity analyses further adjusting on diabetes ----
+### model 2 ----
+# matched on sex and age, adjusted on for smoking_2cat_i, BMI, marital status, education, diabetes
+
+#### quartiles ----
+model2_quart_sensi_diabetes <- data.frame(variable = character(),
+                                          df = integer(),
+                                          OR = numeric(),
+                                          lower_CI = numeric(),
+                                          upper_CI = numeric(),
+                                          p_value = numeric(),
+                                          stringsAsFactors = FALSE)
+
+for (var in POPs_group_quart) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + marital_status_2cat_i + education_i + diabetes_i"))
+  model <- clogit(formula, data = bdd_danish)
+  model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  df_value <- model_summary$term
+  model2_quart_sensi_diabetes <- rbind(model2_quart_sensi_diabetes, data.frame(variable = var,
+                                                                               df = df_value, 
+                                                                               OR = OR,
+                                                                               lower_CI = lower_CI,
+                                                                               upper_CI = upper_CI,
+                                                                               "p-value" = p_value))
+}
+
+model2_quart_sensi_diabetes <- model2_quart_sensi_diabetes |> 
+  mutate(
+    df = case_when(
+      grepl("_quartQ2", df) ~ "Quartile 2",
+      grepl("_quartQ3", df) ~ "Quartile 3",
+      grepl("_quartQ4", df) ~ "Quartile 4",
+      TRUE ~ NA_character_),
+    model = "adjusted_quart_sensi_diabetes") |>
+  select(variable, model, everything())
+rm(model, lower_CI, upper_CI, df_value, formula, p_value, OR, model_summary, var)
+
+#### gams ----
+model2_gam_sensi_diabetes <- list()
+
+for (var in POPs_group) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi + marital_status_2cat_i + education_i + diabetes_i"))
+  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model_summary <- summary(model)
+  model2_gam_sensi_diabetes[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
+
+
+### heterogeneity tests ----
+
+#### model 2 quartile ----
+heterogeneity_adjusted_sensi_diabetes <- data.frame(variable = character(),
+                                                    model = factor(), 
+                                                    p.value_heterogeneity = numeric(), 
+                                                    stringsAsFactors = FALSE)
+
+for (var in POPs_group_quart) {
+  
+  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi + marital_status_2cat_i + education_i, data = bdd_danish)
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + marital_status_2cat_i + education_i + diabetes_i"))
+  test_2 <- clogit(formula, data = bdd_danish)
+  
+  anova <- anova(test_1, test_2, test = "LR")
+  p.value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
+  
+  heterogeneity_adjusted_sensi_diabetes <- rbind(heterogeneity_adjusted_sensi_diabetes, 
+                                                 data.frame(variable = var,
+                                                            model = "adjusted_quart_sensi_diabetes",
+                                                            p.value_heterogeneity = p.value_heterogeneity))
+}
+rm(var, test_1, test_2, formula, anova, p.value_heterogeneity)
+
+
+heterogeneity_adjusted_sensi_diabetes <- 
+  heterogeneity_adjusted_sensi_diabetes |>
+  mutate(variable = gsub("_quart", "", variable))
+
+### trend tests ----
+
+#### model 2 quartile ----
+trend_adjusted_sensi_diabetes <- data.frame(variable = character(),
+                                            model = factor(), 
+                                            p.value_trend = numeric(), 
+                                            stringsAsFactors = FALSE)
+
+for (var in POPs_group_quart_med) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi + marital_status_2cat_i + education_i + diabetes_i"))
+  test <- clogit(formula, data = bdd_danish) |> summary()
+  p.value_trend <- test$coefficients[var, "Pr(>|z|)"]
+  
+  trend_adjusted_sensi_diabetes <- rbind(trend_adjusted_sensi_diabetes, 
+                                         data.frame(variable = var,
+                                                    model = "adjusted_quart_sensi_diabetes",
+                                                    p.value_trend = p.value_trend))
+}
+rm(var, test, formula, p.value_trend)
+
+
+trend_adjusted_sensi_diabetes <- 
+  trend_adjusted_sensi_diabetes |>
+  mutate(variable = gsub("_quart_med", "", variable))
+
+
+
+
+# Merging the results ----
 main_results <- bind_rows(model1_quart, 
                           model2_quart,
-                          model3_quart) |> 
+                          model3_quart, 
+                          model2_quart_sensi_lipid, 
+                          model2_quart_sensi_diabetes_chol,
+                          model2_quart_sensi_diabetes) |> 
   mutate(variable = gsub("_quart", "", variable), 
          OR = as.numeric(sprintf("%.1f", OR)),
          lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
@@ -1169,6 +1519,15 @@ main_results <- bind_rows(model1_quart,
          starts_with("95%"), 
          starts_with("p.value"), 
          lower_CI, upper_CI) 
+
+heterogeneity_tests <- bind_rows(heterogeneity_tests, heterogeneity_adjusted_sensi_lipid)
+trend_tests <- bind_rows(trend_tests, trend_adjusted_sensi_lipid)
+
+heterogeneity_tests <- bind_rows(heterogeneity_tests, heterogeneity_adjusted_sensi_diabetes_chol)
+trend_tests <- bind_rows(trend_tests, trend_adjusted_sensi_diabetes_chol)
+
+heterogeneity_tests <- bind_rows(heterogeneity_tests, heterogeneity_adjusted_sensi_diabetes)
+trend_tests <- bind_rows(trend_tests, trend_adjusted_sensi_diabetes)
 
 main_results <- left_join(main_results, heterogeneity_tests, by = c("variable", "model"))
 main_results <- left_join(main_results, trend_tests, by = c("variable", "model"))
@@ -1195,9 +1554,15 @@ colnames(results_quart) <- gsub('_quart', '', colnames(results_quart))
 rm(model1_quart, 
    model2_quart, 
    model3_quart, 
-   heterogeneity_base_quart, heterogeneity_adjusted_quart, heterogeneity_copollutant, 
+   model2_quart_sensi_lipid, 
+   model2_quart_sensi_diabetes_chol, 
+   model2_quart_sensi_diabetes, 
+   heterogeneity_base, heterogeneity_adjusted, heterogeneity_copollutant, 
    trend_base, trend_adjusted, trend_copollutant, 
-   heterogeneity_tests, trend_tests)
+   heterogeneity_tests, trend_tests, 
+   heterogeneity_adjusted_sensi_lipid, trend_adjusted_sensi_lipid, 
+   heterogeneity_adjusted_sensi_diabetes_chol, trend_adjusted_sensi_diabetes_chol, 
+   heterogeneity_adjusted_sensi_diabetes, trend_adjusted_sensi_diabetes)
 
 # sensitivity analyses pollutants not summed ----
 ### quartiles ----
@@ -1318,9 +1683,12 @@ for (var in POPs_included) {
 
 rm(var, formula, model, model_summary)
 
-# figures ----
+
+
+# Figures ----
 ## quartiles ----
-plot_quart <- main_results |> 
+plot_quart <- 
+  main_results |> 
   filter(model %in% c('base_quart', 'adjusted_quart', 'copollutant_quart')) |>
   mutate(p.value_shape = ifelse(p.value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
          model = fct_recode(model, 
@@ -1349,8 +1717,74 @@ plot_quart <- main_results |>
         strip.text.y = element_text(hjust = 0.5)) +
   coord_flip()
 
+
+## quartiles sensi lipid instead of cholesterol ----
+plot_quart_sensi_lipid <- 
+  main_results |> 
+  filter(model %in% c('adjusted_quart', 'adjusted_quart_sensi_lipid')) |>
+  mutate(p.value_shape = ifelse(p.value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
+         model = fct_recode(model, 
+                            "Main analyses" = "adjusted_quart",
+                            "Sensitivity analyses" = "adjusted_quart_sensi_lipid"),
+         model = fct_relevel(model, 'Main analyses', 'Sensitivity analyses'), 
+         df = fct_relevel(df, "Quartile 4", "Quartile 3", "Quartile 2" ), 
+         variable = fct_recode(variable, 
+                               "Most\nprevalent\nPCBs" = "PCB_4",
+                               "Dioxin-like\nPCBs" = "PCB_DL",
+                               "Non-dioxin-\nlike PCBs" = "PCB_NDL",
+                               "β-HCH" = "OCP_β_HCH", 
+                               "HCB" = "OCP_HCB"), 
+         variable = fct_relevel(variable, 
+                                "Most\nprevalent\nPCBs", "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) |>
+  ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(rows = dplyr::vars(variable), cols = dplyr::vars(model), switch = "y") +  
+  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  labs(x = "POPs", y = "Odds Ratio (OR)", color = "p-value") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip()
+
+
+## quartiles sensi diabetes (in addition to cholesterol or instead of cholesterol) ----
+plot_quart_sensi_diabetes <- 
+  main_results |> 
+  filter(model %in% c('adjusted_quart', 'adjusted_quart_sensi_diabetes_chol', 'adjusted_quart_sensi_diabetes')) |>
+  mutate(p.value_shape = ifelse(p.value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
+         model = fct_recode(model, 
+                            "Main analyses" = "adjusted_quart",
+                            "Sensitivity analyses\nDiabetes in addition\nto cholesterol" = "adjusted_quart_sensi_diabetes_chol",
+                            "Sensitivity analyses\nDiabetes instead of\ncholesterol" = "adjusted_quart_sensi_diabetes"),
+         model = fct_relevel(model, 'Main analyses', 'Sensitivity analyses'), 
+         df = fct_relevel(df, "Quartile 4", "Quartile 3", "Quartile 2" ), 
+         variable = fct_recode(variable, 
+                               "Most\nprevalent\nPCBs" = "PCB_4",
+                               "Dioxin-like\nPCBs" = "PCB_DL",
+                               "Non-dioxin-\nlike PCBs" = "PCB_NDL",
+                               "β-HCH" = "OCP_β_HCH", 
+                               "HCB" = "OCP_HCB"), 
+         variable = fct_relevel(variable, 
+                                "Most\nprevalent\nPCBs", "Dioxin-like\nPCBs", "Non-dioxin-\nlike PCBs", "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE")) |>
+  ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(rows = dplyr::vars(variable), cols = dplyr::vars(model), switch = "y") +  
+  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  labs(x = "POPs", y = "Odds Ratio (OR)", color = "p-value") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip()
+
+
+
 ## quartiles not summed ----
-plot_quart_sensi_not_summed <- sensitivity_results_not_summed_quart |> 
+plot_quart_sensi_not_summed <- 
+  sensitivity_results_not_summed_quart |> 
   mutate(df = fct_recode(df, "Quartile 2" = "2", "Quartile 3" = "3", "Quartile 4" = "4"), 
          df = fct_relevel(df, "Quartile 4", "Quartile 3", "Quartile 2" ), 
          p.value_shape = ifelse(p.value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
@@ -1361,8 +1795,8 @@ plot_quart_sensi_not_summed <- sensitivity_results_not_summed_quart |>
          variable = fct_relevel(variable, 
                                 "PCB-118", "PCB-156", "PCB-28", "PCB-52", "PCB-74", "PCB-99",
                                 "PCB-101", "PCB-138", "PCB-153", "PCB-170", "PCB-180", "PCB-183",
-                                "PCB-187", "OCP-HCB", "p,p'-DDE", "p,p'-DDT", "OCP-β-HCH", "OCP-transnonachlor",
-                                "OCP-oxychlordane", "PBDE-47", "PBDE-99", "PBDE-153"), 
+                                "PCB-187", "HCB", "p,p'-DDE", "p,p'-DDT", "β-HCH", "transnonachlor",
+                                "oxychlordane", "PBDE-47", "PBDE-99", "PBDE-153"), 
          OR = as.numeric(as.character(OR)), 
          lower_CI = as.numeric(as.character(lower_CI)), 
          upper_CI = as.numeric(as.character(upper_CI))) |>
@@ -1800,6 +2234,178 @@ plot_metanalysis_quart <- metanalysis_quart |>
         strip.text.y = element_text(hjust = 0.5)) +
   coord_flip()
 
+# Tables ----
+## quartiles sensi lipid instead of cholesterol ----
+extra_rows <- main_results |>
+  filter(model %in% c('adjusted_quart', 'adjusted_quart_sensi_lipid')) |>
+  select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI, - p.value_raw) |>
+  distinct(variable) |> 
+  mutate(
+    quartiles = "Quartile 1",
+    "OR_adjusted" = '-', "95%CI_adjusted" = '-', "p.value_adjusted" = '', , "p.value_heterogeneity_adjusted" = '', "p.value_trend_adjusted" = '',
+    "OR_adjusted_sensi_lipid" = '-', "95%CI_adjusted_sensi_lipid" = '-', "p.value_adjusted_sensi_lipid" = '', "p.value_heterogeneity_adjusted_sensi_lipid" = '', "p.value_trend_adjusted_sensi_lipid" = '')
+
+table_quart_sensi_lipid <- 
+  main_results |>
+  select(-lower_CI, -upper_CI, - p.value_raw) |>
+  filter(model %in% c('adjusted_quart', 'adjusted_quart_sensi_lipid')) |>
+  pivot_wider(
+    names_from = model,  
+    values_from = c(OR, `95%CI`, p.value, p.value_heterogeneity, p.value_trend)) |>
+  select(variable, 
+         quartiles = df,
+         contains("adjusted_quart"), 
+         contains("adjusted_quart_sensi_lipid")) 
+colnames(table_quart_sensi_lipid) <- gsub('_quart', '', colnames(table_quart_sensi_lipid))
+
+table_quart_sensi_lipid <- 
+  table_quart_sensi_lipid |>
+  mutate_if(is.numeric, as.character) |>
+  bind_rows(extra_rows) |>
+  mutate(
+    variable = gsub("OCP_", "", variable), 
+    variable = fct_relevel(variable, "PCB_4", "PCB_DL", "PCB_NDL",  "HCB", "ΣDDT", "β_HCH", "Σchlordane", "ΣPBDE"),
+    variable = fct_recode(variable, 
+                          "Most prevalent PCBs" = "PCB_4",
+                          "Dioxin-like PCBs" = "PCB_DL",
+                          "Non-dioxin-like PCBs" = "PCB_NDL",
+                          "β-HCH" = "β_HCH")) |>
+  arrange(variable, quartiles) |>
+  group_by(variable) |>
+  mutate(p.value_heterogeneity_adjusted = ifelse(quartiles == 'Quartile 1', p.value_heterogeneity_adjusted[quartiles == 'Quartile 2'], ''), 
+         p.value_trend_adjusted = ifelse(quartiles == 'Quartile 1', p.value_trend_adjusted[quartiles == 'Quartile 2'], ''), 
+         p.value_heterogeneity_adjusted_sensi_lipid = ifelse(quartiles == 'Quartile 1', p.value_heterogeneity_adjusted_sensi_lipid[quartiles == 'Quartile 2'], ''), 
+         p.value_trend_adjusted_sensi_lipid = ifelse(quartiles == 'Quartile 1', p.value_trend_adjusted_sensi_lipid[quartiles == 'Quartile 2'], '')) |>
+  ungroup() |>
+  rename('OR' = 'OR_adjusted', '95% CI' = '95%CI_adjusted', 'p-value' = 'p.value_adjusted', 'Heterogeneity test' = 'p.value_heterogeneity_adjusted', 'Trend test' = 'p.value_trend_adjusted', 
+         'OR ' = 'OR_adjusted_sensi_lipid', '95% CI ' = '95%CI_adjusted_sensi_lipid', 'p-value ' = 'p.value_adjusted_sensi_lipid', 'Heterogeneity test ' = 'p.value_heterogeneity_adjusted_sensi_lipid', 'Trend test ' = 'p.value_trend_adjusted_sensi_lipid')
+table_quart_sensi_lipid <- 
+  table_quart_sensi_lipid |> 
+  select(
+    variable, quartiles,
+    `OR`, `95% CI`, `p-value`, `Heterogeneity test`, `Trend test`,
+    `OR `, `95% CI `, `p-value `, `Heterogeneity test `, `Trend test `) |>
+  flextable() |>
+  add_footer_lines(
+    "1POPs were summed as follows: Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; ΣPBDE corresponds to PBDEs 47, 99, 153; ΣDDT corresponds to p,p’-DDT and p,p’-DDE and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
+  2All models are matched for sex and age, and adjusted for smoking, BMI, marital status, and education. Main analysis are adjusted for serum total cholesterol, while sensitivity analyses are adjusted on serum total lipids.
+  3Estimated risk of ALS when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
+  4CI: Confidence interval.
+  5Heterogeneity tests in outcome value across POP quartiles, matched on age and sex, and adjusted for smoking, BMI, serum total cholesterol, marital status, and education.
+  6Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, matched on age and sex, and adjusted for smoking, BMI, serum total cholesterol, marital status, and education.
+  7Heterogeneity tests in outcome value across POP quartiles, matched on age and sex, and adjusted for smoking, BMI, serum total lipids, marital status, and education.
+  8Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, matched on age and sex, and adjusted for smoking, BMI, serum total lipids, marital status, and education.") |>
+  add_header(
+    "variable" = "Exposures", "quartiles" = "Quartiles",
+    "OR" = "Main analysis", "95% CI" = "Main analysis", "p-value" = "Main analysis", "Heterogeneity test" = 'Main analysis', "Trend test" = 'Main analysis', 
+    "OR " = "Sensitivity analysis", "95% CI " = "Sensitivity analysis", "p-value " = "Sensitivity analysis", "Heterogeneity test " = 'Sensitivity analysis', "Trend test " = 'Sensitivity analysis') |>
+  merge_h(part = "header") |>
+  merge_v(j = "variable") |>
+  theme_vanilla() |>
+  bold(j = "variable", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "variable", align = "left", part = "all") |> 
+  merge_at(j = "variable", part = "header") |>
+  merge_at(j = "quartiles", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")|>
+  set_table_properties(align = "left")
+
+table_quart_sensi_lipid
+rm(extra_rows)
+
+
+## quartiles sensi diabetes (in addition to cholesterol or instead of cholesterol) ----
+extra_rows <- main_results |>
+  filter(model %in% c('adjusted_quart', 'adjusted_quart_sensi_diabetes', 'adjusted_quart_sensi_diabetes_chol')) |>
+  select(-p.value_heterogeneity, -p.value_trend, -lower_CI, -upper_CI, - p.value_raw) |>
+  distinct(variable) |> 
+  mutate(
+    quartiles = "Quartile 1",
+    "OR_adjusted" = '-', "95%CI_adjusted" = '-', "p.value_adjusted" = '', , "p.value_heterogeneity_adjusted" = '', "p.value_trend_adjusted" = '',
+    "OR_adjusted_sensi_diabetes" = '-', "95%CI_adjusted_sensi_diabetes" = '-', "p.value_adjusted_sensi_diabetes" = '', "p.value_heterogeneity_adjusted_sensi_diabetes" = '', "p.value_trend_adjusted_sensi_diabetes" = '', 
+    "OR_adjusted_sensi_diabetes_chol" = '-', "95%CI_adjusted_sensi_diabetes_chol" = '-', "p.value_adjusted_sensi_diabetes_chol" = '', "p.value_heterogeneity_adjusted_sensi_diabetes_chol" = '', "p.value_trend_adjusted_sensi_diabetes_chol" = '')
+
+table_quart_sensi_diabetes <- 
+  main_results |>
+  select(-lower_CI, -upper_CI, - p.value_raw) |>
+  filter(model %in% c('adjusted_quart', 'adjusted_quart_sensi_diabetes', 'adjusted_quart_sensi_diabetes_chol')) |>
+  pivot_wider(
+    names_from = model,  
+    values_from = c(OR, `95%CI`, p.value, p.value_heterogeneity, p.value_trend)) |>
+  select(variable, 
+         quartiles = df,
+         contains("adjusted_quart"), 
+         contains("adjusted_quart_sensi_diabetes"), 
+         contains("adjusted_quart_sensi_diabetes_chol")) 
+colnames(table_quart_sensi_diabetes) <- gsub('_quart', '', colnames(table_quart_sensi_diabetes))
+
+table_quart_sensi_diabetes <- 
+  table_quart_sensi_diabetes |>
+  mutate_if(is.numeric, as.character) |>
+  bind_rows(extra_rows) |>
+  mutate(
+    variable = gsub("OCP_", "", variable), 
+    variable = fct_relevel(variable, "PCB_4", "PCB_DL", "PCB_NDL",  "HCB", "ΣDDT", "β_HCH", "Σchlordane", "ΣPBDE"),
+    variable = fct_recode(variable, 
+                          "Most prevalent PCBs" = "PCB_4",
+                          "Dioxin-like PCBs" = "PCB_DL",
+                          "Non-dioxin-like PCBs" = "PCB_NDL",
+                          "β-HCH" = "β_HCH")) |>
+  arrange(variable, quartiles) |>
+  group_by(variable) |>
+  mutate(p.value_heterogeneity_adjusted = ifelse(quartiles == 'Quartile 1', p.value_heterogeneity_adjusted[quartiles == 'Quartile 2'], ''), 
+         p.value_trend_adjusted = ifelse(quartiles == 'Quartile 1', p.value_trend_adjusted[quartiles == 'Quartile 2'], ''), 
+         p.value_heterogeneity_adjusted_sensi_diabetes = ifelse(quartiles == 'Quartile 1', p.value_heterogeneity_adjusted_sensi_diabetes[quartiles == 'Quartile 2'], ''), 
+         p.value_trend_adjusted_sensi_diabetes = ifelse(quartiles == 'Quartile 1', p.value_trend_adjusted_sensi_diabetes[quartiles == 'Quartile 2'], ''), 
+         p.value_heterogeneity_adjusted_sensi_diabetes_chol = ifelse(quartiles == 'Quartile 1', p.value_heterogeneity_adjusted_sensi_diabetes_chol[quartiles == 'Quartile 2'], ''), 
+         p.value_trend_adjusted_sensi_diabetes_chol = ifelse(quartiles == 'Quartile 1', p.value_trend_adjusted_sensi_diabetes_chol[quartiles == 'Quartile 2'], '')) |>
+  ungroup() |>
+  rename('OR' = 'OR_adjusted', '95% CI' = '95%CI_adjusted', 'p-value' = 'p.value_adjusted', 'Heterogeneity test' = 'p.value_heterogeneity_adjusted', 'Trend test' = 'p.value_trend_adjusted', 
+         'OR ' = 'OR_adjusted_sensi_diabetes', '95% CI ' = '95%CI_adjusted_sensi_diabetes', 'p-value ' = 'p.value_adjusted_sensi_diabetes', 'Heterogeneity test ' = 'p.value_heterogeneity_adjusted_sensi_diabetes', 'Trend test ' = 'p.value_trend_adjusted_sensi_diabetes', 
+         ' OR ' = 'OR_adjusted_sensi_diabetes_chol', ' 95% CI ' = '95%CI_adjusted_sensi_diabetes_chol', ' p-value ' = 'p.value_adjusted_sensi_diabetes_chol', ' Heterogeneity test ' = 'p.value_heterogeneity_adjusted_sensi_diabetes_chol', ' Trend test ' = 'p.value_trend_adjusted_sensi_diabetes_chol')
+table_quart_sensi_diabetes <- 
+  table_quart_sensi_diabetes |> 
+  select(
+    variable, quartiles,
+    `OR`, `95% CI`, `p-value`, `Heterogeneity test`, `Trend test`,
+    `OR `, `95% CI `, `p-value `, `Heterogeneity test `, `Trend test `,
+    ` OR `, ` 95% CI `, ` p-value `, ` Heterogeneity test `, ` Trend test `) |>
+  flextable() |>
+  add_footer_lines(
+    "1POPs were summed as follows: Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; ΣPBDE corresponds to PBDEs 47, 99, 153; ΣDDT corresponds to p,p’-DDT and p,p’-DDE and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
+  2All models are matched for sex and age, and adjusted for smoking, BMI, marital status, and education. 
+  3Estimated risk of ALS when exposures to POP are at quartiles 2, 3, and 4, compared to quartile 1.
+  4CI: Confidence interval.
+  5Heterogeneity tests in outcome value across POP quartiles, matched on age and sex, and adjusted for smoking, BMI, marital status, education and serum total cholesterol.
+  6Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, matched on age and sex, and adjusted for smoking, BMI, marital status, education and serum total cholesterol.
+  
+  7Heterogeneity tests in outcome value across POP quartiles, matched on age and sex, and adjusted for smoking, BMI, marital status, education and diabetes.
+  8Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, matched on age and sex, and adjusted for smoking, BMI, marital status, education and diabetes.
+  
+  9Heterogeneity tests in outcome value across POP quartiles, matched on age and sex, and adjusted for smoking, BMI, marital status, education, serum total cholesterol and diabetes.
+  10Trend tests using continuous variables whose values corresponded to the quartile specific median POP levels, matched on age and sex, and adjusted for smoking, BMI, marital status, education, serum total cholesterol and diabetes.") |>
+  add_header(
+    "variable" = "Exposures", "quartiles" = "Quartiles",
+    "OR" = "Main analysis - Adjusted for cholesterol", "95% CI" = "Main analysis - Adjusted for cholesterol", "p-value" = "Main analysis - Adjusted for cholesterol", "Heterogeneity test" = 'Main analysis - Adjusted for cholesterol', "Trend test" = 'Main analysis - Adjusted for cholesterol', 
+    "OR " = "Sensitivity analysis - Adjusted for diabetes", "95% CI " = "Sensitivity analysis - Adjusted for diabetes", "p-value " = "Sensitivity analysis - Adjusted for diabetes", "Heterogeneity test " = 'Sensitivity analysis - Adjusted for diabetes', "Trend test " = 'Sensitivity analysis - Adjusted for diabetes', 
+    "OR " = "Sensitivity analysis - Adjusted for diabetes and cholesterol", "95% CI " = "Sensitivity analysis - Adjusted for diabetes and cholesterol", "p-value " = "Sensitivity analysis - Adjusted for diabetes and cholesterol", "Heterogeneity test " = 'Sensitivity analysis - Adjusted for diabetes and cholesterol', "Trend test " = 'Sensitivity analysis - Adjusted for diabetes and cholesterol') |>
+  merge_h(part = "header") |>
+  merge_v(j = "variable") |>
+  theme_vanilla() |>
+  bold(j = "variable", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "variable", align = "left", part = "all") |> 
+  merge_at(j = "variable", part = "header") |>
+  merge_at(j = "quartiles", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")|>
+  set_table_properties(align = "left")
+
+table_quart_sensi_diabetes
+rm(extra_rows)
 
 # Assemblage -----
 results_POPs_ALS_occurrence <- 
@@ -1809,6 +2415,10 @@ results_POPs_ALS_occurrence <-
                    model1_gam = model1_gam, 
                    model2_gam = model2_gam, 
                    plot_quart = plot_quart,                                     # co-pollutant model with only the POP of interest as quartile and the other as s() in a GAM model
+                   plot_quart_sensi_lipid = plot_quart_sensi_lipid, 
+                   table_quart_sensi_lipid = table_quart_sensi_lipid, 
+                   plot_quart_sensi_diabetes = plot_quart_sensi_diabetes, 
+                   table_quart_sensi_diabetes = table_quart_sensi_diabetes, 
                    plot_base_gam = plot_base_gam, 
                    plot_adjusted_gam = plot_adjusted_gam, 
                    plot_copollutant_gam = plot_copollutant_gam, 
@@ -1827,7 +2437,10 @@ results_POPs_ALS_occurrence <-
 
 rm(main_results, covar, results_quart, model1_gam, model2_gam, 
    sensitivity_results_not_summed_quart, model1_gam_not_summed, model2_gam_not_summed, model1_quart_not_summed, model2_quart_not_summed, 
-   plot_quart, plot_quart_sensi_not_summed, 
+   plot_quart, 
+   plot_quart_sensi_lipid, table_quart_sensi_lipid, 
+   plot_quart_sensi_diabetes, table_quart_sensi_diabetes, 
+   plot_quart_sensi_not_summed, 
    plot_base_gam, plot_adjusted_gam, 
    plot_base_gam_not_summed, plot_adjusted_gam_not_summed, 
    plot_copollutant_gam, 
