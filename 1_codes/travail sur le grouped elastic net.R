@@ -75,13 +75,13 @@ penalty_vec <- c(rep(1, length(POPs_group_quart_bis)), rep(0, 1))
 # -----------------------------
 glm_family <- glm.cox(stop = bdd_cases_danish_bis$follow_up_death, status = bdd_cases_danish_bis$als)
 
-set.seed(123)
+set.seed(1996)
 cvfit <- cv.grpnet(
   X,
   glm_family,
   groups = group_starts,
   penalty = penalty_vec,
-  alpha = 0.9,
+  alpha = 0.1,
   n_folds = 5,
   standardize = FALSE)
 
@@ -103,11 +103,11 @@ names(beta_vec) <- colnames(X)  # reprend les noms des colonnes de ton design ma
 # Créer un tibble propre
 coef_tbl <- tibble(
   variable = names(beta_vec),
-  beta = beta_vec
-)
+  beta = beta_vec)
 
 # Filtrer les variables sélectionnées (non nulles)
-selected_vars <- coef_tbl |>
+selected_vars <- 
+  coef_tbl |>
   filter(beta != 0) |>
   arrange(desc(abs(beta))) |>
   mutate(

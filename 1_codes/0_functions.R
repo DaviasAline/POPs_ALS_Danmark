@@ -53,6 +53,7 @@ library(performance)
 library(ggrepel)
 library(adelie)
 library(fasano.franceschini.test)
+library(pROC)
 
 ## Tableau descriptif variables numériques
 descrip_num <- function(data, vars) {                                           

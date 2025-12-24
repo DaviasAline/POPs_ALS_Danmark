@@ -134,7 +134,8 @@ table_S2 <- table_S2 |>
          'Heterogeneity test ' = 'p.value_heterogeneity_adjusted', 'Trend test ' = 'p.value_trend_adjusted',
          ' OR ' = 'OR_copollutant', ' 95% CI ' = '95%CI_copollutant', ' p-value ' = 'p.value_copollutant',
          ' Heterogeneity test ' = 'p.value_heterogeneity_copollutant', ' Trend test ' = 'p.value_trend_copollutant')
-table_S2 <- table_S2 |> flextable() |>
+table_S2 <- table_S2 |> 
+  flextable() |>
   add_footer_lines(
     "1POPs were summed as follows: Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; ΣPBDE corresponds to PBDEs 47, 99, 153; ΣDDT corresponds to p,p’-DDT and p,p’-DDE and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
   2All models are matched for sex and age. Adjusted models further account for smoking, BMI, serum total cholesterol, marital status, and education. Co-pollutant models further include all chemicals, where a GAM is used in which the chemical of interest is categorized into quartiles, while the other pollutants are included as smooth terms.

@@ -3944,6 +3944,44 @@ rm(data_matrix1_neuro, data_matrix2_neuro,
    proteomic_influence, proteomic_selected, valeurs_communes)
 
 
+# Additional analysis 4 - AUS, sensi, speci ----
+roc_nefl <- roc(
+  response = bdd_danish$als,
+  predictor = bdd_danish$proteomic_neuro_explo_NEFL,
+  direction = ">")
+
+auc(roc_nefl)
+
+ci.auc(roc_nefl)
+
+youden <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
+  roc_nefl,
+  x = "best",
+  best.method = "youden",
+  ret = c("threshold", "sensitivity", "specificity"))
+
+youden
+
+
+plot(
+  roc_nefl,
+  col = "#1c61b6",
+  lwd = 2,
+  main = "ROC – NEFL pour le diagnostic ALS")
+
+text( 0.2, 0.6,
+  paste0("AUC = ", round(auc(roc_nefl), 2)))
+
+points(
+  1 - youden["specificity"],
+  youden["sensitivity"],
+  pch = 19,
+  col = "red")
+
+
+
+
+
 # Figures and Tables ----
 
 make_gam_plot_base <- function(var, data) {
