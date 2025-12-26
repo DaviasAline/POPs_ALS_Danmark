@@ -14,9 +14,10 @@ table_1 <-
     als = as.character(als),
     als = fct_recode(als, "Controls" = "0", "Cases" = "1"),
     als = fct_relevel(als, "Cases", "Controls"),
-    follow_up = follow_up/12) |>
+    follow_up = follow_up/12, 
+    follow_up_death = follow_up_death/12) |>
   select(
-    als, birth_year, baseline_age, diagnosis_age, follow_up,  
+    als, birth_year, baseline_age, diagnosis_age, follow_up,follow_up_death, 
     sex, marital_status_2cat, education_merged, alcohol, smoking_2cat, bmi, fS_Kol, 
     proteomic_neuro_explo_NEFL) |>
   tbl_summary(by = als, 
@@ -122,10 +123,10 @@ figure_2
 
 
 # Figure 3 - Additional analysis (NEFL level over follow-up time) ----
-figure_4 <- results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_over_time_sensi_1
+figure_3 <- results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_over_time_sensi_1
 
 # Figure 4 - Additional analysis (AUC) ----
-
+figure_4 <- results_proteomic_ALS_occurrence$additional_analysis_4$additional_analysis_4_figure
 
 # Figure 5 - Base and adjusted logistic regressions (ALS survival) ----
 figure_5 <- results_proteomic_ALS_survival$main_results |>
@@ -302,8 +303,8 @@ ggsave(                                                                         
 ggsave(                                                                         # AUC curve
   "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/figure_4.tiff",
   figure_4,
-  height = 4,
-  width = 8,
+  height = 8,
+  width = 14,
   units = "in")
 
 ggsave(                                                                         # Forest plot of Cox regression results (ALS survival)

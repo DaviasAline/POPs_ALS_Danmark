@@ -3945,41 +3945,339 @@ rm(data_matrix1_neuro, data_matrix2_neuro,
 
 
 # Additional analysis 4 - AUS, sensi, speci ----
-roc_nefl <- roc(
-  response = bdd_danish$als,
-  predictor = bdd_danish$proteomic_neuro_explo_NEFL,
-  direction = ">")
+## All data, unadjusted ----
+roc_nefl_all <- roc(
+  response = bdd_danish_sensi_1$als,
+  predictor = bdd_danish_sensi_1$proteomic_neuro_explo_NEFL,
+  levels = c(0, 1), 
+  direction = "<")
 
-auc(roc_nefl)
+auc(roc_nefl_all)
+ci.auc(roc_nefl_all)
 
-ci.auc(roc_nefl)
+youden_nefl_all <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
+  roc_nefl_all,
+  x = "best",
+  best.method = "youden",
+  ret = c("threshold", "sensitivity", "specificity")) |>
+  as.data.frame()
 
-youden <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
-  roc_nefl,
+youden_best_nefl_all <- 
+  youden_nefl_all |>
+  slice_max(sensitivity, n = 1)
+
+## All data, adjusted ----
+model_adjusted_all <- clogit(
+  als ~ proteomic_neuro_explo_NEFL + strata(match) + smoking_2cat_i + bmi,
+  data = bdd_danish_sensi_1)
+
+bdd_danish_sensi_1$pred_adjusted_all <- predict(model_adjusted_all, type = "lp")
+
+roc_nefl_all_adjusted <- 
+  roc(
+    response = bdd_danish_sensi_1$als, 
+    predictor = bdd_danish_sensi_1$pred_adjusted_all, 
+    direction = "<")
+
+auc(roc_nefl_all_adjusted)
+ci.auc(roc_nefl_all_adjusted)
+
+youden_nefl_all_adjusted <- coords(
+  roc_nefl_all_adjusted,
   x = "best",
   best.method = "youden",
   ret = c("threshold", "sensitivity", "specificity"))
 
-youden
+youden_nefl_all_adjusted
 
 
-plot(
-  roc_nefl,
-  col = "#1c61b6",
-  lwd = 2,
-  main = "ROC – NEFL pour le diagnostic ALS")
+## Follow-up > 5 years, unadjusted ----
+roc_nefl_sensi_1_3 <- roc(
+  response = bdd_danish_sensi_1_3$als,
+  predictor = bdd_danish_sensi_1_3$proteomic_neuro_explo_NEFL,
+  levels = c(0, 1), 
+  direction = "<")
 
-text( 0.2, 0.6,
-  paste0("AUC = ", round(auc(roc_nefl), 2)))
+auc(roc_nefl_sensi_1_3)
+ci.auc(roc_nefl_sensi_1_3)
 
-points(
-  1 - youden["specificity"],
-  youden["sensitivity"],
-  pch = 19,
-  col = "red")
+youden_nefl_sensi_1_3 <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
+  roc_nefl_sensi_1_3,
+  x = "best",
+  best.method = "youden",
+  ret = c("threshold", "sensitivity", "specificity")) |>
+  as.data.frame()
+
+youden_best_nefl_sensi_1_3 <- 
+  youden_nefl_sensi_1_3 |>
+  slice_max(sensitivity, n = 1)
+
+## Follow-up > 5 years, adjusted ----
+model_adjusted_sensi_1_3 <- clogit(
+  als ~ proteomic_neuro_explo_NEFL + strata(match) + smoking_2cat_i + bmi,
+  data = bdd_danish_sensi_1_3)
+
+bdd_danish_sensi_1_3$pred_adjusted_sensi_1_3 <- predict(model_adjusted_sensi_1_3, type = "lp")
+
+roc_nefl_sensi_1_3_adjusted <- 
+  roc(
+    response = bdd_danish_sensi_1_3$als, 
+    predictor = bdd_danish_sensi_1_3$pred_adjusted_sensi_1_3, 
+    direction = "<")
+
+auc(roc_nefl_sensi_1_3_adjusted)
+ci.auc(roc_nefl_sensi_1_3_adjusted)
+
+youden_nefl_sensi_1_3_adjusted <- coords(
+  roc_nefl_sensi_1_3_adjusted,
+  x = "best",
+  best.method = "youden",
+  ret = c("threshold", "sensitivity", "specificity"))
+
+youden_nefl_sensi_1_3_adjusted
+
+
+## Follow-up > 5 years and < 14.6 years, unadjusted ----
+roc_nefl_sensi_1_3_4 <- roc(
+  response = bdd_danish_sensi_1_3_4$als,
+  predictor = bdd_danish_sensi_1_3_4$proteomic_neuro_explo_NEFL,
+  levels = c(0, 1), 
+  direction = "<")
+
+auc(roc_nefl_sensi_1_3_4)
+ci.auc(roc_nefl_sensi_1_3_4)
+
+youden_nefl_sensi_1_3_4 <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
+  roc_nefl_sensi_1_3_4,
+  x = "best",
+  best.method = "youden",
+  ret = c("threshold", "sensitivity", "specificity")) |>
+  as.data.frame()
+
+youden_best_nefl_sensi_1_3_4 <- 
+  youden_nefl_sensi_1_3_4 |>
+  slice_max(sensitivity, n = 1)
+
+
+## Follow-up > 5 years and < 14.6 years, adjusted ----
+model_adjusted_sensi_1_3_4 <- clogit(
+  als ~ proteomic_neuro_explo_NEFL + strata(match) + smoking_2cat_i + bmi,
+  data = bdd_danish_sensi_1_3_4)
+
+bdd_danish_sensi_1_3_4$pred_adjusted_sensi_1_3_4 <- predict(model_adjusted_sensi_1_3_4, type = "lp")
+
+roc_nefl_sensi_1_3_4_adjusted <- 
+  roc(
+    response = bdd_danish_sensi_1_3_4$als, 
+    predictor = bdd_danish_sensi_1_3_4$pred_adjusted_sensi_1_3_4, 
+    direction = "<")
+
+auc(roc_nefl_sensi_1_3_4_adjusted)
+ci.auc(roc_nefl_sensi_1_3_4_adjusted)
+
+youden_nefl_sensi_1_3_4_adjusted <- coords(
+  roc_nefl_sensi_1_3_4_adjusted,
+  x = "best",
+  best.method = "youden",
+  ret = c("threshold", "sensitivity", "specificity"))
+
+youden_nefl_sensi_1_3_4_adjusted
+
+
+## Follow-up > 14.6 years, unadjusted ----
+roc_nefl_sensi_1_3_5 <- roc(
+  response = bdd_danish_sensi_1_3_5$als,
+  predictor = bdd_danish_sensi_1_3_5$proteomic_neuro_explo_NEFL,
+  levels = c(0, 1), 
+  direction = "<")
+
+auc(roc_nefl_sensi_1_3_5)
+ci.auc(roc_nefl_sensi_1_3_5)
+
+youden_nefl_sensi_1_3_5 <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
+  roc_nefl_sensi_1_3_5,
+  x = "best",
+  best.method = "youden",
+  ret = c("threshold", "sensitivity", "specificity")) |>
+  as.data.frame()
+
+youden_best_nefl_sensi_1_3_5 <- 
+  youden_nefl_sensi_1_3_5 |>
+  slice_max(sensitivity, n = 1)
 
 
 
+## Follow-up > 14.6 years, adjusted ----
+model_adjusted_sensi_1_3_5 <- clogit(
+  als ~ proteomic_neuro_explo_NEFL + strata(match) + smoking_2cat_i + bmi,
+  data = bdd_danish_sensi_1_3_5)
+
+bdd_danish_sensi_1_3_5$pred_adjusted_sensi_1_3_5 <- predict(model_adjusted_sensi_1_3_5, type = "lp")
+
+roc_nefl_sensi_1_3_5_adjusted <- 
+  roc(
+    response = bdd_danish_sensi_1_3_5$als, 
+    predictor = bdd_danish_sensi_1_3_5$pred_adjusted_sensi_1_3_5, 
+    direction = "<")
+
+auc(roc_nefl_sensi_1_3_5_adjusted)
+ci.auc(roc_nefl_sensi_1_3_5_adjusted)
+
+youden_nefl_sensi_1_3_5_adjusted <- coords(
+  roc_nefl_sensi_1_3_5_adjusted,
+  x = "best",
+  best.method = "youden",
+  ret = c("threshold", "sensitivity", "specificity"))
+
+youden_nefl_sensi_1_3_5_adjusted
+
+## plots----
+roc_colors <- c(
+  "Main analysis (n=495)" = "#1b9e77",
+  "Filtered to follow-up > 5 years (n=447)" = "#d95f02",
+  "Filtered to 5 years < follow-up < 14.6 years (n=225)" = "#7570b3",
+  "Filtered to follow-up > 14.6 years (n=222)" = "#e7298a")
+
+
+p <- ggroc(
+  list(
+    "Main analysis (n=495)" = roc_nefl_all,
+    "Filtered to follow-up > 5 years (n=447)" = roc_nefl_sensi_1_3,
+    "Filtered to 5 years < follow-up < 14.6 years (n=225)" = roc_nefl_sensi_1_3_4,
+    "Filtered to follow-up > 14.6 years (n=222)" = roc_nefl_sensi_1_3_5),
+  legacy.axes = TRUE,
+  aes = c("color")) +
+  geom_abline(
+    intercept = 0,
+    slope = 1,
+    linetype = "dashed",
+    color = "grey50") +
+  scale_color_manual(values = roc_colors) +
+  labs(
+    x = "1 − Specificity",
+    y = "Sensitivity",
+    title = "ROC curves for NEFL pre-disease biomarker (unmatched, unadjusted)",
+    color = "Model") +
+  theme_lucid() +
+  annotate(
+    "text",
+    x = 0.48,
+    y = 0.36,
+    hjust = 0, 
+    label = paste0("AUC = ", round(auc(roc_nefl_all), 2), 
+                   "\nIdeal NEFL cut-off: ", round(youden_best_nefl_all["threshold"], 2), 
+                   "\n(sensitivity: ", round(youden_best_nefl_all["sensitivity"], 2), 
+                   " and specificity: ", round(youden_best_nefl_all["specificity"], 2), ")"),
+    color = roc_colors["Main analysis (n=495)"],
+    size = 4) +
+  annotate(
+    "text",
+    x = 0.41,
+    y = 0.24,
+    hjust = 0, 
+    label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3), 2), 
+                   "\nIdeal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3["threshold"], 2), 
+                   "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3["sensitivity"], 2), 
+                   " and specificity: ", round(youden_best_nefl_sensi_1_3["specificity"], 2), ")"),
+    color = roc_colors["Filtered to follow-up > 5 years (n=447)"],
+    size = 4) +
+  annotate(
+    "text",
+    x = 0.55,
+    y = 0.48,
+    hjust = 0, 
+    label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_4), 2), 
+                   "\nIdeal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3_4["threshold"], 2), 
+                   "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3_4["sensitivity"], 2), 
+                   " and specificity: ", round(youden_best_nefl_sensi_1_3_4["specificity"], 2), ")"),
+    color = roc_colors["Filtered to 5 years < follow-up < 14.6 years (n=225)"],
+    size = 4) +
+  annotate(
+    "text",
+    x = 0.34,
+    y = 0.12,
+    hjust = 0, 
+    label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_5), 2), 
+                   "\nIdeal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3_5["threshold"], 2), 
+                   "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3_5["sensitivity"], 2), 
+                   " and specificity: ", round(youden_best_nefl_sensi_1_3_5["specificity"], 2), ")"),
+    color = roc_colors["Filtered to follow-up > 14.6 years (n=222)"],
+    size = 4) +
+  theme(legend.position = "none")
+
+
+
+
+p_adjusted <- ggroc(
+  list(
+    "Main analysis (n=495)" = roc_nefl_all_adjusted,
+    "Filtered to follow-up > 5 years (n=447)" = roc_nefl_sensi_1_3_adjusted,
+    "Filtered to 5 years < follow-up < 14.6 years (n=225)" = roc_nefl_sensi_1_3_4_adjusted,
+    "Filtered to follow-up > 14.6 years (n=222)" = roc_nefl_sensi_1_3_5_adjusted),
+  legacy.axes = TRUE,
+  aes = c("color")) +
+  geom_abline(
+    intercept = 0,
+    slope = 1,
+    linetype = "dashed",
+    color = "grey50") +
+  scale_color_manual(values = roc_colors) +
+  labs(
+    x = "1 − Specificity",
+    y = "Sensitivity",
+    title = "ROC curves for NEFL pre-disease biomarker (matched and adjusted)",
+    color = "Model") +
+  theme_lucid() +
+  annotate(
+    "text",
+    x = 0.48,
+    y = 0.36,
+    hjust = 0, 
+    label = paste0("AUC = ", round(auc(roc_nefl_all_adjusted), 2)),
+    color = roc_colors["Main analysis (n=495)"],
+    size = 4) +
+  annotate(
+    "text",
+    x = 0.41,
+    y = 0.24,
+    hjust = 0, 
+    label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_adjusted), 2)),
+    color = roc_colors["Filtered to follow-up > 5 years (n=447)"],
+    size = 4) +
+  annotate(
+    "text",
+    x = 0.55,
+    y = 0.48,
+    hjust = 0, 
+    label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_4_adjusted), 2)),
+    color = roc_colors["Filtered to 5 years < follow-up < 14.6 years (n=225)"],
+    size = 4) +
+  annotate(
+    "text",
+    x = 0.34,
+    y = 0.12,
+    hjust = 0, 
+    label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_5_adjusted), 2)),
+    color = roc_colors["Filtered to follow-up > 14.6 years (n=222)"],
+    size = 4) +
+  theme(legend.position = "bottom")
+
+legend_roc <- get_legend(p_adjusted)
+
+p_adjusted <- p_adjusted + theme(legend.position = "none")
+
+additional_analysis_4_figure <- (p + p_adjusted)  / legend_roc + plot_layout(heights = c(10, 1))
+
+
+rm(roc_nefl_all, youden_nefl_all, youden_best_nefl_all, 
+   model_adjusted_all, roc_nefl_all_adjusted, youden_nefl_all_adjusted, 
+   roc_nefl_sensi_1_3, youden_nefl_sensi_1_3, youden_best_nefl_sensi_1_3, 
+   model_adjusted_sensi_1_3, roc_nefl_sensi_1_3_adjusted, youden_nefl_sensi_1_3_adjusted, 
+   roc_nefl_sensi_1_3_4, youden_nefl_sensi_1_3_4, youden_best_nefl_sensi_1_3_4, 
+   model_adjusted_sensi_1_3_4, roc_nefl_sensi_1_3_4_adjusted, youden_nefl_sensi_1_3_4_adjusted, 
+   roc_nefl_sensi_1_3_5, youden_nefl_sensi_1_3_5, youden_best_nefl_sensi_1_3_5, 
+   model_adjusted_sensi_1_3_5, roc_nefl_sensi_1_3_5_adjusted, youden_nefl_sensi_1_3_5_adjusted, 
+   roc_colors, p, p_adjusted, legend_roc)
 
 
 # Figures and Tables ----
@@ -6452,7 +6750,9 @@ results_proteomic_ALS_occurrence <-
       
       additional_analysis_3_neuro_figure = additional_analysis_3_neuro_figure, 
       additional_analysis_3_neuro_results = additional_analysis_3_neuro_results, 
-      jackknife_neuro_results = jackknife_neuro_results))
+      jackknife_neuro_results = jackknife_neuro_results), 
+    additional_analysis_4 = list(
+      additional_analysis_4_figure = additional_analysis_4_figure))
 
 rm(covar, 
    main_results, 
@@ -6556,6 +6856,8 @@ rm(covar,
    additional_analysis_3_neuro_figure, 
    additional_analysis_3_neuro_results, 
    jackknife_neuro_results, 
+   
+   additional_analysis_4_figure, 
    
    make_gam_plot_base, 
    make_gam_plot_adjusted)

@@ -2107,13 +2107,24 @@ wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$si
 ```
 
 ### Additional analysis 
-NEFL over time
+#### NEFL over time
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
 results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_over_time_sensi_1
 ```
+
+#### AUC
+```{r, fig.height=8, fig.width=12}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+results_proteomic_ALS_occurrence$additional_analysis_4$additional_analysis_4_figure
+```
+
+
 
 ## NEFL and ALS survival 
 ```{r}
