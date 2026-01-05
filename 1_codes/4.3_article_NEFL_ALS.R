@@ -98,12 +98,12 @@ figure_2 <-
              "Main analysis\n(n=495)" = "sensi_1",
              "Filtered to\nfollow-up > 5 years\n (n=447)" = "sensi_1_3",
              "Filtered to follow-up\nbetween 5 and 14.6 years\n(n=225)" = "sensi_1_3_4",
-             "Filtered to\nfollow-up > 14.6 years\n (n=227)" = "sensi_1_3_5"), 
+             "Filtered to\nfollow-up > 14.6 years\n (n=222)" = "sensi_1_3_5"), 
          analysis = fct_relevel(analysis, 
                                 "Main analysis\n(n=495)", 
                                 "Filtered to\nfollow-up > 5 years\n (n=447)", 
                                 "Filtered to follow-up\nbetween 5 and 14.6 years\n(n=225)",
-                                "Filtered to\nfollow-up > 14.6 years\n (n=227)")) |> 
+                                "Filtered to\nfollow-up > 14.6 years\n (n=222)")) |> 
   ggplot(aes(x = explanatory, y = OR_raw, ymin = lower_CI, ymax = upper_CI, color = signif)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
@@ -118,7 +118,6 @@ figure_2 <-
         axis.ticks.y = element_blank(),
         axis.title.y = element_blank()) +
   coord_flip()
-figure_2
 
 
 
@@ -192,12 +191,12 @@ table_S2 <-
                                "Main analysis (n=495)" = "sensi_1",
                                "Filtered to follow-up > 5 years (n=447)" = "sensi_1_3",
                                "Filtered to follow-up between 5 and 14.6 years (n=225)" = "sensi_1_3_4",
-                               "Filtered to follow-up > 14.6 years (n=227)" = "sensi_1_3_5"), 
+                               "Filtered to follow-up > 14.6 years (n=222)" = "sensi_1_3_5"), 
          analysis = fct_relevel(analysis, 
                                 "Main analysis (n=495)", 
                                 "Filtered to follow-up > 5 years (n=447)", 
                                 "Filtered to follow-up between 5 and 14.6 years (n=225)",
-                                "Filtered to follow-up > 14.6 years (n=227)")) |> 
+                                "Filtered to follow-up > 14.6 years (n=222)")) |> 
   select(analysis, model, explanatory, OR, "95% CI", p_value) |> 
   pivot_wider(
     names_from = model,  
@@ -228,11 +227,7 @@ table_S2 <-
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 # Table S3 ----
-
-
-
-# Table S4 ----
-table_S4 <- 
+table_S3 <- 
   results_proteomic_ALS_survival$main_results |>
   filter(term == "Continuous", 
          explanatory == "NEFL") |> 
@@ -274,8 +269,8 @@ print(table_S1, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL
 table_S2 <- read_docx() |> body_add_flextable(table_S2)                         # Conditional logistic regressions (als risk)
 print(table_S2, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/table_S2.docx")
 
-table_S4 <- read_docx() |> body_add_flextable(table_S4)                         # Cox regressions (als survival)
-print(table_S4, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/table_S4.docx")
+table_S3 <- read_docx() |> body_add_flextable(table_S3)                         # Cox regressions (als survival)
+print(table_S3, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/table_S3.docx")
 
 
 ## figures ----

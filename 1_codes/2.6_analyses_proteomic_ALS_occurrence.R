@@ -3394,7 +3394,7 @@ ratios_sensi_1 <-
 figure_NEFL_over_time_sensi_1 <- 
   ggplot(ratios_sensi_1, aes(x = follow_up_neg, y = ratio_proteomic_neuro_explo_NEFL)) +
   geom_point(alpha = 0.6, color = "darkblue") +
-  geom_smooth(method = "loess", se = FALSE, color = "red", span = 0.75) +
+  geom_smooth(method = "loess", se = TRUE, color = "red", span = 0.75) +
   labs(
     x = "Time to ALS diagnosis (years)",
     y = "Ratio of NEFL in case and matched controls") +
@@ -3402,7 +3402,7 @@ figure_NEFL_over_time_sensi_1 <-
 rm(ratios_sensi_1)
 
 ## GAM ----
-# to do 
+# to do, or not if we choose a more clinical journal?
 
 
 
@@ -4165,7 +4165,7 @@ p <- ggroc(
     y = 0.36,
     hjust = 0, 
     label = paste0("AUC = ", round(auc(roc_nefl_all), 2), 
-                   "\nIdeal NEFL cut-off: ", round(youden_best_nefl_all["threshold"], 2), 
+                   "\nOptimal NEFL cut-off: ", round(youden_best_nefl_all["threshold"], 2), 
                    "\n(sensitivity: ", round(youden_best_nefl_all["sensitivity"], 2), 
                    " and specificity: ", round(youden_best_nefl_all["specificity"], 2), ")"),
     color = roc_colors["Main analysis (n=495)"],
@@ -4176,7 +4176,7 @@ p <- ggroc(
     y = 0.24,
     hjust = 0, 
     label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3), 2), 
-                   "\nIdeal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3["threshold"], 2), 
+                   "\nOptimal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3["threshold"], 2), 
                    "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3["sensitivity"], 2), 
                    " and specificity: ", round(youden_best_nefl_sensi_1_3["specificity"], 2), ")"),
     color = roc_colors["Filtered to follow-up > 5 years (n=447)"],
@@ -4187,7 +4187,7 @@ p <- ggroc(
     y = 0.48,
     hjust = 0, 
     label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_4), 2), 
-                   "\nIdeal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3_4["threshold"], 2), 
+                   "\nOptimal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3_4["threshold"], 2), 
                    "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3_4["sensitivity"], 2), 
                    " and specificity: ", round(youden_best_nefl_sensi_1_3_4["specificity"], 2), ")"),
     color = roc_colors["Filtered to 5 years < follow-up < 14.6 years (n=225)"],
@@ -4198,7 +4198,7 @@ p <- ggroc(
     y = 0.12,
     hjust = 0, 
     label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_5), 2), 
-                   "\nIdeal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3_5["threshold"], 2), 
+                   "\nOptimal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3_5["threshold"], 2), 
                    "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3_5["sensitivity"], 2), 
                    " and specificity: ", round(youden_best_nefl_sensi_1_3_5["specificity"], 2), ")"),
     color = roc_colors["Filtered to follow-up > 14.6 years (n=222)"],
