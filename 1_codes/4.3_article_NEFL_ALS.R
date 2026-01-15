@@ -125,9 +125,9 @@ figure_2 <-
 figure_3 <- results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_over_time_sensi_1
 
 # Figure 4 - Additional analysis (AUC) ----
-figure_4 <- results_proteomic_ALS_occurrence$additional_analysis_4$additional_analysis_4_figure
+figure_4 <- results_proteomic_ALS_occurrence$additional_analysis_4$additional_analysis_4_figure_raw
 
-# Figure 5 - Base and adjusted logistic regressions (ALS survival) ----
+# Figure 5 - Base and adjusted Cox regressions (ALS survival) ----
 figure_5 <- results_proteomic_ALS_survival$main_results |>
   filter(term == "Continuous", 
          explanatory == "NEFL") |> 
@@ -163,7 +163,6 @@ figure_5 <- results_proteomic_ALS_survival$main_results |>
         axis.ticks.y = element_blank(),
         axis.title.y = element_blank()) +
   coord_flip()
-figure_5
 
 # Table S1 ----
 table_S1 <-
@@ -299,7 +298,7 @@ ggsave(                                                                         
   "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/figure_4.tiff",
   figure_4,
   height = 8,
-  width = 14,
+  width = 7,
   units = "in")
 
 ggsave(                                                                         # Forest plot of Cox regression results (ALS survival)
@@ -309,4 +308,5 @@ ggsave(                                                                         
   width = 7,
   units = "in")
 
+figure_4 <- figure_4 + theme(legend.direction = "vertical") + labs(title = "")
 

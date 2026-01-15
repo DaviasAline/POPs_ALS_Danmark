@@ -1151,7 +1151,7 @@ rm(formula_danish)
 
 
 
-# Sensitivity analysis 4 - removing the highest 5%----
+# Sensitivity analysis 4 - removing the highest 2.5%----
 # bdd_cases_danish_sensi_4 <- bdd_cases_danish |>
 #   mutate(across(all_of(POPs_group), ~{
 #     q_low  <- quantile(., 0.025, na.rm = TRUE)  # 2.5% quantile
@@ -1162,7 +1162,7 @@ rm(formula_danish)
 bdd_cases_danish_sensi_4 <- bdd_cases_danish |>
   mutate(across(all_of(POPs_group), ~{
     #q_low  <- quantile(., 0.025, na.rm = TRUE)  # 2.5% quantile
-    q_high <- quantile(., 0.95, na.rm = TRUE)  # 95% quantile
+    q_high <- quantile(., 0.975, na.rm = TRUE)  # 97.5% quantile
     ifelse( . > q_high, NA, .)
   })) |>
   mutate(across(all_of(POPs_group),
@@ -1267,7 +1267,7 @@ plot_base_cox_gam_danish_sensi_4 <- map(cox_gam_results_base_sensi_4, function(r
                 alpha = 0.2, fill = "steelblue") +
     labs(
       #title = paste0("Cox-GAM smooth term for ", res$var),
-      title = "Base model - sensi 95%", 
+      title = "Base model - sensi 97.5%", 
       x = NULL,
       y = "LogHR (smooth estimate)") +
     annotate(
@@ -1353,7 +1353,7 @@ plot_adjusted_cox_gam_danish_sensi_4 <- map(cox_gam_results_adjusted, function(r
                 alpha = 0.2, fill = "steelblue") +
     labs(
       #title = paste0("Cox-GAM smooth term for ", res$var),
-      title = "Adjusted model - sensi 95%", 
+      title = "Adjusted model - sensi 97.5%", 
       x = NULL,
       y = "LogHR (smooth estimate)") +
     annotate(
