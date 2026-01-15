@@ -1703,7 +1703,7 @@ bdd_danish_sensi_1_3_4 <-
   bdd_danish |>
   group_by(match) |>                                                              
   filter(any(als == 1 & follow_up > 60)) |>                                     # sensi 3 : we remove cases (and their controls) with follow-up < 60 months
-  ungroup()|>
+  ungroup() |>
   mutate(                                                                       # sensi 1 : we remove NEFL in match 159 because it's an outlier
     proteomic_neuro_explo_NEFL_sd_sensi_1_3_4 = 
       ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd), 
