@@ -2631,16 +2631,17 @@ rm(formula_danish, model_summary)
 covar_danish
 
 ## table POPs (sd) - als survival ----
-POPs_sd_ALS_table_danish <- main_results_POPs_ALS_survival |>
+POPs_sd_ALS_table_danish <- 
+  main_results_POPs_ALS_survival |>
   filter(study == "Danish") |>
   filter(term == "Continuous") |>
   filter(analysis == "main") |>
+  filter(!model == "copollutant") |>
   select(model, explanatory, term, HR, "95% CI", "p-value") |>
   pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
-  select(explanatory, contains("base"), contains("adjusted"), contains("copollutant")) |>
+  select(explanatory, contains("base"), contains("adjusted")) |>
   rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted",
-         " HR " = "HR_copollutant", " 95% CI " = "95% CI_copollutant", " p-value " = "p-value_copollutant") |>
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |>
   mutate(explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |> 
   flextable() |>
   add_footer_lines(
@@ -2651,8 +2652,7 @@ POPs_sd_ALS_table_danish <- main_results_POPs_ALS_survival |>
   add_header(
     "explanatory" = "Exposures", 
     "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model", 
-    " HR " = "Copollutant Model", " 95% CI " = "Copollutant Model", " p-value " = "Copollutant Model") |>
+    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   theme_vanilla() |>
@@ -2740,11 +2740,11 @@ POPs_sd_ALS_figure_danish <- main_results_POPs_ALS_survival |>
   filter(study == "Danish") |>
   filter(term == "Continuous") |>
   filter(analysis == "main") |>
+  filter(!model == "copollutant") |>
   mutate(model = fct_recode(model, 
                             "Base model" = "base",
-                            "Adjusted model" = "adjusted", 
-                            "Co-pollutant model" = 'copollutant'),
-         model = fct_relevel(model, 'Base model', 'Adjusted model', "Co-pollutant model"), 
+                            "Adjusted model" = "adjusted"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
          explanatory = factor(explanatory, levels = POPs_group_labels),
          explanatory = fct_rev(explanatory),
          explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
@@ -3625,7 +3625,7 @@ POPs_sd_ALS_table_danish_sensi_4 <- main_results_POPs_ALS_survival |>
   add_header(
     "explanatory" = "Exposures", 
     "HR" = "Main model", "95% CI" = "Main model", "p-value" = "Main model", 
-    "HR " = "Sensi 4 (95%)", "95% CI " = "Sensi 4 (95%)", "p-value " = "Sensi 4 (95%)") |>
+    "HR " = "Sensi 4 (97.5%)", "95% CI " = "Sensi 4 (97.5%)", "p-value " = "Sensi 4 (97.5%)") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   theme_vanilla() |>
@@ -3644,7 +3644,10 @@ POPs_sd_ALS_figure_danish_sensi_4 <- main_results_POPs_ALS_survival |>
   filter(model == "adjusted") |>
   mutate(explanatory = factor(explanatory, levels = POPs_group_labels),
          explanatory = fct_rev(explanatory),
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
+         explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
+         analysis = factor(analysis,
+                           "Main analysis" = "main", 
+                           "sensitivity analysis" = "sensi_4")) |>
   arrange(explanatory) |> 
   ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 

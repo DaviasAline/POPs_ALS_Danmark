@@ -2224,15 +2224,15 @@ results_proteomic_ALS_occurrence$additional_analysis_4$additional_analysis_4_fig
 #| echo: false
 #| message: false
 #| warning: false
-wrap_plots(results_proteomic_ALS_survival$plot_base_cox_gam_danish$NEFL, 
-           results_proteomic_ALS_survival$plot_adjusted_cox_gam_danish$NEFL)
+wrap_plots(results_proteomic_ALS_survival$main$plot_base_cox_gam_danish$NEFL, 
+           results_proteomic_ALS_survival$main$plot_adjusted_cox_gam_danish$NEFL)
 ```
 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-results_proteomic_ALS_survival$main_results |>
+results_proteomic_ALS_survival$main$main_results |>
   filter(term == "Continuous", 
          explanatory == "NEFL") |> 
   select(model, explanatory, HR, "95% CI", p_value) |> 
@@ -2266,7 +2266,7 @@ results_proteomic_ALS_survival$main_results |>
 #| echo: false
 #| message: false
 #| warning: false
-results_proteomic_ALS_survival$main_results |>
+results_proteomic_ALS_survival$main$main_results |>
   filter(term == "Continuous", 
          explanatory == "NEFL") |> 
   mutate(signif = ifelse(p_value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
@@ -3089,7 +3089,7 @@ results_proteomic_ALS_occurrence$additional_analysis_3$jackknife_neuro_results |
 #| echo: false
 #| message: false
 #| warning: false
-results_proteomic_ALS_survival$covar |>
+results_proteomic_ALS_survival$main$covar |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
@@ -3248,4 +3248,82 @@ results_proteomic_ALS_survival$sensi_1_3_5$proteomic_quart_ALS_table_sensi_1_3_5
 #| include: false
 wrap_plots(results_proteomic_ALS_survival$sensi_1_3_5$plot_base_cox_gam_danish_sensi_1_3_5, ncol = 5)
 wrap_plots(results_proteomic_ALS_survival$sensi_1_3_5$plot_adjusted_cox_gam_danish_sensi_1_3_5, ncol = 5)
+```
+
+
+
+
+## Sensi 1 + 7 females : Removing NEFL outlier + filtering female cases
+
+### continuous standardized
+
+```{r, fig.width=9, fig.height=6}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_survival$sensi_1_7_female$proteomic_sd_ALS_table_sensi_1_7_female |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
+results_proteomic_ALS_survival$sensi_1_7_female$proteomic_sd_ALS_base_figure_sensi_1_7_female
+results_proteomic_ALS_survival$sensi_1_7_female$proteomic_sd_ALS_adjusted_figure_sensi_1_7_female
+
+```
+
+### quartiles
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+results_proteomic_ALS_survival$sensi_1_7_female$proteomic_quart_ALS_table_sensi_1_7_female  |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
+```
+
+### GAMs
+
+```{r fig.height=21, fig.width=9}
+#| eval: false
+#| message: false
+#| warning: false
+#| include: false
+wrap_plots(results_proteomic_ALS_survival$sensi_1_7_female$plot_base_cox_gam_danish_sensi_1_7_female, ncol = 5)
+wrap_plots(results_proteomic_ALS_survival$sensi_1_7_female$plot_adjusted_cox_gam_danish_sensi_1_7_female, ncol = 5)
+```
+
+
+## Sensi 1 + 7 males : Removing NEFL outlier + male cases
+
+### continuous standardized
+
+```{r, fig.width=9, fig.height=6}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_survival$sensi_1_7_male$proteomic_sd_ALS_table_sensi_1_7_male |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
+results_proteomic_ALS_survival$sensi_1_7_male$proteomic_sd_ALS_base_figure_sensi_1_7_male
+results_proteomic_ALS_survival$sensi_1_7_male$proteomic_sd_ALS_adjusted_figure_sensi_1_7_male
+
+```
+
+### quartiles
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| column: screen-inset-right
+results_proteomic_ALS_survival$sensi_1_7_male$proteomic_quart_ALS_table_sensi_1_7_male  |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
+```
+
+### GAMs
+
+```{r fig.height=21, fig.width=9}
+#| eval: false
+#| message: false
+#| warning: false
+#| include: false
+wrap_plots(results_proteomic_ALS_survival$sensi_1_7_male$plot_base_cox_gam_danish_sensi_1_7_male, ncol = 5)
+wrap_plots(results_proteomic_ALS_survival$sensi_1_7_male$plot_adjusted_cox_gam_danish_sensi_1_7_male, ncol = 5)
 ```
