@@ -4771,6 +4771,53 @@ youden_nefl_all_adjusted <- coords(
 youden_nefl_all_adjusted
 
 
+
+## Follow-up < 5 years, unadjusted ----
+roc_nefl_sensi_2 <- roc(
+  response = bdd_danish_sensi_2$als,
+  predictor = bdd_danish_sensi_2$proteomic_neuro_explo_NEFL,
+  levels = c(0, 1), 
+  direction = "<")
+
+auc(roc_nefl_sensi_2)
+ci.auc(roc_nefl_sensi_2)
+
+youden_nefl_sensi_2 <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
+  roc_nefl_sensi_2,
+  x = "best",
+  best.method = "youden",
+  ret = c("threshold", "sensitivity", "specificity")) |>
+  as.data.frame()
+
+youden_best_nefl_sensi_2 <- 
+  youden_nefl_sensi_2 |>
+  slice_max(sensitivity, n = 1)
+
+## Follow-up < 5 years, adjusted ----
+model_adjusted_sensi_2 <- clogit(
+  als ~ proteomic_neuro_explo_NEFL + strata(match) + smoking_2cat_i + bmi,
+  data = bdd_danish_sensi_2)
+
+bdd_danish_sensi_2$pred_adjusted_sensi_2 <- predict(model_adjusted_sensi_2, type = "lp")
+
+roc_nefl_sensi_2_adjusted <- 
+  roc(
+    response = bdd_danish_sensi_2$als, 
+    predictor = bdd_danish_sensi_2$pred_adjusted_sensi_2, 
+    direction = "<")
+
+auc(roc_nefl_sensi_2_adjusted)
+ci.auc(roc_nefl_sensi_2_adjusted)
+
+youden_nefl_sensi_2_adjusted <- coords(
+  roc_nefl_sensi_2_adjusted,
+  x = "best",
+  best.method = "youden",
+  ret = c("threshold", "sensitivity", "specificity"))
+
+youden_nefl_sensi_2_adjusted
+
+
 ## Follow-up > 5 years, unadjusted ----
 roc_nefl_sensi_1_3 <- roc(
   response = bdd_danish_sensi_1_3$als,
@@ -4911,9 +4958,10 @@ youden_nefl_sensi_1_3_5_adjusted <- coords(
 
 youden_nefl_sensi_1_3_5_adjusted
 
-## plots----
+## Plots----
 roc_colors <- c(
   "Main analysis (n=495)" = "#1b9e77",
+  "Filtered to follow-up < 5 years (n=51)" = "blue",
   "Filtered to follow-up > 5 years (n=447)" = "#d95f02",
   "Filtered to 5 years < follow-up < 14.6 years (n=225)" = "#7570b3",
   "Filtered to follow-up > 14.6 years (n=222)" = "#e7298a")
@@ -4922,6 +4970,7 @@ roc_colors <- c(
 p <- ggroc(
   list(
     "Main analysis (n=495)" = roc_nefl_all,
+    "Filtered to follow-up < 5 years (n=51)" = roc_nefl_sensi_2, 
     "Filtered to follow-up > 5 years (n=447)" = roc_nefl_sensi_1_3,
     "Filtered to 5 years < follow-up < 14.6 years (n=225)" = roc_nefl_sensi_1_3_4,
     "Filtered to follow-up > 14.6 years (n=222)" = roc_nefl_sensi_1_3_5),
@@ -4939,32 +4988,23 @@ p <- ggroc(
     title = "ROC curves for NEFL pre-disease biomarker (unmatched, unadjusted)",
     color = "Model") +
   theme_lucid() +
-  annotate(
-    "text",
-    x = 0.48,
-    y = 0.36,
-    hjust = 0, 
-    label = paste0("AUC = ", round(auc(roc_nefl_all), 2), 
-                   "\nOptimal NEFL cut-off: ", round(youden_best_nefl_all["threshold"], 2), 
-                   "\n(sensitivity: ", round(youden_best_nefl_all["sensitivity"], 2), 
-                   " and specificity: ", round(youden_best_nefl_all["specificity"], 2), ")"),
-    color = roc_colors["Main analysis (n=495)"],
-    size = 4) +
-  annotate(
-    "text",
-    x = 0.41,
-    y = 0.24,
-    hjust = 0, 
-    label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3), 2), 
-                   "\nOptimal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3["threshold"], 2), 
-                   "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3["sensitivity"], 2), 
-                   " and specificity: ", round(youden_best_nefl_sensi_1_3["specificity"], 2), ")"),
-    color = roc_colors["Filtered to follow-up > 5 years (n=447)"],
-    size = 4) +
+  
   annotate(
     "text",
     x = 0.55,
     y = 0.48,
+    hjust = 0, 
+    label = paste0("AUC = ", round(auc(roc_nefl_sensi_2), 2), 
+                   "\nOptimal NEFL cut-off: ", round(youden_best_nefl_sensi_2["threshold"], 2), 
+                   "\n(sensitivity: ", round(youden_best_nefl_sensi_2["sensitivity"], 2), 
+                   " and specificity: ", round(youden_best_nefl_sensi_2["specificity"], 2), ")"),
+    color = roc_colors["Filtered to follow-up < 5 years (n=51)"],
+    size = 4) +
+  
+  annotate(
+    "text",
+    x = 0.46,
+    y = 0.38,
     hjust = 0, 
     label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_4), 2), 
                    "\nOptimal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3_4["threshold"], 2), 
@@ -4972,10 +5012,35 @@ p <- ggroc(
                    " and specificity: ", round(youden_best_nefl_sensi_1_3_4["specificity"], 2), ")"),
     color = roc_colors["Filtered to 5 years < follow-up < 14.6 years (n=225)"],
     size = 4) +
+  
   annotate(
     "text",
-    x = 0.34,
-    y = 0.12,
+    x = 0.37,
+    y = 0.28,
+    hjust = 0, 
+    label = paste0("AUC = ", round(auc(roc_nefl_all), 2), 
+                   "\nOptimal NEFL cut-off: ", round(youden_best_nefl_all["threshold"], 2), 
+                   "\n(sensitivity: ", round(youden_best_nefl_all["sensitivity"], 2), 
+                   " and specificity: ", round(youden_best_nefl_all["specificity"], 2), ")"),
+    color = roc_colors["Main analysis (n=495)"],
+    size = 4) +
+
+  annotate(
+    "text",
+    x = 0.28,
+    y = 0.18,
+    hjust = 0, 
+    label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3), 2), 
+                   "\nOptimal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3["threshold"], 2), 
+                   "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3["sensitivity"], 2), 
+                   " and specificity: ", round(youden_best_nefl_sensi_1_3["specificity"], 2), ")"),
+    color = roc_colors["Filtered to follow-up > 5 years (n=447)"],
+    size = 4) +
+
+  annotate(
+    "text",
+    x = 0.19,
+    y = 0.08,
     hjust = 0, 
     label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_5), 2), 
                    "\nOptimal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3_5["threshold"], 2), 
@@ -4991,6 +5056,7 @@ p <- ggroc(
 p_adjusted <- ggroc(
   list(
     "Main analysis (n=495)" = roc_nefl_all_adjusted,
+    "Filtered to follow-up < 5 years (n=51)" = roc_nefl_sensi_2_adjusted, 
     "Filtered to follow-up > 5 years (n=447)" = roc_nefl_sensi_1_3_adjusted,
     "Filtered to 5 years < follow-up < 14.6 years (n=225)" = roc_nefl_sensi_1_3_4_adjusted,
     "Filtered to follow-up > 14.6 years (n=222)" = roc_nefl_sensi_1_3_5_adjusted),
@@ -5008,34 +5074,47 @@ p_adjusted <- ggroc(
     title = "ROC curves for NEFL pre-disease biomarker (matched and adjusted)",
     color = "Model") +
   theme_lucid() +
-  annotate(
-    "text",
-    x = 0.48,
-    y = 0.36,
-    hjust = 0, 
-    label = paste0("AUC = ", round(auc(roc_nefl_all_adjusted), 2)),
-    color = roc_colors["Main analysis (n=495)"],
-    size = 4) +
-  annotate(
-    "text",
-    x = 0.41,
-    y = 0.24,
-    hjust = 0, 
-    label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_adjusted), 2)),
-    color = roc_colors["Filtered to follow-up > 5 years (n=447)"],
-    size = 4) +
+  
   annotate(
     "text",
     x = 0.55,
     y = 0.48,
     hjust = 0, 
+    label = paste0("AUC = ", round(auc(roc_nefl_sensi_2_adjusted), 2)),
+    color = roc_colors["Filtered to follow-up < 5 years (n=51)"],
+    size = 4) +
+  
+  annotate(
+    "text",
+    x = 0.46,
+    y = 0.38,
+    hjust = 0, 
     label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_4_adjusted), 2)),
     color = roc_colors["Filtered to 5 years < follow-up < 14.6 years (n=225)"],
     size = 4) +
+  
   annotate(
     "text",
-    x = 0.34,
-    y = 0.12,
+    x = 0.37,
+    y = 0.28,
+    hjust = 0, 
+    label = paste0("AUC = ", round(auc(roc_nefl_all_adjusted), 2)),
+    color = roc_colors["Main analysis (n=495)"],
+    size = 4) +
+
+  annotate(
+    "text",
+    x = 0.28,
+    y = 0.18,
+    hjust = 0, 
+    label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_adjusted), 2)),
+    color = roc_colors["Filtered to follow-up > 5 years (n=447)"],
+    size = 4) +
+
+  annotate(
+    "text",
+    x = 0.19,
+    y = 0.08,
     hjust = 0, 
     label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_5_adjusted), 2)),
     color = roc_colors["Filtered to follow-up > 14.6 years (n=222)"],
@@ -5051,6 +5130,8 @@ additional_analysis_4_figure_raw <- p + theme(legend.position = "bottom", legend
 
 rm(roc_nefl_all, youden_nefl_all, youden_best_nefl_all, 
    model_adjusted_all, roc_nefl_all_adjusted, youden_nefl_all_adjusted, 
+   roc_nefl_sensi_2, youden_nefl_sensi_2, youden_best_nefl_sensi_2, 
+   model_adjusted_sensi_2, roc_nefl_sensi_2_adjusted, youden_nefl_sensi_2_adjusted, 
    roc_nefl_sensi_1_3, youden_nefl_sensi_1_3, youden_best_nefl_sensi_1_3, 
    model_adjusted_sensi_1_3, roc_nefl_sensi_1_3_adjusted, youden_nefl_sensi_1_3_adjusted, 
    roc_nefl_sensi_1_3_4, youden_nefl_sensi_1_3_4, youden_best_nefl_sensi_1_3_4, 
@@ -5570,6 +5651,7 @@ extra_rows <-
            analysis == "sensi_1") |>           
   group_by(explanatory) |>                                                      # select explanatory vars with at least one quartile significant 
   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
+  ungroup() |>
   distinct(protein_group, explanatory) |> 
   mutate(
     quartiles = "Quartile 1",

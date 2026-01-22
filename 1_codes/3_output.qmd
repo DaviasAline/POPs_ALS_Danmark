@@ -8,12 +8,13 @@ theme:
   light: flatly
   dark: darkly
 toc-location: left
+execute:
+  echo: false
+  message: false
+  warning: false
 ---
 
 ```{r}
-#| message: false
-#| warning: false
-#| include: false
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2.7_analyses_proteomic_ALS_survival.R")
 ```
 
@@ -22,9 +23,6 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/2.7_analyses_proteomic_ALS_surviv
 ## ALS survival
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 bdd_danish |> 
   filter(als == 1) |>
   ggplot() +
@@ -46,9 +44,6 @@ descrip_num(data = bdd_danish, vars = "follow_up_death") |>
 Not imputed for missing data
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$covar_danish |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -60,9 +55,6 @@ results_descriptive$danish$covar_danish |>
 ### Multiple cholesterol variables
 
 ```{r, fig.height=5}
-#| echo: false
-#| message: false
-#| warning: false
 boxplot(data = bdd_danish, vars = c("fS_Kol", "cholesterol"))
 descrip_num(data = bdd_danish, vars = c("fS_Kol", "cholesterol")) |>
   flextable() |>
@@ -76,9 +68,6 @@ cor.test(bdd_danish$fS_Kol, bdd_danish$cholesterol)
 ### Timing between baseline, ALS diagnosis and death
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 timing <- bdd |> 
   filter(study == "Danish") |>
   filter(als == 1) |>
@@ -107,9 +96,6 @@ rm(timing)
 ### Distribution tables
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$POPs_table_danish |>
   flextable() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -121,9 +107,6 @@ results_descriptive$danish$POPs_table_danish |>
 ### Comparison of distribution cases/controls
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$POPs_table_danish_by_als|>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -135,9 +118,6 @@ results_descriptive$danish$POPs_table_danish_by_als|>
 ### Heatmap of correlation
 
 ```{r fig.height=11, fig.width=11}
-#| echo: false
-#| message: false
-#| warning: false
 corrplot(results_descriptive$danish$POPs_heatmap_danish, 
          method = 'color', 
          type = "lower", 
@@ -153,26 +133,16 @@ corrplot(results_descriptive$danish$POPs_heatmap_danish,
 ### Boxplots
 
 ```{r, fig.width=10, fig.height=10}
-#| echo: false
-#| message: false
-#| warning: false
-# descrip_expo_danish
 results_descriptive$danish$POPs_boxplot_danish_by_als
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$POPs_group_boxplot_danish_by_als
 ```
 
 POPs distribution depending on alive/deceased status at the end of the follow-up (among cases)
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$POPs_group_boxplot_danish_by_death
 ```
 
@@ -181,9 +151,6 @@ results_descriptive$danish$POPs_group_boxplot_danish_by_death
 #### Summed
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 densityplot(data = bdd_danish, vars = POPs_group)
 boxplot(data = bdd_danish, vars = POPs_group)
 heatmap_cor(cormat = bdd_danish[POPs_group], decimal = 1)
@@ -192,38 +159,23 @@ heatmap_cor(cormat = bdd_danish[POPs_group], decimal = 1)
 #### PCBs
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 PCBs <- bdd_danish |> select(all_of(POPs)) |> select(contains("PCB")) |> colnames()
 densityplot(data = bdd_danish, vars = PCBs[1:9])
 ```
 
 ```{r, fig.height=3.33}
-#| echo: false
-#| message: false
-#| warning: false
 densityplot(data = bdd_danish, vars = PCBs[10:13])
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 boxplot(data = bdd_danish, vars = PCBs[1:10])
 ```
 
 ```{r, fig.height=2}
-#| echo: false
-#| message: false
-#| warning: false
 boxplot(data = bdd_danish, vars = PCBs[11:13])
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 heatmap_cor(cormat = bdd_danish[PCBs], decimal = 1)
 rm(PCBs)
 ```
@@ -231,9 +183,6 @@ rm(PCBs)
 #### OCPs
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 OCPs <- bdd_danish |> select(all_of(POPs)) |> select(contains("OCP")) |> colnames()
 densityplot(data = bdd_danish, vars = OCPs)
 boxplot(data = bdd_danish, vars = OCPs)
@@ -243,18 +192,12 @@ heatmap_cor(cormat = bdd_danish[OCPs], decimal = 1)
 #### PBDEs
 
 ```{r,  fig.width=7, fig.height=3}
-#| echo: false
-#| message: false
-#| warning: false
 PBDEs <- bdd_danish |> select(all_of(POPs)) |> select(contains("PBDE")) |> colnames()
 densityplot(data = bdd_danish, vars = PBDEs)
 boxplot(data = bdd_danish, vars = PBDEs)
 ```
 
 ```{r,  fig.width=7, fig.height=4}
-#| echo: false
-#| message: false
-#| warning: false
 heatmap_cor(cormat = bdd_danish[PBDEs], decimal = 1)
 ```
 
@@ -263,9 +206,6 @@ heatmap_cor(cormat = bdd_danish[PBDEs], decimal = 1)
 ### Distribution tables
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$fattyacids_table_danish|>
   flextable() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -277,9 +217,6 @@ results_descriptive$danish$fattyacids_table_danish|>
 ### Comparison of distribution cases/controls
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$fattyacids_table_danish_by_als |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -291,9 +228,6 @@ results_descriptive$danish$fattyacids_table_danish_by_als |>
 ### Heatmap of correlation
 
 ```{r, fig.height=12, fig.width=12}
-#| echo: false
-#| message: false
-#| warning: false
 corrplot(results_descriptive$danish$fattyacids_heatmap_danish, 
          method = 'color', 
          type = "lower", 
@@ -309,9 +243,6 @@ corrplot(results_descriptive$danish$fattyacids_heatmap_danish,
 ### Boxplots
 
 ```{r, fig.height=10, fig.width=10}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$fattyacids_boxplot_danish_by_als
 ```
 
@@ -320,9 +251,6 @@ results_descriptive$danish$fattyacids_boxplot_danish_by_als
 #### Density plots
 
 ```{r, fig.height=10, fig.width=10}
-#| echo: false
-#| message: false
-#| warning: false
 bdd_danish |> 
   select(sample, all_of(fattyacids_tot)) |>
   pivot_longer(cols = -sample, names_to = "fattyacids", values_to = "values") |>
@@ -337,9 +265,6 @@ bdd_danish |>
 ## Heatmap POPs/Fatty acids
 
 ```{r, fig.width=12, fig.height=12}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$POPs_fattyacids_heatmap_danish
 ```
 
@@ -348,9 +273,6 @@ results_descriptive$danish$POPs_fattyacids_heatmap_danish
 ### Distribution table
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$proteomic_table_danish  |>
   flextable() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -397,9 +319,6 @@ corrplot(results_descriptive$danish$proteomic_heatmap_danish,
 ```
 
 ```{r fig.height=11, fig.width=11}
-#| echo: false
-#| message: false
-#| warning: false
 
 vars <- colnames(results_descriptive$danish$proteomic_heatmap_danish)
 
@@ -428,9 +347,6 @@ rm(vars, col_labels, corr_order, col_labels_ordered)
 Neuro explo
 
 ```{r fig.height=11, fig.width=11}
-#| echo: false
-#| message: false
-#| warning: false
 
 corrplot(results_descriptive$danish$proteomic_heatmap_danish_neuro_explo, 
          method = 'color', 
@@ -448,9 +364,6 @@ corrplot(results_descriptive$danish$proteomic_heatmap_danish_neuro_explo,
 Immune response
 
 ```{r fig.height=11, fig.width=11}
-#| echo: false
-#| message: false
-#| warning: false
 
 corrplot(results_descriptive$danish$proteomic_heatmap_danish_immun_res, 
          method = 'color', 
@@ -468,9 +381,6 @@ corrplot(results_descriptive$danish$proteomic_heatmap_danish_immun_res,
 Metabolism
 
 ```{r fig.height=11, fig.width=11}
-#| echo: false
-#| message: false
-#| warning: false
 
 corrplot(results_descriptive$danish$proteomic_heatmap_danish_metabolism, 
          method = 'color', 
@@ -489,35 +399,23 @@ corrplot(results_descriptive$danish$proteomic_heatmap_danish_metabolism,
 ### Boxplots
 
 ```{r, fig.width=10, fig.height=30}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$proteomic_boxplot_danish
 ```
 
 Comparison between cases and controls
 
 ```{r, fig.width=10, fig.height=30}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$proteomic_boxplot_danish_by_als
 ```
 
 Comparison between alive/deceased status at the end of the follow-up (among cases)
 
 ```{r, fig.width=10, fig.height=30}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$proteomic_boxplot_danish_by_death
 ```
 
 ### NEFL 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$figure_NEFL
 ```
 
@@ -527,9 +425,6 @@ results_descriptive$danish$figure_NEFL
 ### Distribution tables
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$EVs_table_danish |>
   flextable() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -541,9 +436,6 @@ results_descriptive$danish$EVs_table_danish |>
 ### Comparison of distribution cases/controls
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$EVs_table_danish_by_als |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -555,9 +447,6 @@ results_descriptive$danish$EVs_table_danish_by_als |>
 ### Heatmap of correlation
 
 ```{r, fig.height=12, fig.width=12}
-#| echo: false
-#| message: false
-#| warning: false
 corrplot(results_descriptive$danish$EVs_heatmap_danish, 
          method = 'color', 
          type = "lower", 
@@ -574,27 +463,18 @@ corrplot(results_descriptive$danish$EVs_heatmap_danish,
 ### Boxplots
 
 ```{r, fig.height=10, fig.width=10}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$EVs_boxplot_danish
 ```
 
 Comparison between cases and controls
 
 ```{r, fig.height=10, fig.width=10}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$EVs_boxplot_danish_by_als
 ```
 
 Comparison between alive/deceased status at the end of the follow-up (among cases)
 
 ```{r, fig.width=10, fig.height=10}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$danish$EVs_boxplot_danish_by_death
 ```
 
@@ -603,9 +483,6 @@ results_descriptive$danish$EVs_boxplot_danish_by_death
 ## ALS survival
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 bdd_finnish |> 
   filter(als == 1) |>
   select(follow_up_death, status_death, study) |>
@@ -628,9 +505,6 @@ descrip_num(data = bdd_finnish, vars = "follow_up_death") |>
 ## Metadata
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$finnish$covar_finnish |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -644,9 +518,6 @@ results_descriptive$finnish$covar_finnish |>
 ### Distribution tables
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$finnish$POPs_table_finnish |>
   flextable() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -658,9 +529,6 @@ results_descriptive$finnish$POPs_table_finnish |>
 ### Comparison of distribution cases/controls
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$finnish$POPs_table_finnish_by_als |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -672,9 +540,6 @@ results_descriptive$finnish$POPs_table_finnish_by_als |>
 ### Heatmap of correlation
 
 ```{r fig.height=11, fig.width=11}
-#| echo: false
-#| message: false
-#| warning: false
 corrplot(results_descriptive$finnish$POPs_heatmap_finnish, 
          method = 'color', 
          type = "lower", 
@@ -690,9 +555,6 @@ corrplot(results_descriptive$finnish$POPs_heatmap_finnish,
 ### Boxplots
 
 ```{r, fig.width=10, fig.height=10}
-#| echo: false
-#| message: false
-#| warning: false
 # results_descriptive$finnish$POPs_boxplot_finnish
 results_descriptive$finnish$POPs_boxplot_finnish_by_als
 ```
@@ -702,9 +564,6 @@ results_descriptive$finnish$POPs_boxplot_finnish_by_als
 #### Summed
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 densityplot(data = bdd_finnish, vars = POPs_group)
 boxplot(data = bdd_finnish, vars = POPs_group)
 heatmap_cor(cormat = bdd_finnish[POPs_group], decimal = 1)
@@ -713,38 +572,23 @@ heatmap_cor(cormat = bdd_finnish[POPs_group], decimal = 1)
 #### PCBs
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 PCBs <- bdd_finnish |> select(all_of(POPs_finnish)) |> select(contains("PCB")) |> colnames()
 densityplot(data = bdd_finnish, vars = PCBs[1:9])
 ```
 
 ```{r, fig.height=3.33}
-#| echo: false
-#| message: false
-#| warning: false
 densityplot(data = bdd_finnish, vars = PCBs[10:13])
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 boxplot(data = bdd_finnish, vars = PCBs[1:10])
 ```
 
 ```{r, fig.height=2}
-#| echo: false
-#| message: false
-#| warning: false
 boxplot(data = bdd_finnish, vars = PCBs[11:13])
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 heatmap_cor(cormat = bdd_finnish[PCBs], decimal = 1)
 rm(PCBs)
 ```
@@ -752,9 +596,6 @@ rm(PCBs)
 #### OCPs
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 OCPs <- bdd_finnish |> select(all_of(POPs_finnish)) |> select(contains("OCP")) |> colnames()
 densityplot(data = bdd_finnish, vars = OCPs)
 boxplot(data = bdd_finnish, vars = OCPs)
@@ -764,18 +605,12 @@ boxplot(data = bdd_finnish, vars = OCPs)
 #### PBDEs
 
 ```{r,  fig.width=7, fig.height=3}
-#| echo: false
-#| message: false
-#| warning: false
 PBDEs <- bdd_finnish |> select(all_of(POPs_finnish)) |> select(contains("PBDE")) |> colnames()
 densityplot(data = bdd_finnish, vars = PBDEs)
 boxplot(data = bdd_finnish, vars = PBDEs)
 ```
 
 ```{r,  fig.width=7, fig.height=4}
-#| echo: false
-#| message: false
-#| warning: false
 heatmap_cor(cormat = bdd_finnish[PBDEs], decimal = 1)
 ```
 
@@ -784,9 +619,6 @@ heatmap_cor(cormat = bdd_finnish[PBDEs], decimal = 1)
 ### Distribution tables
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$finnish$fattyacids_table_finnish |>
   flextable() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -798,9 +630,6 @@ results_descriptive$finnish$fattyacids_table_finnish |>
 ### Comparison of distribution cases/controls
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$finnish$fattyacids_table_finnish_by_als |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -812,9 +641,6 @@ results_descriptive$finnish$fattyacids_table_finnish_by_als |>
 ### Heatmap of correlation
 
 ```{r, fig.height=12, fig.width=12}
-#| echo: false
-#| message: false
-#| warning: false
 corrplot(results_descriptive$finnish$fattyacids_heatmap_finnish, 
          method = 'color', 
          type = "lower", 
@@ -830,18 +656,12 @@ corrplot(results_descriptive$finnish$fattyacids_heatmap_finnish,
 ### Boxplots
 
 ```{r, fig.height=10, fig.width=10}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$finnish$fattyacids_boxplot_finnish_by_als
 ```
 
 ### Detailed distribution
 
 ```{r, fig.height=10, fig.width=10}
-#| echo: false
-#| message: false
-#| warning: false
 bdd_finnish |> 
   select(sample, all_of(fattyacids_tot)) |>
   pivot_longer(cols = -sample, names_to = "fattyacids", values_to = "values") |>
@@ -858,9 +678,6 @@ bdd_finnish |>
 ## Heatmap POPs/Fatty acids
 
 ```{r, fig.width=12, fig.height=12}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$finnish$POPs_fattyacids_heatmap_finnish
 ```
 
@@ -869,9 +686,6 @@ results_descriptive$finnish$POPs_fattyacids_heatmap_finnish
 Why do we have 3 cholesterol variables in the finnish data ?
 
 ```{r, fig.height=4}
-#| echo: false
-#| message: false
-#| warning: false
 boxplot(data = bdd_finnish, vars = c("fS_Kol", "chol", "cholesterol"))
 descrip_num(data = bdd_finnish, vars = c("fS_Kol", "chol", "cholesterol")) |>
   flextable() |>
@@ -901,9 +715,6 @@ corrplot(heatmap_cholesterol,
 ### FMC
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 timing <- bdd |> 
   filter(study == "FMC") |>
   filter(als == 1) |>
@@ -932,9 +743,6 @@ rm(timing)
 ### FMCF
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 timing <- bdd |> 
   filter(study == "FMCF") |>
   filter(als == 1) |>
@@ -962,9 +770,6 @@ rm(timing)
 ### MFH
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 timing <- bdd |> 
   filter(study == "MFH") |>
   filter(als == 1) |>
@@ -995,9 +800,6 @@ rm(timing)
 ### Metadata
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$comp$covar_comp |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -1009,9 +811,6 @@ results_descriptive$comp$covar_comp |>
 ### POPs
 
 ```{r, fig.width=10, fig.height=10}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$comp$POPs_table_comp |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -1024,9 +823,6 @@ results_descriptive$comp$POPs_boxplot_comp
 ### Fatty acids
 
 ```{r, fig.height=12, fig.width=12}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$comp$fattyacids_table_comp |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -1038,12 +834,11 @@ results_descriptive$comp$fattyacids_boxplot_comp
 
 ## Among cases
 
-(for ALS survival analyses) \#### Metadata
+(for ALS survival analyses) 
+
+### Metadata
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$comp$covar_comp_cases |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -1055,9 +850,6 @@ results_descriptive$comp$covar_comp_cases |>
 ### POPs
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_descriptive$comp$POPs_table_comp_cases |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -1068,7 +860,7 @@ results_descriptive$comp$POPs_table_comp_cases |>
 results_descriptive$comp$POPs_boxplot_comp_cases
 ```
 
-```{r, fig.width=12, fig.height=12}
+```{r fig.height=12, fig.width=12}
 #| echo: false
 #| message: false
 #| warning: false
@@ -1093,9 +885,6 @@ corrplot(results_descriptive$comp$POPs_heatmap_cases,
 ### Effects of subject characteristics on ALS occurence
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_occurrence$main$covar |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -1113,16 +902,10 @@ results_POPs_ALS_occurrence$main$covar |>
 In the copollutant models, the pollutant of interest is quartile while the others are s() in a GAM model
 
 ```{r fig.height=9, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_occurrence$main$plot_quart
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 extra_rows <- results_POPs_ALS_occurrence$main$results_quart |>
   distinct(variable) |> 
@@ -1207,9 +990,6 @@ rm(extra_rows, table_S2)
 #### q-gcomp analysis
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_occurrence$main$POPs_ALS_qgcomp_table_danish |>
   flextable() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -1227,9 +1007,6 @@ Relationship between POPs exposure at baseline time and ALS occurrence estimated
 
 
 ```{r, fig.height=3.5, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
 wrap_plots(
   results_POPs_ALS_occurrence$main$plot_base_gam$PCB_DL, 
   results_POPs_ALS_occurrence$main$plot_adjusted_gam$PCB_DL, 
@@ -1277,17 +1054,12 @@ wrap_plots(
 ### Sensitivity analysis total lipid instead of total cholesterol 
 
 ```{r fig.height=9, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
+
 results_POPs_ALS_occurrence$main$plot_quart_sensi_lipid
 ```
 
 
 ```{r fig.height=9, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 
 results_POPs_ALS_occurrence$main$table_quart_sensi_lipid
@@ -1298,17 +1070,12 @@ results_POPs_ALS_occurrence$main$table_quart_sensi_lipid
 ### Sensitivity analysis about diabetes
 
 ```{r fig.height=9, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
+
 results_POPs_ALS_occurrence$main$plot_quart_sensi_diabetes
 ```
 
 
 ```{r fig.height=9, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 
 results_POPs_ALS_occurrence$main$table_quart_sensi_diabetes
@@ -1318,9 +1085,6 @@ results_POPs_ALS_occurrence$main$table_quart_sensi_diabetes
 ### Sensitivity analysis POPs not summed
 #### quartiles
 ```{r,  fig.height=15, fig.width=10}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_occurrence$sensitivity_not_summed$plot_quart_sensi_not_summed
 ```
 
@@ -1328,9 +1092,6 @@ results_POPs_ALS_occurrence$sensitivity_not_summed$plot_quart_sensi_not_summed
 
 ```{r, fig.height=6, fig.width=15}
 #| column: screen-inset-right
-#| echo: false
-#| message: false
-#| warning: false
 wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_not_summed[1:8], ncol = 4)
 wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_not_summed[9:16], ncol = 4)
 wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_not_summed[17:22], ncol = 4)
@@ -1341,16 +1102,10 @@ wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_
 ## Metanalysis (quartiles)
 
 ```{r fig.height=9, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_occurrence$metanalysis$plot_metanalysis_quart
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 extra_rows <- results_POPs_ALS_occurrence$metanalysis$metanalysis_quart |>
   distinct(explanatory) |> 
   mutate(
@@ -1434,9 +1189,6 @@ results_descriptive$comp$covar_comp_cases |>
 ### Effects of subject characteristics on ALS survival
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$main_analysis$covar_danish |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -1450,76 +1202,29 @@ results_POPs_ALS_survival$main_analysis$covar_danish |>
 #### Continuous coding (standardized)
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$main_analysis$POPs_sd_ALS_table_danish  |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$main_analysis$POPs_sd_ALS_figure_danish
 ```
 
 #### Quartiles
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 results_POPs_ALS_survival$main_analysis$POPs_quart_ALS_table_danish |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r fig.height=9, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$main_analysis$POPs_quart_ALS_figure_danish
 ```
 
 #### Cox-gam
 
 ```{r fig.height=11, fig.width=8}
-#| echo: false
-#| message: false
-#| warning: false
-# wrap_plots(list(results_POPs_ALS_survival$main_analysis$plot_base_cox_gam_danish$PCB_4, 
-#                 results_POPs_ALS_survival$main_analysis$plot_adjusted_cox_gam_danish$PCB_4, 
-#                 wrap_elements(grid::nullGrob()),
-#                 results_POPs_ALS_survival$main_analysis$plot_base_cox_gam_danish$PCB_DL, 
-#                 results_POPs_ALS_survival$main_analysis$plot_adjusted_cox_gam_danish$PCB_DL, 
-#                 results_POPs_ALS_survival$main_analysis$plot_copollutant_cox_gam_danish$PCB_DL, 
-#                 
-#                 results_POPs_ALS_survival$main_analysis$plot_base_cox_gam_danish$PCB_NDL, 
-#                 results_POPs_ALS_survival$main_analysis$plot_adjusted_cox_gam_danish$PCB_NDL, 
-#                 results_POPs_ALS_survival$main_analysis$plot_copollutant_cox_gam_danish$PCB_NDL, 
-#                 
-#                 results_POPs_ALS_survival$main_analysis$plot_base_cox_gam_danish$OCP_HCB, 
-#                 results_POPs_ALS_survival$main_analysis$plot_adjusted_cox_gam_danish$OCP_HCB, 
-#                 results_POPs_ALS_survival$main_analysis$plot_copollutant_cox_gam_danish$OCP_HCB), 
-#            ncol = 3)
-# 
-# wrap_plots(list(results_POPs_ALS_survival$main_analysis$plot_base_cox_gam_danish$ΣDDT, 
-#                 results_POPs_ALS_survival$main_analysis$plot_adjusted_cox_gam_danish$ΣDDT, 
-#                 results_POPs_ALS_survival$main_analysis$plot_copollutant_cox_gam_danish$ΣDDT, 
-#                 
-#                 results_POPs_ALS_survival$main_analysis$plot_base_cox_gam_danish$OCP_β_HCH, 
-#                 results_POPs_ALS_survival$main_analysis$plot_adjusted_cox_gam_danish$OCP_β_HCH, 
-#                 results_POPs_ALS_survival$main_analysis$plot_copollutant_cox_gam_danish$OCP_β_HCH, 
-#                 
-#                 results_POPs_ALS_survival$main_analysis$plot_base_cox_gam_danish$Σchlordane, 
-#                 results_POPs_ALS_survival$main_analysis$plot_adjusted_cox_gam_danish$Σchlordane, 
-#                 results_POPs_ALS_survival$main_analysis$plot_copollutant_cox_gam_danish$Σchlordane, 
-#                 
-#                 results_POPs_ALS_survival$main_analysis$plot_base_cox_gam_danish$ΣPBDE, 
-#                 results_POPs_ALS_survival$main_analysis$plot_adjusted_cox_gam_danish$ΣPBDE, 
-#                 results_POPs_ALS_survival$main_analysis$plot_copollutant_cox_gam_danish$ΣPBDE), 
-#            ncol = 3)
 
 wrap_plots(list(results_POPs_ALS_survival$main_analysis$plot_base_cox_gam_danish$PCB_4, 
                 results_POPs_ALS_survival$main_analysis$plot_adjusted_cox_gam_danish$PCB_4, 
@@ -1554,9 +1259,6 @@ wrap_plots(list(results_POPs_ALS_survival$main_analysis$plot_base_cox_gam_danish
 Including all the pollutants
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$main_analysis$qgcomp$POPs_ALS_qgcomp_table_danish  |>
   flextable() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -1569,9 +1271,6 @@ results_POPs_ALS_survival$main_analysis$qgcomp$POPs_ALS_qgcomp_figure_danish
 Selecting the pollutants with a positive weight and adjusting for the others
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$main_analysis$qgcomp$POPs_ALS_qgcomp_positive_table_danish  |>
   flextable() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -1590,27 +1289,18 @@ Mixture models with POPs pre-selection
 Using LASSO
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 plot(results_POPs_ALS_survival$sensi1$sensi1_lasso_sd_danish)  
 ```
 
 Using ridge
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 plot(results_POPs_ALS_survival$sensi1$sensi1_ridge_sd_danish)  
 ```
 
 Using elastic net
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 plot(results_POPs_ALS_survival$sensi1$sensi1_elastic_net_sd_danish)
 ```
 
@@ -1621,27 +1311,18 @@ lambda.min is the value of 𝜆that gives minimum mean cross-validated error
 coefficients using lambda.min Using LASSO
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 coef(results_POPs_ALS_survival$sensi1$sensi1_lasso_sd_danish, s = "lambda.min")  
 ```
 
 Using ridge
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 coef(results_POPs_ALS_survival$sensi1$sensi1_ridge_sd_danish, s = "lambda.min")  
 ```
 
 Using elastic net
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 coef(results_POPs_ALS_survival$sensi1$sensi1_elastic_net_sd_danish, s = "lambda.min")
 ```
 
@@ -1650,27 +1331,18 @@ while lambda.1se is the value of 𝜆that gives the most regularized model such 
 coefficients using lambda.1se Using LASSO
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 coef(results_POPs_ALS_survival$sensi1$sensi1_lasso_sd_danish, s = "lambda.1se")  
 ```
 
 Using ridge
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 coef(results_POPs_ALS_survival$sensi1$sensi1_ridge_sd_danish, s = "lambda.1se")  
 ```
 
 Using elastic net
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 coef(results_POPs_ALS_survival$sensi1$sensi1_elastic_net_sd_danish, s = "lambda.1se")
 ```
 
@@ -1679,9 +1351,6 @@ coef(results_POPs_ALS_survival$sensi1$sensi1_elastic_net_sd_danish, s = "lambda.
 #### Continuous coding
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_danish
 results_POPs_ALS_survival$sensi1$POPs_sd_ALS_table_sensi1_danish
 ```
@@ -1689,9 +1358,6 @@ results_POPs_ALS_survival$sensi1$POPs_sd_ALS_table_sensi1_danish
 #### Quartile coding
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$sensi1$POPs_quart_ALS_figure_sensi1_danish
 results_POPs_ALS_survival$sensi1$POPs_quart_ALS_table_sensi1_danish
 ```
@@ -1701,9 +1367,6 @@ results_POPs_ALS_survival$sensi1$POPs_quart_ALS_table_sensi1_danish
 #### Continuous coding (standardized)
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_ERS_danish
 results_POPs_ALS_survival$sensi1$POPs_sd_ALS_table_sensi1_ERS_danish
 ```
@@ -1711,9 +1374,6 @@ results_POPs_ALS_survival$sensi1$POPs_sd_ALS_table_sensi1_ERS_danish
 #### Quartile coding
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$sensi1$POPs_quart_ALS_figure_sensi1_ERS_danish
 results_POPs_ALS_survival$sensi1$POPs_quart_ALS_table_sensi1_ERS_danish
 ```
@@ -1727,18 +1387,12 @@ coefficients using lambda.min (lambda.min is the value of 𝜆that gives minimum
 Using LASSO
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 coef(results_POPs_ALS_survival$sensi2$sensi2_lasso_sd_danish, s = "lambda.min")  
 ```
 
 Using elastic net
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 coef(results_POPs_ALS_survival$sensi2$sensi2_elastic_net_sd_danish, s = "lambda.min")
 ```
 
@@ -1747,9 +1401,6 @@ coef(results_POPs_ALS_survival$sensi2$sensi2_elastic_net_sd_danish, s = "lambda.
 #### Continuous coding (standardized)
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_danish
 results_POPs_ALS_survival$sensi2$POPs_sd_ALS_table_sensi2_danish
 ```
@@ -1757,9 +1408,6 @@ results_POPs_ALS_survival$sensi2$POPs_sd_ALS_table_sensi2_danish
 #### Quartile coding
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$sensi2$POPs_quart_ALS_figure_sensi2_danish
 results_POPs_ALS_survival$sensi2$POPs_quart_ALS_table_sensi2_danish
 ```
@@ -1769,9 +1417,6 @@ results_POPs_ALS_survival$sensi2$POPs_quart_ALS_table_sensi2_danish
 #### Continuous coding (standardized)
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_ERS_danish
 results_POPs_ALS_survival$sensi2$POPs_sd_ALS_table_sensi2_ERS_danish
 ```
@@ -1779,9 +1424,6 @@ results_POPs_ALS_survival$sensi2$POPs_sd_ALS_table_sensi2_ERS_danish
 #### Quartile coding
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$sensi2$POPs_quart_ALS_figure_sensi2_ERS_danish
 results_POPs_ALS_survival$sensi2$POPs_quart_ALS_table_sensi2_ERS_danish
 ```
@@ -1789,16 +1431,10 @@ results_POPs_ALS_survival$sensi2$POPs_quart_ALS_table_sensi2_ERS_danish
 ## Sensitivity analyses 3
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$sensi3$sensi3_figure
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$sensi3$sensi3_table
 ```
 
@@ -1807,9 +1443,6 @@ results_POPs_ALS_survival$sensi3$sensi3_table
 ### Cox models (sd)
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_POPs_ALS_survival$sensi4$POPs_sd_ALS_table_danish_sensi_4
 results_POPs_ALS_survival$sensi4$POPs_sd_ALS_figure_danish_sensi_4
 ```
@@ -1817,9 +1450,6 @@ results_POPs_ALS_survival$sensi4$POPs_sd_ALS_figure_danish_sensi_4
 ### Cox-GAMs models
 
 ```{r fig.height=11, fig.width=8}
-#| echo: false
-#| message: false
-#| warning: false
 
 wrap_plots(list(results_POPs_ALS_survival$main_analysis$plot_adjusted_cox_gam_danish$PCB_4,
                 results_POPs_ALS_survival$sensi4$plot_adjusted_cox_gam_danish_sensi_4$PCB_4,
@@ -1857,9 +1487,6 @@ wrap_plots(list(
 ### Effects of subject characterist on ALS occurence in the Danish cohort
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_fattyacids_ALS_occurrence$danish$covar_als_table_danish  |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
@@ -1869,81 +1496,48 @@ results_fattyacids_ALS_occurrence$danish$covar_als_table_danish  |>
 #### Continuous coding (standardized)
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_fattyacids_ALS_occurrence$danish$fattyacids_sd_als_table_danish |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_fattyacids_ALS_occurrence$danish$fattyacids_sd_als_figure_danish
 ```
 
 #### Quartiles
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_fattyacids_ALS_occurrence$danish$fattyacids_quart_als_table_danish |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r, fig.height=12}
-#| echo: false
-#| message: false
-#| warning: false
 results_fattyacids_ALS_occurrence$danish$fattyacids_quart_als_figure_danish
 ```
 
 ## Finnish cohorts
-
-### Effects of subject characteristics on ALS occurence in the Finnish cohorts
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-
-```
 
 ### Effects of fatty acids on ALS occurence in the Finnish cohorts
 
 #### Continuous coding (standardized)
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_fattyacids_ALS_occurrence$finnish$fattyacids_sd_als_table_finnish |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_fattyacids_ALS_occurrence$finnish$fattyacids_sd_als_figure_finnish
 ```
 
 #### Quartiles
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_fattyacids_ALS_occurrence$finnish$fattyacids_quart_als_table_finnish |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r, fig.height=12}
-#| echo: false
-#| message: false
-#| warning: false
 results_fattyacids_ALS_occurrence$finnish$fattyacids_quart_als_figure_finnish
 ```
 
@@ -1952,9 +1546,6 @@ results_fattyacids_ALS_occurrence$finnish$fattyacids_quart_als_figure_finnish
 #### Continuous coding (standardized)
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_sd_als_table_sensi_ca_finnish 
 results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_sd_als_figure_sensi_ca_finnish
 ```
@@ -1962,16 +1553,10 @@ results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_sd_als_figure_sensi_ca_fin
 #### Quartiles
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_table_sensi_ca_finnish 
 ```
 
 ```{r, fig.height=13}
-#| echo: false
-#| message: false
-#| warning: false
 results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_figure_sensi_ca_finnish
 ```
 
@@ -1982,9 +1567,6 @@ results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_figure_sensi_ca_
 ### Effects of covariates on ALS survival
 
 ```{r}
-#| echo: false
-#| message: true
-#| warning: false
 results_fattyacids_ALS_survival$danish$covar_danish |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -1996,9 +1578,6 @@ results_fattyacids_ALS_survival$danish$covar_danish |>
 ### Continuous coding (standardized)
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_fattyacids_ALS_survival$danish$fattyacids_sd_als_table_danish |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 results_fattyacids_ALS_survival$danish$fattyacids_sd_als_figure_danish
@@ -2007,24 +1586,15 @@ results_fattyacids_ALS_survival$danish$fattyacids_sd_als_figure_danish
 ### Quartiles
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_fattyacids_ALS_survival$danish$fattyacids_quart_als_table_danish |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r, fig.height=12}
-#| echo: false
-#| message: false
-#| warning: false
 results_fattyacids_ALS_survival$danish$fattyacids_quart_als_figure_danish
 ```
 
 ```{r, fig.height=12, fig.width=12}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 arrange_ggsurvplots(
   results_fattyacids_ALS_survival$danish$survival_plots_danish[1:4],
@@ -2032,71 +1602,160 @@ arrange_ggsurvplots(
   nrow = 2)
 ```
 
-## Finnish cohorts
-
-### Effects of covariates on ALS survival
-
-To be done
-
-```{r}
-#| echo: false
-#| message: true
-#| warning: false
-```
-
-### Continuous coding (standardized)
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_fattyacids_ALS_survival$finnish$fattyacids_sd_als_table_finnish |>
-  set_table_properties(width = 1, layout = "autofit", align = "left")
-results_fattyacids_ALS_survival$finnish$fattyacids_sd_als_figure_finnish
-```
-
-### Quartiles
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
-results_fattyacids_ALS_survival$finnish$fattyacids_quart_als_table_finnish |>
-  set_table_properties(width = 1, layout = "autofit", align = "left")
-```
-
-```{r, fig.height=12}
-#| echo: false
-#| message: false
-#| warning: false
-results_fattyacids_ALS_survival$finnish$fattyacids_quart_als_figure_finnish
-```
-
-## Comparison of the results
-
-```{r, fig.height=10}
-#| echo: false
-#| message: false
-#| warning: false
-results_fattyacids_ALS_survival$comp_results_danish_finnish
-```
-
 
 # NEFL and ALS risk
 ## Main analysis
+### Continuous coding (standardized)
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
+results_proteomic_ALS_occurrence$main$main_results |>
+  filter(analysis == "sensi_1", 
+         term == "Continuous", 
+         explanatory == "NEFL") |>
+  mutate(signif = ifelse(p_value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
+         model = fct_recode(model, 
+                            "Adjusted models" = "adjusted",
+                            "Base models" = "base"), 
+         model = fct_relevel(model, "Base models", "Adjusted models"), 
+         analysis = fct_recode(analysis, "Main analysis\n(n=495)" = "sensi_1")) |> 
+  ggplot(aes(x = explanatory, y = OR_raw, ymin = lower_CI, ymax = upper_CI, color = signif)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(rows = dplyr::vars(analysis), cols = dplyr::vars(model), switch = "y") +                         # , scales = "free_x"
+  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  labs( y = "Odd Ratios (ORs)", color = "p-value") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y.left = element_text(hjust = 0.5, vjust = 0.5, angle = 0), 
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank()) +
+  coord_flip()
+
+```
+
+```{r}
+results_proteomic_ALS_occurrence$main$main_results |>
+  filter(analysis == "sensi_1", 
+         term == "Continuous", 
+         explanatory == "NEFL") |>
+  mutate(analysis = fct_recode(analysis, "Main analysis (n=495)" = "sensi_1")) |> 
+  select(analysis, model, explanatory, OR, "95% CI", p_value) |> 
+  pivot_wider(
+    names_from = model,  
+    values_from = c(OR, `95% CI`, p_value)) |> 
+  select(analysis, explanatory, 'OR' = 'OR_base', '95% CI' = '95% CI_base', 'p-value' = 'p_value_base', 
+         'OR ' = 'OR_adjusted', '95% CI ' = '95% CI_adjusted', 'p-value ' = 'p_value_adjusted') |>
+  flextable() |>
+  add_footer_lines(
+    "1Base model is matched for sex and birth year. Adjusted model further accounts for smoking, body mass index and marital status. 
+  2Estimated risk of ALS for a one standard deviation increase of pre-disease NEFL (NPX). 
+  3CI: Confidence interval.") |>
+  add_header(
+    "analysis" = "Analyses",
+    "explanatory" = "Explanatory variable", 
+    "OR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", 
+    "OR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model") |>
+  merge_h(part = "header") |>
+  theme_vanilla() |>
+  bold(j = "analysis", part = "body") |>
+  bold(j = "explanatory", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "analysis", align = "left", part = "all") |> 
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "analysis", part = "header") |>
+  merge_at(j = "explanatory", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+```
+
+### Quartiles 
+```{r}
+extra_rows <- 
+  results_proteomic_ALS_occurrence$main$main_results |>
+  filter(model %in% c("base", "adjusted") &                                     # select only quartile results
+           term != "Continuous" & 
+           analysis == "sensi_1" &
+           explanatory == "NEFL") |>           
+  distinct(protein_group, explanatory) |> 
+  mutate(
+    quartiles = "Quartile 1",
+    "OR_base" = '-', "95% CI_base" = '-', "p_value_base" = '', "p_value_heterogeneity_base" = '', "p_value_trend_base" = '',
+    "OR_adjusted" = '-', "95% CI_adjusted" = '-', "p_value_adjusted" = '', "p_value_heterogeneity_adjusted" = '', "p_value_trend_adjusted" = '')
+
+NEFL_quart_ALS_table_sensi_1 <- 
+  results_proteomic_ALS_occurrence$main$main_results |>
+  filter(model %in% c("base", "adjusted") &                                     # select quartile results
+           term != "Continuous" & 
+           analysis == "sensi_1" & 
+           explanatory == "NEFL") |>             
+  select(model, protein_group, explanatory, term, OR, "95% CI", "p_value", "p_value_heterogeneity", "p_value_trend") |>
+  pivot_wider(names_from = "model", values_from = c("OR", "95% CI", "p_value", "p_value_heterogeneity", "p_value_trend")) |>
+  select(protein_group, explanatory, quartiles = term, contains("base"), contains("adjusted")) 
+
+NEFL_quart_ALS_table_sensi_1 <- 
+  NEFL_quart_ALS_table_sensi_1 |>
+  mutate_if(is.numeric, as.character) |>
+  bind_rows(extra_rows) |>
+  group_by(explanatory) |>
+  mutate(p_value_heterogeneity_base = ifelse(quartiles == 'Quartile 1', p_value_heterogeneity_base[quartiles == 'Quartile 2'], ''), 
+         p_value_trend_base = ifelse(quartiles == 'Quartile 1', p_value_trend_base[quartiles == 'Quartile 2'], ''),
+         p_value_heterogeneity_adjusted = ifelse(quartiles == 'Quartile 1', p_value_heterogeneity_adjusted[quartiles == 'Quartile 2'], ''), 
+         p_value_trend_adjusted = ifelse(quartiles == 'Quartile 1', p_value_trend_adjusted[quartiles == 'Quartile 2'], '')) |>
+  ungroup() |>
+  rename("OR" = "OR_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base", "Heterogeneity test" = "p_value_heterogeneity_base",  "Trend test" = "p_value_trend_base",
+         "OR " = "OR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p_value_adjusted", "Heterogeneity test " = "p_value_heterogeneity_adjusted",  "Trend test " = "p_value_trend_adjusted") |>
+  arrange(protein_group, explanatory, quartiles) |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are matched on birth year and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
+    3CI: Confidence interval.
+    4Heterogeneity tests in outcome value across protein quartiles, matched on sex and birth year. 
+    5Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and birth year. 
+    6Heterogeneity tests in outcome value across POP quartiles, matched on sex and birth year, and adjusted for smoking and body mass index.
+    7Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and birth year, and adjusted for smoking and body mass index.") |>
+  add_header(
+    "explanatory" = "Pre-disease plasma proteins", 
+    "protein_group" = "Protein group", 
+    "quartiles" = "Quartiles",
+    "OR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model",  "Heterogeneity test" = "Base model",   "Trend test" = "Base model", 
+    "OR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model", "Heterogeneity test " = "Adjusted model",   "Trend test " = "Adjusted model") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  merge_v(j = "protein_group") |>
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  merge_v(j = "explanatory") |>
+  bold(j = "explanatory", part = "body") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  merge_at(j = "quartiles", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
+NEFL_quart_ALS_table_sensi_1
+
+rm(extra_rows, NEFL_quart_ALS_table_sensi_1)
+```
+
+
+### GAMs
+```{r}
 wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$signif$proteomic_neuro_explo_NEFL_sensi_1,  
            results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$signif$proteomic_neuro_explo_NEFL_sensi_1)
 ```
 
+
+
+## Sensitivity analysis: effect of follow_up duration
+### Continuous (standardized)
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
-  results_proteomic_ALS_occurrence$main$main_results |>
+results_proteomic_ALS_occurrence$main$main_results |>
   filter(analysis %in% c("sensi_1", "sensi_2", "sensi_1_3", "sensi_1_3_4", "sensi_1_3_5"), 
          term == "Continuous", 
          explanatory == "NEFL") |>
@@ -2135,11 +1794,8 @@ wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$signif
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
-
-  results_proteomic_ALS_occurrence$main$main_results |>
+#| column: screen-inset-right
+results_proteomic_ALS_occurrence$main$main_results |>
   filter(analysis %in% c("sensi_1", "sensi_2", "sensi_1_3", "sensi_1_3_4", "sensi_1_3_5"), 
          term == "Continuous", 
          explanatory == "NEFL") |>
@@ -2186,12 +1842,9 @@ wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$signif
 ```
 
 
-## Sensitivity analysis
-Filtering the data to follow-up > 5 years
+### GAMs
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
+#| column: screen-inset-right
 wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$signif$proteomic_neuro_explo_NEFL_sensi_1, 
            results_proteomic_ALS_occurrence$sensi_2$plot_adjusted_gam_sensi_2$signif$proteomic_neuro_explo_NEFL, 
            results_proteomic_ALS_occurrence$sensi_1_3$plot_adjusted_gam_sensi_1_3$signif$proteomic_neuro_explo_NEFL_sensi_1_3, 
@@ -2199,20 +1852,145 @@ wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$si
            results_proteomic_ALS_occurrence$sensi_1_3_5$plot_adjusted_gam_sensi_1_3_5$not_signif$proteomic_neuro_explo_NEFL_sensi_1_3_5)
 ```
 
-## Additional analysis 
-### NEFL over time
+### Additional analysis: NEFL over time
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_over_time_sensi_1
 ```
 
-### AUC
+
+
+## Sensitivity analysis: effect of sex 
+### Continuous (standardized)
+```{r}
+results_proteomic_ALS_occurrence$main$main_results |>   
+  filter(model == "adjusted" &                                                  # select only adjusted results
+           term == "Continuous" &                                               # select only continuous results
+           analysis %in% c("sensi_1", "sensi_1_7_female", "sensi_1_7_male") &
+           explanatory == "NEFL") |>            
+  select(analysis, explanatory, protein_group, OR, "95% CI", "p_value") |>
+  pivot_wider(names_from = "analysis", values_from = c("OR", "95% CI", "p_value")) |>
+  select(protein_group, explanatory, 
+         "OR_sensi_1", "95% CI_sensi_1", "p_value_sensi_1", 
+         "OR_sensi_1_7_female", "95% CI_sensi_1_7_female", "p_value_sensi_1_7_female", 
+         "OR_sensi_1_7_male", "95% CI_sensi_1_7_male", "p_value_sensi_1_7_male") |>
+  rename("OR" = "OR_sensi_1", "95% CI" = "95% CI_sensi_1", "p-value" = "p_value_sensi_1", 
+         "OR " = "OR_sensi_1_7_female", "95% CI " = "95% CI_sensi_1_7_female", "p-value " = "p_value_sensi_1_7_female", 
+         " OR " = "OR_sensi_1_7_male", " 95% CI " = "95% CI_sensi_1_7_male", " p-value " = "p_value_sensi_1_7_male") |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are matched on birth year and adjusted for smoking and body mass index. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
+    3CI: Confidence interval.") |>
+  add_header(
+    "explanatory" = "Pre-disease plasma proteins", 
+    "protein_group" = "Protein group", 
+    "OR" = "Females and males (main analyses)", "95% CI" = "Females and males (main analyses)", "p-value" = "Females and males (main analyses)", 
+    "OR " = "Females", "95% CI " = "Females", "p-value " = "Females", 
+    " OR " = "Males", " 95% CI " = "Males", " p-value " = "Males") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  merge_v(j = "explanatory") |>
+  bold(j = "explanatory", part = "body") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  merge_v(j = "protein_group") |>
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+```
+
+### Quartiles 
+```{r}
+extra_rows <- 
+  results_proteomic_ALS_occurrence$main$main_results |>
+  filter(model == "adjusted" &                                                  # select only adjusted results
+           term != "Continuous" &                                               # select only continuous results
+           analysis %in% c("sensi_1", "sensi_1_7_female", "sensi_1_7_male") &
+           explanatory == "NEFL") |>           
+  distinct(protein_group, explanatory) |> 
+  mutate(
+    quartiles = "Quartile 1",
+    "OR_sensi_1" = '-', "95% CI_sensi_1" = '-', "p_value_sensi_1" = '', "p_value_heterogeneity_sensi_1" = '', "p_value_trend_sensi_1" = '',
+    "OR_sensi_1_7_female" = '-', "95% CI_sensi_1_7_female" = '-', "p_value_sensi_1_7_female" = '', "p_value_heterogeneity_sensi_1_7_female" = '', "p_value_trend_sensi_1_7_female" = '',
+    "OR_sensi_1_7_male" = '-', "95% CI_sensi_1_7_male" = '-', "p_value_sensi_1_7_male" = '', "p_value_heterogeneity_sensi_1_7_male" = '', "p_value_trend_sensi_1_7_male" = '')
+
+NEFL_quart_ALS_table_sensi_1_7 <- 
+  results_proteomic_ALS_occurrence$main$main_results |>
+  filter(model == "adjusted" &                                                  # select only adjusted results
+           term != "Continuous" &                                               # select only continuous results
+           analysis %in% c("sensi_1", "sensi_1_7_female", "sensi_1_7_male") &
+           explanatory == "NEFL") |>              
+  select(analysis, protein_group, explanatory, term, OR, "95% CI", "p_value", "p_value_heterogeneity", "p_value_trend") |>
+  pivot_wider(names_from = "analysis", values_from = c("OR", "95% CI", "p_value", "p_value_heterogeneity", "p_value_trend")) |>
+  select(protein_group, explanatory, quartiles = term, matches("_sensi_1$"), matches("_sensi_1_7_female$"), matches("_sensi_1_7_male$")) 
+
+NEFL_quart_ALS_table_sensi_1_7 <- 
+  NEFL_quart_ALS_table_sensi_1_7 |>
+  mutate_if(is.numeric, as.character) |>
+  bind_rows(extra_rows) |>
+  group_by(explanatory) |>
+  mutate(p_value_heterogeneity_sensi_1 = ifelse(quartiles == 'Quartile 1', p_value_heterogeneity_sensi_1[quartiles == 'Quartile 2'], ''), 
+         p_value_trend_sensi_1 = ifelse(quartiles == 'Quartile 1', p_value_trend_sensi_1[quartiles == 'Quartile 2'], ''),
+         p_value_heterogeneity_sensi_1_7_female = ifelse(quartiles == 'Quartile 1', p_value_heterogeneity_sensi_1_7_female[quartiles == 'Quartile 2'], ''), 
+         p_value_trend_sensi_1_7_female = ifelse(quartiles == 'Quartile 1', p_value_trend_sensi_1_7_female[quartiles == 'Quartile 2'], ''),
+         p_value_heterogeneity_sensi_1_7_male = ifelse(quartiles == 'Quartile 1', p_value_heterogeneity_sensi_1_7_male[quartiles == 'Quartile 2'], ''), 
+         p_value_trend_sensi_1_7_male = ifelse(quartiles == 'Quartile 1', p_value_trend_sensi_1_7_male[quartiles == 'Quartile 2'], '')) |>
+  ungroup() |>
+  rename("OR" = "OR_sensi_1", "95% CI" = "95% CI_sensi_1", "p-value" = "p_value_sensi_1", "Heterogeneity test" = "p_value_heterogeneity_sensi_1",  "Trend test" = "p_value_trend_sensi_1",
+         "OR " = "OR_sensi_1_7_female", "95% CI " = "95% CI_sensi_1_7_female", "p-value " = "p_value_sensi_1_7_female", "Heterogeneity test " = "p_value_heterogeneity_sensi_1_7_female",  "Trend test " = "p_value_trend_sensi_1_7_female",
+         " OR " = "OR_sensi_1_7_male", " 95% CI " = "95% CI_sensi_1_7_male", " p-value " = "p_value_sensi_1_7_male", " Heterogeneity test " = "p_value_heterogeneity_sensi_1_7_male",  " Trend test " = "p_value_trend_sensi_1_7_male") |>
+  arrange(protein_group, explanatory, quartiles) |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are matched on birth year and adjusted for smoking and body mass index. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
+    3CI: Confidence interval.
+    4Heterogeneity tests in outcome value across POP quartiles, matched on birth year and adjusted for smoking and body mass index.
+    5Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on birth year and adjusted for smoking and body mass index.") |>
+  add_header(
+    "explanatory" = "Pre-disease plasma proteins", 
+    "protein_group" = "Protein group", 
+    "quartiles" = "Quartiles",
+    "OR" = "Females and males (main analyses)", "95% CI" = "Females and males (main analyses)", "p-value" = "Females and males (main analyses)",  "Heterogeneity test" = "Females and males (main analyses)",   "Trend test" = "Females and males (main analyses)", 
+    "OR " = "Females", "95% CI " = "Females", "p-value " = "Females",  "Heterogeneity test " = "Females",   "Trend test " = "Females", 
+    " OR " = "Males", " 95% CI " = "Males", " p-value " = "Males", " Heterogeneity test " = "Males",   " Trend test " = "Males") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  merge_v(j = "protein_group") |>
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  merge_v(j = "explanatory") |>
+  bold(j = "explanatory", part = "body") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  merge_at(j = "quartiles", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
+NEFL_quart_ALS_table_sensi_1_7
+
+rm(extra_rows, NEFL_quart_ALS_table_sensi_1_7)
+```
+
+
+### GAMs
+```{r, fig.height=4}
+#| column: screen-inset-right
+wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$signif$proteomic_neuro_explo_NEFL_sensi_1, 
+           results_proteomic_ALS_occurrence$sensi_1_7$plot_adjusted_gam_sensi_1_7_female$signif$proteomic_neuro_explo_NEFL_sensi_1_7_female, 
+           results_proteomic_ALS_occurrence$sensi_1_7$plot_adjusted_gam_sensi_1_7_male$signif$proteomic_neuro_explo_NEFL_sensi_1_7_male, 
+           ncol = 3)
+```
+
+## Additional analysis: AUC
 ```{r, fig.height=8, fig.width=12}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence$additional_analysis_4$additional_analysis_4_figure
 ```
@@ -2220,41 +1998,39 @@ results_proteomic_ALS_occurrence$additional_analysis_4$additional_analysis_4_fig
 
 
 # NEFL and ALS survival 
+## Main analyses 
+### Continuous coding (standardized)
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
-wrap_plots(results_proteomic_ALS_survival$main$plot_base_cox_gam_danish$NEFL, 
-           results_proteomic_ALS_survival$main$plot_adjusted_cox_gam_danish$NEFL)
-```
-
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_proteomic_ALS_survival$main$main_results |>
-  filter(term == "Continuous", 
-         explanatory == "NEFL") |> 
-  select(model, explanatory, HR, "95% CI", p_value) |> 
-  pivot_wider(
-    names_from = model,  
-    values_from = c(HR, `95% CI`, p_value)) |> 
-  select(explanatory, 
-         'HR' = 'HR_base', '95% CI' = '95% CI_base', 'p-value' = 'p_value_base', 
-         'HR ' = 'HR_adjusted', '95% CI ' = '95% CI_adjusted', 'p-value ' = 'p_value_adjusted') |>
+  filter(model %in% c("base", "adjusted") & 
+           term == "Continuous" & 
+           analysis == "main" &
+           explanatory == "NEFL") |>            
+  select(model, explanatory, protein_group, term, HR, "95% CI", "p_value") |>
+  arrange(protein_group, explanatory) |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p_value")) |>
+  select(protein_group, explanatory, contains("base"), contains("adjusted")) |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base", 
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p_value_adjusted") |>
   flextable() |>
   add_footer_lines(
-    "1All models are matched for sex and birth year. Adjusted models further account for smoking, body mass index and marital status. 
-  2Estimated risk of ALS for a one standard deviation increase of pre-disease NEFL (NPX). 
-  3CI: Confidence interval.") |>
+    "1Base model is adjusted for age at diagnosis and sex. Adjusted model further accounts for smoking and body mass index. 
+    2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease plasma concentration of proteins. 
+    3CI: Confidence interval.") |>
   add_header(
-    "explanatory" = "Explanatory variable",
-    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", 
-    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model") |>
-  merge_h(part = "header") |>
+    "explanatory" = "Pre-disease plasma proteins", 
+    "protein_group" = "Protein group", 
+    "HR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models", 
+    "HR " = "Adjusted models", "95% CI " = "Adjusted models", "p-value " = "Adjusted models") |>
   theme_vanilla() |>
-  bold(j = "explanatory", part = "body") |>
+  merge_h(part = "header") |>
   align(align = "center", part = "all") |>
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  merge_v(j = "protein_group") |>
+  merge_v(j = "explanatory") |>
+  bold(j = "explanatory", part = "body") |>
   align(j = "explanatory", align = "left", part = "all") |> 
   merge_at(j = "explanatory", part = "header") |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -2262,26 +2038,111 @@ results_proteomic_ALS_survival$main$main_results |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 ```
 
+
+### Quartiles
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
+extra_rows <- 
+  results_proteomic_ALS_survival$main$main_results |>
+  filter(model %in% c("base", "adjusted") & 
+           term != "Continuous" & 
+           analysis == "main" & 
+           explanatory == "NEFL") |>   
+  distinct(protein_group, explanatory) |> 
+  mutate(
+    quartiles = "Quartile 1",
+    "HR_base" = '-', "95% CI_base" = '-', "p_value_base" = '', "p_value_heterogeneity_base" = '', "p_value_trend_base" = '',
+    "HR_adjusted" = '-', "95% CI_adjusted" = '-', "p_value_adjusted" = '', "p_value_heterogeneity_adjusted" = '', "p_value_trend_adjusted" = '')
+
+NEFL_quart_ALS_table <- 
+  results_proteomic_ALS_survival$main$main_results |>
+  filter(model %in% c("base", "adjusted") & 
+           term != "Continuous" & 
+           analysis == "main" & 
+           explanatory == "NEFL") |>    
+  select(model, protein_group, explanatory, term, HR, "95% CI", "p_value", "p_value_heterogeneity", "p_value_trend") |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p_value", "p_value_heterogeneity", "p_value_trend")) |>
+  select(protein_group, explanatory, quartiles = term, contains("base"), contains("adjusted")) 
+
+NEFL_quart_ALS_table <- 
+  NEFL_quart_ALS_table |>
+  mutate_if(is.numeric, as.character) |>
+  bind_rows(extra_rows) |>
+  group_by(explanatory) |>
+  mutate(p_value_heterogeneity_base = ifelse(quartiles == 'Quartile 1', p_value_heterogeneity_base[quartiles == 'Quartile 2'], ''), 
+         p_value_trend_base = ifelse(quartiles == 'Quartile 1', p_value_trend_base[quartiles == 'Quartile 2'], ''),
+         p_value_heterogeneity_adjusted = ifelse(quartiles == 'Quartile 1', p_value_heterogeneity_adjusted[quartiles == 'Quartile 2'], ''), 
+         p_value_trend_adjusted = ifelse(quartiles == 'Quartile 1', p_value_trend_adjusted[quartiles == 'Quartile 2'], '')) |>
+  ungroup() |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base", "Heterogeneity test" = "p_value_heterogeneity_base",  "Trend test" = "p_value_trend_base",
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p_value_adjusted", "Heterogeneity test " = "p_value_heterogeneity_adjusted",  "Trend test " = "p_value_trend_adjusted") |>
+  arrange(protein_group, explanatory, quartiles) |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are adjusted for age at baseline and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
+    3CI: Confidence interval.") |>
+  add_header(
+    "explanatory" = "Pre-disease plasma proteins", 
+    "protein_group" = "Protein group", 
+    "quartiles" = "Quartiles",
+    "HR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models", 
+    "Heterogeneity test" = "Base models",  "Trend test" = "Base models",
+    "HR " = "Adjusted models", "95% CI " = "Adjusted models", "p-value " = "Adjusted models", 
+    "Heterogeneity test " = "Adjusted models",  "Trend test " = "Adjusted models") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  merge_v(j = "protein_group") |>
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  merge_v(j = "explanatory") |>
+  bold(j = "explanatory", part = "body") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  merge_at(j = "quartiles", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
+NEFL_quart_ALS_table
+
+rm(extra_rows, NEFL_quart_ALS_table)
+```
+
+### GAMs
+```{r}
+wrap_plots(results_proteomic_ALS_survival$main$plot_base_cox_gam_danish$not_signif$NEFL, 
+           results_proteomic_ALS_survival$main$plot_adjusted_cox_gam_danish$not_signif$NEFL)
+```
+
+## Sensitivity analysis: effect of follow-up duration
+```{r}
 results_proteomic_ALS_survival$main$main_results |>
-  filter(term == "Continuous", 
-         explanatory == "NEFL") |> 
+  filter(analysis %in% c("main", "sensi_1_3", "sensi_1_3_4", "sensi_1_3_5"), 
+         term == "Continuous", 
+         explanatory == "NEFL") |>
   mutate(signif = ifelse(p_value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
-         model = fct_recode(model,
+         model = fct_recode(model, 
                             "Adjusted models" = "adjusted",
-                            "Base models" = "base"),
-         model = fct_relevel(model, "Base models", "Adjusted models")) |> 
+                            "Base models" = "base"), 
+         model = fct_relevel(model, "Base models", "Adjusted models"), 
+         analysis = fct_recode(analysis, 
+             "Main analysis\n(n=165)" = "main",
+             "Filtered to\nfollow-up > 5 years\n (n=148)" = "sensi_1_3",
+             "Filtered to follow-up\nbetween 5 and 14.6 years\n(n=74)" = "sensi_1_3_4",
+             "Filtered to\nfollow-up > 14.6 years\n (n=74)" = "sensi_1_3_5"), 
+         analysis = fct_relevel(analysis, 
+                                "Main analysis\n(n=165)", 
+                                "Filtered to\nfollow-up > 5 years\n (n=148)", 
+                                "Filtered to follow-up\nbetween 5 and 14.6 years\n(n=74)",
+                                "Filtered to\nfollow-up > 14.6 years\n (n=74)")) |> 
   ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI, color = signif)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(
-    # rows = dplyr::vars(analysis), 
-             cols = dplyr::vars(model), switch = "y") +                         # , scales = "free_x"
+  facet_grid(rows = dplyr::vars(analysis), cols = dplyr::vars(model), switch = "y") +                         # , scales = "free_x"
   scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs( y = "Hazard Ratios (ORs)", color = "p-value") +
+  labs( y = "Hazard ratios (HRs)", color = "p-value") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
         legend.position = "bottom", 
@@ -2292,6 +2153,94 @@ results_proteomic_ALS_survival$main$main_results |>
   coord_flip()
 ```
 
+```{r}
+#| column: screen-inset-right
+results_proteomic_ALS_survival$main$main_results |>
+  filter(analysis %in% c("main", "sensi_1_3", "sensi_1_3_4", "sensi_1_3_5"), 
+         term == "Continuous", 
+         explanatory == "NEFL") |>
+  mutate(analysis = fct_recode(analysis, 
+                               "Main analysis (n=165)" = "main",
+                               "Filtered to follow-up > 5 years (n=148)" = "sensi_1_3",
+                               "Filtered to follow-up between 5 and 14.6 years (n=74)" = "sensi_1_3_4",
+                               "Filtered to follow-up > 14.6 years (n=74)" = "sensi_1_3_5"), 
+         analysis = fct_relevel(analysis, 
+                                "Main analysis (n=165)", 
+                                "Filtered to follow-up > 5 years (n=148)", 
+                                "Filtered to follow-up between 5 and 14.6 years (n=74)",
+                                "Filtered to follow-up > 14.6 years (n=74)")) |> 
+  select(analysis, model, explanatory, HR, "95% CI", p_value) |> 
+  pivot_wider(
+    names_from = model,  
+    values_from = c(HR, `95% CI`, p_value)) |> 
+  select(analysis, explanatory, 'HR' = 'HR_base', '95% CI' = '95% CI_base', 'p-value' = 'p_value_base', 
+         'HR ' = 'HR_adjusted', '95% CI ' = '95% CI_adjusted', 'p-value ' = 'p_value_adjusted') |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are matched for sex and birth year. Adjusted models further account for smoking, body mass index and marital status. 
+  2Estimated risk of ALS for a one standard deviation increase of pre-disease NEFL (NPX). 
+  3CI: Confidence interval.") |>
+  add_header(
+    "analysis" = "Analyses",
+    "explanatory" = "Explanatory variable", 
+    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", 
+    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model") |>
+  merge_h(part = "header") |>
+  theme_vanilla() |>
+  bold(j = "analysis", part = "body") |>
+  bold(j = "explanatory", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "analysis", align = "left", part = "all") |> 
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "analysis", part = "header") |>
+  merge_at(j = "explanatory", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+```
+
+
+
+## Sensitivity analysis: effect of sex
+```{r}
+results_proteomic_ALS_survival$main$main_results |>
+  filter(model == "adjusted" & 
+           term == "Continuous" & 
+           analysis %in% c("main", "sensi_1_7_female", "sensi_1_7_male") &
+           explanatory == "NEFL") |>         
+  select(analysis, explanatory, protein_group, term, HR, "95% CI", "p_value") |>
+  arrange(protein_group, explanatory) |>
+  pivot_wider(names_from = "analysis", values_from = c("HR", "95% CI", "p_value")) |>
+  select(protein_group, explanatory, contains("main"), contains("sensi_1_7_female"), contains("sensi_1_7_male")) |>
+  rename("HR" = "HR_main", "95% CI" = "95% CI_main", "p-value" = "p_value_main", 
+         "HR " = "HR_sensi_1_7_female", "95% CI " = "95% CI_sensi_1_7_female", "p-value " = "p_value_sensi_1_7_female", 
+         " HR " = "HR_sensi_1_7_male", " 95% CI " = "95% CI_sensi_1_7_male", " p-value " = "p_value_sensi_1_7_male") |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are adjusted for age at diagnosis and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease plasma concentration of proteins. 
+    3CI: Confidence interval.") |>
+  add_header(
+    "explanatory" = "Pre-disease plasma proteins", 
+    "protein_group" = "Protein group", 
+    "HR" = "Main analysis\n(females and males)", "95% CI" = "Main analysis\n(females and males)", "p-value" = "Main analysis\n(females and males)", 
+    "HR " = "Females", "95% CI " = "Females", "p-value " = "Females", 
+    " HR " = "Males", " 95% CI " = "Males", " p-value " = "Males") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  merge_v(j = "protein_group") |>
+  merge_v(j = "explanatory") |>
+  bold(j = "explanatory", part = "body") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+```
 
 
 # Proteomic and ALS occurrence
@@ -2299,9 +2248,6 @@ results_proteomic_ALS_survival$main$main_results |>
 ## Effects of subject characterist on ALS occurence in the Danish cohort
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_proteomic_ALS_occurrence$main$covar |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -2317,17 +2263,11 @@ results_proteomic_ALS_occurrence$main$covar |>
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
 ```{r, fig.width=15, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
 results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_table |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r, fig.width=15, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_base_figure +  theme(legend.position = "none") +
   results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_adjusted_figure + theme(legend.position = "bottom") +
@@ -2337,9 +2277,6 @@ results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_base_figure +  theme(lege
 Conditional logistic regressions (quartiles), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence$main$proteomic_quart_ALS_table  |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
@@ -2350,9 +2287,6 @@ results_proteomic_ALS_occurrence$main$proteomic_quart_ALS_table  |>
 Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
 
 ```{r, fig.width=9, fig.height=60}
-#| echo: false
-#| message: false
-#| warning: false
 
 plots_lists <- list(
   sensi_1_base = results_proteomic_ALS_occurrence$main$plot_base_gam$signif,
@@ -2386,17 +2320,11 @@ rm(plots_lists, all_proteins, plot_grid)
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
 ```{r, fig.width=15, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
 results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_table_sensi_1 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r, fig.width=15, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_base_figure + labs(title = "Main analysis - Base model") + theme(legend.position = "none") +
   results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_base_figure_sensi_1 + labs(title = "NEFL outlier removed - Base model") + theme(legend.position = "bottom") +
@@ -2410,9 +2338,6 @@ results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_adjusted_figure + labs(ti
 Conditional logistic regressions (quartiles), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence$sensi_1$proteomic_quart_ALS_table_sensi_1 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
@@ -2423,18 +2348,12 @@ results_proteomic_ALS_occurrence$sensi_1$proteomic_quart_ALS_table_sensi_1 |>
 Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
 
 ```{r, fig.width=10, fig.height=5}
-#| echo: false
-#| message: false
-#| warning: false
 wrap_plots(results_proteomic_ALS_occurrence$main$plot_base_gam$signif$proteomic_neuro_explo_NEFL,
            results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$signif$proteomic_neuro_explo_NEFL_sensi_1, 
            ncol = 2)
 ```
 
 ```{r, fig.width=10, fig.height=5}
-#| echo: false
-#| message: false
-#| warning: false
 wrap_plots(results_proteomic_ALS_occurrence$main$plot_adjusted_gam$signif$proteomic_neuro_explo_NEFL,
            results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$signif$proteomic_neuro_explo_NEFL_sensi_1, 
            ncol = 2)
@@ -2444,16 +2363,15 @@ wrap_plots(results_proteomic_ALS_occurrence$main$plot_adjusted_gam$signif$proteo
 ## Sensitivity 2: Filtering to cases and their controls with follow-up < 5 years
 
 ### Logistic regressions 
-```{r fig.height=6, fig.width=15}
-#| echo: false
-#| message: false
-#| warning: false
+```{r}
 
-### Logistic regressions
-# Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 results_proteomic_ALS_occurrence$sensi_2$proteomic_sd_ALS_table_sensi_2 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
+```
 
+
+```{r fig.height=6, fig.width=15}
+#| column: screen-inset-right
 
 results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_base_figure + labs(title = "Main analysis - Base model") + theme(legend.position = "none") + 
   results_proteomic_ALS_occurrence$sensi_2$proteomic_sd_ALS_base_figure_sensi_2 + labs(title = "Filtered to follow-up < 5 years - Base model") + theme(legend.position = "bottom") +
@@ -2465,23 +2383,15 @@ results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_adjusted_figure + labs(ti
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 
-# Conditional logistic regressions (quartiles), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 results_proteomic_ALS_occurrence$sensi_3$proteomic_quart_ALS_table_sensi_3 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ### GAMs
 ```{r fig.height=60, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
-### GAMs 
-# Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
+#| column: screen-inset-right
 
 plots_lists <- list(
   sensi_1_base = results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$signif,
@@ -2512,16 +2422,14 @@ rm(plots_lists, all_proteins, plot_grid)
 ## Sensitivity 3: Filtering to cases and their controls with follow-up > 5 years
 
 ### Logistic regressions 
-```{r fig.height=6, fig.width=15}
-#| echo: false
-#| message: false
-#| warning: false
-
-### Logistic regressions
-# Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+```{r}
 results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_table_sensi_3 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
+```
 
+
+```{r fig.height=6, fig.width=15}
+#| column: screen-inset-right
 
 results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_base_figure + labs(title = "Main analysis - Base model") + theme(legend.position = "none") + 
   results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_base_figure_sensi_3 + labs(title = "Filtered to follow-up > 5 years - Base model") + theme(legend.position = "bottom") +
@@ -2533,23 +2441,16 @@ results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_adjusted_figure + labs(ti
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 
-# Conditional logistic regressions (quartiles), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 results_proteomic_ALS_occurrence$sensi_3$proteomic_quart_ALS_table_sensi_3 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ### GAMs
 ```{r fig.height=60, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
-### GAMs 
-# Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
+#| column: screen-inset-right
+
 plots_lists <- list(
   sensi_1_base = results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$signif,
   sensi_1_adj  = results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$signif,
@@ -2574,8 +2475,6 @@ wrap_plots(
 
 rm(plots_lists, all_proteins, plot_grid)
 
-
-
 ```
 
 ## Sensitivity 1 + 3: Removing NEFL outlier + filtering cases and their controls with follow-up > 5 years
@@ -2585,18 +2484,12 @@ rm(plots_lists, all_proteins, plot_grid)
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
 ```{r, fig.width=15, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
 
 results_proteomic_ALS_occurrence$sensi_1_3$proteomic_sd_ALS_table_sensi_1_3 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r, fig.width=15, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_base_figure_sensi_1 + 
   labs(title = "NEFL outlier removed \n Base model") + 
@@ -2618,9 +2511,6 @@ results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_
 Conditional logistic regressions (quartiles), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 
 results_proteomic_ALS_occurrence$sensi_1_3$proteomic_quart_ALS_table_sensi_1_3 |>
@@ -2632,9 +2522,6 @@ results_proteomic_ALS_occurrence$sensi_1_3$proteomic_quart_ALS_table_sensi_1_3 |
 Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
 
 ```{r fig.width=12, fig.height=60}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 
 plots_lists <- list(
@@ -2661,8 +2548,6 @@ wrap_plots(
 
 rm(plots_lists, all_proteins, plot_grid)
 
-
-
 ```
 
 
@@ -2674,18 +2559,12 @@ rm(plots_lists, all_proteins, plot_grid)
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
 ```{r, fig.width=15, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
 
 results_proteomic_ALS_occurrence$sensi_1_3_4$proteomic_sd_ALS_table_sensi_1_3_4 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r, fig.width=15, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_base_figure_sensi_1 + 
   labs(title = "NEFL outlier removed \n Base model") + 
@@ -2707,9 +2586,6 @@ results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_
 Conditional logistic regressions (quartiles), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 
 results_proteomic_ALS_occurrence$sensi_1_3_4$proteomic_quart_ALS_table_sensi_1_3_4 |>
@@ -2721,9 +2597,6 @@ results_proteomic_ALS_occurrence$sensi_1_3_4$proteomic_quart_ALS_table_sensi_1_3
 Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
 
 ```{r fig.width=12, fig.height=60}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 
 plots_lists <- list(
@@ -2762,18 +2635,12 @@ rm(plots_lists, all_proteins, plot_grid)
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
 ```{r, fig.width=15, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
 
 results_proteomic_ALS_occurrence$sensi_1_3_5$proteomic_sd_ALS_table_sensi_1_3_5 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r, fig.width=15, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_base_figure_sensi_1 + 
   labs(title = "NEFL outlier removed \n Base model") + 
@@ -2795,9 +2662,6 @@ results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_
 Conditional logistic regressions (quartiles), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 
 results_proteomic_ALS_occurrence$sensi_1_3_5$proteomic_quart_ALS_table_sensi_1_3_5 |>
@@ -2809,9 +2673,6 @@ results_proteomic_ALS_occurrence$sensi_1_3_5$proteomic_quart_ALS_table_sensi_1_3
 Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
 
 ```{r fig.width=12, fig.height=60}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 
 plots_lists <- list(
@@ -2844,10 +2705,8 @@ rm(plots_lists, all_proteins, plot_grid)
 
 Data not shown because of merging sensi 1 and sensi 6
 
-```{r fig.width=15, fig.height=12}
+```{r fig.height=12, fig.width=15}
 #| eval: false
-#| message: false
-#| warning: false
 #| include: false
 
 ### Logistic regressions
@@ -2866,9 +2725,6 @@ results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_adjusted_figure + labs(ti
 ## Sensitivity 1 + 6: Removing NEFL outlier + stratifiyng the analysis in tertiles of follow-up duration
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_proteomic_ALS_occurrence$sensi_6$sensi_6_table_follow_up
 results_proteomic_ALS_occurrence$sensi_6$sensi_6_densityplot_follow_up
 ```
@@ -2878,9 +2734,6 @@ results_proteomic_ALS_occurrence$sensi_6$sensi_6_densityplot_follow_up
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
 ```{r fig.width=15, fig.height=12}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_base_figure_sensi_1 + labs(title = "NEFL outlier removed \n Base model") + theme(legend.position = "none") +
 results_proteomic_ALS_occurrence$sensi_1_6$proteomic_sd_ALS_base_figure_sensi_1_6_T1 + labs(title = "Filtered to follow-up T1 (<11 years)\n+ NEFL outlier excluded \n Base model") + theme(legend.position = "none") +
@@ -2897,20 +2750,12 @@ results_proteomic_ALS_occurrence$sensi_1_6$proteomic_sd_ALS_adjusted_figure_sens
 NEFL is not significantly associated with ALS occurence when the follow-up duration is \>16 years. We don't see many associations in the follow-up group T1: I suspect that it is because of high heterogeneity in follow-up duration among this sub-group (0-11 years). --\> then I trust more the sensi 2 results where we just remove the cases (and their controls) with follow-up \<5 years.
 
 ## Sensitivity 1 + 7: Removing NEFL outlier + stratifiyng the analysis on sex
-### Logistic regressions 
+### Continuous coding (standardized)
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_proteomic_ALS_occurrence$sensi_1_7$proteomic_sd_ALS_table_sensi_1_7
-results_proteomic_ALS_occurrence$sensi_1_7$proteomic_quart_ALS_table_sensi_1_7
 ```
 
-
 ```{r, fig.width=15, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_base_figure_sensi_1 + 
   labs(title = "NEFL outlier removed \n Base model") + 
@@ -2930,11 +2775,16 @@ results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_
 
 ```
 
+
+### Quartiles 
+```{r}
+#| column: screen-inset-right
+results_proteomic_ALS_occurrence$sensi_1_7$proteomic_quart_ALS_table_sensi_1_7
+```
+
+
 ### GAMs
-```{r fig.width=12, fig.height=60}
-#| echo: false
-#| message: false
-#| warning: false
+```{r fig.width=12, fig.height=70}
 #| column: screen-inset-right
 
 plots_lists <- list(
@@ -2967,9 +2817,6 @@ rm(plots_lists, all_proteins, plot_grid)
 ## Additionnal analysis 1
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 shapiro.test(results_proteomic_ALS_occurrence$additional_analysis_1$OR_distribution$OR_log)
 
 results_proteomic_ALS_occurrence$additional_analysis_1$boxplot_OR
@@ -2981,18 +2828,12 @@ results_proteomic_ALS_occurrence$additional_analysis_1$densityplot_OR
 The locally estimated scatterplot smoothing (LOESS) curve illustrates the changes in the ratio of NEFL levels in each case–control pair/triplet over time. Each point corresponds to 1 case–control pair/triplet.
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_over_time
 ```
 
 After removing the NEFL outlier
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_over_time_sensi_1 
 ```
 
@@ -3011,10 +2852,7 @@ H₀: The two datasets come from the same multivariate distribution.
 A small p-value indicates a significant deviation between the two distributions.
 
 ### all proteins 
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
+```{r, fig.height=3}
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_all_figure
 results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_all_results
@@ -3034,10 +2872,7 @@ Therefore, the asymmetric patterns we observe are unlikely to be due to random f
 The results support the idea that the proteins associated with increased disease risk and those associated with decreased disease risk represent genuinely different biological signals, rather than artifacts of high-dimensional multiple testing.
 
 ### Immune response 
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
+```{r, fig.height=3}
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_immune_figure
 results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_immune_results
@@ -3049,10 +2884,7 @@ results_proteomic_ALS_occurrence$additional_analysis_3$jackknife_immune_results 
 ```
 
 ### Metbolism
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
+```{r, fig.height=3}
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_metabolism_figure
 results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_metabolism_results
@@ -3066,10 +2898,7 @@ results_proteomic_ALS_occurrence$additional_analysis_3$jackknife_metabolism_resu
 
 
 ### Neuro explo 
-```{r}
-#| echo: false
-#| message: false
-#| warning: false
+```{r, fig.height=3}
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_neuro_figure
 results_proteomic_ALS_occurrence$additional_analysis_3$additional_analysis_3_neuro_results
@@ -3086,9 +2915,6 @@ results_proteomic_ALS_occurrence$additional_analysis_3$jackknife_neuro_results |
 ## Effects of subject characteristics on ALS survival
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 results_proteomic_ALS_survival$main$covar |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -3101,22 +2927,18 @@ results_proteomic_ALS_survival$main$covar |>
 
 ### continuous standardized
 
-```{r, fig.width=9, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
+```{r, fig.width=9, fig.height=3}
+#| column: screen-inset-right
 results_proteomic_ALS_survival$main$proteomic_sd_ALS_table |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
-results_proteomic_ALS_survival$main$proteomic_sd_ALS_base_figure
-results_proteomic_ALS_survival$main$proteomic_sd_ALS_adjusted_figure
+wrap_plots(results_proteomic_ALS_survival$main$proteomic_sd_ALS_base_figure, 
+           results_proteomic_ALS_survival$main$proteomic_sd_ALS_adjusted_figure, 
+           ncol = 2)
 ```
 
 ### quartiles
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 results_proteomic_ALS_survival$main$proteomic_quart_ALS_table  |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
@@ -3124,12 +2946,30 @@ results_proteomic_ALS_survival$main$proteomic_quart_ALS_table  |>
 
 ### GAMs
 
-```{r fig.height=21, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
-wrap_plots(results_proteomic_ALS_survival$main$plot_base_cox_gam_danish, ncol = 5)
-wrap_plots(results_proteomic_ALS_survival$main$plot_adjusted_cox_gam_danish, ncol = 5)
+```{r fig.height=60}
+#| column: screen-inset-right
+plots_lists <- list(
+  main_base  = results_proteomic_ALS_survival$main$plot_base_cox_gam_danish$signif, 
+  main_adj  = results_proteomic_ALS_survival$main$plot_adjusted_cox_gam_danish$signif)
+
+all_proteins <- sort(unique(unlist(lapply(plots_lists, names))))
+
+plot_grid <- lapply(all_proteins, function(prot) {
+  lapply(plots_lists, function(lst) {
+    if (prot %in% names(lst)) {
+      lst[[prot]]
+    } else {
+      wrap_elements(grid::nullGrob())
+    }
+  })
+})
+
+wrap_plots(
+  unlist(plot_grid, recursive = FALSE),
+  ncol = 2) 
+
+rm(plots_lists, all_proteins, plot_grid)
+
 ```
 
 
@@ -3138,23 +2978,21 @@ wrap_plots(results_proteomic_ALS_survival$main$plot_adjusted_cox_gam_danish, nco
 
 ### continuous standardized
 
-```{r, fig.width=9, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
+```{r, fig.width=9, fig.height=3}
+#| column: screen-inset-right
+
 results_proteomic_ALS_survival$sensi_1_3$proteomic_sd_ALS_table_sensi_1_3 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
-results_proteomic_ALS_survival$sensi_1_3$proteomic_sd_ALS_base_figure_sensi_1_3
-results_proteomic_ALS_survival$sensi_1_3$proteomic_sd_ALS_adjusted_figure_sensi_1_3
+
+wrap_plots(results_proteomic_ALS_survival$sensi_1_3$proteomic_sd_ALS_base_figure_sensi_1_3, 
+           results_proteomic_ALS_survival$sensi_1_3$proteomic_sd_ALS_adjusted_figure_sensi_1_3, 
+           ncol = 2)
 
 ```
 
 ### quartiles
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 results_proteomic_ALS_survival$sensi_1_3$proteomic_quart_ALS_table_sensi_1_3  |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
@@ -3162,13 +3000,29 @@ results_proteomic_ALS_survival$sensi_1_3$proteomic_quart_ALS_table_sensi_1_3  |>
 
 ### GAMs
 
-```{r fig.height=21, fig.width=9}
-#| eval: false
-#| message: false
-#| warning: false
-#| include: false
-wrap_plots(results_proteomic_ALS_survival$sensi_1_3$plot_base_cox_gam_danish_sensi_1_3, ncol = 5)
-wrap_plots(results_proteomic_ALS_survival$main$plot_adjusted_cox_gam_danish_sensi_1_3, ncol = 5)
+```{r fig.height=60, fig.width=9}
+#| column: screen-inset-right
+plots_lists <- list(
+  main = results_proteomic_ALS_survival$main$plot_adjusted_cox_gam_danish$signif,
+  sensi_1_3 = results_proteomic_ALS_survival$sensi_1_3$plot_adjusted_cox_gam_danish_sensi_1_3$signif)
+
+all_proteins <- sort(unique(unlist(lapply(plots_lists, names))))
+
+plot_grid <- lapply(all_proteins, function(prot) {
+  lapply(plots_lists, function(lst) {
+    if (prot %in% names(lst)) {
+      lst[[prot]]
+    } else {
+      wrap_elements(grid::nullGrob())
+    }
+  })
+})
+
+wrap_plots(
+  unlist(plot_grid, recursive = FALSE),
+  ncol = 2) 
+
+rm(plots_lists, all_proteins, plot_grid)
 ```
 
 
@@ -3178,23 +3032,21 @@ wrap_plots(results_proteomic_ALS_survival$main$plot_adjusted_cox_gam_danish_sens
 
 ### continuous standardized
 
-```{r, fig.width=9, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
+```{r, fig.width=9, fig.height=3}
+#| column: screen-inset-right
+
 results_proteomic_ALS_survival$sensi_1_3_4$proteomic_sd_ALS_table_sensi_1_3_4 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
-results_proteomic_ALS_survival$sensi_1_3_4$proteomic_sd_ALS_base_figure_sensi_1_3_4
-results_proteomic_ALS_survival$sensi_1_3_4$proteomic_sd_ALS_adjusted_figure_sensi_1_3_4
+
+wrap_plots(results_proteomic_ALS_survival$sensi_1_3_4$proteomic_sd_ALS_base_figure_sensi_1_3_4,
+           results_proteomic_ALS_survival$sensi_1_3_4$proteomic_sd_ALS_adjusted_figure_sensi_1_3_4, 
+           ncol = 2)
 
 ```
 
 ### quartiles
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 results_proteomic_ALS_survival$sensi_1_3_4$proteomic_quart_ALS_table_sensi_1_3_4  |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
@@ -3202,13 +3054,29 @@ results_proteomic_ALS_survival$sensi_1_3_4$proteomic_quart_ALS_table_sensi_1_3_4
 
 ### GAMs
 
-```{r fig.height=21, fig.width=9}
-#| eval: false
-#| message: false
-#| warning: false
-#| include: false
-wrap_plots(results_proteomic_ALS_survival$sensi_1_3_4$plot_base_cox_gam_danish_sensi_1_3_4, ncol = 5)
-wrap_plots(results_proteomic_ALS_survival$sensi_1_3_4$plot_adjusted_cox_gam_danish_sensi_1_3_4, ncol = 5)
+```{r fig.height=60, fig.width=9}
+#| column: screen-inset-right
+plots_lists <- list(
+  main = results_proteomic_ALS_survival$main$plot_adjusted_cox_gam_danish$signif,
+  sensi_1_3 = results_proteomic_ALS_survival$sensi_1_3_4$plot_adjusted_cox_gam_danish_sensi_1_3_4$signif)
+
+all_proteins <- sort(unique(unlist(lapply(plots_lists, names))))
+
+plot_grid <- lapply(all_proteins, function(prot) {
+  lapply(plots_lists, function(lst) {
+    if (prot %in% names(lst)) {
+      lst[[prot]]
+    } else {
+      wrap_elements(grid::nullGrob())
+    }
+  })
+})
+
+wrap_plots(
+  unlist(plot_grid, recursive = FALSE),
+  ncol = 2) 
+
+rm(plots_lists, all_proteins, plot_grid)
 ```
 
 
@@ -3216,23 +3084,21 @@ wrap_plots(results_proteomic_ALS_survival$sensi_1_3_4$plot_adjusted_cox_gam_dani
 
 ### continuous standardized
 
-```{r, fig.width=9, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
+```{r, fig.width=9, fig.height=3}
+#| column: screen-inset-right
+
 results_proteomic_ALS_survival$sensi_1_3_5$proteomic_sd_ALS_table_sensi_1_3_5 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
-results_proteomic_ALS_survival$sensi_1_3_5$proteomic_sd_ALS_base_figure_sensi_1_3_5
-results_proteomic_ALS_survival$sensi_1_3_5$proteomic_sd_ALS_adjusted_figure_sensi_1_3_5
+
+wrap_plots(results_proteomic_ALS_survival$sensi_1_3_5$proteomic_sd_ALS_base_figure_sensi_1_3_5,
+           results_proteomic_ALS_survival$sensi_1_3_5$proteomic_sd_ALS_adjusted_figure_sensi_1_3_5, 
+           ncol = 2)
 
 ```
 
 ### quartiles
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 results_proteomic_ALS_survival$sensi_1_3_5$proteomic_quart_ALS_table_sensi_1_3_5  |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
@@ -3240,13 +3106,30 @@ results_proteomic_ALS_survival$sensi_1_3_5$proteomic_quart_ALS_table_sensi_1_3_5
 
 ### GAMs
 
-```{r fig.height=21, fig.width=9}
-#| eval: false
-#| message: false
-#| warning: false
-#| include: false
-wrap_plots(results_proteomic_ALS_survival$sensi_1_3_5$plot_base_cox_gam_danish_sensi_1_3_5, ncol = 5)
-wrap_plots(results_proteomic_ALS_survival$sensi_1_3_5$plot_adjusted_cox_gam_danish_sensi_1_3_5, ncol = 5)
+```{r fig.height=60, fig.width=9}
+
+plots_lists <- list(
+  main = results_proteomic_ALS_survival$main$plot_adjusted_cox_gam_danish$signif,
+  sensi_1_3_5 = results_proteomic_ALS_survival$sensi_1_3_5$plot_adjusted_cox_gam_danish_sensi_1_3_5$signif)
+
+all_proteins <- sort(unique(unlist(lapply(plots_lists, names))))
+
+plot_grid <- lapply(all_proteins, function(prot) {
+  lapply(plots_lists, function(lst) {
+    if (prot %in% names(lst)) {
+      lst[[prot]]
+    } else {
+      wrap_elements(grid::nullGrob())
+    }
+  })
+})
+
+wrap_plots(
+  unlist(plot_grid, recursive = FALSE),
+  ncol = 2) 
+
+rm(plots_lists, all_proteins, plot_grid)
+
 ```
 
 
@@ -3256,23 +3139,21 @@ wrap_plots(results_proteomic_ALS_survival$sensi_1_3_5$plot_adjusted_cox_gam_dani
 
 ### continuous standardized
 
-```{r, fig.width=9, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
+```{r, fig.width=9, fig.height=3}
+#| column: screen-inset-right
+
 results_proteomic_ALS_survival$sensi_1_7_female$proteomic_sd_ALS_table_sensi_1_7_female |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
-results_proteomic_ALS_survival$sensi_1_7_female$proteomic_sd_ALS_base_figure_sensi_1_7_female
-results_proteomic_ALS_survival$sensi_1_7_female$proteomic_sd_ALS_adjusted_figure_sensi_1_7_female
+
+wrap_plots(results_proteomic_ALS_survival$sensi_1_7_female$proteomic_sd_ALS_base_figure_sensi_1_7_female,
+           results_proteomic_ALS_survival$sensi_1_7_female$proteomic_sd_ALS_adjusted_figure_sensi_1_7_female, 
+           ncol = 2)
 
 ```
 
 ### quartiles
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
 results_proteomic_ALS_survival$sensi_1_7_female$proteomic_quart_ALS_table_sensi_1_7_female  |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
@@ -3280,13 +3161,29 @@ results_proteomic_ALS_survival$sensi_1_7_female$proteomic_quart_ALS_table_sensi_
 
 ### GAMs
 
-```{r fig.height=21, fig.width=9}
-#| eval: false
-#| message: false
-#| warning: false
-#| include: false
-wrap_plots(results_proteomic_ALS_survival$sensi_1_7_female$plot_base_cox_gam_danish_sensi_1_7_female, ncol = 5)
-wrap_plots(results_proteomic_ALS_survival$sensi_1_7_female$plot_adjusted_cox_gam_danish_sensi_1_7_female, ncol = 5)
+```{r fig.height=60, fig.width=9}
+#| column: screen-inset-right
+plots_lists <- list(
+  main = results_proteomic_ALS_survival$main$plot_adjusted_cox_gam_danish$signif,
+  sensi_1_7_female = results_proteomic_ALS_survival$sensi_1_7_female$plot_adjusted_cox_gam_danish_sensi_1_7_female$signif)
+
+all_proteins <- sort(unique(unlist(lapply(plots_lists, names))))
+
+plot_grid <- lapply(all_proteins, function(prot) {
+  lapply(plots_lists, function(lst) {
+    if (prot %in% names(lst)) {
+      lst[[prot]]
+    } else {
+      wrap_elements(grid::nullGrob())
+    }
+  })
+})
+
+wrap_plots(
+  unlist(plot_grid, recursive = FALSE),
+  ncol = 2) 
+
+rm(plots_lists, all_proteins, plot_grid)
 ```
 
 
@@ -3294,34 +3191,51 @@ wrap_plots(results_proteomic_ALS_survival$sensi_1_7_female$plot_adjusted_cox_gam
 
 ### continuous standardized
 
-```{r, fig.width=9, fig.height=6}
-#| echo: false
-#| message: false
-#| warning: false
+```{r, fig.width=9, fig.height=3}
+#| column: screen-inset-right
+
 results_proteomic_ALS_survival$sensi_1_7_male$proteomic_sd_ALS_table_sensi_1_7_male |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
-results_proteomic_ALS_survival$sensi_1_7_male$proteomic_sd_ALS_base_figure_sensi_1_7_male
-results_proteomic_ALS_survival$sensi_1_7_male$proteomic_sd_ALS_adjusted_figure_sensi_1_7_male
+
+wrap_plots(results_proteomic_ALS_survival$sensi_1_7_male$proteomic_sd_ALS_base_figure_sensi_1_7_male,
+           results_proteomic_ALS_survival$sensi_1_7_male$proteomic_sd_ALS_adjusted_figure_sensi_1_7_male, 
+           ncol = 2)
 
 ```
 
 ### quartiles
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| column: screen-inset-right
+
 results_proteomic_ALS_survival$sensi_1_7_male$proteomic_quart_ALS_table_sensi_1_7_male  |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ### GAMs
 
-```{r fig.height=21, fig.width=9}
-#| echo: false
-#| message: false
-#| warning: false
-wrap_plots(results_proteomic_ALS_survival$sensi_1_7_male$plot_base_cox_gam_danish_sensi_1_7_male, ncol = 5)
-wrap_plots(results_proteomic_ALS_survival$sensi_1_7_male$plot_adjusted_cox_gam_danish_sensi_1_7_male, ncol = 5)
+```{r fig.height=60, fig.width=9}
+#| column: screen-inset-right
+plots_lists <- list(
+  main = results_proteomic_ALS_survival$main$plot_adjusted_cox_gam_danish$signif,
+  sensi_1_7_male = results_proteomic_ALS_survival$sensi_1_7_male$plot_adjusted_cox_gam_danish_sensi_1_7_male$signif)
+
+all_proteins <- sort(unique(unlist(lapply(plots_lists, names))))
+
+plot_grid <- lapply(all_proteins, function(prot) {
+  lapply(plots_lists, function(lst) {
+    if (prot %in% names(lst)) {
+      lst[[prot]]
+    } else {
+      wrap_elements(grid::nullGrob())
+    }
+  })
+})
+
+wrap_plots(
+  unlist(plot_grid, recursive = FALSE),
+  ncol = 2) 
+
+rm(plots_lists, all_proteins, plot_grid)
+
 ```
