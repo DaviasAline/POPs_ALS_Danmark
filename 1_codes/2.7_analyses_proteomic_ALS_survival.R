@@ -5,6 +5,170 @@
 # Data loading - package loading ----
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2.6_analyses_proteomic_ALS_occurrence.R", echo=TRUE)
 
+fit_cox_gam_base <- function(var, data) {
+  
+  outcome <- with(data = data, cbind(follow_up_death, status_death))
+  formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age")
+  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
+  
+  smry <- summary(model)
+  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  pval_raw <- smry$s.table[1, "p-value"]
+  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
+  pval <- case_when(pval < 0.01 ~ "< 0.01", 
+                    pval >0.99 ~ "> 0.99",
+                    .default = format(pval, nsmall =2, digits = 2))
+  x_label <- vars_labels[[var]] 
+  
+  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
+  smooth_df <- data.frame(
+    x = plot_data$x,
+    fit = plot_data$fit,
+    se = plot_data$se)
+  
+  list(
+    model = model,
+    plot_data = smooth_df,
+    edf = edf,
+    pval_raw = pval_raw,  
+    pval = pval,
+    var = var,
+    x_label = x_label)
+}
+
+fit_cox_gam_adjusted <- function(var, data) {
+  
+  outcome <- with(data = data, cbind(follow_up_death, status_death))
+  formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age + smoking_2cat_i + bmi")
+  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
+  
+  smry <- summary(model)
+  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
+  pval <- case_when(pval < 0.01 ~ "< 0.01", 
+                    pval >0.99 ~ "> 0.99",
+                    .default = format(pval, nsmall =2, digits = 2))
+  x_label <- vars_labels[[var]] 
+  
+  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
+  smooth_df <- data.frame(
+    x = plot_data$x,
+    fit = plot_data$fit,
+    se = plot_data$se)
+  
+  list(
+    model = model,
+    plot_data = smooth_df,
+    edf = edf,
+    pval = pval,
+    var = var, 
+    x_label = x_label)
+}
+
+
+fit_and_plot_cox_gam <- function(
+    data,
+    vars = proteomic,
+    time = "follow_up_death",
+    status = "status_death", 
+    covariates = c("sex", "diagnosis_age"),
+    vars_labels = NULL,
+    y_limits = c(-12, 12),
+    #x_limits = c(1, 5),
+    title = "Base model"
+) {
+  
+  if (is.null(vars_labels)) {                                                   # Labels par défaut
+    vars_labels <- set_names(vars, vars)
+  }
+  
+  fit_one <- function(var) {
+    
+    outcome <- cbind(data[[time]], data[[status]])
+    
+    formula_str <- paste0(
+      "outcome ~ s(", var, ") + ",
+      paste(covariates, collapse = " + "))
+    
+    model <- gam(as.formula(formula_str),
+                 data = data,
+                 family = cox.ph())
+    
+    smry <- summary(model)
+    
+    edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1)
+    pval_raw <- smry$s.table[1, "p-value"]
+    
+    pval <- case_when(
+      pval_raw < 0.01 ~ "< 0.01",
+      pval_raw > 0.99 ~ "> 0.99",
+      TRUE ~ format(pval_raw, nsmall = 2, digits = 2))
+    
+    plot_data <- plot(model,
+                      select = 1,
+                      seWithMean = TRUE,
+                      rug = FALSE,
+                      pages = 0)[[1]]
+    
+    smooth_df <- data.frame(
+      x = plot_data$x,
+      fit = plot_data$fit,
+      se = plot_data$se)
+    
+    p1 <- ggplot(smooth_df, aes(x = x, y = fit)) +
+      geom_line(size = 1.2, color = "steelblue") +
+      geom_ribbon(aes(ymin = fit - 2 * se,
+                      ymax = fit + 2 * se),
+                  alpha = 0.2,
+                  fill = "steelblue") +
+      labs(
+        title = title,
+        y = "LogHR (smooth estimate)",
+        x = NULL) +
+      annotate(
+        "text",
+        x = -Inf, y = Inf,
+        hjust = -0.1, vjust = 1.5,
+        label = paste0("EDF: ", edf, "\np-value: ", pval),
+        size = 4.2) +
+      scale_y_continuous(limits = y_limits) +
+      #scale_x_continuous(limits = x_limits) +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.line.x = element_blank(),
+        axis.ticks.x = element_blank())
+    
+    p2 <- p2 <- ggplot(data, aes(x = .data[[var]], y = 1)) +
+      geom_boxplot(width = 0.3,
+                   fill = "steelblue",
+                   color = "black") +
+      labs(x = vars_labels[[var]]) +
+      #scale_x_continuous(limits = x_limits) +
+      theme_minimal() +
+      theme(
+        axis.text.y = element_blank(),
+        axis.title.y = element_blank(),
+        axis.ticks.y = element_blank())
+    
+    list(
+      model = model,
+      plot_data = smooth_df,
+      edf = edf,
+      pval_raw = pval_raw,
+      pval = pval,
+      plot = p1 / p2 + plot_layout(heights = c(10, 1)))
+  }
+  
+  results <- map(vars, fit_one)
+  names(results) <- vars_labels[vars]
+  
+  results
+}
+
+
+
 # Creation of cases specific datasets ----
 bdd_cases_danish <- bdd_danish |>
   filter(als == 1) |>   # remove controls 
@@ -32,6 +196,8 @@ surv_obj <- Surv(time = bdd_cases_danish$follow_up_death,                       
                         event = bdd_cases_danish$status_death)
 covariates <-                                                                   # set the covariates 
   c("sex", "diagnosis_age", "smoking_2cat_i", "bmi")
+
+var_label(bdd_cases_danish[proteomic]) <- NULL
 
 
 # Effects of the covariates on ALS survival ----
@@ -134,7 +300,7 @@ model2_cox_quart <- map_dfr(proteomic_quart, function(expl) {
 })
 
 ### Heterogeneity tests ----
-#### base ----
+#### base 
 heterogeneity_base_quart <- data.frame(explanatory = character(),
                                        model = factor(),
                                        p_value_heterogeneity = numeric(), 
@@ -159,7 +325,7 @@ for (expl in proteomic_quart) {
 }
 rm(expl, formula_raw, model_raw, formula, model, anova, p_value_heterogeneity)
 
-#### adjusted ----
+#### adjusted 
 heterogeneity_adjusted_quart <- data.frame(explanatory = character(),
                                            model = factor(),
                                            p_value_heterogeneity = numeric(), 
@@ -190,7 +356,7 @@ heterogeneity_tests <-
   mutate(explanatory = gsub("_quart", "", explanatory))
 
 ### Trend tests ----
-#### base ----
+#### base 
 trend_base <- data.frame(explanatory = character(),
                          model = factor(), 
                          p_value_trend = numeric(), 
@@ -210,7 +376,7 @@ for (expl in proteomic_quart_med) {
 }
 rm(expl, model, formula, p_value_trend)
 
-#### adjusted ----
+#### adjusted 
 trend_adjusted <- data.frame(explanatory = character(),
                              model = factor(), 
                              p_value_trend = numeric(), 
@@ -239,81 +405,26 @@ rm(heterogeneity_base_quart, heterogeneity_adjusted_quart,
 
 
 ## Cox model (GAMs) ----
-vars_labels <- set_names(str_replace(proteomic, 
-                                     "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                     ""), 
-                         proteomic)
+vars_labels <- 
+  set_names(str_replace(proteomic, 
+                        "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
+                        ""), 
+            proteomic)
 
 
-### Base model ----
-fit_cox_gam_base <- function(var, data = bdd_cases_danish) {
+### Base ----
+cox_gam_results_base <- 
+  fit_and_plot_cox_gam(data = bdd_cases_danish, 
+                       vars_labels = vars_labels)
 
-  outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
-  formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age")
-  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
-  
-  smry <- summary(model)
-  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  pval_raw <- smry$s.table[1, "p-value"]
-  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
-  pval <- case_when(pval < 0.01 ~ "< 0.01", 
-                    pval >0.99 ~ "> 0.99",
-                    .default = format(pval, nsmall =2, digits = 2))
-  x_label <- vars_labels[[var]] 
-  
-  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
-  smooth_df <- data.frame(
-    x = plot_data$x,
-    fit = plot_data$fit,
-    se = plot_data$se)
-  
-  list(
-    model = model,
-    plot_data = smooth_df,
-    edf = edf,
-    pval_raw = pval_raw,  
-    pval = pval,
-    var = var,
-    x_label = x_label)
-}
+### Adjusted ----
+cox_gam_results_adjusted <- 
+  fit_and_plot_cox_gam(data = bdd_cases_danish, 
+                       vars_labels = vars_labels, 
+                       covariates = c("sex", "diagnosis_age", "smoking_2cat_i", "bmi"), 
+                       title = "Adjusted model")
+rm(vars_labels)
 
-cox_gam_results_base <- map(proteomic, fit_cox_gam_base)
-rm(fit_cox_gam_base)
-
-
-
-### Adjusted model ----
-fit_cox_gam_adjusted <- function(var, data = bdd_cases_danish) {
-  
-  outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
-  formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age + smoking_2cat_i + bmi")
-  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
-  
-  smry <- summary(model)
-  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
-  pval <- case_when(pval < 0.01 ~ "< 0.01", 
-                    pval >0.99 ~ "> 0.99",
-                    .default = format(pval, nsmall =2, digits = 2))
-  x_label <- vars_labels[[var]] 
-  
-  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
-  smooth_df <- data.frame(
-    x = plot_data$x,
-    fit = plot_data$fit,
-    se = plot_data$se)
-  
-  list(
-    model = model,
-    plot_data = smooth_df,
-    edf = edf,
-    pval = pval,
-    var = var, 
-    x_label = x_label)
-}
-
-cox_gam_results_adjusted <- map(proteomic, fit_cox_gam_adjusted)
-rm(fit_cox_gam_adjusted, vars_labels)
 
 # Sensi 1 + sensi 3 - Removing the oulier for NEFL + filtering cases with follow_up > 5 years ----
 bdd_cases_danish_sensi_1_3 <- 
@@ -535,74 +646,19 @@ vars_labels <- set_names(str_replace(proteomic,
 
 
 ### Base  ----
-fit_cox_gam_base <- function(var, data = bdd_cases_danish_sensi_1_3) {
-  
-  outcome <- with(bdd_cases_danish_sensi_1_3, cbind(follow_up_death, status_death))
-  formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age")
-  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
-  
-  smry <- summary(model)
-  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  pval_raw <- smry$s.table[1, "p-value"]
-  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
-  pval <- case_when(pval < 0.01 ~ "< 0.01", 
-                    pval >0.99 ~ "> 0.99",
-                    .default = format(pval, nsmall =2, digits = 2))
-  x_label <- vars_labels[[var]] 
-  
-  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
-  smooth_df <- data.frame(
-    x = plot_data$x,
-    fit = plot_data$fit,
-    se = plot_data$se)
-  
-  list(
-    model = model,
-    plot_data = smooth_df,
-    edf = edf,
-    pval_raw = pval_raw,  
-    pval = pval,
-    var = var,
-    x_label = x_label)
-}
-
-cox_gam_results_base_sensi_1_3 <- map(proteomic, fit_cox_gam_base)
-rm(fit_cox_gam_base)
-
+cox_gam_results_base_sensi_1_3 <- 
+  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_3, 
+                       vars_labels = vars_labels)
 
 
 ### Adjusted  ----
-fit_cox_gam_adjusted <- function(var, data = bdd_cases_danish_sensi_1_3) {
-  
-  outcome <- with(bdd_cases_danish_sensi_1_3, cbind(follow_up_death, status_death))
-  formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age + smoking_2cat_i + bmi")
-  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
-  
-  smry <- summary(model)
-  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
-  pval <- case_when(pval < 0.01 ~ "< 0.01", 
-                    pval >0.99 ~ "> 0.99",
-                    .default = format(pval, nsmall =2, digits = 2))
-  x_label <- vars_labels[[var]] 
-  
-  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
-  smooth_df <- data.frame(
-    x = plot_data$x,
-    fit = plot_data$fit,
-    se = plot_data$se)
-  
-  list(
-    model = model,
-    plot_data = smooth_df,
-    edf = edf,
-    pval = pval,
-    var = var, 
-    x_label = x_label)
-}
+cox_gam_results_adjusted_sensi_1_3 <- 
+    fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_3, 
+                         vars_labels = vars_labels, 
+                         covariates = c("sex", "diagnosis_age", "smoking_2cat_i", "bmi"), 
+                         title = "Adjusted model")
 
-cox_gam_results_adjusted_sensi_1_3 <- map(proteomic, fit_cox_gam_adjusted)
-rm(fit_cox_gam_adjusted, vars_labels)
+rm(vars_labels)
 
 
 
@@ -715,7 +771,7 @@ model2_cox_quart_sensi_1_3_4 <- map_dfr(proteomic_quart, function(expl) {
 })
 
 ### Heterogeneity tests ----
-#### base ----
+#### base 
 heterogeneity_base_quart_sensi_1_3_4 <- data.frame(explanatory = character(),
                                                    model = factor(),
                                                    p_value_heterogeneity = numeric(), 
@@ -740,7 +796,7 @@ for (expl in proteomic_quart) {
 }
 rm(expl, formula_raw, model_raw, formula, model, anova, p_value_heterogeneity)
 
-#### adjusted ----
+#### adjusted 
 heterogeneity_adjusted_quart_sensi_1_3_4 <- data.frame(explanatory = character(),
                                                        model = factor(),
                                                        p_value_heterogeneity = numeric(), 
@@ -771,7 +827,7 @@ heterogeneity_tests_sensi_1_3_4 <-
   mutate(explanatory = gsub("_quart", "", explanatory))
 
 ### Trend tests ----
-#### base ----
+#### base 
 trend_base_sensi_1_3_4 <- data.frame(explanatory = character(),
                                      model = factor(), 
                                      p_value_trend = numeric(), 
@@ -791,7 +847,7 @@ for (expl in proteomic_quart_med) {
 }
 rm(expl, model, formula, p_value_trend)
 
-#### adjusted ----
+#### adjusted 
 trend_adjusted_sensi_1_3_4 <- data.frame(explanatory = character(),
                                          model = factor(), 
                                          p_value_trend = numeric(), 
@@ -826,76 +882,20 @@ vars_labels <- set_names(str_replace(proteomic,
                          proteomic)
 
 
-### Base model ----
-fit_cox_gam_base <- function(var, data = bdd_cases_danish_sensi_1_3_4) {
-  
-  outcome <- with(bdd_cases_danish_sensi_1_3_4, cbind(follow_up_death, status_death))
-  formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age")
-  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
-  
-  smry <- summary(model)
-  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  pval_raw <- smry$s.table[1, "p-value"]
-  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
-  pval <- case_when(pval < 0.01 ~ "< 0.01", 
-                    pval >0.99 ~ "> 0.99",
-                    .default = format(pval, nsmall =2, digits = 2))
-  x_label <- vars_labels[[var]] 
-  
-  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
-  smooth_df <- data.frame(
-    x = plot_data$x,
-    fit = plot_data$fit,
-    se = plot_data$se)
-  
-  list(
-    model = model,
-    plot_data = smooth_df,
-    edf = edf,
-    pval_raw = pval_raw,  
-    pval = pval,
-    var = var,
-    x_label = x_label)
-}
-
-cox_gam_results_base_sensi_1_3_4 <- map(proteomic, fit_cox_gam_base)
-rm(fit_cox_gam_base)
+### Base  ----
+cox_gam_results_base_sensi_1_3_4 <- 
+  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_3_4, 
+                       vars_labels = vars_labels)
 
 
+### Adjusted  ----
+cox_gam_results_adjusted_sensi_1_3_4 <- 
+  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_3_4, 
+                       vars_labels = vars_labels, 
+                       covariates = c("sex", "diagnosis_age", "smoking_2cat_i", "bmi"), 
+                       title = "Adjusted model")
 
-### Adjusted model ----
-fit_cox_gam_adjusted <- function(var, data = bdd_cases_danish_sensi_1_3_4) {
-  
-  outcome <- with(bdd_cases_danish_sensi_1_3_4, cbind(follow_up_death, status_death))
-  formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age + smoking_2cat_i + bmi")
-  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
-  
-  smry <- summary(model)
-  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
-  pval <- case_when(pval < 0.01 ~ "< 0.01", 
-                    pval >0.99 ~ "> 0.99",
-                    .default = format(pval, nsmall =2, digits = 2))
-  x_label <- vars_labels[[var]] 
-  
-  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
-  smooth_df <- data.frame(
-    x = plot_data$x,
-    fit = plot_data$fit,
-    se = plot_data$se)
-  
-  list(
-    model = model,
-    plot_data = smooth_df,
-    edf = edf,
-    pval = pval,
-    var = var, 
-    x_label = x_label)
-}
-
-cox_gam_results_adjusted_sensi_1_3_4 <- map(proteomic, fit_cox_gam_adjusted)
-rm(fit_cox_gam_adjusted, vars_labels)
-
+rm(vars_labels)
 
 
 # Sensi 1 + sensi 3 + sensi 5 - Removing NEFL outlier + filtering cases with follow-up < 5 years + filtering follow-up > 50%----
@@ -1118,75 +1118,19 @@ vars_labels <- set_names(str_replace(proteomic,
                          proteomic)
 
 
-### Base model ----
-fit_cox_gam_base <- function(var, data = bdd_cases_danish_sensi_1_3_5) {
-  
-  outcome <- with(bdd_cases_danish_sensi_1_3_5, cbind(follow_up_death, status_death))
-  formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age")
-  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
-  
-  smry <- summary(model)
-  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  pval_raw <- smry$s.table[1, "p-value"]
-  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
-  pval <- case_when(pval < 0.01 ~ "< 0.01", 
-                    pval >0.99 ~ "> 0.99",
-                    .default = format(pval, nsmall =2, digits = 2))
-  x_label <- vars_labels[[var]] 
-  
-  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
-  smooth_df <- data.frame(
-    x = plot_data$x,
-    fit = plot_data$fit,
-    se = plot_data$se)
-  
-  list(
-    model = model,
-    plot_data = smooth_df,
-    edf = edf,
-    pval_raw = pval_raw,  
-    pval = pval,
-    var = var,
-    x_label = x_label)
-}
-
-cox_gam_results_base_sensi_1_3_5 <- map(proteomic, fit_cox_gam_base)
-rm(fit_cox_gam_base)
+### Base  ----
+cox_gam_results_base_sensi_1_3_5 <- 
+  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_3_5, 
+                       vars_labels = vars_labels)
 
 
-
-### Adjusted model ----
-fit_cox_gam_adjusted <- function(var, data = bdd_cases_danish_sensi_1_3_5) {
-  
-  outcome <- with(bdd_cases_danish_sensi_1_3_5, cbind(follow_up_death, status_death))
-  formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age + smoking_2cat_i + bmi")
-  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
-  
-  smry <- summary(model)
-  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
-  pval <- case_when(pval < 0.01 ~ "< 0.01", 
-                    pval >0.99 ~ "> 0.99",
-                    .default = format(pval, nsmall =2, digits = 2))
-  x_label <- vars_labels[[var]] 
-  
-  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
-  smooth_df <- data.frame(
-    x = plot_data$x,
-    fit = plot_data$fit,
-    se = plot_data$se)
-  
-  list(
-    model = model,
-    plot_data = smooth_df,
-    edf = edf,
-    pval = pval,
-    var = var, 
-    x_label = x_label)
-}
-
-cox_gam_results_adjusted_sensi_1_3_5 <- map(proteomic, fit_cox_gam_adjusted)
-rm(fit_cox_gam_adjusted, vars_labels)
+### Adjusted  ----
+cox_gam_results_adjusted_sensi_1_3_5 <- 
+  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_3_5, 
+                       vars_labels = vars_labels, 
+                       covariates = c("sex", "diagnosis_age", "smoking_2cat_i", "bmi"), 
+                       title = "Adjusted model")
+rm(vars_labels)
 
 
 
@@ -1301,7 +1245,7 @@ model2_cox_quart_sensi_1_7_female <- map_dfr(proteomic_quart, function(expl) {
 })
 
 ### Heterogeneity tests ----
-#### base ----
+#### base 
 heterogeneity_base_quart_sensi_1_7_female <- data.frame(explanatory = character(),
                                                         model = factor(),
                                                         p_value_heterogeneity = numeric(),
@@ -1326,7 +1270,7 @@ for (expl in proteomic_quart) {
 }
 rm(expl, formula_raw, model_raw, formula, model, anova, p_value_heterogeneity)
 
-#### adjusted ----
+#### adjusted 
 heterogeneity_adjusted_quart_sensi_1_7_female <- data.frame(explanatory = character(),
                                                             model = factor(),
                                                             p_value_heterogeneity = numeric(),
@@ -1357,7 +1301,7 @@ heterogeneity_tests_sensi_1_7_female <-
   mutate(explanatory = gsub("_quart", "", explanatory))
 
 ### Trend tests ----
-#### base ----
+#### base 
 trend_base_sensi_1_7_female <- data.frame(explanatory = character(),
                                           model = factor(),
                                           p_value_trend = numeric(),
@@ -1377,7 +1321,7 @@ for (expl in proteomic_quart_med) {
 }
 rm(expl, model, formula, p_value_trend)
 
-#### adjusted ----
+#### adjusted 
 trend_adjusted_sensi_1_7_female <- data.frame(explanatory = character(),
                                               model = factor(),
                                               p_value_trend = numeric(),
@@ -1412,75 +1356,20 @@ vars_labels <- set_names(str_replace(proteomic,
                          proteomic)
 
 
-### Base model ----
-fit_cox_gam_base <- function(var, data = bdd_cases_danish_sensi_1_7_female) {
-
-  outcome <- with(bdd_cases_danish_sensi_1_7_female, cbind(follow_up_death, status_death))
-  formula_str <- paste0("outcome ~ s(", var, ") + diagnosis_age")
-  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
-
-  smry <- summary(model)
-  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1)
-  pval_raw <- smry$s.table[1, "p-value"]
-  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2)
-  pval <- case_when(pval < 0.01 ~ "< 0.01",
-                    pval >0.99 ~ "> 0.99",
-                    .default = format(pval, nsmall =2, digits = 2))
-  x_label <- vars_labels[[var]]
-
-  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
-  smooth_df <- data.frame(
-    x = plot_data$x,
-    fit = plot_data$fit,
-    se = plot_data$se)
-
-  list(
-    model = model,
-    plot_data = smooth_df,
-    edf = edf,
-    pval_raw = pval_raw,
-    pval = pval,
-    var = var,
-    x_label = x_label)
-}
-
-cox_gam_results_base_sensi_1_7_female <- map(proteomic, fit_cox_gam_base)
-rm(fit_cox_gam_base)
+### Base  ----
+cox_gam_results_base_sensi_1_7_female <- 
+  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_7_female, 
+                       vars_labels = vars_labels)
 
 
+### Adjusted  ----
+cox_gam_results_adjusted_sensi_1_7_female <- 
+  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_7_female, 
+                       vars_labels = vars_labels, 
+                       covariates = c("diagnosis_age", "smoking_2cat_i", "bmi"), 
+                       title = "Adjusted model")
+rm(vars_labels)
 
-### Adjusted model ----
-fit_cox_gam_adjusted <- function(var, data = bdd_cases_danish_sensi_1_7_female) {
-
-  outcome <- with(bdd_cases_danish_sensi_1_7_female, cbind(follow_up_death, status_death))
-  formula_str <- paste0("outcome ~ s(", var, ") + diagnosis_age + smoking_2cat_i + bmi")
-  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
-
-  smry <- summary(model)
-  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1)
-  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2)
-  pval <- case_when(pval < 0.01 ~ "< 0.01",
-                    pval >0.99 ~ "> 0.99",
-                    .default = format(pval, nsmall =2, digits = 2))
-  x_label <- vars_labels[[var]]
-
-  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
-  smooth_df <- data.frame(
-    x = plot_data$x,
-    fit = plot_data$fit,
-    se = plot_data$se)
-
-  list(
-    model = model,
-    plot_data = smooth_df,
-    edf = edf,
-    pval = pval,
-    var = var,
-    x_label = x_label)
-}
-
-cox_gam_results_adjusted_sensi_1_7_female <- map(proteomic, fit_cox_gam_adjusted)
-rm(fit_cox_gam_adjusted, vars_labels)
 
 # Sensi 1 + sensi 7 - Removing the oulier for NEFL + filtering to male ----
 bdd_cases_danish_sensi_1_7_male <- bdd_danish |>
@@ -1592,7 +1481,7 @@ model2_cox_quart_sensi_1_7_male <- map_dfr(proteomic_quart, function(expl) {
 })
 
 ### Heterogeneity tests ----
-#### base ----
+#### base 
 heterogeneity_base_quart_sensi_1_7_male <- data.frame(explanatory = character(),
                                                       model = factor(),
                                                       p_value_heterogeneity = numeric(),
@@ -1617,7 +1506,7 @@ for (expl in proteomic_quart) {
 }
 rm(expl, formula_raw, model_raw, formula, model, anova, p_value_heterogeneity)
 
-#### adjusted ----
+#### adjusted 
 heterogeneity_adjusted_quart_sensi_1_7_male <- data.frame(explanatory = character(),
                                                           model = factor(),
                                                           p_value_heterogeneity = numeric(),
@@ -1648,7 +1537,7 @@ heterogeneity_tests_sensi_1_7_male <-
   mutate(explanatory = gsub("_quart", "", explanatory))
 
 ### Trend tests ----
-#### base ----
+#### base 
 trend_base_sensi_1_7_male <- data.frame(explanatory = character(),
                                         model = factor(),
                                         p_value_trend = numeric(),
@@ -1668,7 +1557,7 @@ for (expl in proteomic_quart_med) {
 }
 rm(expl, model, formula, p_value_trend)
 
-#### adjusted ----
+#### adjusted 
 trend_adjusted_sensi_1_7_male <- data.frame(explanatory = character(),
                                             model = factor(),
                                             p_value_trend = numeric(),
@@ -1703,75 +1592,20 @@ vars_labels <- set_names(str_replace(proteomic,
                          proteomic)
 
 
-### Base model ----
-fit_cox_gam_base <- function(var, data = bdd_cases_danish_sensi_1_7_male) {
-
-  outcome <- with(bdd_cases_danish_sensi_1_7_male, cbind(follow_up_death, status_death))
-  formula_str <- paste0("outcome ~ s(", var, ") + diagnosis_age")
-  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
-
-  smry <- summary(model)
-  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1)
-  pval_raw <- smry$s.table[1, "p-value"]
-  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2)
-  pval <- case_when(pval < 0.01 ~ "< 0.01",
-                    pval >0.99 ~ "> 0.99",
-                    .default = format(pval, nsmall =2, digits = 2))
-  x_label <- vars_labels[[var]]
-
-  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
-  smooth_df <- data.frame(
-    x = plot_data$x,
-    fit = plot_data$fit,
-    se = plot_data$se)
-
-  list(
-    model = model,
-    plot_data = smooth_df,
-    edf = edf,
-    pval_raw = pval_raw,
-    pval = pval,
-    var = var,
-    x_label = x_label)
-}
-
-cox_gam_results_base_sensi_1_7_male <- map(proteomic, fit_cox_gam_base)
-rm(fit_cox_gam_base)
+### Base  ----
+cox_gam_results_base_sensi_1_7_male <- 
+  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_7_male, 
+                       vars_labels = vars_labels)
 
 
+### Adjusted  ----
+cox_gam_results_adjusted_sensi_1_7_male <- 
+  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_7_male, 
+                       vars_labels = vars_labels, 
+                       covariates = c("diagnosis_age", "smoking_2cat_i", "bmi"), 
+                       title = "Adjusted model")
+rm(vars_labels, covariates_sensi_7)
 
-### Adjusted model ----
-fit_cox_gam_adjusted <- function(var, data = bdd_cases_danish_sensi_1_7_male) {
-
-  outcome <- with(bdd_cases_danish_sensi_1_7_male, cbind(follow_up_death, status_death))
-  formula_str <- paste0("outcome ~ s(", var, ") + diagnosis_age + smoking_2cat_i + bmi")
-  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
-
-  smry <- summary(model)
-  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1)
-  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2)
-  pval <- case_when(pval < 0.01 ~ "< 0.01",
-                    pval >0.99 ~ "> 0.99",
-                    .default = format(pval, nsmall =2, digits = 2))
-  x_label <- vars_labels[[var]]
-
-  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
-  smooth_df <- data.frame(
-    x = plot_data$x,
-    fit = plot_data$fit,
-    se = plot_data$se)
-
-  list(
-    model = model,
-    plot_data = smooth_df,
-    edf = edf,
-    pval = pval,
-    var = var,
-    x_label = x_label)
-}
-
-cox_gam_results_adjusted_sensi_1_7_male <- map(proteomic, fit_cox_gam_adjusted)
-rm(fit_cox_gam_adjusted, vars_labels, covariates_sensi_7)
 
 # Assemblage main analyses ----
 main_results <-       
@@ -1859,10 +1693,13 @@ rm(model1_cox_sd, model2_cox_sd,
    heterogeneity_tests_sensi_1_3_4, trend_tests_sensi_1_3_4,
    heterogeneity_tests_sensi_1_3_5, trend_tests_sensi_1_3_5,
    heterogeneity_tests_sensi_1_7_female, trend_tests_sensi_1_7_female,
-   heterogeneity_tests_sensi_1_7_male, trend_tests_sensi_1_7_male)
+   heterogeneity_tests_sensi_1_7_male, trend_tests_sensi_1_7_male, 
+   fit_cox_gam_base, 
+   fit_cox_gam_adjusted)
 
 
 # Tables and Figures ----
+
 ## Table covariates - als survival ----
 covar
 
@@ -2104,248 +1941,15 @@ proteomic_sd_ALS_adjusted_figure <-
 
 
 ## Figure proteomic - als survival - base gam (main) ----
-# pvals <- sapply(model1_gam, function(m) m$s.table[1, "p-value"])
-# signif_vars <- names(pvals)[pvals < 0.05]
-# signif_vars_labels <- set_names(str_replace(signif_vars, 
-#                                             "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-#                                             ""), 
-#                                 signif_vars)
-# 
-# plot_base_gam <- map(signif_vars, function(var) {
-#   
-#   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
-#   formula <- as.formula(paste("outcome ~ s(", var, ") + diagnosis_age + sex")) 
-#   
-#   model <- gam(formula,                                                         # run the cox-gam model
-#                family = cox.ph(), 
-#                method = "ML", 
-#                data = bdd_cases_danish)            
-#   
-#   bdd_pred <- bdd_cases_danish |>                                               # création bdd avec protein + covariables ramenées à leur moyenne
-#     mutate(
-#       adj_diagnosis_age = mean(diagnosis_age, na.rm = TRUE),
-#       adj_sex = names(which.max(table(sex)))) |>
-#     select(all_of(var), starts_with("adj_")) |>
-#     rename_with(~ gsub("adj_", "", .x)) 
-#   
-#   pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-#   
-#   bdd_pred <- bdd_pred |>
-#     mutate(
-#       hazard_ratio = exp(pred$fit),
-#       hazard_lower = exp(pred$fit - 1.96 * pred$se.fit),
-#       hazard_upper = exp(pred$fit + 1.96 * pred$se.fit))
-#   
-#   model_summary <- summary(model)
-#   edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-#   p_value <- model_summary$s.table[1, "p-value"]
-#   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-#   x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
-#   x_label <- signif_vars_labels[var] 
-#   
-#   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
-#     geom_line(color = "blue", size = 1) +
-#     geom_ribbon(aes(ymin = hazard_lower, ymax = hazard_upper), fill = "blue", alpha = 0.2) +
-#     labs(x = var, y = "Hazard Ratio (HR)") +
-#     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-#              hjust = 1, vjust = 1.2, size = 4, color = "black") +
-#     theme_minimal() + 
-#     scale_y_log10(limits = c(10, 15000)) +
-#     theme(axis.text.x = element_text(color = 'white'),
-#           axis.title.x = element_blank(),
-#           axis.line.x = element_blank(),
-#           axis.ticks.x = element_blank()) +
-#     ggtitle("Base model")
-#   # distribution of the non-scaled protein variables 
-#   p2 <- bdd_cases_danish |>
-#     ggplot() +
-#     aes(x = "", y = .data[[var]]) +
-#     geom_boxplot(fill = "blue") +
-#     coord_flip() +
-#     ylab(x_label) + 
-#     xlab("") + 
-#     theme_minimal()
-#   
-#   p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-#                            guides = 'collect') + 
-#     theme_minimal()
-#   p
-# }) |>
-#   set_names(signif_vars_labels)
-# rm(pvals, signif_vars, signif_vars_labels)
+plot_base_cox_gam_danish <- list(
+  signif = map(keep(cox_gam_results_base, ~ .x$pval_raw <= 0.05), "plot"),
+  not_signif = map(keep(cox_gam_results_base, ~ .x$pval_raw > 0.05), "plot"))
 
-vars_labels <- set_names(str_replace(proteomic, 
-                                     "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                     ""), 
-                         proteomic)
-
-all_fits_base <- map_dfr(cox_gam_results_base, "plot_data", .id = "var")
-y_range_base <- range(all_fits_base$fit - 2 * all_fits_base$se,
-                      all_fits_base$fit + 2 * all_fits_base$se, na.rm = TRUE)
-
-plot_base_cox_gam_danish <- map(cox_gam_results_base, function(res) {
-  
-  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
-    geom_line(size = 1.2, color = "steelblue") +
-    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
-                alpha = 0.2, fill = "steelblue") +
-    labs(
-      title = "Base model", 
-      x = NULL,
-      y = "LogHR (smooth estimate)") +
-    annotate(
-      "text",
-      x = -Inf, y = Inf,
-      hjust = -0.1, vjust = 1.5,
-      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
-      size = 4.2,
-      color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(-12, 12)) +
-    scale_x_continuous(limits = c(1, 5))  +
-    theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank())
-  
-  p2 <- ggplot(bdd_cases_danish, aes_string(x = res$var, y = 1)) +
-    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
-    theme_minimal() +
-    labs(x = "Neurofilament light polypeptide (NPX)") +
-    scale_x_continuous(limits = c(1, 5)) +
-    theme(axis.text.y = element_blank(),
-          axis.title.y = element_blank(),
-          axis.ticks.y = element_blank())
-  
-  p1 / p2 + plot_layout(heights = c(10, 1))
-}) |> 
-  set_names(vars_labels)
-
-rm(all_fits_base, y_range_base, cox_gam_results_base)
 
 ## Figure proteomic - als survival - adjusted gam (main) ----
-# pvals <- sapply(model2_gam, function(m) m$s.table[1, "p-value"])
-# signif_vars <- names(pvals)[pvals < 0.05]
-# signif_vars_labels <- set_names(str_replace(signif_vars, 
-#                                             "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-#                                             ""), 
-#                                 signif_vars)
-# 
-# plot_adjusted_gam <- map(signif_vars, function(var) {
-#   
-#   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
-#   formula <- as.formula(paste("outcome ~ s(", var, ") + ", paste(covariates, collapse = "+"))) 
-#   
-#   model <- gam(formula,                                                         # run the cox-gam model
-#                family = cox.ph(), 
-#                method = "ML", 
-#                data = bdd_cases_danish)     
-#   
-#   bdd_pred <- bdd_cases_danish |>                                               # création bdd avec protein + covariables ramenées à leur moyenne
-#     mutate(
-#       adj_diagnosis_age = mean(diagnosis_age, na.rm = TRUE),
-#       adj_sex = names(which.max(table(sex))), 
-#       adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i))), 
-#       adj_bmi = mean(bmi, na.rm = TRUE)) |>
-#     select(all_of(var), starts_with("adj_")) |>
-#     rename_with(~ gsub("adj_", "", .x)) 
-#   
-#   pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-#   
-#   bdd_pred <- bdd_pred |>
-#     mutate(
-#       hazard_ratio = exp(pred$fit),
-#       hazard_lower = exp(pred$fit - 1.96 * pred$se.fit),
-#       hazard_upper = exp(pred$fit + 1.96 * pred$se.fit))
-#   
-#   model_summary <- summary(model)
-#   edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-#   p_value <- model_summary$s.table[1, "p-value"]
-#   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-#   x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
-#   x_label <- signif_vars_labels[var] 
-#   
-#   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
-#     geom_line(color = "blue", size = 1) +
-#     geom_ribbon(aes(ymin = hazard_lower, ymax = hazard_upper), fill = "blue", alpha = 0.2) +
-#     labs(x = var, y = "Hazard Ratio (HR)") +
-#     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-#              hjust = 1, vjust = 1.2, size = 4, color = "black") +
-#     theme_minimal() + 
-#     scale_y_log10(limits = c(100, 100000),
-#                   labels = scales::label_number(accuracy = 1)) +
-#     theme(axis.text.x = element_text(color = 'white'),
-#           axis.title.x = element_blank(),
-#           axis.line.x = element_blank(),
-#           axis.ticks.x = element_blank()) +
-#     ggtitle("Adjusted model")
-#   # distribution of non-scaled protein variables 
-#   p2 <- bdd_cases_danish |>
-#     ggplot() +
-#     aes(x = "", y = .data[[var]]) +
-#     geom_boxplot(fill = "blue") +
-#     coord_flip() +
-#     ylab(x_label) + 
-#     xlab("") + 
-#     theme_minimal()
-#   
-#   p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-#                            guides = 'collect') + 
-#     theme_minimal()
-#   p
-# }) |>
-#   set_names(signif_vars_labels)
-# rm(pvals, signif_vars, signif_vars_labels)
-
-
-all_fits_adjusted <- map_dfr(cox_gam_results_adjusted, "plot_data", .id = "var")
-y_range_adjusted <- range(all_fits_adjusted$fit - 2 * all_fits_adjusted$se,
-                          all_fits_adjusted$fit + 2 * all_fits_adjusted$se, na.rm = TRUE)
-
-
-plot_adjusted_cox_gam_danish <- map(cox_gam_results_adjusted, function(res) {
-  
-  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
-    geom_line(size = 1.2, color = "steelblue") +
-    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
-                alpha = 0.2, fill = "steelblue") +
-    labs(
-      title = "Adjusted model", 
-      x = NULL,
-      y = "LogHR (smooth estimate)") +
-    annotate(
-      "text",
-      x = -Inf, y = Inf,
-      hjust = -0.1, vjust = 1.5,
-      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
-      size = 4.2,
-      color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(-12, 12)) +  
-    scale_x_continuous(limits = c(1, 5))  +  
-    theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank())
-  
-  p2 <- ggplot(bdd_cases_danish, aes_string(x = res$var, y = 1)) +
-    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
-    theme_minimal() +
-    labs(x = "Neurofilament light polypeptide (NPX)") +
-    scale_x_continuous(limits = c(1, 5)) +
-    theme(axis.text.y = element_blank(),
-          axis.title.y = element_blank(),
-          axis.ticks.y = element_blank())
-  
-  p1 / p2 + plot_layout(heights = c(10, 1))
-}) |> 
-  set_names(vars_labels)
-
-
-rm(vars_labels, all_fits_adjusted, y_range_adjusted, cox_gam_results_adjusted)
-
-
-
+plot_adjusted_cox_gam_danish <- list(
+  signif = map(keep(cox_gam_results_adjusted, ~ .x$pval_raw <= 0.05), "plot"),
+  not_signif = map(keep(cox_gam_results_adjusted, ~ .x$pval_raw > 0.05), "plot"))
 
 
 ## Table proteomic (sd) - als survival (sensi_1_3) ----
@@ -2526,103 +2130,15 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3 <-
 
 
 ## Figure proteomic - als survival - base gam (sensi_1_3) ----
-vars_labels <- set_names(str_replace(proteomic, 
-                                     "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                     ""), 
-                         proteomic)
+plot_base_cox_gam_danish_sensi_1_3 <- list(
+  signif = map(keep(cox_gam_results_base_sensi_1_3, ~ .x$pval_raw <= 0.05), "plot"),
+  not_signif = map(keep(cox_gam_results_base_sensi_1_3, ~ .x$pval_raw > 0.05), "plot"))
 
-all_fits_base <- map_dfr(cox_gam_results_base_sensi_1_3, "plot_data", .id = "var")
-y_range_base <- range(all_fits_base$fit - 2 * all_fits_base$se,
-                      all_fits_base$fit + 2 * all_fits_base$se, na.rm = TRUE)
-
-plot_base_cox_gam_danish_sensi_1_3 <- map(cox_gam_results_base_sensi_1_3, function(res) {
-  
-  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
-    geom_line(size = 1.2, color = "steelblue") +
-    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
-                alpha = 0.2, fill = "steelblue") +
-    labs(
-      title = "Base model", 
-      x = NULL,
-      y = "LogHR (smooth estimate)") +
-    annotate(
-      "text",
-      x = -Inf, y = Inf,
-      hjust = -0.1, vjust = 1.5,
-      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
-      size = 4.2,
-      color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(-12, 12)) +
-    scale_x_continuous(limits = c(1, 5))  +
-    theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank())
-  
-  p2 <- ggplot(bdd_cases_danish_sensi_1_3, aes_string(x = res$var, y = 1)) +
-    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
-    theme_minimal() +
-    labs(x = "Neurofilament light polypeptide (NPX)") +
-    scale_x_continuous(limits = c(1, 5)) +
-    theme(axis.text.y = element_blank(),
-          axis.title.y = element_blank(),
-          axis.ticks.y = element_blank())
-  
-  p1 / p2 + plot_layout(heights = c(10, 1))
-}) |> 
-  set_names(vars_labels)
-
-rm(all_fits_base, y_range_base, cox_gam_results_base_sensi_1_3)
 
 ## Figure proteomic - als survival - adjusted gam (sensi_1_3) ----
-all_fits_adjusted <- map_dfr(cox_gam_results_adjusted_sensi_1_3, "plot_data", .id = "var")
-y_range_adjusted <- range(all_fits_adjusted$fit - 2 * all_fits_adjusted$se,
-                          all_fits_adjusted$fit + 2 * all_fits_adjusted$se, na.rm = TRUE)
-
-
-plot_adjusted_cox_gam_danish_sensi_1_3 <- map(cox_gam_results_adjusted_sensi_1_3, function(res) {
-  
-  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
-    geom_line(size = 1.2, color = "steelblue") +
-    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
-                alpha = 0.2, fill = "steelblue") +
-    labs(
-      title = "Adjusted model", 
-      x = NULL,
-      y = "LogHR (smooth estimate)") +
-    annotate(
-      "text",
-      x = -Inf, y = Inf,
-      hjust = -0.1, vjust = 1.5,
-      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
-      size = 4.2,
-      color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(-12, 12)) +  
-    scale_x_continuous(limits = c(1, 5))  +  
-    theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank())
-  
-  p2 <- ggplot(bdd_cases_danish_sensi_1_3, aes_string(x = res$var, y = 1)) +
-    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
-    theme_minimal() +
-    labs(x = "Neurofilament light polypeptide (NPX)") +
-    scale_x_continuous(limits = c(1, 5)) +
-    theme(axis.text.y = element_blank(),
-          axis.title.y = element_blank(),
-          axis.ticks.y = element_blank())
-  
-  p1 / p2 + plot_layout(heights = c(10, 1))
-}) |> 
-  set_names(vars_labels)
-
-
-rm(vars_labels, all_fits_adjusted, y_range_adjusted, cox_gam_results_adjusted_sensi_1_3)
-
-
+plot_adjusted_cox_gam_danish_sensi_1_3 <- list(
+  signif = map(keep(cox_gam_results_adjusted_sensi_1_3, ~ .x$pval_raw <= 0.05), "plot"),
+  not_signif = map(keep(cox_gam_results_adjusted_sensi_1_3, ~ .x$pval_raw > 0.05), "plot"))
 
 
 ## Table proteomic (sd) - als survival (sensi_1_3_4) ----
@@ -2803,101 +2319,14 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3_4 <-
 
 
 ## Figure proteomic - als survival - base gam (sensi_1_3_4) ----
-vars_labels <- set_names(str_replace(proteomic, 
-                                     "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                     ""), 
-                         proteomic)
-
-all_fits_base <- map_dfr(cox_gam_results_base_sensi_1_3_4, "plot_data", .id = "var")
-y_range_base <- range(all_fits_base$fit - 2 * all_fits_base$se,
-                      all_fits_base$fit + 2 * all_fits_base$se, na.rm = TRUE)
-
-plot_base_cox_gam_danish_sensi_1_3_4 <- map(cox_gam_results_base_sensi_1_3_4, function(res) {
-  
-  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
-    geom_line(size = 1.2, color = "steelblue") +
-    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
-                alpha = 0.2, fill = "steelblue") +
-    labs(
-      title = "Base model", 
-      x = NULL,
-      y = "LogHR (smooth estimate)") +
-    annotate(
-      "text",
-      x = -Inf, y = Inf,
-      hjust = -0.1, vjust = 1.5,
-      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
-      size = 4.2,
-      color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(-12, 12)) +
-    scale_x_continuous(limits = c(1, 5))  +
-    theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank())
-  
-  p2 <- ggplot(bdd_cases_danish_sensi_1_3_4, aes_string(x = res$var, y = 1)) +
-    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
-    theme_minimal() +
-    labs(x = "Neurofilament light polypeptide (NPX)") +
-    scale_x_continuous(limits = c(1, 5)) +
-    theme(axis.text.y = element_blank(),
-          axis.title.y = element_blank(),
-          axis.ticks.y = element_blank())
-  
-  p1 / p2 + plot_layout(heights = c(10, 1))
-}) |> 
-  set_names(vars_labels)
-
-rm(all_fits_base, y_range_base, cox_gam_results_base_sensi_1_3_4)
+plot_base_cox_gam_danish_sensi_1_3_4 <- list(
+  signif = map(keep(cox_gam_results_base_sensi_1_3_4, ~ .x$pval_raw <= 0.05), "plot"),
+  not_signif = map(keep(cox_gam_results_base_sensi_1_3_4, ~ .x$pval_raw > 0.05), "plot"))
 
 ## Figure proteomic - als survival - adjusted gam (sensi_1_3_4) ----
-all_fits_adjusted <- map_dfr(cox_gam_results_adjusted_sensi_1_3_4, "plot_data", .id = "var")
-y_range_adjusted <- range(all_fits_adjusted$fit - 2 * all_fits_adjusted$se,
-                          all_fits_adjusted$fit + 2 * all_fits_adjusted$se, na.rm = TRUE)
-
-
-plot_adjusted_cox_gam_danish_sensi_1_3_4 <- map(cox_gam_results_adjusted_sensi_1_3_4, function(res) {
-  
-  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
-    geom_line(size = 1.2, color = "steelblue") +
-    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
-                alpha = 0.2, fill = "steelblue") +
-    labs(
-      title = "Adjusted model", 
-      x = NULL,
-      y = "LogHR (smooth estimate)") +
-    annotate(
-      "text",
-      x = -Inf, y = Inf,
-      hjust = -0.1, vjust = 1.5,
-      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
-      size = 4.2,
-      color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(-12, 12)) +  
-    scale_x_continuous(limits = c(1, 5))  +  
-    theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank())
-  
-  p2 <- ggplot(bdd_cases_danish_sensi_1_3_4, aes_string(x = res$var, y = 1)) +
-    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
-    theme_minimal() +
-    labs(x = "Neurofilament light polypeptide (NPX)") +
-    scale_x_continuous(limits = c(1, 5)) +
-    theme(axis.text.y = element_blank(),
-          axis.title.y = element_blank(),
-          axis.ticks.y = element_blank())
-  
-  p1 / p2 + plot_layout(heights = c(10, 1))
-}) |> 
-  set_names(vars_labels)
-
-
-rm(vars_labels, all_fits_adjusted, y_range_adjusted, cox_gam_results_adjusted_sensi_1_3_4)
+plot_adjusted_cox_gam_danish_sensi_1_3_4 <- list(
+  signif = map(keep(cox_gam_results_adjusted_sensi_1_3_4, ~ .x$pval_raw <= 0.05), "plot"),
+  not_signif = map(keep(cox_gam_results_adjusted_sensi_1_3_4, ~ .x$pval_raw > 0.05), "plot"))
 
 
 ## Table proteomic (sd) - als survival (sensi_1_3_5) ----
@@ -3078,102 +2507,16 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3_5 <-
 
 
 ## Figure proteomic - als survival - base gam (sensi_1_3_5) ----
-vars_labels <- set_names(str_replace(proteomic, 
-                                     "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                     ""), 
-                         proteomic)
+plot_base_cox_gam_danish_sensi_1_3_5 <- list(
+  signif = map(keep(cox_gam_results_base_sensi_1_3_5, ~ .x$pval_raw <= 0.05), "plot"),
+  not_signif = map(keep(cox_gam_results_base_sensi_1_3_5, ~ .x$pval_raw > 0.05), "plot"))
 
-all_fits_base <- map_dfr(cox_gam_results_base_sensi_1_3_5, "plot_data", .id = "var")
-y_range_base <- range(all_fits_base$fit - 2 * all_fits_base$se,
-                      all_fits_base$fit + 2 * all_fits_base$se, na.rm = TRUE)
 
-plot_base_cox_gam_danish_sensi_1_3_5 <- map(cox_gam_results_base_sensi_1_3_5, function(res) {
-  
-  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
-    geom_line(size = 1.2, color = "steelblue") +
-    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
-                alpha = 0.2, fill = "steelblue") +
-    labs(
-      title = "Base model", 
-      x = NULL,
-      y = "LogHR (smooth estimate)") +
-    annotate(
-      "text",
-      x = -Inf, y = Inf,
-      hjust = -0.1, vjust = 1.5,
-      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
-      size = 4.2,
-      color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(-12, 12)) +
-    scale_x_continuous(limits = c(1, 5))  +
-    theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank())
-  
-  p2 <- ggplot(bdd_cases_danish_sensi_1_3_5, aes_string(x = res$var, y = 1)) +
-    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
-    theme_minimal() +
-    labs(x = "Neurofilament light polypeptide (NPX)") +
-    scale_x_continuous(limits = c(1, 5)) +
-    theme(axis.text.y = element_blank(),
-          axis.title.y = element_blank(),
-          axis.ticks.y = element_blank())
-  
-  p1 / p2 + plot_layout(heights = c(10, 1))
-}) |> 
-  set_names(vars_labels)
-
-rm(all_fits_base, y_range_base, cox_gam_results_base_sensi_1_3_5)
 
 ## Figure proteomic - als survival - adjusted gam (sensi_1_3_5) ----
-all_fits_adjusted <- map_dfr(cox_gam_results_adjusted_sensi_1_3_5, "plot_data", .id = "var")
-y_range_adjusted <- range(all_fits_adjusted$fit - 2 * all_fits_adjusted$se,
-                          all_fits_adjusted$fit + 2 * all_fits_adjusted$se, na.rm = TRUE)
-
-
-plot_adjusted_cox_gam_danish_sensi_1_3_5 <- map(cox_gam_results_adjusted_sensi_1_3_5, function(res) {
-  
-  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
-    geom_line(size = 1.2, color = "steelblue") +
-    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
-                alpha = 0.2, fill = "steelblue") +
-    labs(
-      title = "Adjusted model", 
-      x = NULL,
-      y = "LogHR (smooth estimate)") +
-    annotate(
-      "text",
-      x = -Inf, y = Inf,
-      hjust = -0.1, vjust = 1.5,
-      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
-      size = 4.2,
-      color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(-12, 12)) +  
-    scale_x_continuous(limits = c(1, 5))  +  
-    theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank())
-  
-  p2 <- ggplot(bdd_cases_danish_sensi_1_3_5, aes_string(x = res$var, y = 1)) +
-    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
-    theme_minimal() +
-    labs(x = "Neurofilament light polypeptide (NPX)") +
-    scale_x_continuous(limits = c(1, 5)) +
-    theme(axis.text.y = element_blank(),
-          axis.title.y = element_blank(),
-          axis.ticks.y = element_blank())
-  
-  p1 / p2 + plot_layout(heights = c(10, 1))
-}) |> 
-  set_names(vars_labels)
-
-
-rm(vars_labels, all_fits_adjusted, y_range_adjusted, cox_gam_results_adjusted_sensi_1_3_5)
-
+plot_adjusted_cox_gam_danish_sensi_1_3_5 <- list(
+  signif = map(keep(cox_gam_results_adjusted_sensi_1_3_5, ~ .x$pval_raw <= 0.05), "plot"),
+  not_signif = map(keep(cox_gam_results_adjusted_sensi_1_3_5, ~ .x$pval_raw > 0.05), "plot"))
 
 
 ## Table proteomic (sd) - als survival (sensi_1_7_female) ----
@@ -3354,102 +2697,15 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_7_female <-
 
 
 ## Figure proteomic - als survival - base gam (sensi_1_7_female) ----
-vars_labels <- set_names(str_replace(proteomic, 
-                                     "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                     ""), 
-                         proteomic)
+plot_base_cox_gam_danish_sensi_1_7_female <- list(
+  signif = map(keep(cox_gam_results_base_sensi_1_7_female, ~ .x$pval_raw <= 0.05), "plot"),
+  not_signif = map(keep(cox_gam_results_base_sensi_1_7_female, ~ .x$pval_raw > 0.05), "plot"))
 
-all_fits_base <- map_dfr(cox_gam_results_base_sensi_1_7_female, "plot_data", .id = "var")
-y_range_base <- range(all_fits_base$fit - 2 * all_fits_base$se,
-                      all_fits_base$fit + 2 * all_fits_base$se, na.rm = TRUE)
-
-plot_base_cox_gam_danish_sensi_1_7_female <- map(cox_gam_results_base_sensi_1_7_female, function(res) {
-  
-  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
-    geom_line(size = 1.2, color = "steelblue") +
-    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
-                alpha = 0.2, fill = "steelblue") +
-    labs(
-      title = "Base model", 
-      x = NULL,
-      y = "LogHR (smooth estimate)") +
-    annotate(
-      "text",
-      x = -Inf, y = Inf,
-      hjust = -0.1, vjust = 1.5,
-      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
-      size = 4.2,
-      color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(-12, 12)) +
-    scale_x_continuous(limits = c(1, 5))  +
-    theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank())
-  
-  p2 <- ggplot(bdd_cases_danish_sensi_1_7_female, aes_string(x = res$var, y = 1)) +
-    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
-    theme_minimal() +
-    labs(x = "Neurofilament light polypeptide (NPX)") +
-    scale_x_continuous(limits = c(1, 5)) +
-    theme(axis.text.y = element_blank(),
-          axis.title.y = element_blank(),
-          axis.ticks.y = element_blank())
-  
-  p1 / p2 + plot_layout(heights = c(10, 1))
-}) |> 
-  set_names(vars_labels)
-
-rm(all_fits_base, y_range_base, cox_gam_results_base_sensi_1_7_female)
 
 ## Figure proteomic - als survival - adjusted gam (sensi_1_7_female) ----
-all_fits_adjusted <- map_dfr(cox_gam_results_adjusted_sensi_1_7_female, "plot_data", .id = "var")
-y_range_adjusted <- range(all_fits_adjusted$fit - 2 * all_fits_adjusted$se,
-                          all_fits_adjusted$fit + 2 * all_fits_adjusted$se, na.rm = TRUE)
-
-
-plot_adjusted_cox_gam_danish_sensi_1_7_female <- map(cox_gam_results_adjusted_sensi_1_7_female, function(res) {
-  
-  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
-    geom_line(size = 1.2, color = "steelblue") +
-    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
-                alpha = 0.2, fill = "steelblue") +
-    labs(
-      title = "Adjusted model", 
-      x = NULL,
-      y = "LogHR (smooth estimate)") +
-    annotate(
-      "text",
-      x = -Inf, y = Inf,
-      hjust = -0.1, vjust = 1.5,
-      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
-      size = 4.2,
-      color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(-12, 12)) +  
-    scale_x_continuous(limits = c(1, 5))  +  
-    theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank())
-  
-  p2 <- ggplot(bdd_cases_danish_sensi_1_7_female, aes_string(x = res$var, y = 1)) +
-    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
-    theme_minimal() +
-    labs(x = "Neurofilament light polypeptide (NPX)") +
-    scale_x_continuous(limits = c(1, 5)) +
-    theme(axis.text.y = element_blank(),
-          axis.title.y = element_blank(),
-          axis.ticks.y = element_blank())
-  
-  p1 / p2 + plot_layout(heights = c(10, 1))
-}) |> 
-  set_names(vars_labels)
-
-
-rm(vars_labels, all_fits_adjusted, y_range_adjusted, cox_gam_results_adjusted_sensi_1_7_female)
-
+plot_adjusted_cox_gam_danish_sensi_1_7_female <- list(
+  signif = map(keep(cox_gam_results_adjusted_sensi_1_7_female, ~ .x$pval_raw <= 0.05), "plot"),
+  not_signif = map(keep(cox_gam_results_adjusted_sensi_1_7_female, ~ .x$pval_raw > 0.05), "plot"))
 
 
 ## Table proteomic (sd) - als survival (sensi_1_7_male) ----
@@ -3631,103 +2887,15 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_7_male <-
 
 
 ## Figure proteomic - als survival - base gam (sensi_1_7_male) ----
-vars_labels <- set_names(str_replace(proteomic, 
-                                     "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                     ""), 
-                         proteomic)
+plot_base_cox_gam_danish_sensi_1_7_male <- list(
+  signif = map(keep(cox_gam_results_base_sensi_1_7_male, ~ .x$pval_raw <= 0.05), "plot"),
+  not_signif = map(keep(cox_gam_results_base_sensi_1_7_male, ~ .x$pval_raw > 0.05), "plot"))
 
-all_fits_base <- map_dfr(cox_gam_results_base_sensi_1_7_male, "plot_data", .id = "var")
-y_range_base <- range(all_fits_base$fit - 2 * all_fits_base$se,
-                      all_fits_base$fit + 2 * all_fits_base$se, na.rm = TRUE)
-
-plot_base_cox_gam_danish_sensi_1_7_male <- map(cox_gam_results_base_sensi_1_7_male, function(res) {
-  
-  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
-    geom_line(size = 1.2, color = "steelblue") +
-    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
-                alpha = 0.2, fill = "steelblue") +
-    labs(
-      title = "Base model", 
-      x = NULL,
-      y = "LogHR (smooth estimate)") +
-    annotate(
-      "text",
-      x = -Inf, y = Inf,
-      hjust = -0.1, vjust = 1.5,
-      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
-      size = 4.2,
-      color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(-12, 12)) +
-    scale_x_continuous(limits = c(1, 5))  +
-    theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank())
-  
-  p2 <- ggplot(bdd_cases_danish_sensi_1_7_male, aes_string(x = res$var, y = 1)) +
-    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
-    theme_minimal() +
-    labs(x = "Neurofilament light polypeptide (NPX)") +
-    scale_x_continuous(limits = c(1, 5)) +
-    theme(axis.text.y = element_blank(),
-          axis.title.y = element_blank(),
-          axis.ticks.y = element_blank())
-  
-  p1 / p2 + plot_layout(heights = c(10, 1))
-}) |> 
-  set_names(vars_labels)
-
-rm(all_fits_base, y_range_base, cox_gam_results_base_sensi_1_7_male)
 
 ## Figure proteomic - als survival - adjusted gam (sensi_1_7_male) ----
-all_fits_adjusted <- map_dfr(cox_gam_results_adjusted_sensi_1_7_male, "plot_data", .id = "var")
-y_range_adjusted <- range(all_fits_adjusted$fit - 2 * all_fits_adjusted$se,
-                          all_fits_adjusted$fit + 2 * all_fits_adjusted$se, na.rm = TRUE)
-
-
-plot_adjusted_cox_gam_danish_sensi_1_7_male <- map(cox_gam_results_adjusted_sensi_1_7_male, function(res) {
-  
-  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
-    geom_line(size = 1.2, color = "steelblue") +
-    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
-                alpha = 0.2, fill = "steelblue") +
-    labs(
-      title = "Adjusted model", 
-      x = NULL,
-      y = "LogHR (smooth estimate)") +
-    annotate(
-      "text",
-      x = -Inf, y = Inf,
-      hjust = -0.1, vjust = 1.5,
-      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
-      size = 4.2,
-      color = "black") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(-12, 12)) +  
-    scale_x_continuous(limits = c(1, 5))  +  
-    theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank(),
-          axis.line.x = element_blank(),
-          axis.ticks.x = element_blank())
-  
-  p2 <- ggplot(bdd_cases_danish_sensi_1_7_male, aes_string(x = res$var, y = 1)) +
-    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
-    theme_minimal() +
-    labs(x = "Neurofilament light polypeptide (NPX)") +
-    scale_x_continuous(limits = c(1, 5)) +
-    theme(axis.text.y = element_blank(),
-          axis.title.y = element_blank(),
-          axis.ticks.y = element_blank())
-  
-  p1 / p2 + plot_layout(heights = c(10, 1))
-}) |> 
-  set_names(vars_labels)
-
-
-rm(vars_labels, all_fits_adjusted, y_range_adjusted, cox_gam_results_adjusted_sensi_1_7_male)
-
-
+plot_adjusted_cox_gam_danish_sensi_1_7_male <- list(
+  signif = map(keep(cox_gam_results_adjusted_sensi_1_7_male, ~ .x$pval_raw <= 0.05), "plot"),
+  not_signif = map(keep(cox_gam_results_adjusted_sensi_1_7_male, ~ .x$pval_raw > 0.05), "plot"))
 
 
 

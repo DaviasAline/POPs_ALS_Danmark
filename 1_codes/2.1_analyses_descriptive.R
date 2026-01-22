@@ -183,7 +183,7 @@ POPs_group_boxplot_danish_by_death <- bdd_danish |>
                  guide = guide_legend(reverse = TRUE)) +
   scale_y_continuous(trans = "log", 
                      labels = number_format(accuracy = 1)) +
-  labs(x = "POPs", y = "Pre-disease plasma concentrations (pg/ml)", fill = "") +
+  labs(x = "POPs", y = "Pre-disease plasma concentrations (log10 pg/ml)", fill = "") +
   coord_flip() +
   theme_lucid()
 

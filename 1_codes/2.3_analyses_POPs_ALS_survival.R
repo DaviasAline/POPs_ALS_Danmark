@@ -6,10 +6,10 @@
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2.2_analyses_POPs_ALS_occurrence.R")
 
 # Creation of cases specific datasets ----
-bdd_cases_danish <- bdd_danish |>
+bdd_cases_danish <- 
+  bdd_danish |>
   filter (als == 1) |>
-  filter(study == "Danish") |>
-  select(study, study_2cat, als, als_date, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
+  select(als, als_date, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
          all_of(POPs_group), 
          all_of(POPs_included)) |>
@@ -72,7 +72,6 @@ model1_cox_sd_danish <- map_dfr(POPs_group_sd, function(expl) {
   
   coefs <- model_summary$coefficients
   tibble(                                                                       # creation of a table of results
-    study = "Danish", 
     model = "base", 
     analysis = "main", 
     term = rownames(coefs),
@@ -93,7 +92,6 @@ model2_cox_sd_danish <- map_dfr(POPs_group_sd, function(expl) {
   model_summary <- coxph(formula_danish, data = bdd_cases_danish) |> summary()  # run cox model
   coefs <- model_summary$coefficients
   tibble(                                                                       # creation of a table of results
-    study = "Danish", 
     model = "adjusted", 
     analysis = "main",
     term = rownames(coefs),
@@ -119,7 +117,6 @@ model_summary <-
   coxph(formula_danish, data = bdd_cases_danish) |> summary() 
 coefs <- model_summary$coefficients
 model3_cox_sd_danish <- tibble(                                                 # creation of a table of results
-  study = "Danish", 
   model = "copollutant", 
   analysis = "main",
   term = rownames(coefs),
@@ -143,7 +140,6 @@ model1_cox_quart_danish <- map_dfr(POPs_group_quart, function(expl) {
 
   coefs <- model_summary$coefficients
   tibble(                                                                       # creation of a table of results
-    study = "Danish", 
     model = "base", 
     analysis = "main",
     term = rownames(coefs),
@@ -151,7 +147,7 @@ model1_cox_quart_danish <- map_dfr(POPs_group_quart, function(expl) {
     coef = coefs[, "coef"],
     se = coefs[, "se(coef)"], 
     `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                      # remove the covariates results
+    filter(str_starts(term, explanatory))                                       # remove the covariates results
 })
 
 ### Adjusted ----
@@ -163,7 +159,6 @@ model2_cox_quart_danish <- map_dfr(POPs_group_quart, function(expl) {
   model_summary <- coxph(formula_danish, data = bdd_cases_danish) |> summary()  # run cox model
   coefs <- model_summary$coefficients
   tibble(                                                                       # creation of a table of results
-    study = "Danish", 
     model = "adjusted", 
     analysis = "main",
     term = rownames(coefs),
@@ -273,7 +268,6 @@ model3_cox_quart_danish <- bind_rows(
   model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_HCB, model3_quart_ΣDDT, model3_quart_β_HCH, model3_quart_Σchlordane, model3_quart_ΣPBDE) |>
   filter(grepl("quart", variable)) |>
   mutate(
-    study = "Danish", 
     model = "copollutant", 
     analysis = "main",
     term = variable,
@@ -283,7 +277,7 @@ model3_cox_quart_danish <- bind_rows(
     coef = Estimate, 
     se = `Std. Error`, 
     `p-value` =`Pr(>|z|)`) |> 
-  select(study, model, analysis, term, explanatory, coef, se, `p-value`)
+  select(model, analysis, term, explanatory, coef, se, `p-value`)
 
 rm(model3_quart_PCB_DL, model3_quart_PCB_NDL, model3_quart_HCB, model3_quart_ΣDDT, model3_quart_β_HCH, model3_quart_Σchlordane, model3_quart_ΣPBDE, 
    outcome)
@@ -520,8 +514,7 @@ heterogeneity_tests <-
   bind_rows(heterogeneity_base, 
             heterogeneity_adjusted, 
             heterogeneity_copollutant) |>
-  mutate(explanatory = gsub("_quart", "", explanatory), 
-         study = "Danish")
+  mutate(explanatory = gsub("_quart", "", explanatory))
 
 ### Trend tests ----
 #### base ----
@@ -677,229 +670,20 @@ rm(outcome,
 
 trend_tests <- 
   bind_rows(trend_base, trend_adjusted, trend_copollutant) |>
-  mutate(explanatory = gsub("_quart_med", "", explanatory), 
-         study = "Danish")
+  mutate(explanatory = gsub("_quart_med", "", explanatory))
 
 rm(heterogeneity_base, heterogeneity_adjusted, heterogeneity_copollutant,
    trend_base, trend_adjusted, trend_copollutant)
 
 
 ## Cox-gam model ----
-# ### Base  
-# POPs_group_labels_cox_gam <- set_names(
-#   POPs_group, 
-#   c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"))
-# plot_base_cox_gam_danish <- map(POPs_group, function(var) {
-#   
-#   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
-#   formula <- as.formula(paste("outcome ~ s(", var, ") + diagnosis_age + sex")) 
-#   
-#   model <- gam(formula,                                                         # run the cox-gam model
-#                family = cox.ph(), 
-#                method = "ML", 
-#                data = bdd_cases_danish)            
-#   
-#   bdd_pred <- bdd_cases_danish |>                                               # création bdd avec expo + covariables ramenées à leur moyenne
-#     mutate(
-#       adj_diagnosis_age = mean(diagnosis_age, na.rm = TRUE),
-#       adj_sex = names(which.max(table(sex)))) |>
-#     select(all_of(var), starts_with("adj_")) |>
-#     rename_with(~ gsub("adj_", "", .x)) 
-#   
-#   pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-#   
-#   bdd_pred <- bdd_pred |>
-#     mutate(
-#       hazard_ratio = exp(pred$fit),
-#       hazard_lower = exp(pred$fit - 1.96 * pred$se.fit),
-#       hazard_upper = exp(pred$fit + 1.96 * pred$se.fit))
-#   
-#   model_summary <- summary(model)
-#   edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-#   p_value <- model_summary$s.table[1, "p-value"]
-#   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-#   x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
-#   x_label <- POPs_group_labels_cox_gam[var] 
-#   
-#   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
-#     geom_line(color = "blue", size = 1) +
-#     geom_ribbon(aes(ymin = hazard_lower, ymax = hazard_upper), fill = "blue", alpha = 0.2) +
-#     labs(x = var, y = "Hazard Ratio (HR)") +
-#     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-#              hjust = 1, vjust = 1.2, size = 4, color = "black") +
-#     theme_minimal() + 
-#     scale_y_log10(limits = c(10, 15000)) +
-#     theme(axis.text.x = element_text(color = 'white'),
-#           axis.title.x = element_blank(),
-#           axis.line.x = element_blank(),
-#           axis.ticks.x = element_blank()) +
-#     ggtitle("Base model")
-#                                               # distribution of the non-scaled POP variables 
-#   p2 <- bdd_cases_danish |>
-#     ggplot() +
-#     aes(x = "", y = .data[[var]]) +
-#     geom_boxplot(fill = "blue") +
-#     coord_flip() +
-#     ylab(x_label) + 
-#     xlab("") + 
-#     theme_minimal()
-#   
-#   p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-#                            guides = 'collect') + 
-#     theme_minimal()
-#   p
-# }) |> 
-#   set_names(POPs_group_labels_cox_gam)
-# 
-# 
-# ### Adjusted 
-# plot_adjusted_cox_gam_danish <- map(POPs_group, function(var) {
-#   
-#   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
-#   formula <- as.formula(paste("outcome ~ s(", var, ") + ", paste(covariates_danish, collapse = "+"))) 
-#   
-#   model <- gam(formula,                                                         # run the cox-gam model
-#                family = cox.ph(), 
-#                method = "ML", 
-#                data = bdd_cases_danish)     
-#   
-#   bdd_pred <- bdd_cases_danish |>                                               # création bdd avec expo + covariables ramenées à leur moyenne
-#     mutate(
-#       adj_diagnosis_age = mean(diagnosis_age, na.rm = TRUE),
-#       adj_sex = names(which.max(table(sex))), 
-#       adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i))), 
-#       adj_bmi = mean(bmi, na.rm = TRUE),  
-#       adj_marital_status_2cat_i = names(which.max(table(marital_status_2cat_i)))) |>
-#     select(all_of(var), starts_with("adj_")) |>
-#     rename_with(~ gsub("adj_", "", .x)) 
-#   
-#   pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-#   
-#   bdd_pred <- bdd_pred |>
-#     mutate(
-#       hazard_ratio = exp(pred$fit),
-#       hazard_lower = exp(pred$fit - 1.96 * pred$se.fit),
-#       hazard_upper = exp(pred$fit + 1.96 * pred$se.fit))
-#   
-#   model_summary <- summary(model)
-#   edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1) 
-#   p_value <- model_summary$s.table[1, "p-value"]
-#   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-#   x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
-#   x_label <- POPs_group_labels_cox_gam[var] 
-#   
-#   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
-#     geom_line(color = "blue", size = 1) +
-#     geom_ribbon(aes(ymin = hazard_lower, ymax = hazard_upper), fill = "blue", alpha = 0.2) +
-#     labs(x = var, y = "Hazard Ratio (HR)") +
-#     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-#              hjust = 1, vjust = 1.2, size = 4, color = "black") +
-#     theme_minimal() + 
-#     scale_y_log10(limits = c(100, 100000),
-#                   labels = scales::label_number(accuracy = 1)) +
-#     theme(axis.text.x = element_text(color = 'white'),
-#           axis.title.x = element_blank(),
-#           axis.line.x = element_blank(),
-#           axis.ticks.x = element_blank()) +
-#     ggtitle("Adjusted model")
-#                                              # distribution of non-scaled POP variables 
-#   p2 <- bdd_cases_danish |>
-#     ggplot() +
-#     aes(x = "", y = .data[[var]]) +
-#     geom_boxplot(fill = "blue") +
-#     coord_flip() +
-#     ylab(x_label) + 
-#     xlab("") + 
-#     theme_minimal()
-#   
-#   p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-#                            guides = 'collect') + 
-#     theme_minimal()
-#   p
-# }) |> 
-#   set_names(POPs_group_labels_cox_gam)
-# rm(POPs_group_labels_cox_gam)
-# 
-# ### Copollutant 
-# POPs_group_bis <- setdiff(POPs_group, "PCB_4")                         # PCB4 not included because already present in NDL-PCBs
-# POPs_group_labels_bis <- set_names(
-#   c("Dioxin-like PCBs", "Non-dioxin-like PCBs", 
-#     "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
-#   POPs_group_bis)
-# 
-# outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
-# 
-# model <- gam(outcome ~ s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + 
-#                s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) + 
-#                sex + diagnosis_age + 
-#                smoking_2cat_i + bmi + marital_status_2cat_i, 
-#              family = cox.ph(), 
-#              method = "ML", 
-#              data = bdd_cases_danish)
-# 
-# 
-# plot_copollutant_cox_gam_danish <- map(POPs_group_bis, function(var) {
-#   
-#   bdd_pred <- bdd_cases_danish |>
-#     mutate(across(all_of(covariates_danish),                                    # fixe toutes les covariables à leurs moyennes
-#                   ~ if (is.numeric(.)) mean(., na.rm = TRUE) else names(which.max(table(.))))) |>
-#     mutate(across(setdiff(POPs_group_bis, var), 
-#                   ~ mean(., na.rm = TRUE)))|>                                   # Fixe tous les autres POPs à leur moyenne
-#     select(all_of(var), all_of(covariates_danish), all_of(setdiff(POPs_group_bis, var)))  
-#   
-#   pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-#   
-#   bdd_pred <- bdd_pred |>
-#     mutate(
-#       hazard_ratio = exp(pred$fit),
-#       hazard_lower = exp(pred$fit - 1.96 * pred$se.fit),
-#       hazard_upper = exp(pred$fit + 1.96 * pred$se.fit))
-#   
-#   model_summary <- summary(model)
-#   edf <- format(model_summary$s.table[rownames(model_summary$s.table) == paste0("s(", var, ")"), "edf"], nsmall = 1, digits = 1) 
-#   p_value <- model_summary$s.table[rownames(model_summary$s.table) == paste0("s(", var, ")"), "p-value"]
-#   p_value_text <- ifelse(p_value < 0.01, "< 0.01", format(p_value, nsmall =2, digits = 2))
-#   x_max <- max(bdd_cases_danish[[var]], na.rm = TRUE)
-#   x_label <- POPs_group_labels_bis[var]
-#   
-#   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = hazard_ratio)) +
-#     geom_line(color = "blue", size = 1) +
-#     geom_ribbon(aes(ymin = hazard_lower, ymax = hazard_upper), fill = "blue", alpha = 0.2) +
-#     labs(x = var, y = "Hazard Ratio (HR)") +
-#     annotate("text", x = x_max, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
-#              hjust = 1, vjust = 1.2, size = 4, color = "black") +
-#     theme_minimal() +
-#     scale_y_log10(limits = c(0.1, 2000), 
-#                   labels = scales::label_number(accuracy = 1)) +
-#     theme(axis.text.x = element_blank(),
-#           axis.title.x = element_blank(),
-#           axis.line.x = element_blank(),
-#           axis.ticks.x = element_blank()) +
-#     ggtitle("Co-pollutant model")
-#   
-#   p2 <- bdd_cases_danish |>
-#     ggplot() +
-#     aes(x = "", y = .data[[var]]) +
-#     geom_boxplot(fill = "blue") +
-#     coord_flip() +
-#     ylab(x_label) + 
-#     xlab("") + 
-#     theme_minimal()
-#   
-#   p <- p1/p2 + plot_layout(ncol = 1, nrow = 2, heights = c(10, 1),
-#                            guides = 'collect')
-#   p
-# }) |> set_names(POPs_group_bis)
-# rm(POPs_group_bis, POPs_group_labels_bis, model, outcome)
-
 ### Base model ----
 POPs_group_labels_cox_gam <- set_names(
   POPs_group, 
   c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"))
 
-# Fonction modifiée pour inclure EDF, p-value et axe y commun
 fit_cox_gam_base <- function(var, data = bdd_cases_danish) {
-  # Formule complète avec Surv() directement
+
   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
   formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age")
   model <- gam(as.formula(formula_str), data = data, family = cox.ph())
@@ -938,7 +722,7 @@ y_range_base <- range(all_fits_base$fit - 2 * all_fits_base$se,
 
 
 plot_base_cox_gam_danish <- map(cox_gam_results_base, function(res) {
-  # GAM smooth plot
+
   p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
     geom_line(size = 1.2, color = "steelblue") +
     geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
@@ -958,7 +742,6 @@ plot_base_cox_gam_danish <- map(cox_gam_results_base, function(res) {
     coord_cartesian(ylim = y_range_base) +
     theme_minimal(base_size = 14)
   
-  # Horizontal boxplot for the explanatory variable
   p2 <- ggplot(bdd_cases_danish, aes_string(x = res$var, y = 1)) +
     geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
     coord_cartesian(xlim = range(res$plot_data$x, na.rm = TRUE)) +
@@ -968,7 +751,6 @@ plot_base_cox_gam_danish <- map(cox_gam_results_base, function(res) {
       axis.title.x = element_text(size = 12),
       plot.margin = margin(t = -10, r = 5, b = 5, l = 5)) 
   
-  # Stack GAM plot above boxplot
   p1 / p2 + plot_layout(heights = c(10, 1))
 }) |> 
    set_names(POPs_group_labels_cox_gam)
@@ -983,9 +765,8 @@ POPs_group_labels_cox_gam <- set_names(
   POPs_group, 
   c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"))
 
-# Fonction modifiée pour inclure EDF, p-value et axe y commun
 fit_cox_gam_adjusted <- function(var, data = bdd_cases_danish) {
-  # Formule complète avec Surv() directement
+
   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
   formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i")
   model <- gam(as.formula(formula_str), data = data, family = cox.ph())
@@ -1024,7 +805,7 @@ y_range_adjusted <- range(all_fits_adjusted$fit - 2 * all_fits_adjusted$se,
 
 
 plot_adjusted_cox_gam_danish <- map(cox_gam_results_adjusted, function(res) {
-  # GAM smooth plot
+
   p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
     geom_line(size = 1.2, color = "steelblue") +
     geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
@@ -1044,7 +825,6 @@ plot_adjusted_cox_gam_danish <- map(cox_gam_results_adjusted, function(res) {
     coord_cartesian(ylim = y_range_adjusted) +
     theme_minimal(base_size = 14)
   
-  # Horizontal boxplot for the explanatory variable
   p2 <- ggplot(bdd_cases_danish, aes_string(x = res$var, y = 1)) +
     geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
     coord_cartesian(xlim = range(res$plot_data$x, na.rm = TRUE)) +
@@ -1054,7 +834,6 @@ plot_adjusted_cox_gam_danish <- map(cox_gam_results_adjusted, function(res) {
       axis.title.x = element_text(size = 12),
       plot.margin = margin(t = -10, r = 5, b = 5, l = 5)) 
   
-  # Stack GAM plot above boxplot
   p1 / p2 + plot_layout(heights = c(10, 1))
 }) |> 
   set_names(POPs_group_labels_cox_gam)
@@ -1107,7 +886,7 @@ rm(formula_danish, POPs_group_bis)
 # run qgcomp just for the positive weigths and by adjusted for the negatives 
 formula_danish <-                                                               # set the formulas  
   as.formula(paste("Surv(follow_up_death, status_death) ~",   
-                   paste(c(covariates_danish,                                     # attention pour qgcomp.cox.boot() pas besoin de mettre les expo dans la formule sinon sont comptés 2 fois
+                   paste(c(covariates_danish,                                   # attention pour qgcomp.cox.boot() pas besoin de mettre les expo dans la formule sinon sont comptés 2 fois
                            # c("PCB_NDL", "OCP_β_HCH", "Σchlordane"), 
                            c("PCB_DL_quart",  "OCP_HCB_quart", "ΣDDT_quart", "ΣPBDE_quart")), 
                          collapse = " + ")))
@@ -1152,25 +931,20 @@ rm(formula_danish)
 
 
 # Sensitivity analysis 4 - removing the highest 2.5%----
-# bdd_cases_danish_sensi_4 <- bdd_cases_danish |>
-#   mutate(across(all_of(POPs_group), ~{
-#     q_low  <- quantile(., 0.025, na.rm = TRUE)  # 2.5% quantile
-#     q_high <- quantile(., 0.975, na.rm = TRUE)  # 97.5% quantile
-#     ifelse(. < q_low | . > q_high, NA, .)
-#   }))
 
 bdd_cases_danish_sensi_4 <- bdd_cases_danish |>
   mutate(across(all_of(POPs_group), ~{
-    #q_low  <- quantile(., 0.025, na.rm = TRUE)  # 2.5% quantile
-    q_high <- quantile(., 0.975, na.rm = TRUE)  # 97.5% quantile
-    ifelse( . > q_high, NA, .)
-  })) |>
+    q_low  <- quantile(., 0.01, na.rm = TRUE)                                   # 1% quantile
+    q_high <- quantile(., 0.99, na.rm = TRUE)                                   # 99% quantile
+    ifelse(. < q_low | . > q_high, NA, .)
+    })) |>
   mutate(across(all_of(POPs_group),
                 ~as.numeric(scale(.x)),
                 .names = "{.col}_sd")) 
 
-surv_obj_danish_sensi_4 <- Surv(time = bdd_cases_danish_sensi_4$follow_up_death,                # set the outcomes
-                                event = bdd_cases_danish_sensi_4$status_death)
+surv_obj_danish_sensi_4 <- 
+  Surv(time = bdd_cases_danish_sensi_4$follow_up_death,                         # set the outcomes
+       event = bdd_cases_danish_sensi_4$status_death)
 
 ## Cox model (sd) ----
 model1_cox_sd_danish_sensi_4 <- map_dfr(POPs_group_sd, function(expl) {
@@ -1181,7 +955,6 @@ model1_cox_sd_danish_sensi_4 <- map_dfr(POPs_group_sd, function(expl) {
   
   coefs <- model_summary$coefficients
   tibble(                                                                       # creation of a table of results
-    study = "Danish", 
     model = "base", 
     analysis = "sensi_4",
     term = rownames(coefs),
@@ -1189,7 +962,7 @@ model1_cox_sd_danish_sensi_4 <- map_dfr(POPs_group_sd, function(expl) {
     coef = coefs[, "coef"],
     se = coefs[, "se(coef)"], 
     `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                         # remove the covariates results 
+    filter(str_starts(term, explanatory))                                       # remove the covariates results 
 })
 
 model2_cox_sd_danish_sensi_4 <- map_dfr(POPs_group_sd, function(expl) {
@@ -1198,10 +971,11 @@ model2_cox_sd_danish_sensi_4 <- map_dfr(POPs_group_sd, function(expl) {
     as.formula(paste("surv_obj_danish_sensi_4 ~", expl, "+",  
                      paste(covariates_danish, collapse = " + ")))
   
-  model_summary <- coxph(formula_danish, data = bdd_cases_danish_sensi_4) |> summary()  # run cox model
+  model_summary <- 
+    coxph(formula_danish, data = bdd_cases_danish_sensi_4) |>                   # run cox model
+    summary()  
   coefs <- model_summary$coefficients
   tibble(                                                                       # creation of a table of results
-    study = "Danish", 
     model = "adjusted", 
     analysis = "sensi_4",
     term = rownames(coefs),
@@ -1219,9 +993,7 @@ POPs_group_labels_cox_gam <- set_names(
   POPs_group, 
   c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"))
 
-# Fonction modifiée pour inclure EDF, p-value et axe y commun
 fit_cox_gam_base_sensi_4 <- function(var, data = bdd_cases_danish_sensi_4) {
-  # Formule complète avec Surv() directement
   outcome <- with(bdd_cases_danish_sensi_4, cbind(follow_up_death, status_death))
   formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age")
   model <- gam(as.formula(formula_str), data = data, family = cox.ph())
@@ -1260,14 +1032,13 @@ y_range_base_sensi_4 <- range(all_fits_base_sensi_4$fit - 2 * all_fits_base_sens
 
 
 plot_base_cox_gam_danish_sensi_4 <- map(cox_gam_results_base_sensi_4, function(res) {
-  # GAM smooth plot
   p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
     geom_line(size = 1.2, color = "steelblue") +
     geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
                 alpha = 0.2, fill = "steelblue") +
     labs(
       #title = paste0("Cox-GAM smooth term for ", res$var),
-      title = "Base model - sensi 97.5%", 
+      title = "Base model - sensitivity analysis", 
       x = NULL,
       y = "LogHR (smooth estimate)") +
     annotate(
@@ -1280,7 +1051,6 @@ plot_base_cox_gam_danish_sensi_4 <- map(cox_gam_results_base_sensi_4, function(r
     coord_cartesian(ylim = y_range_base_sensi_4) +
     theme_minimal(base_size = 14)
   
-  # Horizontal boxplot for the explanatory variable
   p2 <- ggplot(bdd_cases_danish_sensi_4, aes_string(x = res$var, y = 1)) +
     geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
     coord_cartesian(xlim = range(res$plot_data$x, na.rm = TRUE)) +
@@ -1290,12 +1060,9 @@ plot_base_cox_gam_danish_sensi_4 <- map(cox_gam_results_base_sensi_4, function(r
       axis.title.x = element_text(size = 12),
       plot.margin = margin(t = -10, r = 5, b = 5, l = 5)) 
   
-  # Stack GAM plot above boxplot
   p1 / p2 + plot_layout(heights = c(10, 1))
 }) |> 
   set_names(POPs_group_labels_cox_gam)
-
-
 
 rm(POPs_group_labels_cox_gam, fit_cox_gam_base_sensi_4, all_fits_base_sensi_4, y_range_base_sensi_4, cox_gam_results_base_sensi_4)
 
@@ -1305,9 +1072,8 @@ POPs_group_labels_cox_gam <- set_names(
   POPs_group, 
   c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"))
 
-# Fonction modifiée pour inclure EDF, p-value et axe y commun
 fit_cox_gam_adjusted_sensi_4 <- function(var, data = bdd_cases_danish_sensi_4) {
-  # Formule complète avec Surv() directement
+
   outcome <- with(bdd_cases_danish_sensi_4, cbind(follow_up_death, status_death))
   formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i")
   model <- gam(as.formula(formula_str), data = data, family = cox.ph())
@@ -1346,14 +1112,13 @@ y_range_adjusted_sensi_4 <- range(all_fits_adjusted_sensi_4$fit - 2 * all_fits_a
 
 
 plot_adjusted_cox_gam_danish_sensi_4 <- map(cox_gam_results_adjusted, function(res) {
-  # GAM smooth plot
   p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
     geom_line(size = 1.2, color = "steelblue") +
     geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
                 alpha = 0.2, fill = "steelblue") +
     labs(
       #title = paste0("Cox-GAM smooth term for ", res$var),
-      title = "Adjusted model - sensi 97.5%", 
+      title = "Adjusted model - sensitivity analysis", 
       x = NULL,
       y = "LogHR (smooth estimate)") +
     annotate(
@@ -1366,7 +1131,6 @@ plot_adjusted_cox_gam_danish_sensi_4 <- map(cox_gam_results_adjusted, function(r
     coord_cartesian(ylim = y_range_adjusted_sensi_4) +
     theme_minimal(base_size = 14)
   
-  # Horizontal boxplot for the explanatory variable
   p2 <- ggplot(bdd_cases_danish_sensi_4, aes_string(x = res$var, y = 1)) +
     geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
     coord_cartesian(xlim = range(res$plot_data$x, na.rm = TRUE)) +
@@ -1376,7 +1140,6 @@ plot_adjusted_cox_gam_danish_sensi_4 <- map(cox_gam_results_adjusted, function(r
       axis.title.x = element_text(size = 12),
       plot.margin = margin(t = -10, r = 5, b = 5, l = 5)) 
   
-  # Stack GAM plot above boxplot
   p1 / p2 + plot_layout(heights = c(10, 1))
 }) |> 
   set_names(POPs_group_labels_cox_gam)
@@ -1415,21 +1178,21 @@ main_results_POPs_ALS_survival <-
     upper_CI = as.numeric(sprintf("%.1f", upper_CI)),, 
     `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
     `p-value_raw` = `p-value`, 
-    `p-value_shape` = ifelse(`p-value_raw`<0.05, "p-value<0.05", "p-value≥0.05"), 
+    `p-value_shape` = ifelse(`p-value_raw`<=0.05, "p-value≤0.05", "p-value>0.05"), 
     `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")), 
     `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
-  select(study, model, explanatory, term,  analysis, HR, HR_raw, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI)
+  select(model, explanatory, term,  analysis, HR, HR_raw, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI)
 
 main_results_POPs_ALS_survival <- 
   left_join(main_results_POPs_ALS_survival, heterogeneity_tests, 
-            by = c("explanatory", "model", "study", "analysis")) |>
-  mutate(p.value_heterogeneity = ifelse(term == "Continuous" & study == "Danish", NA, p.value_heterogeneity), 
+            by = c("explanatory", "model", "analysis")) |>
+  mutate(p.value_heterogeneity = ifelse(term == "Continuous", NA, p.value_heterogeneity), 
          p.value_heterogeneity = ifelse(p.value_heterogeneity < 0.01, "<0.01", number(p.value_heterogeneity, accuracy = 0.01, decimal.mark = ".")), 
          p.value_heterogeneity = ifelse(p.value_heterogeneity == "1.00", ">0.99", p.value_heterogeneity))
 
 main_results_POPs_ALS_survival <- 
   left_join(main_results_POPs_ALS_survival, trend_tests, 
-            by = c("explanatory", "model", "study", "analysis")) |>
+            by = c("explanatory", "model", "analysis")) |>
   mutate(p.value_trend = ifelse(term == "Continuous", NA, p.value_trend), 
          p.value_trend = ifelse(p.value_trend < 0.01, "<0.01", number(p.value_trend, accuracy = 0.01, decimal.mark = ".")), 
          p.value_trend = ifelse(p.value_trend == "1.00", ">0.99", p.value_trend)) 
@@ -1447,20 +1210,19 @@ rm(model1_cox_sd_danish,
 bdd_cases_danish_bis <- bdd_danish |>
   filter (als == 1) |>
   filter(follow_up_death>0) |>
-  filter(study == "Danish") |>
-  select(study, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age,
+  select(als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age,
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
          all_of(POPs_group)) |>
-  mutate(across(all_of(POPs_group),                           # creation of cohort and case specific quartiles of exposures
+  mutate(across(all_of(POPs_group),                                             # creation of cohort and case specific quartiles of exposures
                 ~ cut(.x,
                       breaks = quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE),
                       include.lowest = TRUE,
                       labels = c("Q1", "Q2", "Q3", "Q4")), 
                 .names = "{.col}_quart")) |>
-  mutate(across(all_of(POPs_group),                           # creation of cohort and case specific standardized exposures
+  mutate(across(all_of(POPs_group),                                             # creation of cohort and case specific standardized exposures
                 ~as.numeric(scale(.x)),
                 .names = "{.col}_sd"))   |>
-  mutate(across(all_of(POPs_group),                           # creation of cohort and case specific quartile mean exposures
+  mutate(across(all_of(POPs_group),                                             # creation of cohort and case specific quartile mean exposures
                 ~ {
                   cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)      
                   quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
@@ -1502,11 +1264,11 @@ sensi1_lasso_sd_danish <- cv.glmnet(                                            
   penalty.factor = penalty_factor_sd)                                           # pre-set penalty factor because we want to force the model to select at least the covariates
 
 plot(sensi1_lasso_sd_danish)
-coef(sensi1_lasso_sd_danish, s = "lambda.min")                                   # lasso keeps only chlordane 
+coef(sensi1_lasso_sd_danish, s = "lambda.min")                                  # lasso keeps only chlordane 
 coef(sensi1_lasso_sd_danish, s = "lambda.1se")  
 
 set.seed(1996)
-sensi1_lasso_quart_danish <- cv.glmnet(                                          # lasso + cross validation to choose the lamda parameter
+sensi1_lasso_quart_danish <- cv.glmnet(                                         # lasso + cross validation to choose the lamda parameter
   x = X_matrix_quart,                                                           # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -1537,7 +1299,7 @@ coef(sensi1_ridge_sd_danish, s = "lambda.min")
 coef(sensi1_ridge_sd_danish, s = "lambda.1se")  
 
 set.seed(1996)
-sensi1_ridge_quart_danish <- cv.glmnet(                                          # ridge + cross validation to choose the lamda parameter
+sensi1_ridge_quart_danish <- cv.glmnet(                                         # ridge + cross validation to choose the lamda parameter
   x = X_matrix_quart,                                                           # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -1553,12 +1315,12 @@ coef(sensi1_ridge_quart_danish, s = "lambda.1se")
 
 ## Elastic net selection -----
 ### choose the best alpha ----
-alpha_grid <- seq(0.3, 1, by = 0.1)  # de 0 (Ridge) à 1 (Lasso)                 # starting at least at 0.3 because we want to select variables, not just run a ridge 
+alpha_grid <- seq(0.3, 1, by = 0.1)                                             # de 0 (Ridge) à 1 (Lasso): starting at least at 0.3 because we want to select variables, not just run a ridge 
 
 cv_results <- list()
 cvm_min <- numeric(length(alpha_grid))
 
-for (i in seq_along(alpha_grid)) {   # Boucle pour trouver le meilleur alpha
+for (i in seq_along(alpha_grid)) {                                              # Boucle pour trouver le meilleur alpha
   set.seed(1996)
   cv_model <- cv.glmnet(
     x = X_matrix_sd,
@@ -1571,7 +1333,7 @@ for (i in seq_along(alpha_grid)) {   # Boucle pour trouver le meilleur alpha
     penalty.factor = penalty_factor_sd
   )
   cv_results[[i]] <- cv_model
-  cvm_min[i] <- min(cv_model$cvm)  # stocke la deviance minimale
+  cvm_min[i] <- min(cv_model$cvm)                                               # stocke la deviance minimale
 }
 
 best_alpha <- alpha_grid[which.min(cvm_min)]
@@ -1581,7 +1343,7 @@ rm(alpha_grid, cv_results, cvm_min, i, cv_model, best_alpha)
 
 ### analysis ----
 set.seed(1996)
-sensi1_elastic_net_sd_danish <- cv.glmnet(                                       # elastic net + cross validation to choose the lambda parameter
+sensi1_elastic_net_sd_danish <- cv.glmnet(                                      # elastic net + cross validation to choose the lambda parameter
   x = X_matrix_sd,                                                              # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -1592,11 +1354,11 @@ sensi1_elastic_net_sd_danish <- cv.glmnet(                                      
   penalty.factor = penalty_factor_sd)                          
 
 plot(sensi1_elastic_net_sd_danish)
-coef(sensi1_elastic_net_sd_danish, s = "lambda.min")                             # Elastic net keeps HCB and Σchlordane
+coef(sensi1_elastic_net_sd_danish, s = "lambda.min")                            # Elastic net keeps HCB and Σchlordane
 coef(sensi1_elastic_net_sd_danish, s = "lambda.1se")
 
 set.seed(1996)
-sensi1_elastic_net_quart_danish <- cv.glmnet(                                    # elastic net + cross validation to choose the lambda parameter
+sensi1_elastic_net_quart_danish <- cv.glmnet(                                   # elastic net + cross validation to choose the lambda parameter
   x = X_matrix_quart,                                                           # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -1607,7 +1369,7 @@ sensi1_elastic_net_quart_danish <- cv.glmnet(                                   
   penalty.factor = penalty_factor_quart)                          
 
 plot(sensi1_elastic_net_quart_danish)
-coef(sensi1_elastic_net_quart_danish, s = "lambda.min")                          # elastic net doesn't keep any pollutant when they are quartiles
+coef(sensi1_elastic_net_quart_danish, s = "lambda.min")                         # elastic net doesn't keep any pollutant when they are quartiles
 coef(sensi1_elastic_net_quart_danish, s = "lambda.1se")
 rm(bdd_cases_danish_bis)
 
@@ -1626,8 +1388,7 @@ model_summary <-
   coxph(formula_danish, data = bdd_cases_danish) |> summary() 
 coefs <- model_summary$coefficients
 sensi1_model3_cox_sd_elastic_net_danish <- tibble(                              # creation of a table of results
-  study = "Danish", 
-  model = "copollutant_sd", 
+  model = "copollutant", 
   term = rownames(coefs),
   explanatory = rownames(coefs),
   coef = coefs[, "coef"],
@@ -1648,9 +1409,8 @@ formula_danish <-                                                               
 model_summary <- 
   coxph(formula_danish, data = bdd_cases_danish) |> summary() 
 coefs <- model_summary$coefficients
-sensi1_model3_cox_quart_elastic_net_danish <- tibble(                                  # creation of a table of results
-  study = "Danish", 
-  model = "copollutant_quart", 
+sensi1_model3_cox_quart_elastic_net_danish <- tibble(                           # creation of a table of results
+  model = "copollutant", 
   term = rownames(coefs),
   explanatory = rownames(coefs),
   coef = coefs[, "coef"],
@@ -1706,9 +1466,8 @@ p.value_heterogeneity_Σchlordane <- tibble(explanatory = "Σchlordane_quart", p
 heterogeneity_copollutant <- 
   bind_rows(p.value_heterogeneity_HCB, 
             p.value_heterogeneity_Σchlordane) |>
-  mutate(model = "copollutant_quart", 
-         explanatory = gsub("_quart", "", explanatory), 
-         study = "Danish")
+  mutate(model = "copollutant", 
+         explanatory = gsub("_quart", "", explanatory))
 
 rm(anova, outcome, 
    model3_quart_HCB_full, model3_quart_HCB_raw, 
@@ -1744,11 +1503,10 @@ p.value_trend_Σchlordane <- model3_quart_Σchlordane_trend$p.table["Σchlordane
 trend_copollutant <- 
   data.frame(explanatory = c("OCP_HCB_quart_med", 
                              "Σchlordane_quart_med"),
-             model = "copollutant_quart",
+             model = "copollutant",
              p.value_trend = c(p.value_trend_HCB, 
                                p.value_trend_Σchlordane)) |>
-  mutate(explanatory = gsub("_quart_med", "", explanatory), 
-         study = "Danish")
+  mutate(explanatory = gsub("_quart_med", "", explanatory))
 
 rm(outcome, 
    model3_quart_HCB_trend, 
@@ -1793,13 +1551,33 @@ bdd_cases_danish <-
     }
   )
 
-#### sd ----
-sensi1_cox_model_ERS_from_elastic_net_sd <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_sensi_1_sd + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
-model_summary <- summary(sensi1_cox_model_ERS_from_elastic_net_sd)
+#### base sd ----
+sensi1_cox_model1_ERS_from_elastic_net_sd <- 
+  coxph(Surv(follow_up_death, status_death) ~ 
+          ERS_score_from_elastic_net_sensi_1_sd + 
+          sex + diagnosis_age, 
+        data = bdd_cases_danish)
+model_summary <- summary(sensi1_cox_model1_ERS_from_elastic_net_sd)
 coefs <- model_summary$coefficients
-sensi1_cox_model_ERS_from_elastic_net_sd <- tibble(                                     # creation of a table of results
-  study = "Danish", 
-  model = "ERS_sd", 
+sensi1_cox_model1_ERS_from_elastic_net_sd <- tibble(                             
+  model = "base", 
+  term = rownames(coefs),
+  explanatory = rownames(coefs),
+  coef = coefs[, "coef"],
+  se = coefs[, "se(coef)"], 
+  `p-value` = coefs[, "Pr(>|z|)"]) |>
+  filter(str_detect(term, "_sd"))
+
+#### adjusted sd ----
+sensi1_cox_model2_ERS_from_elastic_net_sd <- 
+  coxph(Surv(follow_up_death, status_death) ~ 
+          ERS_score_from_elastic_net_sensi_1_sd + 
+          sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+        data = bdd_cases_danish)
+model_summary <- summary(sensi1_cox_model2_ERS_from_elastic_net_sd)
+coefs <- model_summary$coefficients
+sensi1_cox_model2_ERS_from_elastic_net_sd <- tibble(                             
+  model = "adjusted", 
   term = rownames(coefs),
   explanatory = rownames(coefs),
   coef = coefs[, "coef"],
@@ -1808,13 +1586,87 @@ sensi1_cox_model_ERS_from_elastic_net_sd <- tibble(                             
   filter(str_detect(term, "_sd"))
 
 
-#### quart ----
-sensi1_cox_model_ERS_from_elastic_net_quart <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_sensi_1_quart + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
-model_summary <- summary(sensi1_cox_model_ERS_from_elastic_net_quart)
+#### base quart ----
+sensi1_cox_model1_ERS_from_elastic_net_quart <- 
+  coxph(Surv(follow_up_death, status_death) ~ 
+          ERS_score_from_elastic_net_sensi_1_quart + sex + diagnosis_age, 
+        data = bdd_cases_danish)
+model_summary <- summary(sensi1_cox_model1_ERS_from_elastic_net_quart)
 coefs <- model_summary$coefficients
-sensi1_cox_model_ERS_from_elastic_net_quart <- tibble(                                  # creation of a table of results
-  study = "Danish", 
-  model = "ERS_quart", 
+sensi1_cox_model1_ERS_from_elastic_net_quart <- tibble(                         
+  model = "base", 
+  term = rownames(coefs),
+  explanatory = rownames(coefs),
+  coef = coefs[, "coef"],
+  se = coefs[, "se(coef)"], 
+  `p-value` = coefs[, "Pr(>|z|)"]) |>
+  filter(str_detect(term, "_quart"))
+
+rm(cox_model, coefs, model_summary, weight_HCB, weight_Σchlordane)
+
+
+
+
+##### heterogeneity tests ----
+outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
+
+model3_quart_ERS <- 
+  gam(outcome ~ 
+        ERS_score_from_elastic_net_sensi_1_quart + sex + diagnosis_age, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish)
+
+model3_quart_raw <- 
+  gam(outcome ~ 
+        #ERS_score_from_elastic_net_sensi_1_quart +
+        sex + diagnosis_age, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish)
+
+anova <- anova(model3_quart_raw, model3_quart_ERS, test = "Chisq")
+p.value_heterogeneity_ERS <- tibble(explanatory = "ERS_score_from_elastic_net_sensi_1", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+heterogeneity_ERS_base <- 
+  p.value_heterogeneity_ERS |>
+  mutate(model = "base")
+
+rm(anova, outcome, model3_quart_ERS, model3_quart_raw, p.value_heterogeneity_ERS)
+
+##### trend tests ----
+outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
+
+model3_quart_ERS_trend <- 
+  gam(outcome ~ 
+        ERS_score_from_elastic_net_sensi_1_quart_med + sex + diagnosis_age, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish)|> 
+  summary()
+p.value_trend_ERS <- model3_quart_ERS_trend$p.table["ERS_score_from_elastic_net_sensi_1_quart_med", "Pr(>|z|)"]
+
+
+trend_ERS_base <- 
+  data.frame(explanatory = "ERS_score_from_elastic_net_sensi_1",
+             model = "base",
+             p.value_trend = p.value_trend_ERS)
+
+rm(outcome, model3_quart_ERS_trend, p.value_trend_ERS)
+
+
+
+
+#### adjusted quart ----
+sensi1_cox_model2_ERS_from_elastic_net_quart <- 
+  coxph(Surv(follow_up_death, status_death) ~ 
+          ERS_score_from_elastic_net_sensi_1_quart + 
+          sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+        data = bdd_cases_danish)
+model_summary <- summary(sensi1_cox_model2_ERS_from_elastic_net_quart)
+coefs <- model_summary$coefficients
+sensi1_cox_model2_ERS_from_elastic_net_quart <- tibble(                   
+  model = "adjusted", 
   term = rownames(coefs),
   explanatory = rownames(coefs),
   coef = coefs[, "coef"],
@@ -1848,10 +1700,9 @@ model3_quart_raw <-
 anova <- anova(model3_quart_raw, model3_quart_ERS, test = "Chisq")
 p.value_heterogeneity_ERS <- tibble(explanatory = "ERS_score_from_elastic_net_sensi_1", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
-heterogeneity_ERS <- 
+heterogeneity_ERS_adjusted <- 
   p.value_heterogeneity_ERS |>
-  mutate(model = "ERS_quart", 
-         study = "Danish")
+  mutate(model = "adjusted")
 
 rm(anova, outcome, model3_quart_ERS, model3_quart_raw, p.value_heterogeneity_ERS)
 
@@ -1869,11 +1720,10 @@ model3_quart_ERS_trend <-
 p.value_trend_ERS <- model3_quart_ERS_trend$p.table["ERS_score_from_elastic_net_sensi_1_quart_med", "Pr(>|z|)"]
 
 
-trend_ERS <- 
+trend_ERS_adjusted <- 
   data.frame(explanatory = "ERS_score_from_elastic_net_sensi_1",
-             model = "ERS_quart",
-             p.value_trend = p.value_trend_ERS, 
-             study = "Danish")
+             model = "adjusted",
+             p.value_trend = p.value_trend_ERS)
 
 rm(outcome, model3_quart_ERS_trend, p.value_trend_ERS)
 
@@ -1882,8 +1732,10 @@ rm(outcome, model3_quart_ERS_trend, p.value_trend_ERS)
 results_sensi1 <-
   bind_rows(sensi1_model3_cox_sd_elastic_net_danish, 
             sensi1_model3_cox_quart_elastic_net_danish, 
-            sensi1_cox_model_ERS_from_elastic_net_sd, 
-            sensi1_cox_model_ERS_from_elastic_net_quart) |>
+            sensi1_cox_model1_ERS_from_elastic_net_sd, 
+            sensi1_cox_model1_ERS_from_elastic_net_quart, 
+            sensi1_cox_model2_ERS_from_elastic_net_sd, 
+            sensi1_cox_model2_ERS_from_elastic_net_quart) |>
   mutate(
     HR = exp(coef),
     lower_CI = exp(coef - 1.96 * se),
@@ -1904,21 +1756,21 @@ results_sensi1 <-
     upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
     `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
     `p-value_raw` = `p-value`,
-    `p-value_shape` = ifelse(`p-value_raw` < 0.05, "p-value<0.05", "p-value≥0.05"),
+    `p-value_shape` = ifelse(`p-value_raw` <= 0.05, "p-value≤0.05", "p-value>0.05"),
     `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")),
     `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
   select(
-    study, model, explanatory, term, HR, HR_raw, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`,
+    model, explanatory, term, HR, HR_raw, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`,
     lower_CI,  upper_CI)
 
-heterogeneity <- bind_rows(heterogeneity_copollutant, heterogeneity_ERS)
-trend <- bind_rows(trend_copollutant, trend_ERS)
+heterogeneity <- bind_rows(heterogeneity_copollutant, heterogeneity_ERS_base, heterogeneity_ERS_adjusted)
+trend <- bind_rows(trend_copollutant, trend_ERS_base, trend_ERS_adjusted)
 
 results_sensi1 <- left_join(results_sensi1, heterogeneity, 
-                            by = c("study", "model", "explanatory"))
+                            by = c("model", "explanatory"))
 
 results_sensi1 <- left_join(results_sensi1, trend, 
-                            by = c("study", "model", "explanatory")) 
+                            by = c("model", "explanatory")) 
 
 results_sensi1 <- results_sensi1 |>
   mutate(
@@ -1935,14 +1787,20 @@ rm(results_sensi1,
    heterogeneity_copollutant, 
    trend_copollutant, 
    
-   heterogeneity_ERS, 
-   trend_ERS, 
+   heterogeneity_ERS_base, 
+   trend_ERS_base, 
+   
+   heterogeneity_ERS_adjusted, 
+   trend_ERS_adjusted, 
    
    heterogeneity, 
    trend, 
    
-   sensi1_cox_model_ERS_from_elastic_net_sd, 
-   sensi1_cox_model_ERS_from_elastic_net_quart, 
+   sensi1_cox_model1_ERS_from_elastic_net_sd, 
+   sensi1_cox_model1_ERS_from_elastic_net_quart, 
+   
+   sensi1_cox_model2_ERS_from_elastic_net_sd, 
+   sensi1_cox_model2_ERS_from_elastic_net_quart, 
    
    POPs_group_sd_bis, POPs_group_quart_bis, 
    X_matrix_sd, X_matrix_quart, 
@@ -1959,23 +1817,23 @@ rm(results_sensi1,
 
 # Sensitivity analysis 2 - elastic net on all the POPs (ungrouped) ----
 ## Data prep ----
-bdd_cases_danish_bis <- bdd_danish |>
+bdd_cases_danish_bis <- 
+  bdd_danish |>
   filter (als == 1) |>
   filter(follow_up_death>0) |>
-  filter(study == "Danish") |>
-  select(study, als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age,
+  select(als, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age,
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
          all_of(POPs_included)) |>
-  mutate(across(all_of(POPs_included),                           # creation of cohort and case specific quartiles of exposures
+  mutate(across(all_of(POPs_included),                                          # creation of cohort and case specific quartiles of exposures
                 ~ cut(.x,
                       breaks = quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE),
                       include.lowest = TRUE,
                       labels = c("Q1", "Q2", "Q3", "Q4")), 
                 .names = "{.col}_quart")) |>
-  mutate(across(all_of(POPs_included),                           # creation of cohort and case specific standardized exposures
+  mutate(across(all_of(POPs_included),                                          # creation of cohort and case specific standardized exposures
                 ~as.numeric(scale(.x)),
                 .names = "{.col}_sd"))   |>
-  mutate(across(all_of(POPs_included),                           # creation of cohort and case specific quartile mean exposures
+  mutate(across(all_of(POPs_included),                                          # creation of cohort and case specific quartile mean exposures
                 ~ {
                   cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)      
                   quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
@@ -2003,7 +1861,7 @@ penalty_factor_quart <-                                                         
 
 ## LASSO POPs selection ----
 set.seed(1996)
-sensi2_lasso_sd_danish <- cv.glmnet(                                             # lasso + cross validation to choose the lamda parameter
+sensi2_lasso_sd_danish <- cv.glmnet(                                            # lasso + cross validation to choose the lamda parameter
   x = X_matrix_sd,                                                              # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -2014,11 +1872,11 @@ sensi2_lasso_sd_danish <- cv.glmnet(                                            
   penalty.factor = penalty_factor_sd)                                           # pre-set penalty factor because we want to force the model to select at least the covariates
 
 plot(sensi2_lasso_sd_danish)
-coef(sensi2_lasso_sd_danish, s = "lambda.min")                                   # lasso keeps only chlordane 
+coef(sensi2_lasso_sd_danish, s = "lambda.min")                                  # lasso keeps only chlordane 
 coef(sensi2_lasso_sd_danish, s = "lambda.1se")  
 
 set.seed(1996)
-sensi2_lasso_quart_danish <- cv.glmnet(                                          # lasso + cross validation to choose the lamda parameter
+sensi2_lasso_quart_danish <- cv.glmnet(                                         # lasso + cross validation to choose the lamda parameter
   x = X_matrix_quart,                                                           # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -2035,12 +1893,12 @@ coef(sensi2_lasso_quart_danish, s = "lambda.1se")
 
 ## Elastic net selection -----
 ### choose the best alpha ----
-alpha_grid <- seq(0.3, 1, by = 0.1)  # de 0 (Ridge) à 1 (Lasso)                 # starting at least at 0.3 because we want to select variables, not just run a ridge 
+alpha_grid <- seq(0.3, 1, by = 0.1)                                             # de 0 (Ridge) à 1 (Lasso): starting at least at 0.3 because we want to select variables, not just run a ridge 
 
 cv_results <- list()
 cvm_min <- numeric(length(alpha_grid))
 
-for (i in seq_along(alpha_grid)) {   # Boucle pour trouver le meilleur alpha
+for (i in seq_along(alpha_grid)) {                                        
   set.seed(1996)
   cv_model <- cv.glmnet(
     x = X_matrix_sd,
@@ -2053,7 +1911,7 @@ for (i in seq_along(alpha_grid)) {   # Boucle pour trouver le meilleur alpha
     penalty.factor = penalty_factor_sd
   )
   cv_results[[i]] <- cv_model
-  cvm_min[i] <- min(cv_model$cvm)  # stocke la deviance minimale
+  cvm_min[i] <- min(cv_model$cvm)                                               # stocke la deviance minimale
 }
 
 best_alpha <- alpha_grid[which.min(cvm_min)]
@@ -2063,7 +1921,7 @@ rm(alpha_grid, cv_results, cvm_min, i, cv_model, best_alpha)
 
 ### analysis ----
 set.seed(1996)
-sensi2_elastic_net_sd_danish <- cv.glmnet(                                       # elastic net + cross validation to choose the lambda parameter
+sensi2_elastic_net_sd_danish <- cv.glmnet(                                      # elastic net + cross validation to choose the lambda parameter
   x = X_matrix_sd,                                                              # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -2074,11 +1932,11 @@ sensi2_elastic_net_sd_danish <- cv.glmnet(                                      
   penalty.factor = penalty_factor_sd)                          
 
 plot(sensi2_elastic_net_sd_danish)
-coef(sensi2_elastic_net_sd_danish, s = "lambda.min")                             # Elastic net keeps HCB, β-HCH and Σchlordane
+coef(sensi2_elastic_net_sd_danish, s = "lambda.min")                            # Elastic net keeps HCB, β-HCH and Σchlordane
 coef(sensi2_elastic_net_sd_danish, s = "lambda.1se")
 
 set.seed(1996)
-sensi2_elastic_net_quart_danish <- cv.glmnet(                                    # elastic net + cross validation to choose the lambda parameter
+sensi2_elastic_net_quart_danish <- cv.glmnet(                                   # elastic net + cross validation to choose the lambda parameter
   x = X_matrix_quart,                                                           # matrice of explanatory variables 
   y = with(bdd_cases_danish_bis, Surv(follow_up_death, status_death)),          # survival outcome                   
   family = "cox",                                                               # cox regression 
@@ -2089,7 +1947,7 @@ sensi2_elastic_net_quart_danish <- cv.glmnet(                                   
   penalty.factor = penalty_factor_quart)                          
 
 plot(sensi2_elastic_net_quart_danish)
-coef(sensi2_elastic_net_quart_danish, s = "lambda.min")                          # elastic net doesn't keep any pollutant when they are quartiles
+coef(sensi2_elastic_net_quart_danish, s = "lambda.min")                         # elastic net doesn't keep any pollutant when they are quartiles
 coef(sensi2_elastic_net_quart_danish, s = "lambda.1se")
 rm(bdd_cases_danish_bis)
 
@@ -2109,8 +1967,7 @@ model_summary <-
   coxph(formula_danish, data = bdd_cases_danish) |> summary() 
 coefs <- model_summary$coefficients
 sensi2_model3_cox_sd_elastic_net_danish <- tibble(                              # creation of a table of results
-  study = "Danish", 
-  model = "copollutant_sd", 
+  model = "copollutant", 
   term = rownames(coefs),
   explanatory = rownames(coefs),
   coef = coefs[, "coef"],
@@ -2132,9 +1989,8 @@ formula_danish <-                                                               
 model_summary <- 
   coxph(formula_danish, data = bdd_cases_danish) |> summary() 
 coefs <- model_summary$coefficients
-sensi2_model3_cox_quart_elastic_net_danish <- tibble(                                  # creation of a table of results
-  study = "Danish", 
-  model = "copollutant_quart", 
+sensi2_model3_cox_quart_elastic_net_danish <- tibble(                           # creation of a table of results
+  model = "copollutant", 
   term = rownames(coefs),
   explanatory = rownames(coefs),
   coef = coefs[, "coef"],
@@ -2183,6 +2039,7 @@ model3_quart_PCB_52_raw <-
       family = cox.ph(), 
       method = 'ML',
       data = bdd_cases_danish)
+
 
 anova <- anova(model3_quart_PCB_52_raw, model3_quart_PCB_52_full, test = "Chisq")
 p.value_heterogeneity_PCB_52 <- tibble(explanatory = "PCB_52_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
@@ -2256,9 +2113,8 @@ heterogeneity_copollutant <-
             p.value_heterogeneity_oxychlordane,
             p.value_heterogeneity_transnonachlor,
             p.value_heterogeneity_PBDE_47) |>
-  mutate(model = "copollutant_quart", 
-         explanatory = gsub("_quart", "", explanatory), 
-         study = "Danish")
+  mutate(model = "copollutant", 
+         explanatory = gsub("_quart", "", explanatory))
 
 rm(anova, outcome, 
    
@@ -2338,17 +2194,15 @@ trend_copollutant <-
                              "OCP_oxychlordane_quart_med", 
                              "OCP_transnonachlor_quart_med", 
                              "PBDE_47_quart_med"),
-             model = "copollutant_quart",
+             model = "copollutant",
              p.value_trend = c(p.value_trend_PCB_28,
                                p.value_trend_PCB_52, 
                                p.value_trend_oxychlordane, 
                                p.value_trend_transnonachlor,
                                p.value_trend_PBDE_47)) |>
-  mutate(explanatory = gsub("_quart_med", "", explanatory), 
-         study = "Danish")
+  mutate(explanatory = gsub("_quart_med", "", explanatory))
 
 ### ERS model avec les POP selectionnés par elastic net 0.4 ----
-#### sd -----
 coef(sensi2_elastic_net_sd_danish, s = "lambda.min")                            # Elastic net keeps HCB and Σchlordane
 cox_model <-                                                                    # regular co-pollutant cox model to get unpenalized coefficients 
   coxph(Surv(follow_up_death, status_death) ~ 
@@ -2356,7 +2210,7 @@ cox_model <-                                                                    
           sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
         data = bdd_cases_danish)
 summary(cox_model)
-pollutants <- c("PCB_28_sd", "PCB_52_sd", "OCP_oxychlordane_sd", "OCP_transnonachlor_sd", "PBDE_47_sd")                                        # selected POPs
+pollutants <- c("PCB_28_sd", "PCB_52_sd", "OCP_oxychlordane_sd", "OCP_transnonachlor_sd", "PBDE_47_sd")         # selected POPs
 scaled_betas <- c(PCB_28_sd = 0.17657 / (0.17657 + 0.23046 + 0.17271 + 0.07953 + 0.14389),                      # weigths of the POPs depending on the scaled coefficients of the regular cox copollutant model
                   PCB_52_sd = 0.23046 / (0.17657 + 0.23046 + 0.17271 + 0.07953 + 0.14389), 
                   OCP_oxychlordane_sd = 0.17271 / (0.17657 + 0.23046 + 0.17271 + 0.07953 + 0.14389), 
@@ -2383,13 +2237,16 @@ bdd_cases_danish <-
          }
   )
 
+#### base sd -----
+sensi2_cox_model1_ERS_from_elastic_net_sd <- 
+  coxph(Surv(follow_up_death, status_death) ~ 
+          ERS_score_from_elastic_net_sensi_2_sd + sex + diagnosis_age, 
+        data = bdd_cases_danish)
 
-sensi2_cox_model_ERS_from_elastic_net_sd <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_sensi_2_sd + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
-model_summary <-  summary(sensi2_cox_model_ERS_from_elastic_net_sd)
+model_summary <-  summary(sensi2_cox_model1_ERS_from_elastic_net_sd)
 coefs <- model_summary$coefficients
-sensi2_cox_model_ERS_from_elastic_net_sd <- tibble(                                     # creation of a table of results
-  study = "Danish", 
-  model = "ERS_sd", 
+sensi2_cox_model1_ERS_from_elastic_net_sd <- tibble(                                
+  model = "base", 
   term = rownames(coefs),
   explanatory = rownames(coefs),
   coef = coefs[, "coef"],
@@ -2397,13 +2254,32 @@ sensi2_cox_model_ERS_from_elastic_net_sd <- tibble(                             
   `p-value` = coefs[, "Pr(>|z|)"]) |>
   filter(str_detect(term, "_sd"))
 
-#### quartiles ----
-sensi2_cox_model_ERS_from_elastic_net_quart <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_sensi_2_quart + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
-model_summary <- summary(sensi2_cox_model_ERS_from_elastic_net_quart)
+#### adjusted sd -----
+sensi2_cox_model2_ERS_from_elastic_net_sd <- 
+  coxph(Surv(follow_up_death, status_death) ~ 
+          ERS_score_from_elastic_net_sensi_2_sd + 
+          sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+        data = bdd_cases_danish)
+model_summary <-  summary(sensi2_cox_model2_ERS_from_elastic_net_sd)
 coefs <- model_summary$coefficients
-sensi2_cox_model_ERS_from_elastic_net_quart <- tibble(                                  # creation of a table of results
-  study = "Danish", 
-  model = "ERS_quart", 
+sensi2_cox_model2_ERS_from_elastic_net_sd <- tibble(                                
+  model = "adjusted", 
+  term = rownames(coefs),
+  explanatory = rownames(coefs),
+  coef = coefs[, "coef"],
+  se = coefs[, "se(coef)"], 
+  `p-value` = coefs[, "Pr(>|z|)"]) |>
+  filter(str_detect(term, "_sd"))
+
+#### base quartiles ----
+sensi2_cox_model1_ERS_from_elastic_net_quart <- 
+  coxph(Surv(follow_up_death, status_death) ~ 
+          ERS_score_from_elastic_net_sensi_2_quart + sex + diagnosis_age, 
+        data = bdd_cases_danish)
+model_summary <- summary(sensi2_cox_model1_ERS_from_elastic_net_quart)
+coefs <- model_summary$coefficients
+sensi2_cox_model1_ERS_from_elastic_net_quart <- tibble(                               
+  model = "base", 
   term = rownames(coefs),
   explanatory = rownames(coefs),
   coef = coefs[, "coef"],
@@ -2412,6 +2288,75 @@ sensi2_cox_model_ERS_from_elastic_net_quart <- tibble(                          
   filter(str_detect(term, "_quart"))
 
 rm(cox_model, pollutants, scaled_betas, Z, model_summary, coefs)
+
+##### heterogeneity tests ----
+outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
+
+model3_quart_ERS <- 
+  gam(outcome ~ 
+        ERS_score_from_elastic_net_sensi_2_quart + sex + diagnosis_age, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish)
+
+model3_quart_raw <- 
+  gam(outcome ~ 
+        #ERS_score_from_elastic_net_sensi_2_quart +
+        sex + diagnosis_age, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish)
+
+anova <- anova(model3_quart_raw, model3_quart_ERS, test = "Chisq")
+p.value_heterogeneity_ERS <- tibble(explanatory = "ERS_score_from_elastic_net_sensi_2", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
+
+heterogeneity_ERS_base <- 
+  p.value_heterogeneity_ERS |>
+  mutate(model = "base")
+
+rm(anova, outcome, model3_quart_ERS, model3_quart_raw, p.value_heterogeneity_ERS)
+
+##### trend tests ----
+outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
+
+model3_quart_ERS_trend <- 
+  gam(outcome ~ 
+        ERS_score_from_elastic_net_sensi_2_quart_med + sex + diagnosis_age, 
+      family = cox.ph(), 
+      method = 'ML',
+      data = bdd_cases_danish)|> 
+  summary()
+p.value_trend_ERS <- model3_quart_ERS_trend$p.table["ERS_score_from_elastic_net_sensi_2_quart_med", "Pr(>|z|)"]
+
+
+trend_ERS_base <- 
+  data.frame(explanatory = "ERS_score_from_elastic_net_sensi_2",
+             model = "base",
+             p.value_trend = p.value_trend_ERS)
+
+rm(outcome, model3_quart_ERS_trend, p.value_trend_ERS)
+
+
+
+
+#### adjusted quartiles ----
+sensi2_cox_model2_ERS_from_elastic_net_quart <- 
+  coxph(Surv(follow_up_death, status_death) ~ 
+          ERS_score_from_elastic_net_sensi_2_quart + 
+          sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+        data = bdd_cases_danish)
+model_summary <- summary(sensi2_cox_model2_ERS_from_elastic_net_quart)
+coefs <- model_summary$coefficients
+sensi2_cox_model2_ERS_from_elastic_net_quart <- tibble(                               
+  model = "adjusted", 
+  term = rownames(coefs),
+  explanatory = rownames(coefs),
+  coef = coefs[, "coef"],
+  se = coefs[, "se(coef)"], 
+  `p-value` = coefs[, "Pr(>|z|)"]) |>
+  filter(str_detect(term, "_quart"))
+
+rm(model_summary, coefs)
 
 
 ##### heterogeneity tests ----
@@ -2436,10 +2381,9 @@ model3_quart_raw <-
 anova <- anova(model3_quart_raw, model3_quart_ERS, test = "Chisq")
 p.value_heterogeneity_ERS <- tibble(explanatory = "ERS_score_from_elastic_net_sensi_2", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
-heterogeneity_ERS <- 
+heterogeneity_ERS_adjusted <- 
   p.value_heterogeneity_ERS |>
-  mutate(model = "ERS_quart", 
-         study = "Danish")
+  mutate(model = "adjusted")
 
 rm(anova, outcome, model3_quart_ERS, model3_quart_raw, p.value_heterogeneity_ERS)
 
@@ -2457,11 +2401,10 @@ model3_quart_ERS_trend <-
 p.value_trend_ERS <- model3_quart_ERS_trend$p.table["ERS_score_from_elastic_net_sensi_2_quart_med", "Pr(>|z|)"]
 
 
-trend_ERS <- 
+trend_ERS_adjusted <- 
   data.frame(explanatory = "ERS_score_from_elastic_net_sensi_2",
-             model = "ERS_quart",
-             p.value_trend = p.value_trend_ERS, 
-             study = "Danish")
+             model = "adjusted",
+             p.value_trend = p.value_trend_ERS)
 
 rm(outcome, model3_quart_ERS_trend, p.value_trend_ERS)
 
@@ -2472,8 +2415,10 @@ rm(outcome, model3_quart_ERS_trend, p.value_trend_ERS)
 results_sensi2 <-
   bind_rows(sensi2_model3_cox_sd_elastic_net_danish, 
             sensi2_model3_cox_quart_elastic_net_danish,
-            sensi2_cox_model_ERS_from_elastic_net_sd, 
-            sensi2_cox_model_ERS_from_elastic_net_quart) |>
+            sensi2_cox_model1_ERS_from_elastic_net_sd, 
+            sensi2_cox_model1_ERS_from_elastic_net_quart, 
+            sensi2_cox_model2_ERS_from_elastic_net_sd, 
+            sensi2_cox_model2_ERS_from_elastic_net_quart) |>
   mutate(
     HR = exp(coef),
     lower_CI = exp(coef - 1.96 * se),
@@ -2494,22 +2439,22 @@ results_sensi2 <-
     upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
     `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
     `p-value_raw` = `p-value`,
-    `p-value_shape` = ifelse(`p-value_raw` < 0.05, "p-value<0.05", "p-value≥0.05"),
+    `p-value_shape` = ifelse(`p-value_raw` <= 0.05, "p-value≤0.05", "p-value>0.05"),
     `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")),
     `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
   select(
-    study, model, explanatory, term, HR_raw, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`,
+    model, explanatory, term, HR_raw, HR, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`,
     lower_CI,  upper_CI)
 
 
-heterogeneity <- bind_rows(heterogeneity_copollutant, heterogeneity_ERS)
-trend <- bind_rows(trend_copollutant, trend_ERS)
+heterogeneity <- bind_rows(heterogeneity_copollutant, heterogeneity_ERS_base, heterogeneity_ERS_adjusted)
+trend <- bind_rows(trend_copollutant, trend_ERS_base, trend_ERS_adjusted)
 
 results_sensi2 <- left_join(results_sensi2, heterogeneity, 
-                            by = c("study", "model", "explanatory"))
+                            by = c("model", "explanatory"))
 
 results_sensi2 <- left_join(results_sensi2, trend, 
-                            by = c("study", "model", "explanatory")) 
+                            by = c("model", "explanatory")) 
 
 results_sensi2 <- results_sensi2 |>
   mutate(
@@ -2538,16 +2483,21 @@ rm(results_sensi2,
    heterogeneity_copollutant, 
    trend_copollutant, 
    
-   heterogeneity_ERS, 
-   trend_ERS, 
+   heterogeneity_ERS_base, 
+   trend_ERS_base, 
+   
+   heterogeneity_ERS_adjusted, 
+   trend_ERS_adjusted, 
    
    heterogeneity, 
    trend, 
    
    sensi2_model3_cox_sd_elastic_net_danish, 
    sensi2_model3_cox_quart_elastic_net_danish,
-   sensi2_cox_model_ERS_from_elastic_net_sd, 
-   sensi2_cox_model_ERS_from_elastic_net_quart, 
+   sensi2_cox_model1_ERS_from_elastic_net_sd, 
+   sensi2_cox_model1_ERS_from_elastic_net_quart, 
+   sensi2_cox_model2_ERS_from_elastic_net_sd, 
+   sensi2_cox_model2_ERS_from_elastic_net_quart, 
    
    POPs_sd_selected, POPs_sd_selected_labels,
    POPs_quart_selected, POPs_quart_selected_labels,
@@ -2562,7 +2512,8 @@ rm(results_sensi2,
 
 # Sensitivity analysis 3 - follow-up duration ----
 # investigation du probleme de follow-up duration très courte par rapport à la réalité (3-5 ans)
-sensi3_figure <- bdd_cases_danish |>
+sensi3_figure <- 
+  bdd_cases_danish |>
   mutate(
     als_year = year(als_date), 
     status_death = as.factor(as.character(status_death)),
@@ -2582,48 +2533,13 @@ sensi3_figure <- bdd_cases_danish |>
     color = "Death statut at the end of the study") +
   theme_minimal()
 
-sensi3_table <- bdd_cases_danish |> 
-      select(follow_up_death, status_death) |>
-      tbl_summary(by = status_death) |>
-      add_overall()
-
-# Sensitivity analysis 5 ---- 
-# A copollutant model with just NDL-PCBs, HCB, b-HCH and chlordane
-formula_danish <-                                                             # set the formulas
-  as.formula(paste("surv_obj_danish ~", 
-                   paste(
-                     c("PCB_NDL_sd", "OCP_HCB_sd", "OCP_β_HCH_sd", "Σchlordane_sd", 
-                        covariates_danish), 
-                     collapse = " + ")))
-
-model_summary <- coxph(formula_danish, data = bdd_cases_danish)
-model_summary |> summary()
+sensi3_table <- 
+  bdd_cases_danish |> 
+  select(follow_up_death, status_death) |>
+  tbl_summary(by = status_death) |>
+  add_overall()
 
 
-coxph(formula_danish, data = bdd_cases_danish) |> 
-  tbl_regression(exponentiate = TRUE, 
-                 include = c("PCB_NDL_sd", "OCP_HCB_sd", "OCP_β_HCH_sd", "Σchlordane_sd"), 
-                 pvalue_fun = label_style_number(digits = 2)) |>
-  add_n()
-
-formula_danish <-                                                             # set the formulas
-  as.formula(paste("surv_obj_danish ~", 
-                   paste(
-                     c("PCB_NDL_quart", "OCP_HCB_quart", "OCP_β_HCH_quart", "Σchlordane_quart", 
-                       covariates_danish), 
-                     collapse = " + ")))
-
-model_summary <- coxph(formula_danish, data = bdd_cases_danish)
-model_summary |> summary()
-
-
-coxph(formula_danish, data = bdd_cases_danish) |> 
-  tbl_regression(exponentiate = TRUE, 
-                 include = c("PCB_NDL_quart", "OCP_HCB_quart", "OCP_β_HCH_quart", "Σchlordane_quart"), 
-                 pvalue_fun = label_style_number(digits = 2)) |>
-  add_n()
-
-rm(formula_danish, model_summary)
 
 # Tables and figures ----
 
@@ -2633,7 +2549,6 @@ covar_danish
 ## table POPs (sd) - als survival ----
 POPs_sd_ALS_table_danish <- 
   main_results_POPs_ALS_survival |>
-  filter(study == "Danish") |>
   filter(term == "Continuous") |>
   filter(analysis == "main") |>
   filter(!model == "copollutant") |>
@@ -2666,7 +2581,6 @@ POPs_sd_ALS_table_danish <-
 
 ## table POPs (quart) - als survival ----
 quartile1_rows <- main_results_POPs_ALS_survival |>
-  filter(study == "Danish") |>
   filter(analysis == "main") |>
   distinct(model, explanatory) |>
   mutate(
@@ -2678,7 +2592,6 @@ quartile1_rows <- main_results_POPs_ALS_survival |>
     "p.value_trend" = '')
 
 POPs_quart_ALS_table_danish <- main_results_POPs_ALS_survival |>
-  filter(study == "Danish") |>
   filter(!term == "Continuous") |>
   filter(analysis == "main") |>
   select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity", "p.value_trend") |>
@@ -2737,7 +2650,6 @@ rm(quartile1_rows)
 
 ## figure POPs (sd) - als survival ----
 POPs_sd_ALS_figure_danish <- main_results_POPs_ALS_survival |>
-  filter(study == "Danish") |>
   filter(term == "Continuous") |>
   filter(analysis == "main") |>
   filter(!model == "copollutant") |>
@@ -2753,7 +2665,7 @@ POPs_sd_ALS_figure_danish <- main_results_POPs_ALS_survival |>
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(cols = dplyr::vars(model), switch = "y") +                         # , scales = "free_x"
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  scale_color_manual(values = c("p-value≤0.05" = "red", "p-value>0.05" = "black")) +
   labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
@@ -2764,7 +2676,6 @@ POPs_sd_ALS_figure_danish <- main_results_POPs_ALS_survival |>
 ## figure POPs (quart) - als survival ----
 POPs_quart_ALS_figure_danish <- 
   main_results_POPs_ALS_survival |>
-  filter(study == "Danish") |>
   filter(!term == "Continuous") |>
   filter(analysis == "main") |>
   filter(!model == "copollutant") |>
@@ -2803,7 +2714,7 @@ POPs_quart_ALS_figure_danish <-
     color = "black") +
   
   facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y") +  
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  scale_color_manual(values = c("p-value≤0.05" = "red", "p-value>0.05" = "black")) +
   labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
@@ -2822,7 +2733,6 @@ pollutant_labels_bis <- set_names(
 p <- summary(qgcomp_boot_danish)
 POPs_ALS_qgcomp_table_danish <-                                                 # overall results
   tibble(
-    study = "Danish", 
     model = "copollutant", 
     HR = exp(qgcomp_boot_danish$psi),
     lower_CI = exp(qgcomp_boot_danish$ci[1]), 
@@ -2835,7 +2745,7 @@ POPs_ALS_qgcomp_table_danish <-                                                 
     `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''), 
     `p-value` = ifelse(p_value < 0.01, "<0.01", number(p_value, accuracy = 0.01, decimal.mark = ".")), 
     `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
-  select(study, model, HR, `95% CI`, `p-value`)
+  select(model, HR, `95% CI`, `p-value`)
 
 ## figure POPs - ALS survival (qgcomp analysis all POPs grouped) ----
 POPs_ALS_qgcomp_figure_danish <- 
@@ -2857,7 +2767,6 @@ POPs_ALS_qgcomp_figure_danish <-
 p <- summary(qgcomp_positive_boot_danish)
 POPs_ALS_qgcomp_positive_table_danish <-                                                 # overall results
   tibble(
-    study = "Danish", 
     model = "copollutant", 
     HR = exp(qgcomp_positive_boot_danish$psi),
     lower_CI = exp(qgcomp_positive_boot_danish$ci[1]), 
@@ -2870,7 +2779,7 @@ POPs_ALS_qgcomp_positive_table_danish <-                                        
     `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''), 
     `p-value` = ifelse(p_value < 0.01, "<0.01", number(p_value, accuracy = 0.01, decimal.mark = ".")), 
     `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
-  select(study, model, HR, `95% CI`, `p-value`)
+  select(model, HR, `95% CI`, `p-value`)
 
 ## figure POPs - ALS survival (qgcomp analysis positive POPs grouped) ----
 POPs_ALS_qgcomp_positive_figure_danish <- 
@@ -2902,10 +2811,11 @@ POPs_quart_selected_labels <-
   set_names(c("OCP_HCB", "Σchlordane"), c("HCB", "Σchlordane"))
 
 
-POPs_sd_ALS_table_sensi1_danish <- main_results_POPs_ALS_survival |>
+POPs_sd_ALS_table_sensi1_danish <- 
+  main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_1") |>
-  filter(study == "Danish") |>
-  filter(model == "copollutant_sd") |>
+  filter(model == "copollutant") |> 
+  filter(term == "Continuous") |>
   select(explanatory, HR, "95% CI", "p-value") |>
   mutate(
     explanatory = factor(explanatory, levels = POPs_group_labels), 
@@ -2934,7 +2844,8 @@ POPs_sd_ALS_table_sensi1_danish <- main_results_POPs_ALS_survival |>
 quartile1_rows <- 
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_1") |>
-  filter(model == "copollutant_quart") |>
+  filter(model == "copollutant") |>
+  filter(!term == "Continuous") |>
   distinct(model, explanatory) |>
   mutate(
     term = "quartile 1",
@@ -2950,8 +2861,8 @@ quartile1_rows <-
 POPs_quart_ALS_table_sensi1_danish <- 
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_1") |>
-  filter(study == "Danish") |>
-  filter(model == "copollutant_quart") |>
+  filter(model == "copollutant") |>
+  filter(!term == "Continuous") |>
   select("explanatory", "term", "HR", "95% CI", "p-value", 
          "Heterogeneity test" = "p.value_heterogeneity", 
          "Trend test" = "p.value_trend") |>
@@ -3001,7 +2912,8 @@ rm(quartile1_rows)
 POPs_sd_ALS_figure_sensi1_danish <-
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_1") |>
-  filter(model == "copollutant_sd") |>
+  filter(model == "copollutant") |>
+  filter(term == "Continuous") |>
   mutate(
     # explanatory = factor(explanatory, levels = POPs_sd_selected_labels),
     explanatory = fct_recode(explanatory, !!!POPs_sd_selected_labels), 
@@ -3018,8 +2930,8 @@ POPs_sd_ALS_figure_sensi1_danish <-
              linetype = "dashed",
              color = "black") +                        # , scales = "free_x"
   scale_color_manual(values = c(
-    "p-value<0.05" = "red",
-    "p-value≥0.05" = "black")) +
+    "p-value≤0.05" = "red",
+    "p-value>0.05" = "black")) +
   labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
   theme(
@@ -3032,7 +2944,8 @@ POPs_sd_ALS_figure_sensi1_danish <-
 POPs_quart_ALS_figure_sensi1_danish <-
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_1") |>
-  filter(model == "copollutant_quart") |>
+  filter(model == "copollutant") |>
+  filter(!term == "Continuous") |>
   mutate(
     # explanatory = factor(explanatory, levels = POPs_sd_selected_labels),
     explanatory = fct_recode(explanatory, !!!POPs_quart_selected_labels), 
@@ -3050,8 +2963,8 @@ POPs_quart_ALS_figure_sensi1_danish <-
              linetype = "dashed",
              color = "black") +                        # , scales = "free_x"
   scale_color_manual(values = c(
-    "p-value<0.05" = "red",
-    "p-value≥0.05" = "black")) +
+    "p-value≤0.05" = "red",
+    "p-value>0.05" = "black")) +
   labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
   theme(
@@ -3077,21 +2990,26 @@ POPs_quart_ALS_figure_sensi1_danish <-
 POPs_sd_ALS_table_sensi1_ERS_danish <- 
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_1") |>
-  filter(study == "Danish") |>
-  filter(model == "ERS_sd") |>
-  select(explanatory, HR, "95% CI", "p-value") |>
+  filter(term == "Continuous") |> 
+  filter(!model == "copollutant") |>
+  select(model, explanatory, HR, "95% CI", "p-value") |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
+  select(explanatory, matches("_base$"), matches("_adjusted$")) |>
   mutate(
     explanatory = fct_recode(explanatory, 
                              "Environmental risk score" = "ERS_score_from_elastic_net_sensi_1")) |> 
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |>
   flextable() |>
   add_footer_lines(
     "1Environmental risk score is the weighted sum of relevant pollutants (HCB and Σchlordane) selected with elastic net regularization.
-     2The model was adjusted for sex, age at diagnosis, smoking, BMI and marital status.
+     2Base model was adjusted for sex, age at diagnosis. Adjusted model further accounts for smoking, BMI and marital status.
      3Estimated risk of death after ALS diagnosis associated with a one standard deviation increase of the environmental risk score.
     4CI: Confidence interval.") |>
   add_header(
     "explanatory" = "Exposures", 
-    "HR" = "Environmental risk score model", "95% CI" = "Environmental risk score model", "p-value" = "Environmental risk score model") |>
+    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", 
+    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   theme_vanilla() |>
@@ -3104,10 +3022,10 @@ POPs_sd_ALS_table_sensi1_ERS_danish <-
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 ## table quart ERS (sensi_1) ----
-quartile1_rows <- 
-  main_results_POPs_ALS_survival |>
+quartile1_rows <- main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_1") |>
-  filter(model == "ERS_quart") |>
+  filter(!model == "copollutant") |>
+  filter(!term == "Continuous") |>
   distinct(model, explanatory) |>
   mutate(
     term = "quartile 1",
@@ -3115,45 +3033,47 @@ quartile1_rows <-
     "95% CI" = "-",
     `p-value` = "", 
     "p.value_heterogeneity" = '', 
-    "p.value_trend" = '') |>
-  select("explanatory", "term", "HR", "95% CI", "p-value", 
-         "Heterogeneity test" = "p.value_heterogeneity", 
-         "Trend test" = "p.value_trend") 
+    "p.value_trend" = '')
 
 POPs_quart_ALS_table_sensi1_ERS_danish <- 
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_1") |>
-  filter(study == "Danish") |>
-  filter(model == "ERS_quart") |>
-  select("explanatory", "term", "HR", "95% CI", "p-value", 
-         "Heterogeneity test" = "p.value_heterogeneity", 
-         "Trend test" = "p.value_trend") |>
+  filter(!model == "copollutant") |>
+  filter(!term == "Continuous") |>
+  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity", "p.value_trend") |>
   mutate(across(everything(), as.character))
 
 POPs_quart_ALS_table_sensi1_ERS_danish <- 
   bind_rows(quartile1_rows, POPs_quart_ALS_table_sensi1_ERS_danish) |>
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity", "p.value_trend")) |>
+  select(explanatory, term, contains("base"), contains("adjusted")) |>
   group_by(explanatory) |>
-  mutate(
-    `Heterogeneity test` = ifelse(term == "quartile 1", first(`Heterogeneity test`[term == "quartile 2"]), ""),
-    `Trend test` = ifelse(term == "quartile 1", first(`Trend test`[term == "quartile 2"]), "")) |>
+  mutate(p.value_heterogeneity_base = ifelse(term == 'quartile 1', p.value_heterogeneity_base[term == 'quartile 2'], ''), 
+         p.value_trend_base = ifelse(term == 'quartile 1', p.value_trend_base[term == 'quartile 2'], ''),
+         p.value_heterogeneity_adjusted = ifelse(term == 'quartile 1', p.value_heterogeneity_adjusted[term == 'quartile 2'], ''), 
+         p.value_trend_adjusted = ifelse(term == 'quartile 1', p.value_trend_adjusted[term == 'quartile 2'], '')) |>
   ungroup() |>
-  mutate(explanatory = factor(explanatory, levels = POPs_quart_selected_labels), 
-         explanatory = fct_recode(explanatory, !!!POPs_quart_selected_labels)) |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Heterogeneity test" = "p.value_heterogeneity_base", "Trend test" = "p.value_trend_base",
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted",  "Heterogeneity test " = "p.value_heterogeneity_adjusted", "Trend test " = "p.value_trend_adjusted") |>
+  mutate(explanatory = fct_recode(explanatory, "Environmental risk score" = "ERS_score_from_elastic_net_sensi_1")) |>
   arrange(explanatory) |>
   flextable() |>
   add_footer_lines(
     "1Σchlordane corresponds to trans-nonanchlor and oxychlordane.
-    2The model was adjusted for sex, age at diagnosis, smoking, BMI and marital status.
+    2Base model was adjusted for sex, age at diagnosis. Adjusted model further accounts for smoking, BMI and marital status.
     3Estimated risk of ALS death when environmental risk score is at quartiles 2, 3, and 4, compared to quartile 1.
     4CI: Confidence interval.
-    5Heterogeneity tests in outcome value across environmental risk score quartiles, adjusted for sex, age at diagnosis, smoking, BMI and marital status.
-    6Trend tests using continuous environmental risk score whose values corresponded to the quartile specific mean POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
+    5Heterogeneity tests in outcome value across environmental risk score quartiles, adjusted for sex and age at diagnosis.
+    6Trend tests using continuous environmental risk score whose values corresponded to the quartile specific mean POP levels, adjusted for sex and age at diagnosis.
+    7Heterogeneity tests in outcome value across environmental risk score quartiles, adjusted for sex, age at diagnosis, smoking, BMI and marital status.
+    8Trend tests using continuous environmental risk score whose values corresponded to the quartile specific mean POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
   add_header(
-    "explanatory" = "Exposures", term = "Quartiles",
-    "HR" = "Environmental risk score model", "95% CI" = "Environmental risk score model", "p-value" = "Environmental risk score model",  
-    "Heterogeneity test" = "Environmental risk score model",  "Trend test" = "Environmental risk score model") |>
+    "explanatory" = "Exposures", 
+    term = "Quartiles",
+    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model",  "Heterogeneity test" = "Base model",  "Trend test" = "Base model",
+    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model",  "Heterogeneity test " = "Adjusted model",  "Trend test " = "Adjusted model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   merge_v(j = "term") |>
@@ -3169,79 +3089,71 @@ POPs_quart_ALS_table_sensi1_ERS_danish <-
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 rm(quartile1_rows)
 
+
 ## figure sd ERS (sensi_1) ----
-POPs_sd_ALS_figure_sensi1_ERS_danish <-
+POPs_sd_ALS_figure_sensi1_ERS_danish <- 
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_1") |>
-  filter(model == "ERS_sd") |>
-  mutate(
-    explanatory = fct_recode(explanatory, 
-                             "Environmental risk score" = "ERS_score_from_elastic_net_sensi_1")) |>
-  ggplot(aes(
-    x = explanatory,
-    y = HR,
-    ymin = lower_CI,
-    ymax = upper_CI,
-    color = `p-value_shape`)) +
-  geom_pointrange(position = position_dodge(width = 0.5), size = 0.5) +
-  geom_hline(yintercept = 1,
-             linetype = "dashed",
-             color = "black") +                        # , scales = "free_x"
-  scale_color_manual(values = c(
-    "p-value<0.05" = "red",
-    "p-value≥0.05" = "black")) +
+  filter(!model == "copollutant") |>
+  filter(term == "Continuous") |>
+  mutate(model = fct_recode(model, 
+                            "Base model" = "base",
+                            "Adjusted model" = "adjusted"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
+         explanatory = fct_recode(explanatory, "Environmental risk score" = "ERS_score_from_elastic_net_sensi_1")) |>
+  arrange(explanatory) |> 
+  ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(cols = dplyr::vars(model), switch = "y") +                         # , scales = "free_x"
+  scale_color_manual(values = c("p-value≤0.05" = "red", "p-value>0.05" = "black")) +
   labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
-  theme(
-    strip.text = element_text(face = "bold"),
-    legend.position = "bottom",
-    strip.text.y = element_text(hjust = 0.5)) +
-  coord_flip() 
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip()
 
 
 ## figure quart ERS (sensi_1) ----
-POPs_quart_ALS_figure_sensi1_ERS_danish <-
+POPs_quart_ALS_figure_sensi1_ERS_danish <- 
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_1") |>
-  filter(model == "ERS_quart") |>
-  mutate(
-    explanatory = fct_recode(explanatory, 
-                             "Environmental risk score" = "ERS_score_from_elastic_net_sensi_1"),
-    term = str_replace(term, "quartile", "Quartile"), 
-    term = fct_rev(term)) |>
-  ggplot(aes(
-    x = term,
-    y = HR,
-    ymin = lower_CI,
-    ymax = upper_CI,
-    color = `p-value_shape`)) +
-  geom_pointrange(position = position_dodge(width = 0.5), size = 0.5) +
-  geom_hline(yintercept = 1,
-             linetype = "dashed",
-             color = "black") +                        # , scales = "free_x"
-  scale_color_manual(values = c(
-    "p-value<0.05" = "red",
-    "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
-  theme_lucid() +
-  theme(
-    strip.text = element_text(face = "bold"),
-    legend.position = "bottom",
-    strip.text.y = element_text(hjust = 0.5)) +
+  filter(!model == "copollutant") |>
+  filter(!term == "Continuous") |>
+  mutate(model = fct_recode(model, 
+                            "Base model" = "base",
+                            "Adjusted model" = "adjusted"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
+         explanatory = fct_recode(explanatory, 
+                                  "Environmental risk score" = "ERS_score_from_elastic_net_sensi_1"),
+         term = str_replace(term, "quartile", "Quartile"), 
+         term = fct_rev(term)) |>
+  arrange(explanatory) |> 
+  ggplot(aes(x = term, y = HR_raw, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   
   geom_text(
-    data = \(d) d |> filter(term == "Quartile 2"),
+    data = \(d) d |> filter(term == "quartile 2"),
     aes(
       x = term,
-      y = 2.75,
-      label = paste("p trend: ", p.value_trend)),
+      y = 3,
+      label = p.value_trend),
     hjust = 0,
-    vjust = -2,
+    vjust = -0.5, 
     size = 3,
     color = "black") +
   
-  facet_grid(rows = dplyr::vars(explanatory), switch = "y") +  
-  coord_flip() 
+  facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y") +  
+  scale_color_manual(values = c("p-value≤0.05" = "red", "p-value>0.05" = "black")) +
+  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y.left = element_text(angle = 0, hjust = 0.5, vjust = 0.5)) +
+  coord_flip()
+
 
 rm(POPs_sd_selected, POPs_sd_selected_labels, 
    POPs_quart_selected, POPs_quart_selected_labels)
@@ -3261,8 +3173,8 @@ POPs_quart_selected_labels <-
 POPs_sd_ALS_table_sensi2_danish <- 
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_2") |>
-  filter(study == "Danish") |>
-  filter(model == "copollutant_sd") |>
+  filter(model == "copollutant") |>
+  filter(term == "Continuous") |>
   select(explanatory, HR, "95% CI", "p-value") |>
   mutate(
     # explanatory = factor(explanatory, levels = POPs_sd_selected_labels), 
@@ -3290,7 +3202,8 @@ POPs_sd_ALS_table_sensi2_danish <-
 quartile1_rows <- 
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_2") |>
-  filter(model == "copollutant_quart") |>
+  filter(model == "copollutant") |>
+  filter(!term == "Continuous") |>
   distinct(model, explanatory) |>
   mutate(
     term = "quartile 1",
@@ -3306,8 +3219,8 @@ quartile1_rows <-
 POPs_quart_ALS_table_sensi2_danish <- 
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_2") |>
-  filter(study == "Danish") |>
-  filter(model == "copollutant_quart") |>
+  filter(model == "copollutant") |>
+  filter(!term == "Continuous") |>
   select("explanatory", "term", "HR", "95% CI", "p-value", 
          "Heterogeneity test" = "p.value_heterogeneity", 
          "Trend test" = "p.value_trend") |>
@@ -3356,7 +3269,8 @@ rm(quartile1_rows)
 POPs_sd_ALS_figure_sensi2_danish <-
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_2") |>
-  filter(model == "copollutant_sd") |>
+  filter(model == "copollutant") |>
+  filter(term == "Continuous") |>
   mutate(
     explanatory = factor(explanatory, levels = POPs_sd_selected_labels),
     explanatory = fct_recode(explanatory, !!!POPs_sd_selected_labels), 
@@ -3373,8 +3287,8 @@ POPs_sd_ALS_figure_sensi2_danish <-
              linetype = "dashed",
              color = "black") +                        # , scales = "free_x"
   scale_color_manual(values = c(
-    "p-value<0.05" = "red",
-    "p-value≥0.05" = "black")) +
+    "p-value≤0.05" = "red",
+    "p-value>0.05" = "black")) +
   labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
   theme(
@@ -3387,7 +3301,8 @@ POPs_sd_ALS_figure_sensi2_danish <-
 POPs_quart_ALS_figure_sensi2_danish <-
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_2") |>
-  filter(model == "copollutant_quart") |>
+  filter(model == "copollutant") |>
+  filter(!term == "Continuous") |>
   mutate(
     explanatory = factor(explanatory, levels = POPs_quart_selected_labels),
     explanatory = fct_recode(explanatory, !!!POPs_quart_selected_labels), 
@@ -3407,8 +3322,8 @@ POPs_quart_ALS_figure_sensi2_danish <-
              linetype = "dashed",
              color = "black") +                        # , scales = "free_x"
   scale_color_manual(values = c(
-    "p-value<0.05" = "red",
-    "p-value≥0.05" = "black")) +
+    "p-value≤0.05" = "red",
+    "p-value>0.05" = "black")) +
   labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   
   geom_text(
@@ -3434,21 +3349,26 @@ POPs_quart_ALS_figure_sensi2_danish <-
 POPs_sd_ALS_table_sensi2_ERS_danish <- 
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_2") |>
-  filter(study == "Danish") |>
-  filter(model == "ERS_sd") |>
-  select(explanatory, HR, "95% CI", "p-value") |>
+  filter(term == "Continuous") |> 
+  filter(!model == "copollutant") |>
+  select(model, explanatory, HR, "95% CI", "p-value") |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
+  select(explanatory, matches("_base$"), matches("_adjusted$")) |>
   mutate(
     explanatory = fct_recode(explanatory, 
                              "Environmental risk score" = "ERS_score_from_elastic_net_sensi_2")) |> 
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |>
   flextable() |>
   add_footer_lines(
     "1Environmental risk score is the weighted sum of relevant pollutants (PCB-28, PCB-52, oxychlordane, transnonachlor, PBDE-47) selected with elastic net regularization.
-     2The model was adjusted for sex, age at diagnosis, smoking, BMI and marital status.
+     2Base model was adjusted for sex, age at diagnosis. Adjusted model further accounts for smoking, BMI and marital status.
      3Estimated risk of death after ALS diagnosis associated with a one standard deviation increase of the environmental risk score.
     4CI: Confidence interval.") |>
   add_header(
     "explanatory" = "Exposures", 
-    "HR" = "Environmental risk score model", "95% CI" = "Environmental risk score model", "p-value" = "Environmental risk score model") |>
+    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", 
+    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   theme_vanilla() |>
@@ -3460,11 +3380,12 @@ POPs_sd_ALS_table_sensi2_ERS_danish <-
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
+
 ## table quart ERS  (sensi_2) ----
-quartile1_rows <- 
-  main_results_POPs_ALS_survival |>
+quartile1_rows <- main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_2") |>
-  filter(model == "ERS_quart") |>
+  filter(!model == "copollutant") |>
+  filter(!term == "Continuous") |>
   distinct(model, explanatory) |>
   mutate(
     term = "quartile 1",
@@ -3472,45 +3393,47 @@ quartile1_rows <-
     "95% CI" = "-",
     `p-value` = "", 
     "p.value_heterogeneity" = '', 
-    "p.value_trend" = '') |>
-  select("explanatory", "term", "HR", "95% CI", "p-value", 
-         "Heterogeneity test" = "p.value_heterogeneity", 
-         "Trend test" = "p.value_trend") 
+    "p.value_trend" = '')
 
 POPs_quart_ALS_table_sensi2_ERS_danish <- 
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_2") |>
-  filter(study == "Danish") |>
-  filter(model == "ERS_quart") |>
-  select("explanatory", "term", "HR", "95% CI", "p-value", 
-         "Heterogeneity test" = "p.value_heterogeneity", 
-         "Trend test" = "p.value_trend") |>
+  filter(!model == "copollutant") |>
+  filter(!term == "Continuous") |>
+  select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity", "p.value_trend") |>
   mutate(across(everything(), as.character))
 
 POPs_quart_ALS_table_sensi2_ERS_danish <- 
   bind_rows(quartile1_rows, POPs_quart_ALS_table_sensi2_ERS_danish) |>
   mutate(`p-value` = str_replace(`p-value`, "1.00", ">0.99")) |>
   arrange(explanatory, term) |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "p.value_heterogeneity", "p.value_trend")) |>
+  select(explanatory, term, contains("base"), contains("adjusted")) |>
   group_by(explanatory) |>
-  mutate(
-    `Heterogeneity test` = ifelse(term == "quartile 1", first(`Heterogeneity test`[term == "quartile 2"]), ""),
-    `Trend test` = ifelse(term == "quartile 1", first(`Trend test`[term == "quartile 2"]), "")) |>
+  mutate(p.value_heterogeneity_base = ifelse(term == 'quartile 1', p.value_heterogeneity_base[term == 'quartile 2'], ''), 
+         p.value_trend_base = ifelse(term == 'quartile 1', p.value_trend_base[term == 'quartile 2'], ''),
+         p.value_heterogeneity_adjusted = ifelse(term == 'quartile 1', p.value_heterogeneity_adjusted[term == 'quartile 2'], ''), 
+         p.value_trend_adjusted = ifelse(term == 'quartile 1', p.value_trend_adjusted[term == 'quartile 2'], '')) |>
   ungroup() |>
-  mutate(explanatory = factor(explanatory, levels = POPs_quart_selected_labels), 
-         explanatory = fct_recode(explanatory, !!!POPs_quart_selected_labels)) |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "Heterogeneity test" = "p.value_heterogeneity_base", "Trend test" = "p.value_trend_base",
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted",  "Heterogeneity test " = "p.value_heterogeneity_adjusted", "Trend test " = "p.value_trend_adjusted") |>
+  mutate(explanatory = fct_recode(explanatory, "Environmental risk score" = "ERS_score_from_elastic_net_sensi_2")) |>
   arrange(explanatory) |>
   flextable() |>
   add_footer_lines(
     "1Environmental risk score is the weighted sum of relevant pollutants (PCB-28, PCB-52, oxychlordane, transnonachlor, PBDE-47) selected with elastic net regularization.
-    2The model was adjusted for sex, age at diagnosis, smoking, BMI and marital status.
-    3Estimated risk of ALS death when the environmental risk score is at quartiles 2, 3, and 4, compared to quartile 1.
+    2Base model was adjusted for sex, age at diagnosis. Adjusted model further accounts for smoking, BMI and marital status.
+    3Estimated risk of ALS death when environmental risk score is at quartiles 2, 3, and 4, compared to quartile 1.
     4CI: Confidence interval.
-    5Heterogeneity tests in outcome value across environmental risk score quartiles, adjusted for sex, age at diagnosis, smoking, BMI and marital status.
-    6Trend tests using continuous environmental risk score whose values corresponded to the quartile specific mean POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
+    5Heterogeneity tests in outcome value across environmental risk score quartiles, adjusted for sex and age at diagnosis.
+    6Trend tests using continuous environmental risk score whose values corresponded to the quartile specific mean POP levels, adjusted for sex and age at diagnosis.
+    7Heterogeneity tests in outcome value across environmental risk score quartiles, adjusted for sex, age at diagnosis, smoking, BMI and marital status.
+    8Trend tests using continuous environmental risk score whose values corresponded to the quartile specific mean POP levels, adjusted for sex, age at diagnosis, smoking, BMI and marital status.") |>
   add_header(
-    "explanatory" = "Exposures", term = "Quartiles",
-    "HR" = "Environmental risk score model", "95% CI" = "Environmental risk score model", "p-value" = "Environmental risk score model",  
-    "Heterogeneity test" = "Environmental risk score model",  "Trend test" = "Environmental risk score model") |>
+    "explanatory" = "Exposures", 
+    term = "Quartiles",
+    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model",  "Heterogeneity test" = "Base model",  "Trend test" = "Base model",
+    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model",  "Heterogeneity test " = "Adjusted model",  "Trend test " = "Adjusted model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   merge_v(j = "term") |>
@@ -3529,87 +3452,80 @@ rm(quartile1_rows)
 
 
 ## figure sd ERS  (sensi_2) ----
-POPs_sd_ALS_figure_sensi2_ERS_danish <-
+POPs_sd_ALS_figure_sensi2_ERS_danish <- 
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_2") |>
-  filter(model == "ERS_sd") |>
-  mutate(
-    explanatory = fct_recode(explanatory, 
-                             "Environmental risk score" = "ERS_score_from_elastic_net_sensi_2")) |>
-  ggplot(aes(
-    x = explanatory,
-    y = HR,
-    ymin = lower_CI,
-    ymax = upper_CI,
-    color = `p-value_shape`)) +
-  geom_pointrange(position = position_dodge(width = 0.5), size = 0.5) +
-  geom_hline(yintercept = 1,
-             linetype = "dashed",
-             color = "black") +                        # , scales = "free_x"
-  scale_color_manual(values = c(
-    "p-value<0.05" = "red",
-    "p-value≥0.05" = "black")) +
+  filter(!model == "copollutant") |>
+  filter(term == "Continuous") |>
+  mutate(model = fct_recode(model, 
+                            "Base model" = "base",
+                            "Adjusted model" = "adjusted"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
+         explanatory = fct_recode(explanatory, "Environmental risk score" = "ERS_score_from_elastic_net_sensi_2")) |>
+  arrange(explanatory) |> 
+  ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(cols = dplyr::vars(model), switch = "y") +                         # , scales = "free_x"
+  scale_color_manual(values = c("p-value≤0.05" = "red", "p-value>0.05" = "black")) +
   labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
-  theme(
-    strip.text = element_text(face = "bold"),
-    legend.position = "bottom",
-    strip.text.y = element_text(hjust = 0.5)) +
-  coord_flip() 
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip()
 
 
 ## figure quart ERS  (sensi_2) ----
-POPs_quart_ALS_figure_sensi2_ERS_danish <-
+POPs_quart_ALS_figure_sensi2_ERS_danish <- 
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_2") |>
-  filter(model == "ERS_quart") |>
-  mutate(
-    explanatory = fct_recode(explanatory, 
-                             "Environmental risk score" = "ERS_score_from_elastic_net_sensi_2"),
-    term = str_replace(term, "quartile", "Quartile"), 
-    term = fct_rev(term)) |>
-  ggplot(aes(
-    x = term,
-    y = HR,
-    ymin = lower_CI,
-    ymax = upper_CI,
-    color = `p-value_shape`)) +
-  geom_pointrange(position = position_dodge(width = 0.5), size = 0.5) +
-  geom_hline(yintercept = 1,
-             linetype = "dashed",
-             color = "black") +                        # , scales = "free_x"
-  scale_color_manual(values = c(
-    "p-value<0.05" = "red",
-    "p-value≥0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
+  filter(!model == "copollutant") |>
+  filter(!term == "Continuous") |>
+  mutate(model = fct_recode(model, 
+                            "Base model" = "base",
+                            "Adjusted model" = "adjusted"),
+         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
+         explanatory = fct_recode(explanatory, 
+                                  "Environmental risk score" = "ERS_score_from_elastic_net_sensi_2"),
+         term = str_replace(term, "quartile", "Quartile"), 
+         term = fct_rev(term)) |>
+  arrange(explanatory) |> 
+  ggplot(aes(x = term, y = HR_raw, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   
   geom_text(
     data = \(d) d |> filter(term == "Quartile 2"),
     aes(
       x = term,
-      y = 2.5,
-      label = paste("p trend: ", p.value_trend)),
+      y = 3,
+      label = paste("p-value trend:\n", p.value_trend)),
     hjust = 0,
-    vjust = -2,
+    vjust = -0.5, 
     size = 3,
     color = "black") +
   
+  facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y") +  
+  scale_color_manual(values = c("p-value≤0.05" = "red", "p-value>0.05" = "black")) +
+  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
-  theme(
-    strip.text = element_text(face = "bold"),
-    legend.position = "bottom",
-    strip.text.y = element_text(hjust = 0.5)) +
-  facet_grid(rows = dplyr::vars(explanatory), switch = "y") +  
-  coord_flip() 
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y.left = element_text(angle = 0, hjust = 0.5, vjust = 0.5)) +
+  coord_flip()
+
 
 rm(POPs_sd_selected, POPs_sd_selected_labels, 
    POPs_quart_selected, POPs_quart_selected_labels)
 
+
 ## table POPs (sd) - als survival (sensi_4) ---- 
-POPs_sd_ALS_table_danish_sensi_4 <- main_results_POPs_ALS_survival |>
-  filter(study == "Danish") |>
+POPs_sd_ALS_table_danish_sensi_4 <- 
+  main_results_POPs_ALS_survival |>
   filter(term == "Continuous") |>
   filter(model == "adjusted") |>
+  filter(!explanatory %in% c("ERS_score_from_elastic_net_sensi_1", "ERS_score_from_elastic_net_sensi_2")) |>
   select(analysis, explanatory, term, model, HR, "95% CI", "p-value") |>
   pivot_wider(names_from = "analysis", values_from = c("HR", "95% CI", "p-value")) |>
   select(explanatory, contains("main"), contains("sensi_4")) |>
@@ -3625,7 +3541,7 @@ POPs_sd_ALS_table_danish_sensi_4 <- main_results_POPs_ALS_survival |>
   add_header(
     "explanatory" = "Exposures", 
     "HR" = "Main model", "95% CI" = "Main model", "p-value" = "Main model", 
-    "HR " = "Sensi 4 (97.5%)", "95% CI " = "Sensi 4 (97.5%)", "p-value " = "Sensi 4 (97.5%)") |>
+    "HR " = "Sensitivity analysis", "95% CI " = "Sensitivity analysis", "p-value " = "Sensitivity analysis") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   theme_vanilla() |>
@@ -3637,23 +3553,25 @@ POPs_sd_ALS_table_danish_sensi_4 <- main_results_POPs_ALS_survival |>
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
+
 ## figure POPs (sd) - als survival (sensi_4) ---- 
-POPs_sd_ALS_figure_danish_sensi_4 <- main_results_POPs_ALS_survival |>
-  filter(study == "Danish") |>
+POPs_sd_ALS_figure_danish_sensi_4 <- 
+  main_results_POPs_ALS_survival |>
   filter(term == "Continuous") |>
   filter(model == "adjusted") |>
+  filter(!explanatory %in% c("ERS_score_from_elastic_net_sensi_1", "ERS_score_from_elastic_net_sensi_2")) |>
   mutate(explanatory = factor(explanatory, levels = POPs_group_labels),
          explanatory = fct_rev(explanatory),
          explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
-         analysis = factor(analysis,
+         analysis = fct_recode(analysis,
                            "Main analysis" = "main", 
-                           "sensitivity analysis" = "sensi_4")) |>
+                           "Sensitivity analysis" = "sensi_4")) |>
   arrange(explanatory) |> 
   ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(cols = dplyr::vars(analysis), switch = "y") +                         # , scales = "free_x"
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  scale_color_manual(values = c("p-value≤0.05" = "red", "p-value>0.05" = "black")) +
   labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
@@ -3672,11 +3590,9 @@ results_POPs_ALS_survival <-
       POPs_quart_ALS_table_danish = POPs_quart_ALS_table_danish, 
       POPs_sd_ALS_figure_danish = POPs_sd_ALS_figure_danish, 
       POPs_quart_ALS_figure_danish = POPs_quart_ALS_figure_danish, 
-      # plot_base_cox_gam_danish = plot_base_cox_gam_danish, 
-      # plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish, 
+      plot_base_cox_gam_danish = plot_base_cox_gam_danish,
+      plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish,
       # plot_copollutant_cox_gam_danish = plot_copollutant_cox_gam_danish, 
-      plot_base_cox_gam_danish = plot_base_cox_gam_danish, 
-      plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish, 
       qgcomp = list(
         qgcomp_boot_danish = qgcomp_boot_danish, 
         qgcomp_noboot_danish = qgcomp_noboot_danish, 
@@ -3700,7 +3616,6 @@ results_POPs_ALS_survival <-
       POPs_quart_ALS_table_sensi1_ERS_danish = POPs_quart_ALS_table_sensi1_ERS_danish), 
     sensi2 = list(
       sensi2_lasso_sd_danish = sensi2_lasso_sd_danish, 
-      # sensi2_ridge_sd_danish = sensi2_ridge_sd_danish, 
       sensi2_elastic_net_sd_danish = sensi2_elastic_net_sd_danish, 
       POPs_sd_ALS_figure_sensi2_danish = POPs_sd_ALS_figure_sensi2_danish, 
       POPs_quart_ALS_figure_sensi2_danish = POPs_quart_ALS_figure_sensi2_danish, 
@@ -3726,11 +3641,9 @@ rm(bdd_cases_danish,
    POPs_quart_ALS_table_danish, 
    POPs_sd_ALS_figure_danish, 
    POPs_quart_ALS_figure_danish, 
-   # plot_base_cox_gam_danish, 
-   # plot_adjusted_cox_gam_danish, 
+   plot_base_cox_gam_danish,
+   plot_adjusted_cox_gam_danish,
    # plot_copollutant_cox_gam_danish,
-   plot_base_cox_gam_danish, 
-   plot_adjusted_cox_gam_danish, 
    POPs_ALS_qgcomp_table_danish, 
    POPs_ALS_qgcomp_figure_danish,
    POPs_ALS_qgcomp_positive_table_danish, 
@@ -3756,7 +3669,6 @@ rm(bdd_cases_danish,
    POPs_quart_ALS_table_sensi1_ERS_danish,
    
    sensi2_lasso_sd_danish, 
-   #sensi2_ridge_sd_danish, 
    sensi2_elastic_net_sd_danish, 
    POPs_sd_ALS_figure_sensi2_danish, 
    POPs_quart_ALS_figure_sensi2_danish, 

@@ -3125,10 +3125,9 @@ results_proteomic_ALS_survival$main$proteomic_quart_ALS_table  |>
 ### GAMs
 
 ```{r fig.height=21, fig.width=9}
-#| eval: false
+#| echo: false
 #| message: false
 #| warning: false
-#| include: false
 wrap_plots(results_proteomic_ALS_survival$main$plot_base_cox_gam_danish, ncol = 5)
 wrap_plots(results_proteomic_ALS_survival$main$plot_adjusted_cox_gam_danish, ncol = 5)
 ```
@@ -3320,10 +3319,9 @@ results_proteomic_ALS_survival$sensi_1_7_male$proteomic_quart_ALS_table_sensi_1_
 ### GAMs
 
 ```{r fig.height=21, fig.width=9}
-#| eval: false
+#| echo: false
 #| message: false
 #| warning: false
-#| include: false
 wrap_plots(results_proteomic_ALS_survival$sensi_1_7_male$plot_base_cox_gam_danish_sensi_1_7_male, ncol = 5)
 wrap_plots(results_proteomic_ALS_survival$sensi_1_7_male$plot_adjusted_cox_gam_danish_sensi_1_7_male, ncol = 5)
 ```
