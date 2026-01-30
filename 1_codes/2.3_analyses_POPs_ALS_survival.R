@@ -9,7 +9,7 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/2.2_analyses_POPs_ALS_occurrence.
 bdd_cases_danish <- 
   bdd_danish |>
   filter (als == 1) |>
-  select(als, als_date, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
+  select(sample, als, als_date, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
          all_of(POPs_group), 
          all_of(POPs_included)) |>
@@ -1726,6 +1726,194 @@ trend_ERS_adjusted <-
              p.value_trend = p.value_trend_ERS)
 
 rm(outcome, model3_quart_ERS_trend, p.value_trend_ERS)
+
+
+### ERS s(t) curves ----
+
+# Create person-month (pooled) dataset ----
+pooled_data <- 
+  bdd_cases_danish |>
+  select(sample, 
+         follow_up_death, status_death, 
+         ERS_score_from_elastic_net_sensi_1_sd, 
+         sex, diagnosis_age, smoking_2cat_i, bmi, marital_status_2cat_i) |>
+  mutate(follow_up_death = ceiling(follow_up_death),                            # ensure integer months
+         ERS_score_from_elastic_net_sensi_1_sd = 
+           as.numeric(ERS_score_from_elastic_net_sensi_1_sd)) |>   
+  uncount(follow_up_death, .id = "month") |>                                    # one row per person per month
+  group_by(sample) |>
+  mutate(
+    t = month,
+    event_pooled = ifelse(t == max(t) & status_death == 1, 1, 0)) |>            # for each person for each months : did the event occur (y/n)
+  ungroup()
+
+
+
+### t as poly 2 ----
+#### Fit the pooled logistic regression ----
+pooled_model_poly_2 <- glm(
+  event_pooled ~ ERS_score_from_elastic_net_sensi_1_sd + 
+    sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i +
+    poly(t, 2),                                                                  # we think that the risk is not linear with time
+  family = binomial(),
+  data = pooled_data)
+
+
+#### Predict survival curves for ERS values (ERS = 0 (mean) vs ERS = +1sd ----
+newdata <- 
+  expand.grid(
+    t = 1:max(pooled_data$t),
+    ERS_score_from_elastic_net_sensi_1_sd = c(0, 1),              
+    sex = "Male",                                                               # most common category
+    diagnosis_age = mean(bdd_cases_danish$diagnosis_age, na.rm = TRUE),         # mean
+    smoking_2cat_i = "Ever",                                                    # most common category
+    bmi = mean(bdd_cases_danish$bmi, na.rm = TRUE),                             # mean
+    marital_status_2cat_i = "Married/cohabit")                                  # most common category
+
+newdata <- 
+  newdata |>
+  mutate(
+    pred_risk = predict(
+      pooled_model_poly_2,
+      newdata = newdata,
+      type = "response")) |>
+  group_by(ERS_score_from_elastic_net_sensi_1_sd) |>
+  arrange(t) |>
+  mutate(survival = cumprod(1 - pred_risk))
+
+#### Survival curves ----
+# extraire les valeurs survie mediane pour ERS mean et ERS mean + sd (au premier temps où s(t) <= 0.5)
+median_surv <- 
+  newdata |>
+  group_by(ERS_score_from_elastic_net_sensi_1_sd) |>
+  filter(survival <= 0.5) |>
+  slice(1) |>                                                                   
+  ungroup() 
+
+# personnaliser axe x pour ajouter les valeurs survie mediane 
+base_breaks <- pretty(newdata$t)
+median_breaks <- median_surv$t
+x_breaks <- sort(unique(c(base_breaks, median_breaks)))
+
+x_labels <- as.character(x_breaks)
+x_labels[x_breaks %in% median_breaks] <- x_breaks[x_breaks %in% median_breaks]
+
+# survival plot
+figure_survival_poly <- 
+  newdata |>
+  ggplot(aes(x = t,
+             y = survival,
+             color = factor(ERS_score_from_elastic_net_sensi_1_sd))) +
+  geom_line(size = 1.2) +
+  geom_segment(data = median_surv,
+               aes(x = 0, xend = t,
+                   y = 0.5, yend = 0.5,
+                   color = factor(ERS_score_from_elastic_net_sensi_1_sd)),
+               linetype = "dashed",
+               show.legend = FALSE) +
+  geom_segment(data = median_surv,
+               aes(x = t, xend = t,
+                   y = 0, yend = 0.5,
+                   color = factor(ERS_score_from_elastic_net_sensi_1_sd)),
+               linetype = "dashed",
+               show.legend = FALSE) +
+  scale_x_continuous(breaks = x_breaks,
+                     labels = x_labels) +
+  labs(x = "Months since diagnosis",
+       y = "Survival probability",
+       color = "Environmental\nrisk score (ERS)") +
+  scale_color_manual(values = c("blue", "red"),
+                     labels = c("Mean ERS", "+1 SD ERS")) +
+  theme_minimal()
+
+rm(pooled_data, pooled_model_poly_2, newdata, median_surv, 
+   base_breaks, median_breaks, x_breaks, x_labels)
+
+# 
+### t as factor ----
+#### Fit the pooled logistic regression ----
+# pooled_model_f <- glm(
+#   event_pooled ~ ERS_score_from_elastic_net_sensi_1_sd + 
+#     sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i +
+#     factor(t),                                                                  # we think that the risk is not linear with time
+#   family = binomial(),
+#   data = pooled_data)
+# 
+# 
+#### Predict survival curves for ERS values (ERS = 0 (mean) vs ERS = +1sd ----
+# newdata <- 
+#   expand.grid(
+#     t = 1:max(pooled_data$t),
+#     ERS_score_from_elastic_net_sensi_1_sd = c(0, 1),              
+#     sex = "Male",                                                               # most common category
+#     diagnosis_age = mean(bdd_cases_danish$diagnosis_age, na.rm = TRUE),         # mean
+#     smoking_2cat_i = "Ever",                                                    # most common category
+#     bmi = mean(bdd_cases_danish$bmi, na.rm = TRUE),                             # mean
+#     marital_status_2cat_i = "Married/cohabit")                                  # most common category
+# 
+# newdata <- 
+#   newdata |>
+#   mutate(
+#     pred_risk = predict(
+#       pooled_model_f,
+#       newdata = newdata,
+#       type = "response")) |>
+#   group_by(ERS_score_from_elastic_net_sensi_1_sd) |>
+#   arrange(t) |>
+#   mutate(survival = cumprod(1 - pred_risk))
+# 
+#### Survival curves ----
+# # extraire les valeurs survie mediane pour ERS mean et ERS mean + sd (au premier temps où s(t) <= 0.5)
+# median_surv <- 
+#   newdata |>
+#   group_by(ERS_score_from_elastic_net_sensi_1_sd) |>
+#   filter(survival <= 0.5) |>
+#   slice(1) |>                                                                   
+#   ungroup() 
+# 
+# # personnaliser axe x pour ajouter les valeurs survie mediane 
+# base_breaks <- pretty(newdata$t)
+# median_breaks <- median_surv$t
+# x_breaks <- sort(unique(c(base_breaks, median_breaks)))
+# 
+# x_labels <- as.character(x_breaks)
+# x_labels[x_breaks %in% median_breaks] <- x_breaks[x_breaks %in% median_breaks]
+# 
+# # survival plot
+# figure_survival_factor <- 
+#   newdata |>
+#   ggplot(aes(x = t,
+#              y = survival,
+#              color = factor(ERS_score_from_elastic_net_sensi_1_sd))) +
+#   geom_line(size = 1.2) +
+#   geom_segment(data = median_surv,
+#                aes(x = 0, xend = t,
+#                    y = 0.5, yend = 0.5,
+#                    color = factor(ERS_score_from_elastic_net_sensi_1_sd)),
+#                linetype = "dashed",
+#                show.legend = FALSE) +
+#   geom_segment(data = median_surv,
+#                aes(x = t, xend = t,
+#                    y = 0, yend = 0.5,
+#                    color = factor(ERS_score_from_elastic_net_sensi_1_sd)),
+#                linetype = "dashed",
+#                show.legend = FALSE) +
+#   scale_x_continuous(breaks = x_breaks,
+#                      labels = x_labels) +
+#   labs(x = "Months since diagnosis",
+#        y = "Survival probability",
+#        color = "Environmental\nrisk score (ERS)") +
+#   scale_color_manual(values = c("blue", "red"),
+#                      labels = c("Mean ERS", "+1 SD ERS")) +
+#   theme_minimal()
+
+
+
+
+rm(pooled_data, pooled_model_f, newdata, median_surv, 
+   base_breaks, median_breaks, x_breaks, x_labels)
+
+
 
 
 ### assemblage ----
@@ -3564,20 +3752,20 @@ POPs_sd_ALS_figure_danish_sensi_4 <-
          explanatory = fct_rev(explanatory),
          explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
          analysis = fct_recode(analysis,
-                           "Main analysis" = "main", 
-                           "Sensitivity analysis" = "sensi_4")) |>
+                           "Main analysis (N = 166)" = "main", 
+                           "Sensitivity analysis (N = 162)" = "sensi_4")) |>
   arrange(explanatory) |> 
-  ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
+  ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(cols = dplyr::vars(analysis), switch = "y") +                         # , scales = "free_x"
-  scale_color_manual(values = c("p-value≤0.05" = "red", "p-value>0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
+  labs(x = "POPs", y = "Hazard Ratio (HR)") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
         legend.position = "bottom", 
         strip.text.y = element_text(hjust = 0.5)) +
   coord_flip()
+
 
 
 # Assemblage ----
@@ -3613,7 +3801,8 @@ results_POPs_ALS_survival <-
       POPs_sd_ALS_figure_sensi1_ERS_danish = POPs_sd_ALS_figure_sensi1_ERS_danish, 
       POPs_quart_ALS_figure_sensi1_ERS_danish = POPs_quart_ALS_figure_sensi1_ERS_danish, 
       POPs_sd_ALS_table_sensi1_ERS_danish = POPs_sd_ALS_table_sensi1_ERS_danish, 
-      POPs_quart_ALS_table_sensi1_ERS_danish = POPs_quart_ALS_table_sensi1_ERS_danish), 
+      POPs_quart_ALS_table_sensi1_ERS_danish = POPs_quart_ALS_table_sensi1_ERS_danish, 
+      figure_survival_poly = figure_survival_poly), 
     sensi2 = list(
       sensi2_lasso_sd_danish = sensi2_lasso_sd_danish, 
       sensi2_elastic_net_sd_danish = sensi2_elastic_net_sd_danish, 
@@ -3667,6 +3856,7 @@ rm(bdd_cases_danish,
    POPs_quart_ALS_figure_sensi1_ERS_danish, 
    POPs_sd_ALS_table_sensi1_ERS_danish, 
    POPs_quart_ALS_table_sensi1_ERS_danish,
+   figure_survival_poly, 
    
    sensi2_lasso_sd_danish, 
    sensi2_elastic_net_sd_danish, 

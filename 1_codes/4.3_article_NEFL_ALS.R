@@ -297,7 +297,7 @@ ggsave(                                                                         
 ggsave(                                                                         # AUC curve
   "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/figure_4.tiff",
   figure_4,
-  height = 8,
+  height = 10,
   width = 7,
   units = "in")
 

@@ -30,16 +30,18 @@ figure_2 <-
          explanatory = fct_rev(explanatory),
          explanatory = fct_recode(explanatory, !!!c(POPs_group_labels, "Environmental risk score" = "ERS_score_from_elastic_net_sensi_1"))) |>
   arrange(explanatory) |> 
-  ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
+  ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  scale_color_manual(values = c("p-value≤0.05" = "red", "p-value>0.05" = "black")) +
-  labs(x = "POPs", y = "Hazard Ratio (HR)", color = "p-value") +
+  labs(x = "POPs", y = "Hazard Ratio (HR)") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
         legend.position = "bottom", 
         strip.text.y = element_text(hjust = 0.5)) +
   coord_flip()
+
+# Figure 3 - s(t) curves depending on ERS ----
+figure_3 <- results_POPs_ALS_survival$sensi1$figure_survival_poly
 
 
 # Table S1 - description of the POP levels (table) ----
@@ -161,6 +163,13 @@ ggsave(
   figure_2,
   height = 5,
   width = 8,
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/figure_3.tiff",
+  figure_3,
+  height = 5,
+  width = 8, 
   units = "in")
 
 ggsave(

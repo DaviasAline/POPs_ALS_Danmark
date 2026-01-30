@@ -30,9 +30,10 @@ covar_danish_cases <-
          marital_status_2cat = fct_relevel(marital_status_2cat, "Married/cohabit", "Other")) |>
   select(
     baseline_age, diagnosis_age, death_age, birth_year, 
-    follow_up_death, status_death,
+    follow_up, follow_up_death, status_death,
     sex, marital_status_2cat, education_merged, alcohol, smoking_2cat, bmi, cholesterol)|>
   tbl_summary(missing = "no", 
+              statistic = list(all_continuous() ~ "{mean} ({sd})"), 
               label = list(status_death ~ "Status at end of the follow-up"), 
               digits = list(birth_year ~ 0, 
                             baseline_age ~ 0, 
@@ -101,7 +102,8 @@ POPs_table_danish_by_death <- bdd_danish |>
                               "Deceased" = "1")) |>
   tbl_summary(by = status_death, 
               digits = all_continuous() ~1) |>
-  bold_labels() 
+  bold_labels() |>
+  add_overall()
 
 POPs_boxplot_danish <- bdd_danish |>
   select(all_of(POPs_tot)) |>
