@@ -109,9 +109,11 @@ fit_and_plot_cox_gam <- function(
 
 
 # Creation of cases specific datasets ----
-bdd_cases_danish <- bdd_danish |>
-  filter(als == 1) |>   # remove controls 
-  filter(match != 159) |>    # remove NEFL outlier
+bdd_cases_danish <- 
+  bdd_danish |>
+  filter(als == 1) |>                                                           # remove controls 
+  mutate(                                                                       # remove NEFL outlier
+    proteomic_neuro_explo_NEFL = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>   
   select(sample, als, als_date, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
          all_of(proteomic)) |>
@@ -132,7 +134,7 @@ bdd_cases_danish <- bdd_danish |>
                 .names = "{.col}_quart_med"))
 
 surv_obj <- Surv(time = bdd_cases_danish$follow_up_death,                       # set the outcomes
-                        event = bdd_cases_danish$status_death)
+                 event = bdd_cases_danish$status_death)
 covariates <-                                                                   # set the covariates 
   c("sex", "diagnosis_age", "smoking_2cat_i", "bmi")
 
@@ -240,58 +242,96 @@ model2_cox_quart <- map_dfr(proteomic_quart, function(expl) {
 
 ### Heterogeneity tests ----
 #### base 
-heterogeneity_base_quart <- data.frame(explanatory = character(),
-                                       model = factor(),
-                                       p_value_heterogeneity = numeric(), 
-                                       stringsAsFactors = FALSE)
 
-for (expl in proteomic_quart) {
-  
-  formula_raw <- as.formula("surv_obj ~ diagnosis_age + sex")
-  model_raw <- coxph(formula_raw, data = bdd_cases_danish) 
-  
-  formula <- as.formula(paste("surv_obj ~", expl, "+ diagnosis_age + sex"))  
-  model <- coxph(formula, data = bdd_cases_danish)  
-  
-  anova <- anova(model_raw, model, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_base_quart <- rbind(heterogeneity_base_quart, 
-                                    data.frame(explanatory = expl,
-                                               model = "base",
-                                               analysis = "main", 
-                                               p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(expl, formula_raw, model_raw, formula, model, anova, p_value_heterogeneity)
+heterogeneity_base <- map_dfr(
+  proteomic_quart,
+  function(var) {
+    
+    data_sub <- bdd_cases_danish |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, diagnosis_age, sex, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "base",
+        analysis = "main",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    surv_obj <- Surv(time = data_sub$follow_up_death,                       # set the outcomes
+                     event = data_sub$status_death)
+    
+    formula_raw <- as.formula("surv_obj ~ diagnosis_age + sex")
+    test_1 <- coxph(formula_raw, data = data_sub) 
+    
+    formula <- as.formula(paste("surv_obj ~", var, "+ diagnosis_age + sex"))  
+    test_2 <- coxph(formula, data = data_sub)  
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "base",
+      analysis = "main",
+      p_value_heterogeneity = p_lr)
+  })
+
+
 
 #### adjusted 
-heterogeneity_adjusted_quart <- data.frame(explanatory = character(),
-                                           model = factor(),
-                                           p_value_heterogeneity = numeric(), 
-                                           stringsAsFactors = FALSE)
+heterogeneity_adjusted <- map_dfr(
+  proteomic_quart,
+  function(var) {
+    
+    data_sub <- bdd_cases_danish |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, diagnosis_age, sex, smoking_2cat_i, bmi, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "adjusted",
+        analysis = "main",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    surv_obj <- Surv(time = data_sub$follow_up_death,                       # set the outcomes
+                     event = data_sub$status_death)
+    
+    formula_raw <- as.formula("surv_obj ~ diagnosis_age + sex + smoking_2cat_i + bmi")
+    test_1 <- coxph(formula_raw, data = data_sub) 
+    
+    formula <- as.formula(paste("surv_obj ~", var, "+ diagnosis_age + sex + smoking_2cat_i + bmi"))  
+    test_2 <- coxph(formula, data = data_sub)  
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "adjusted",
+      analysis = "main",
+      p_value_heterogeneity = p_lr)
+  })
 
-for (expl in proteomic_quart) {
-  
-  formula_raw <- as.formula(paste("surv_obj ~ ", paste(covariates, collapse = "+")))
-  model_raw <- coxph(formula_raw, data = bdd_cases_danish) 
-  
-  formula <- as.formula(paste("surv_obj ~", expl, "+ ", paste(covariates, collapse = "+")))  
-  model <- coxph(formula, data = bdd_cases_danish)  
-  
-  anova <- anova(model_raw, model, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_adjusted_quart <- rbind(heterogeneity_adjusted_quart, 
-                                        data.frame(explanatory = expl,
-                                                   model = "adjusted",
-                                                   analysis = "main", 
-                                                   p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(expl, formula_raw, model_raw, formula, model, anova, p_value_heterogeneity)
 
 heterogeneity_tests <- 
-  bind_rows(heterogeneity_base_quart, 
-            heterogeneity_adjusted_quart) |>
+  bind_rows(heterogeneity_base, 
+            heterogeneity_adjusted) |>
   mutate(explanatory = gsub("_quart", "", explanatory))
 
 ### Trend tests ----
@@ -339,7 +379,7 @@ trend_tests <-
   bind_rows(trend_base, trend_adjusted) |>
   mutate(explanatory = gsub("_quart_med", "", explanatory))
 
-rm(heterogeneity_base_quart, heterogeneity_adjusted_quart,
+rm(heterogeneity_base, heterogeneity_adjusted,
    trend_base, trend_adjusted)
 
 
@@ -369,7 +409,8 @@ rm(vars_labels)
 bdd_cases_danish_sensi_1_3 <- 
   bdd_danish |>
   filter (als == 1 & follow_up > 60) |>                                         # filtering cases with follow_up > 5 years
-  filter(match != 159) |>                                                       # removing NEFL outlier
+  mutate(                                                                       # remove NEFL outlier
+    proteomic_neuro_explo_NEFL = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>   
   select(sample, als, als_date, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i, 
          all_of(proteomic)) |>
@@ -474,58 +515,96 @@ model2_cox_quart_sensi_1_3 <- map_dfr(proteomic_quart, function(expl) {
 
 ### Heterogeneity tests ----
 #### base 
-heterogeneity_base_quart_sensi_1_3 <- data.frame(explanatory = character(),
-                                                 model = factor(),
-                                                 p_value_heterogeneity = numeric(), 
-                                                 stringsAsFactors = FALSE)
 
-for (expl in proteomic_quart) {
-  
-  formula_raw <- as.formula("surv_obj_sensi_1_3 ~ diagnosis_age + sex")
-  model_raw <- coxph(formula_raw, data = bdd_cases_danish_sensi_1_3) 
-  
-  formula <- as.formula(paste("surv_obj_sensi_1_3 ~", expl, "+ diagnosis_age + sex"))  
-  model <- coxph(formula, data = bdd_cases_danish_sensi_1_3)  
-  
-  anova <- anova(model_raw, model, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_base_quart_sensi_1_3 <- rbind(heterogeneity_base_quart_sensi_1_3, 
-                                    data.frame(explanatory = expl,
-                                               model = "base",
-                                               analysis = "sensi_1_3", 
-                                               p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(expl, formula_raw, model_raw, formula, model, anova, p_value_heterogeneity)
+heterogeneity_base_sensi_1_3 <- map_dfr(
+  proteomic_quart,
+  function(var) {
+    
+    data_sub <- bdd_cases_danish_sensi_1_3 |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, diagnosis_age, sex, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "base",
+        analysis = "sensi_1_3",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    surv_obj <- Surv(time = data_sub$follow_up_death,                       # set the outcomes
+                     event = data_sub$status_death)
+    
+    formula_raw <- as.formula("surv_obj ~ diagnosis_age + sex")
+    test_1 <- coxph(formula_raw, data = data_sub) 
+    
+    formula <- as.formula(paste("surv_obj ~", var, "+ diagnosis_age + sex"))  
+    test_2 <- coxph(formula, data = data_sub)  
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "base",
+      analysis = "sensi_1_3",
+      p_value_heterogeneity = p_lr)
+  })
+
+
 
 #### adjusted 
-heterogeneity_adjusted_quart_sensi_1_3 <- data.frame(explanatory = character(),
-                                                     model = factor(),
-                                                     p_value_heterogeneity = numeric(), 
-                                                     stringsAsFactors = FALSE)
+heterogeneity_adjusted_sensi_1_3 <- map_dfr(
+  proteomic_quart,
+  function(var) {
+    
+    data_sub <- bdd_cases_danish_sensi_1_3 |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, diagnosis_age, sex, smoking_2cat_i, bmi, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "adjusted",
+        analysis = "sensi_1_3",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    surv_obj <- Surv(time = data_sub$follow_up_death,                           # set the outcomes
+                     event = data_sub$status_death)
+    
+    formula_raw <- as.formula("surv_obj ~ diagnosis_age + sex + smoking_2cat_i + bmi")
+    test_1 <- coxph(formula_raw, data = data_sub) 
+    
+    formula <- as.formula(paste("surv_obj ~", var, "+ diagnosis_age + sex + smoking_2cat_i + bmi"))  
+    test_2 <- coxph(formula, data = data_sub)  
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "adjusted",
+      analysis = "sensi_1_3",
+      p_value_heterogeneity = p_lr)
+  })
 
-for (expl in proteomic_quart) {
-  
-  formula_raw <- as.formula(paste("surv_obj_sensi_1_3 ~ ", paste(covariates, collapse = "+")))
-  model_raw <- coxph(formula_raw, data = bdd_cases_danish_sensi_1_3) 
-  
-  formula <- as.formula(paste("surv_obj_sensi_1_3 ~", expl, "+ ", paste(covariates, collapse = "+")))  
-  model <- coxph(formula, data = bdd_cases_danish_sensi_1_3)  
-  
-  anova <- anova(model_raw, model, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_adjusted_quart_sensi_1_3 <- rbind(heterogeneity_adjusted_quart_sensi_1_3, 
-                                        data.frame(explanatory = expl,
-                                                   model = "adjusted",
-                                                   analysis = "sensi_1_3", 
-                                                   p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(expl, formula_raw, model_raw, formula, model, anova, p_value_heterogeneity)
 
 heterogeneity_tests_sensi_1_3 <- 
-  bind_rows(heterogeneity_base_quart_sensi_1_3, 
-            heterogeneity_adjusted_quart_sensi_1_3) |>
+  bind_rows(heterogeneity_base_sensi_1_3, 
+            heterogeneity_adjusted_sensi_1_3) |>
   mutate(explanatory = gsub("_quart", "", explanatory))
 
 ### Trend tests ----
@@ -573,7 +652,7 @@ trend_tests_sensi_1_3 <-
   bind_rows(trend_base_sensi_1_3, trend_adjusted_sensi_1_3) |>
   mutate(explanatory = gsub("_quart_med", "", explanatory))
 
-rm(heterogeneity_base_quart_sensi_1_3, heterogeneity_adjusted_quart_sensi_1_3,
+rm(heterogeneity_base_sensi_1_3, heterogeneity_adjusted_sensi_1_3,
    trend_base_sensi_1_3, trend_adjusted_sensi_1_3)
 
 
@@ -604,7 +683,8 @@ rm(vars_labels)
 # Sensi 1 + sensi 3 + sensi 4 - Removing NEFL outlier + filtering cases with follow- up < 5 years + filtering follow-up <= 50%----
 bdd_cases_danish_sensi_1_3_4 <- bdd_danish |>
   filter(als == 1 & follow_up > 60) |>                                          # remove controls and remove cases with follow-up<5years 
-  filter(match != 159) |>                                                       # remove NEFL outlier
+  mutate(                                                                       # remove NEFL outlier
+    proteomic_neuro_explo_NEFL = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>   
   mutate(seuil = quantile(follow_up, 0.5, na.rm = TRUE)) |>                     # sensi 4 : we remove 50% of the highest values of follow-up (after removing the follow-up<5years)
   filter(follow_up <= seuil) |>
   select(sample, als, als_date, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
@@ -711,58 +791,95 @@ model2_cox_quart_sensi_1_3_4 <- map_dfr(proteomic_quart, function(expl) {
 
 ### Heterogeneity tests ----
 #### base 
-heterogeneity_base_quart_sensi_1_3_4 <- data.frame(explanatory = character(),
-                                                   model = factor(),
-                                                   p_value_heterogeneity = numeric(), 
-                                                   stringsAsFactors = FALSE)
 
-for (expl in proteomic_quart) {
-  
-  formula_raw <- as.formula("surv_obj_sensi_1_3_4 ~ diagnosis_age + sex")
-  model_raw <- coxph(formula_raw, data = bdd_cases_danish_sensi_1_3_4) 
-  
-  formula <- as.formula(paste("surv_obj_sensi_1_3_4 ~", expl, "+ diagnosis_age + sex"))  
-  model <- coxph(formula, data = bdd_cases_danish_sensi_1_3_4)  
-  
-  anova <- anova(model_raw, model, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_base_quart_sensi_1_3_4 <- rbind(heterogeneity_base_quart_sensi_1_3_4, 
-                                    data.frame(explanatory = expl,
-                                               model = "base",
-                                               analysis = "sensi_1_3_4", 
-                                               p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(expl, formula_raw, model_raw, formula, model, anova, p_value_heterogeneity)
+heterogeneity_base_sensi_1_3_4 <- map_dfr(
+  proteomic_quart,
+  function(var) {
+    
+    data_sub <- bdd_cases_danish_sensi_1_3_4 |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, diagnosis_age, sex, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "base",
+        analysis = "sensi_1_3_4",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    surv_obj <- Surv(time = data_sub$follow_up_death,                       # set the outcomes
+                     event = data_sub$status_death)
+    
+    formula_raw <- as.formula("surv_obj ~ diagnosis_age + sex")
+    test_1 <- coxph(formula_raw, data = data_sub) 
+    
+    formula <- as.formula(paste("surv_obj ~", var, "+ diagnosis_age + sex"))  
+    test_2 <- coxph(formula, data = data_sub)  
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "base",
+      analysis = "sensi_1_3_4",
+      p_value_heterogeneity = p_lr)
+  })
+
+
 
 #### adjusted 
-heterogeneity_adjusted_quart_sensi_1_3_4 <- data.frame(explanatory = character(),
-                                                       model = factor(),
-                                                       p_value_heterogeneity = numeric(), 
-                                                       stringsAsFactors = FALSE)
-
-for (expl in proteomic_quart) {
-  
-  formula_raw <- as.formula(paste("surv_obj_sensi_1_3_4 ~ ", paste(covariates, collapse = "+")))
-  model_raw <- coxph(formula_raw, data = bdd_cases_danish_sensi_1_3_4) 
-  
-  formula <- as.formula(paste("surv_obj_sensi_1_3_4 ~", expl, "+ ", paste(covariates, collapse = "+")))  
-  model <- coxph(formula, data = bdd_cases_danish_sensi_1_3_4)  
-  
-  anova <- anova(model_raw, model, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_adjusted_quart_sensi_1_3_4 <- rbind(heterogeneity_adjusted_quart_sensi_1_3_4, 
-                                        data.frame(explanatory = expl,
-                                                   model = "adjusted",
-                                                   analysis = "sensi_1_3_4", 
-                                                   p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(expl, formula_raw, model_raw, formula, model, anova, p_value_heterogeneity)
+heterogeneity_adjusted_sensi_1_3_4 <- map_dfr(
+  proteomic_quart,
+  function(var) {
+    
+    data_sub <- bdd_cases_danish_sensi_1_3_4 |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, diagnosis_age, sex, smoking_2cat_i, bmi, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "adjusted",
+        analysis = "sensi_1_3_4",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    surv_obj <- Surv(time = data_sub$follow_up_death,                           # set the outcomes
+                     event = data_sub$status_death)
+    
+    formula_raw <- as.formula("surv_obj ~ diagnosis_age + sex + smoking_2cat_i + bmi")
+    test_1 <- coxph(formula_raw, data = data_sub) 
+    
+    formula <- as.formula(paste("surv_obj ~", var, "+ diagnosis_age + sex + smoking_2cat_i + bmi"))  
+    test_2 <- coxph(formula, data = data_sub)  
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "adjusted",
+      analysis = "sensi_1_3_4",
+      p_value_heterogeneity = p_lr)
+  })
 
 heterogeneity_tests_sensi_1_3_4 <- 
-  bind_rows(heterogeneity_base_quart_sensi_1_3_4, 
-            heterogeneity_adjusted_quart_sensi_1_3_4) |>
+  bind_rows(heterogeneity_base_sensi_1_3_4, 
+            heterogeneity_adjusted_sensi_1_3_4) |>
   mutate(explanatory = gsub("_quart", "", explanatory))
 
 ### Trend tests ----
@@ -810,7 +927,7 @@ trend_tests_sensi_1_3_4 <-
   bind_rows(trend_base_sensi_1_3_4, trend_adjusted_sensi_1_3_4) |>
   mutate(explanatory = gsub("_quart_med", "", explanatory))
 
-rm(heterogeneity_base_quart_sensi_1_3_4, heterogeneity_adjusted_quart_sensi_1_3_4,
+rm(heterogeneity_base_sensi_1_3_4, heterogeneity_adjusted_sensi_1_3_4,
    trend_base_sensi_1_3_4, trend_adjusted_sensi_1_3_4)
 
 
@@ -840,7 +957,8 @@ rm(vars_labels)
 # Sensi 1 + sensi 3 + sensi 5 - Removing NEFL outlier + filtering cases with follow-up < 5 years + filtering follow-up > 50%----
 bdd_cases_danish_sensi_1_3_5 <- bdd_danish |>
   filter(als == 1 & follow_up > 60) |>                                          # remove controls and remove cases with follow-up<5years 
-  filter(match != 159) |>                                                       # remove NEFL outlier
+  mutate(                                                                       # remove NEFL outlier
+    proteomic_neuro_explo_NEFL = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>   
   mutate(seuil = quantile(follow_up, 0.5, na.rm = TRUE)) |>                     # sensi 4 : we remove 50% of the highest values of follow-up (after removing the follow-up<5years)
   filter(follow_up > seuil) |>
   select(sample, als, als_date, follow_up_death, status_death, sex, baseline_age, diagnosis_age, death_age, follow_up, 
@@ -946,60 +1064,97 @@ model2_cox_quart_sensi_1_3_5 <- map_dfr(proteomic_quart, function(expl) {
 })
 
 ### Heterogeneity tests ----
-#### base ----
-heterogeneity_base_quart_sensi_1_3_5 <- data.frame(explanatory = character(),
-                                                   model = factor(),
-                                                   p_value_heterogeneity = numeric(), 
-                                                   stringsAsFactors = FALSE)
+#### base 
+heterogeneity_base_sensi_1_3_5 <- map_dfr(
+  proteomic_quart,
+  function(var) {
+    
+    data_sub <- bdd_cases_danish_sensi_1_3_5 |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, diagnosis_age, sex, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "base",
+        analysis = "sensi_1_3_5",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    surv_obj <- Surv(time = data_sub$follow_up_death,                       # set the outcomes
+                     event = data_sub$status_death)
+    
+    formula_raw <- as.formula("surv_obj ~ diagnosis_age + sex")
+    test_1 <- coxph(formula_raw, data = data_sub) 
+    
+    formula <- as.formula(paste("surv_obj ~", var, "+ diagnosis_age + sex"))  
+    test_2 <- coxph(formula, data = data_sub)  
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "base",
+      analysis = "sensi_1_3_5",
+      p_value_heterogeneity = p_lr)
+  })
 
-for (expl in proteomic_quart) {
-  
-  formula_raw <- as.formula("surv_obj_sensi_1_3_5 ~ diagnosis_age + sex")
-  model_raw <- coxph(formula_raw, data = bdd_cases_danish_sensi_1_3_5) 
-  
-  formula <- as.formula(paste("surv_obj_sensi_1_3_5 ~", expl, "+ diagnosis_age + sex"))  
-  model <- coxph(formula, data = bdd_cases_danish_sensi_1_3_5)  
-  
-  anova <- anova(model_raw, model, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_base_quart_sensi_1_3_5 <- rbind(heterogeneity_base_quart_sensi_1_3_5, 
-                                    data.frame(explanatory = expl,
-                                               model = "base",
-                                               analysis = "sensi_1_3_5", 
-                                               p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(expl, formula_raw, model_raw, formula, model, anova, p_value_heterogeneity)
 
-#### adjusted ----
-heterogeneity_adjusted_quart_sensi_1_3_5 <- data.frame(explanatory = character(),
-                                                       model = factor(),
-                                                       p_value_heterogeneity = numeric(), 
-                                                       stringsAsFactors = FALSE)
 
-for (expl in proteomic_quart) {
-  
-  formula_raw <- as.formula(paste("surv_obj_sensi_1_3_5 ~ ", paste(covariates, collapse = "+")))
-  model_raw <- coxph(formula_raw, data = bdd_cases_danish_sensi_1_3_5) 
-  
-  formula <- as.formula(paste("surv_obj_sensi_1_3_5 ~", expl, "+ ", paste(covariates, collapse = "+")))  
-  model <- coxph(formula, data = bdd_cases_danish_sensi_1_3_5)  
-  
-  anova <- anova(model_raw, model, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_adjusted_quart_sensi_1_3_5 <- rbind(heterogeneity_adjusted_quart_sensi_1_3_5, 
-                                        data.frame(explanatory = expl,
-                                                   model = "adjusted",
-                                                   analysis = "sensi_1_3_5", 
-                                                   p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(expl, formula_raw, model_raw, formula, model, anova, p_value_heterogeneity)
+#### adjusted 
+heterogeneity_adjusted_sensi_1_3_5 <- map_dfr(
+  proteomic_quart,
+  function(var) {
+    
+    data_sub <- bdd_cases_danish_sensi_1_3_5 |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, diagnosis_age, sex, smoking_2cat_i, bmi, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "adjusted",
+        analysis = "sensi_1_3_5",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    surv_obj <- Surv(time = data_sub$follow_up_death,                           # set the outcomes
+                     event = data_sub$status_death)
+    
+    formula_raw <- as.formula("surv_obj ~ diagnosis_age + sex + smoking_2cat_i + bmi")
+    test_1 <- coxph(formula_raw, data = data_sub) 
+    
+    formula <- as.formula(paste("surv_obj ~", var, "+ diagnosis_age + sex + smoking_2cat_i + bmi"))  
+    test_2 <- coxph(formula, data = data_sub)  
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "adjusted",
+      analysis = "sensi_1_3_5",
+      p_value_heterogeneity = p_lr)
+  })
 
 heterogeneity_tests_sensi_1_3_5 <- 
-  bind_rows(heterogeneity_base_quart_sensi_1_3_5, 
-            heterogeneity_adjusted_quart_sensi_1_3_5) |>
+  bind_rows(heterogeneity_base_sensi_1_3_5, 
+            heterogeneity_adjusted_sensi_1_3_5) |>
   mutate(explanatory = gsub("_quart", "", explanatory))
+
 
 ### Trend tests ----
 #### base ----
@@ -1046,7 +1201,7 @@ trend_tests_sensi_1_3_5 <-
   bind_rows(trend_base_sensi_1_3_5, trend_adjusted_sensi_1_3_5) |>
   mutate(explanatory = gsub("_quart_med", "", explanatory))
 
-rm(heterogeneity_base_quart_sensi_1_3_5, heterogeneity_adjusted_quart_sensi_1_3_5,
+rm(heterogeneity_base_sensi_1_3_5, heterogeneity_adjusted_sensi_1_3_5,
    trend_base_sensi_1_3_5, trend_adjusted_sensi_1_3_5)
 
 
@@ -1077,7 +1232,8 @@ rm(vars_labels)
 bdd_cases_danish_sensi_1_7_female <- 
   bdd_danish |>
   filter(als == 1) |>                                                           # remove controls
-  filter(match != 159) |>                                                       # remove NEFL outlier
+  mutate(                                                                       # remove NEFL outlier
+    proteomic_neuro_explo_NEFL = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>   
   filter(sex == "Female") |>                                                    # sensi 7 female : we keep only female cases
   select(sample, als, als_date, follow_up_death, status_death, baseline_age, diagnosis_age, death_age, follow_up,
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i,
@@ -1185,58 +1341,96 @@ model2_cox_quart_sensi_1_7_female <- map_dfr(proteomic_quart, function(expl) {
 
 ### Heterogeneity tests ----
 #### base 
-heterogeneity_base_quart_sensi_1_7_female <- data.frame(explanatory = character(),
-                                                        model = factor(),
-                                                        p_value_heterogeneity = numeric(),
-                                                        stringsAsFactors = FALSE)
 
-for (expl in proteomic_quart) {
+heterogeneity_base_sensi_1_7_female <- map_dfr(
+  proteomic_quart,
+  function(var) {
+    
+    data_sub <- bdd_cases_danish_sensi_1_7_female |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, diagnosis_age, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "base",
+        analysis = "sensi_1_7_female",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    surv_obj <- Surv(time = data_sub$follow_up_death,                       # set the outcomes
+                     event = data_sub$status_death)
+    
+    formula_raw <- as.formula("surv_obj ~ diagnosis_age")
+    test_1 <- coxph(formula_raw, data = data_sub) 
+    
+    formula <- as.formula(paste("surv_obj ~", var, "+ diagnosis_age"))  
+    test_2 <- coxph(formula, data = data_sub)  
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "base",
+      analysis = "sensi_1_7_female",
+      p_value_heterogeneity = p_lr)
+  })
 
-  formula_raw <- as.formula("surv_obj_sensi_1_7_female ~ diagnosis_age")
-  model_raw <- coxph(formula_raw, data = bdd_cases_danish_sensi_1_7_female)
 
-  formula <- as.formula(paste("surv_obj_sensi_1_7_female ~", expl, "+ diagnosis_age"))
-  model <- coxph(formula, data = bdd_cases_danish_sensi_1_7_female)
-
-  anova <- anova(model_raw, model, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-
-  heterogeneity_base_quart_sensi_1_7_female <- rbind(heterogeneity_base_quart_sensi_1_7_female,
-                                    data.frame(explanatory = expl,
-                                               model = "base",
-                                               analysis = "sensi_1_7_female",
-                                               p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(expl, formula_raw, model_raw, formula, model, anova, p_value_heterogeneity)
 
 #### adjusted 
-heterogeneity_adjusted_quart_sensi_1_7_female <- data.frame(explanatory = character(),
-                                                            model = factor(),
-                                                            p_value_heterogeneity = numeric(),
-                                                            stringsAsFactors = FALSE)
+heterogeneity_adjusted_sensi_1_7_female <- map_dfr(
+  proteomic_quart,
+  function(var) {
+    
+    data_sub <- bdd_cases_danish_sensi_1_7_female |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, diagnosis_age, smoking_2cat_i, bmi, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "adjusted",
+        analysis = "sensi_1_7_female",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    surv_obj <- Surv(time = data_sub$follow_up_death,                           # set the outcomes
+                     event = data_sub$status_death)
+    
+    formula_raw <- as.formula("surv_obj ~ diagnosis_age + smoking_2cat_i + bmi")
+    test_1 <- coxph(formula_raw, data = data_sub) 
+    
+    formula <- as.formula(paste("surv_obj ~", var, "+ diagnosis_age + smoking_2cat_i + bmi"))  
+    test_2 <- coxph(formula, data = data_sub)  
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "adjusted",
+      analysis = "sensi_1_7_female",
+      p_value_heterogeneity = p_lr)
+  })
 
-for (expl in proteomic_quart) {
-
-  formula_raw <- as.formula(paste("surv_obj_sensi_1_7_female ~ ", paste(covariates_sensi_7, collapse = "+")))
-  model_raw <- coxph(formula_raw, data = bdd_cases_danish_sensi_1_7_female)
-
-  formula <- as.formula(paste("surv_obj_sensi_1_7_female ~", expl, "+ ", paste(covariates_sensi_7, collapse = "+")))
-  model <- coxph(formula, data = bdd_cases_danish_sensi_1_7_female)
-
-  anova <- anova(model_raw, model, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-
-  heterogeneity_adjusted_quart_sensi_1_7_female <- rbind(heterogeneity_adjusted_quart_sensi_1_7_female,
-                                        data.frame(explanatory = expl,
-                                                   model = "adjusted",
-                                                   analysis = "sensi_1_7_female",
-                                                   p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(expl, formula_raw, model_raw, formula, model, anova, p_value_heterogeneity)
 
 heterogeneity_tests_sensi_1_7_female <-
-  bind_rows(heterogeneity_base_quart_sensi_1_7_female,
-            heterogeneity_adjusted_quart_sensi_1_7_female) |>
+  bind_rows(heterogeneity_base_sensi_1_7_female,
+            heterogeneity_adjusted_sensi_1_7_female) |>
   mutate(explanatory = gsub("_quart", "", explanatory))
 
 ### Trend tests ----
@@ -1284,7 +1478,7 @@ trend_tests_sensi_1_7_female <-
   bind_rows(trend_base_sensi_1_7_female, trend_adjusted_sensi_1_7_female) |>
   mutate(explanatory = gsub("_quart_med", "", explanatory))
 
-rm(heterogeneity_base_quart_sensi_1_7_female, heterogeneity_adjusted_quart_sensi_1_7_female,
+rm(heterogeneity_base_sensi_1_7_female, heterogeneity_adjusted_sensi_1_7_female,
    trend_base_sensi_1_7_female, trend_adjusted_sensi_1_7_female)
 
 
@@ -1314,7 +1508,8 @@ rm(vars_labels)
 # Sensi 1 + sensi 7 - Removing the oulier for NEFL + filtering to male ----
 bdd_cases_danish_sensi_1_7_male <- bdd_danish |>
   filter(als == 1) |>                                                           # remove controls
-  filter(match != 159) |>                                                       # remove NEFL outlier
+  mutate(                                                                       # remove NEFL outlier
+    proteomic_neuro_explo_NEFL = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>   
   filter(sex == "Male") |>                                                    # sensi 7 male : we keep only male cases
   select(sample, als, als_date, follow_up_death, status_death, baseline_age, diagnosis_age, death_age, follow_up,
          bmi, marital_status_2cat_i, smoking_i, smoking_2cat_i, education_i, cholesterol_i,
@@ -1422,58 +1617,95 @@ model2_cox_quart_sensi_1_7_male <- map_dfr(proteomic_quart, function(expl) {
 
 ### Heterogeneity tests ----
 #### base 
-heterogeneity_base_quart_sensi_1_7_male <- data.frame(explanatory = character(),
-                                                      model = factor(),
-                                                      p_value_heterogeneity = numeric(),
-                                                      stringsAsFactors = FALSE)
 
-for (expl in proteomic_quart) {
+heterogeneity_base_sensi_1_7_male <- map_dfr(
+  proteomic_quart,
+  function(var) {
+    
+    data_sub <- bdd_cases_danish_sensi_1_7_male |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, diagnosis_age, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "base",
+        analysis = "sensi_1_7_male",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    surv_obj <- Surv(time = data_sub$follow_up_death,                       # set the outcomes
+                     event = data_sub$status_death)
+    
+    formula_raw <- as.formula("surv_obj ~ diagnosis_age")
+    test_1 <- coxph(formula_raw, data = data_sub) 
+    
+    formula <- as.formula(paste("surv_obj ~", var, "+ diagnosis_age"))  
+    test_2 <- coxph(formula, data = data_sub)  
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "base",
+      analysis = "sensi_1_7_male",
+      p_value_heterogeneity = p_lr)
+  })
 
-  formula_raw <- as.formula("surv_obj_sensi_1_7_male ~ diagnosis_age")
-  model_raw <- coxph(formula_raw, data = bdd_cases_danish_sensi_1_7_male)
 
-  formula <- as.formula(paste("surv_obj_sensi_1_7_male ~", expl, "+ diagnosis_age"))
-  model <- coxph(formula, data = bdd_cases_danish_sensi_1_7_male)
-
-  anova <- anova(model_raw, model, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-
-  heterogeneity_base_quart_sensi_1_7_male <- rbind(heterogeneity_base_quart_sensi_1_7_male,
-                                    data.frame(explanatory = expl,
-                                               model = "base",
-                                               analysis = "sensi_1_7_male",
-                                               p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(expl, formula_raw, model_raw, formula, model, anova, p_value_heterogeneity)
 
 #### adjusted 
-heterogeneity_adjusted_quart_sensi_1_7_male <- data.frame(explanatory = character(),
-                                                          model = factor(),
-                                                          p_value_heterogeneity = numeric(),
-                                                          stringsAsFactors = FALSE)
-
-for (expl in proteomic_quart) {
-
-  formula_raw <- as.formula(paste("surv_obj_sensi_1_7_male ~ ", paste(covariates_sensi_7, collapse = "+")))
-  model_raw <- coxph(formula_raw, data = bdd_cases_danish_sensi_1_7_male)
-
-  formula <- as.formula(paste("surv_obj_sensi_1_7_male ~", expl, "+ ", paste(covariates_sensi_7, collapse = "+")))
-  model <- coxph(formula, data = bdd_cases_danish_sensi_1_7_male)
-
-  anova <- anova(model_raw, model, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-
-  heterogeneity_adjusted_quart_sensi_1_7_male <- rbind(heterogeneity_adjusted_quart_sensi_1_7_male,
-                                        data.frame(explanatory = expl,
-                                                   model = "adjusted",
-                                                   analysis = "sensi_1_7_male",
-                                                   p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(expl, formula_raw, model_raw, formula, model, anova, p_value_heterogeneity)
+heterogeneity_adjusted_sensi_1_7_male <- map_dfr(
+  proteomic_quart,
+  function(var) {
+    
+    data_sub <- bdd_cases_danish_sensi_1_7_male |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, diagnosis_age, smoking_2cat_i, bmi, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "adjusted",
+        analysis = "sensi_1_7_male",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    surv_obj <- Surv(time = data_sub$follow_up_death,                           # set the outcomes
+                     event = data_sub$status_death)
+    
+    formula_raw <- as.formula("surv_obj ~ diagnosis_age + smoking_2cat_i + bmi")
+    test_1 <- coxph(formula_raw, data = data_sub) 
+    
+    formula <- as.formula(paste("surv_obj ~", var, "+ diagnosis_age + smoking_2cat_i + bmi"))  
+    test_2 <- coxph(formula, data = data_sub)  
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "adjusted",
+      analysis = "sensi_1_7_male",
+      p_value_heterogeneity = p_lr)
+  })
 
 heterogeneity_tests_sensi_1_7_male <-
-  bind_rows(heterogeneity_base_quart_sensi_1_7_male,
-            heterogeneity_adjusted_quart_sensi_1_7_male) |>
+  bind_rows(heterogeneity_base_sensi_1_7_male,
+            heterogeneity_adjusted_sensi_1_7_male) |>
   mutate(explanatory = gsub("_quart", "", explanatory))
 
 ### Trend tests ----
@@ -1521,7 +1753,7 @@ trend_tests_sensi_1_7_male <-
   bind_rows(trend_base_sensi_1_7_male, trend_adjusted_sensi_1_7_male) |>
   mutate(explanatory = gsub("_quart_med", "", explanatory))
 
-rm(heterogeneity_base_quart_sensi_1_7_male, heterogeneity_adjusted_quart_sensi_1_7_male,
+rm(heterogeneity_base_sensi_1_7_male, heterogeneity_adjusted_sensi_1_7_male,
    trend_base_sensi_1_7_male, trend_adjusted_sensi_1_7_male)
 
 

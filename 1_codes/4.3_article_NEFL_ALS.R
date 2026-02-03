@@ -22,6 +22,8 @@ table_1 <-
     proteomic_neuro_explo_NEFL) |>
   tbl_summary(by = als, 
               missing = 'no', 
+              statistic = list(all_continuous() ~ "{mean} ({sd})", 
+                               all_categorical() ~ "{n} ({p})"),
               digits = list(birth_year ~ 0, 
                             baseline_age ~ 0, 
                             diagnosis_age ~ 0, 
@@ -33,7 +35,7 @@ table_1 <-
   bold_labels() |>
   # add_p(include = -c('diagnosis_age', 'follow_up')) |>
   add_overall() |>
-  add_n(statistic = "{N_miss} ({p_miss}%)", 
+  add_n(statistic = "{N_miss} ({p_miss})", 
         col_label = "**N missing**") |>
   as_flex_table() |>
   flextable::font(fontname = "Calibri", part = "all") |> 
@@ -86,30 +88,35 @@ figure_1 <-   bdd_danish |>                                                     
 # Figure 2 - Base and adjusted logistic regressions (ALS risk) ----
 figure_2 <- 
   results_proteomic_ALS_occurrence$main$main_results |>
-  filter(analysis %in% c("sensi_1", "sensi_1_3", "sensi_1_3_4", "sensi_1_3_5"), 
+  filter(analysis %in% c("sensi_1", 
+                         "sensi_2", "sensi_1_3", 
+                         "sensi_1_3_4", "sensi_1_3_5", 
+                         "sensi_1_7_female", "sensi_1_7_male"), 
          term == "Continuous", 
-         explanatory == "NEFL") |>
+         explanatory == "NEFL", 
+         model == "adjusted") |> 
   mutate(signif = ifelse(p_value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
-         model = fct_recode(model, 
-                            "Adjusted models" = "adjusted",
-                            "Base models" = "base"), 
-         model = fct_relevel(model, "Base models", "Adjusted models"), 
          analysis = fct_recode(analysis, 
              "Main analysis\n(n=495)" = "sensi_1",
-             "Filtered to\nfollow-up > 5 years\n (n=447)" = "sensi_1_3",
+             "Filtered to\nfollow-up < 5 years\n (n=51)" = "sensi_2",
+             "Filtered to\nfollow-up > 5 years\n (n=444)" = "sensi_1_3",
              "Filtered to follow-up\nbetween 5 and 14.6 years\n(n=225)" = "sensi_1_3_4",
-             "Filtered to\nfollow-up > 14.6 years\n (n=222)" = "sensi_1_3_5"), 
+             "Filtered to\nfollow-up > 14.6 years\n (n=219)" = "sensi_1_3_5", 
+             "Filtered to females (n=192)" = "sensi_1_7_female", 
+             "Filtered to males (n=303)" = "sensi_1_7_male"), 
          analysis = fct_relevel(analysis, 
                                 "Main analysis\n(n=495)", 
-                                "Filtered to\nfollow-up > 5 years\n (n=447)", 
+                                "Filtered to\nfollow-up < 5 years\n (n=51)", 
+                                "Filtered to\nfollow-up > 5 years\n (n=444)", 
                                 "Filtered to follow-up\nbetween 5 and 14.6 years\n(n=225)",
-                                "Filtered to\nfollow-up > 14.6 years\n (n=222)")) |> 
-  ggplot(aes(x = explanatory, y = OR_raw, ymin = lower_CI, ymax = upper_CI, color = signif)) +
+                                "Filtered to\nfollow-up > 14.6 years\n (n=219)", 
+                                "Filtered to females (n=192)",
+                                "Filtered to males (n=303)")) |> 
+  ggplot(aes(x = explanatory, y = OR_raw, ymin = lower_CI, ymax = upper_CI)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(rows = dplyr::vars(analysis), cols = dplyr::vars(model), switch = "y") +                         # , scales = "free_x"
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs( y = "Odd Ratios (ORs)", color = "p-value") +
+  facet_grid(rows = dplyr::vars(analysis),  switch = "y") +   
+  labs( y = "Odd Ratios (ORs)") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
         legend.position = "bottom", 
@@ -128,33 +135,36 @@ figure_3 <- results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_o
 figure_4 <- results_proteomic_ALS_occurrence$additional_analysis_4$additional_analysis_4_figure_raw
 
 # Figure 5 - Base and adjusted Cox regressions (ALS survival) ----
-figure_5 <- results_proteomic_ALS_survival$main_results |>
+figure_5 <- results_proteomic_ALS_survival$main$main_results |> 
   filter(term == "Continuous", 
-         explanatory == "NEFL") |> 
+         explanatory == "NEFL", 
+         analysis %in% c("main", "sensi_1_3", "sensi_1_3_4", "sensi_1_3_5", "sensi_1_7_female", "sensi_1_7_male")) |> 
   mutate(signif = ifelse(p_value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
          model = fct_recode(model,
                             "Adjusted models" = "adjusted",
                             "Base models" = "base"),
          model = fct_relevel(model, "Base models", "Adjusted models"),
-         # analysis = fct_recode(analysis, 
-         #                       "Main analyis\n(n=495)" = "sensi_1",
-         #                       "Filtered to\nfollow-up > 5 years\n (n=447)" = "sensi_1_3",
-         #                       "Filtered to follow-up\nbetween 5 and 14.6 years\n(n=225)" = "sensi_1_3_4",
-         #                       "Filtered to\nfollow-up > 14.6 years\n (n=227)" = "sensi_1_3_5"), 
-         # analysis = fct_relevel(analysis, 
-         #                        "Main analyis\n(n=495)", 
-         #                        "Filtered to\nfollow-up > 5 years\n (n=447)", 
-         #                        "Filtered to follow-up\nbetween 5 and 14.6 years\n(n=225)",
-         #                        "Filtered to\nfollow-up > 14.6 years\n (n=227)")
-         ) |> 
-  ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI, color = signif)) +
+         analysis = fct_recode(analysis,
+                               "Main analyis\n(n=165)" = "main",
+                               "Filtered to\nfollow-up > 5 years\n (n=148)" = "sensi_1_3",
+                               "Filtered to follow-up\nbetween 5 and 14.6 years\n(n=75)" = "sensi_1_3_4",
+                               "Filtered to\nfollow-up > 14.6 years\n (n=73)" = "sensi_1_3_5",
+                               "Filtered to females (n=64)" = "sensi_1_7_female",
+                               "Filtered to males (n=101)" = "sensi_1_7_male"),
+         analysis = fct_relevel(analysis,
+                                "Main analyis\n(n=165)",
+                                "Filtered to\nfollow-up > 5 years\n (n=148)",
+                                "Filtered to follow-up\nbetween 5 and 14.6 years\n(n=75)",
+                                "Filtered to\nfollow-up > 14.6 years\n (n=73)", 
+                                "Filtered to females (n=64)", 
+                                "Filtered to males (n=101)")) |> 
+  ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(
-    # rows = dplyr::vars(analysis), 
-             cols = dplyr::vars(model), switch = "y") +                         # , scales = "free_x"
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
-  labs( y = "Hazard Ratios (ORs)", color = "p-value") +
+    rows = dplyr::vars(analysis), 
+             cols = dplyr::vars(model), switch = "y") +                         
+  labs( y = "Hazard Ratios (ORs)") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
         legend.position = "bottom", 
@@ -163,6 +173,8 @@ figure_5 <- results_proteomic_ALS_survival$main_results |>
         axis.ticks.y = element_blank(),
         axis.title.y = element_blank()) +
   coord_flip()
+figure_4 <- figure_4 + theme(legend.direction = "vertical") + labs(title = "")
+
 
 # Table S1 ----
 table_S1 <-
@@ -183,19 +195,25 @@ table_S1 <-
 # Table S2 ----
 table_S2 <- 
   results_proteomic_ALS_occurrence$main$main_results |>
-  filter(analysis %in% c("sensi_1", "sensi_1_3", "sensi_1_3_4", "sensi_1_3_5"), 
+  filter(analysis %in% c("sensi_1", "sensi_2", "sensi_1_3", "sensi_1_3_4", "sensi_1_3_5", "sensi_1_7_female", "sensi_1_7_male"), 
          term == "Continuous", 
          explanatory == "NEFL") |>
   mutate(analysis = fct_recode(analysis, 
                                "Main analysis (n=495)" = "sensi_1",
-                               "Filtered to follow-up > 5 years (n=447)" = "sensi_1_3",
+                               "Filtered to follow-up < 5 years (n=51)" = "sensi_2", 
+                               "Filtered to follow-up > 5 years (n=444)" = "sensi_1_3",
                                "Filtered to follow-up between 5 and 14.6 years (n=225)" = "sensi_1_3_4",
-                               "Filtered to follow-up > 14.6 years (n=222)" = "sensi_1_3_5"), 
+                               "Filtered to follow-up > 14.6 years (n=219)" = "sensi_1_3_5", 
+                               "Filtered to females (n=192)" = "sensi_1_7_female", 
+                               "Filtered to males (n=303)" = "sensi_1_7_male"), 
          analysis = fct_relevel(analysis, 
                                 "Main analysis (n=495)", 
-                                "Filtered to follow-up > 5 years (n=447)", 
+                                "Filtered to follow-up < 5 years (n=51)", 
+                                "Filtered to follow-up > 5 years (n=444)", 
                                 "Filtered to follow-up between 5 and 14.6 years (n=225)",
-                                "Filtered to follow-up > 14.6 years (n=222)")) |> 
+                                "Filtered to follow-up > 14.6 years (n=219)", 
+                                "Filtered to females (n=192)", 
+                                "Filtered to males (n=303)")) |> 
   select(analysis, model, explanatory, OR, "95% CI", p_value) |> 
   pivot_wider(
     names_from = model,  
@@ -227,14 +245,30 @@ table_S2 <-
 
 # Table S3 ----
 table_S3 <- 
-  results_proteomic_ALS_survival$main_results |>
+  results_proteomic_ALS_survival$main$main_results |>
   filter(term == "Continuous", 
-         explanatory == "NEFL") |> 
-  select(model, explanatory, HR, "95% CI", p_value) |> 
+         explanatory == "NEFL", 
+         analysis %in% c("main", "sensi_1_3", "sensi_1_3_4", "sensi_1_3_5", "sensi_1_7_female", "sensi_1_7_male")) |> 
+  select(analysis, model, explanatory, HR, "95% CI", p_value) |> 
+  mutate(
+    analysis = fct_recode(analysis,
+                          "Main analyis\n(n=165)" = "main",
+                          "Filtered to\nfollow-up > 5 years\n (n=148)" = "sensi_1_3",
+                          "Filtered to follow-up\nbetween 5 and 14.6 years\n(n=75)" = "sensi_1_3_4",
+                          "Filtered to\nfollow-up > 14.6 years\n (n=73)" = "sensi_1_3_5",
+                          "Filtered to females (n=64)" = "sensi_1_7_female",
+                          "Filtered to males (n=101)" = "sensi_1_7_male"),
+    analysis = fct_relevel(analysis,
+                           "Main analyis\n(n=165)",
+                           "Filtered to\nfollow-up > 5 years\n (n=148)",
+                           "Filtered to follow-up\nbetween 5 and 14.6 years\n(n=75)",
+                           "Filtered to\nfollow-up > 14.6 years\n (n=73)", 
+                           "Filtered to females (n=64)", 
+                           "Filtered to males (n=101)")) |> 
   pivot_wider(
     names_from = model,  
     values_from = c(HR, `95% CI`, p_value)) |> 
-  select(explanatory, 
+  select(analysis, explanatory, 
          'HR' = 'HR_base', '95% CI' = '95% CI_base', 'p-value' = 'p_value_base', 
          'HR ' = 'HR_adjusted', '95% CI ' = '95% CI_adjusted', 'p-value ' = 'p_value_adjusted') |>
   flextable() |>
@@ -304,9 +338,9 @@ ggsave(                                                                         
 ggsave(                                                                         # Forest plot of Cox regression results (ALS survival)
   "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/figure_5.tiff",
   figure_5,
-  height = 2,
+  height = 4,
   width = 7,
   units = "in")
 
-figure_4 <- figure_4 + theme(legend.direction = "vertical") + labs(title = "")
+
 

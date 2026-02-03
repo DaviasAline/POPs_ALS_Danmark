@@ -319,39 +319,40 @@ rm(var, formula, model, model_summary)
 
 
 # Sensi 1 - Removing NEFL outlier ----
+proteomic_sensi_1 <-
+  proteomic |> 
+  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1")
+proteomic_sd_sensi_1 <-
+  proteomic_sd |> 
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_sd")
+proteomic_quart_sensi_1 <-
+  proteomic_quart |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_quart")
+proteomic_quart_med_sensi_1 <-
+  proteomic_quart_med |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_quart_med")
+
 bdd_danish_sensi_1 <- 
   bdd_danish  |> 
   mutate(
     proteomic_neuro_explo_NEFL_sensi_1 = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
-  mutate(across(all_of(proteomic),
+  mutate(across(all_of(proteomic_sensi_1),
                 ~as.numeric(scale(.x)),
-                .names = "{.col}_sd_sensi_1")) |>
-  mutate(across(all_of(proteomic), ~ factor(ntile(.x, 4),                           
-                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart_sensi_1")) |>
+                .names = "{.col}_sd")) |>
   mutate(across(
-    all_of(proteomic),
+    all_of(proteomic_sensi_1),
     ~ {
       cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
       quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
       quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
       quart_meds[quartiles]                                                     
     },
-    .names = "{.col}_quart_med_sensi_1"
-  ))
+    .names = "{.col}_quart_med")) |>
+  mutate(across(all_of(proteomic_sensi_1), ~ factor(ntile(.x, 4),                           
+                                            labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) 
 
-proteomic_sensi_1 <-
-  proteomic |> 
-  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1")
-proteomic_sd_sensi_1 <-
-  proteomic_sd |> 
-  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sd_sensi_1")
-proteomic_quart_sensi_1 <-
-  proteomic_quart |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_quart_sensi_1")
-proteomic_quart_med_sensi_1 <-
-  proteomic_quart_med |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_quart_med_sensi_1")
+
 
 
 ### model 1 sd ----
@@ -449,28 +450,49 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 #### heterogeneity test 
-heterogeneity_base_sensi_1 <- data.frame(explanatory = character(),
-                                        model = factor(),
-                                        p_value_heterogeneity = numeric(), 
-                                        stringsAsFactors = FALSE)
 
-for (var in proteomic_quart_sensi_1) {
-  
-  test_1 <- clogit(als ~ strata(match), data = bdd_danish_sensi_1)
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  test_2 <- clogit(formula, data = bdd_danish_sensi_1)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_base_sensi_1 <- rbind(heterogeneity_base_sensi_1, 
-                                     data.frame(explanatory = var,
-                                                model = "base", 
-                                                analysis = "sensi_1",
-                                                p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
+heterogeneity_base_sensi_1 <- map_dfr(
+  proteomic_quart_sensi_1,
+  function(var) {
+    
+    data_sub <- bdd_danish_sensi_1 |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL_sensi_1")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, match, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "base",
+        analysis = "sensi_1",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    test_1 <- clogit(
+      als ~ strata(match),
+      data = data_sub)
+    
+    test_2 <- clogit(
+      reformulate(
+        termlabels = c(var, "strata(match)"),
+        response = "als"),
+      data = data_sub)
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "base",
+      analysis = "sensi_1",
+      p_value_heterogeneity = p_lr)
+  })
+
 
 
 #### trend test 
@@ -601,30 +623,47 @@ model2_quart_sensi_1 <- model2_quart_sensi_1 |>
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 ### heterogeneity tests
-
-heterogeneity_adjusted_sensi_1 <- data.frame(explanatory = character(),
-                                            model = factor(), 
-                                            p_value_heterogeneity = numeric(), 
-                                            stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_sensi_1) {
-  
-  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi, data = bdd_danish_sensi_1)
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  test_2 <- clogit(formula, data = bdd_danish_sensi_1)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_adjusted_sensi_1 <- rbind(heterogeneity_adjusted_sensi_1, 
-                                         data.frame(explanatory = var,
-                                                    model = "adjusted", 
-                                                    analysis = "sensi_1",
-                                                    p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
-
+heterogeneity_adjusted_sensi_1 <- map_dfr(
+  proteomic_quart_sensi_1,
+  function(var) {
+    
+    data_sub <- bdd_danish_sensi_1 |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL_sensi_1")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, match, smoking_2cat_i, bmi, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "adjusted",
+        analysis = "sensi_1",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    test_1 <- clogit(
+      als ~ strata(match) + smoking_2cat_i + bmi,
+      data = data_sub)
+    
+    test_2 <- clogit(
+      reformulate(
+        termlabels = c(var, "strata(match)", "smoking_2cat_i", "bmi"),
+        response = "als"),
+      data = data_sub)
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "adjusted",
+      analysis = "sensi_1",
+      p_value_heterogeneity = p_lr)
+  })
 
 
 ### trend tests
@@ -1338,46 +1377,45 @@ rm(var, formula, model, model_summary)
 
 # Sensi 1 + sensi 3 - Removing the oulier for NEFL + filtering cases and their controls with follow_up > 5 years ----
 
+proteomic_sensi_1_3 <-
+  proteomic |> 
+  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3")
+proteomic_sd_sensi_1_3 <-
+  proteomic_sd |> 
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_3_sd")
+proteomic_quart_sensi_1_3 <-
+  proteomic_quart |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_3_quart")
+proteomic_quart_med_sensi_1_3 <-
+  proteomic_quart_med |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_3_quart_med")
+
+
 bdd_danish_sensi_1_3 <- 
   bdd_danish |>
   group_by(match) |>                                                            # sensi 3 : we remove cases (and their controls) with follow-up <60 months to see if the association with NEFL really happens a long time before ALS diagnosis 
   filter(any(als == 1 & follow_up > 60)) |>
   ungroup()|>
   mutate(                                                                       # sensi 1 : we remove NEFL in match 159 because it's an outlier
-    proteomic_neuro_explo_NEFL_sd_sensi_1_3 =
-      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd),
     proteomic_neuro_explo_NEFL_sensi_1_3 =
       ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
-  mutate(across(all_of(proteomic),
+  mutate(across(all_of(proteomic_sensi_1_3),
                 ~as.numeric(scale(.x)),
-                .names = "{.col}_sd_sensi_1_3")) |>
-  mutate(across(all_of(proteomic), ~ factor(ntile(.x, 4),                           
+                .names = "{.col}_sd")) |>
+  mutate(across(all_of(proteomic_sensi_1_3), ~ factor(ntile(.x, 4),                           
                                             labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart_sensi_1_3")) |>
+                .names = "{.col}_quart")) |>
   mutate(across(
-    all_of(proteomic),
+    all_of(proteomic_sensi_1_3),
     ~ {
       cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
       quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
       quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
       quart_meds[quartiles]                                                     
     },
-    .names = "{.col}_quart_med_sensi_1_3"
+    .names = "{.col}_quart_med"
   ))
 
-
-proteomic_sensi_1_3 <-
-  proteomic |> 
-  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3")
-proteomic_sd_sensi_1_3 <-
-  proteomic_sd |> 
-  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sd_sensi_1_3")
-proteomic_quart_sensi_1_3 <-
-  proteomic_quart |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_quart_sensi_1_3")
-proteomic_quart_med_sensi_1_3 <-
-  proteomic_quart_med |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_quart_med_sensi_1_3")
 
 
 
@@ -1473,28 +1511,47 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 #### heterogeneity test 
-heterogeneity_base_sensi_1_3 <- data.frame(explanatory = character(),
-                                           model = factor(),
-                                           p_value_heterogeneity = numeric(), 
-                                           stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_sensi_1_3) {
-  
-  test_1 <- clogit(als ~ strata(match), data = bdd_danish_sensi_1_3)
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  test_2 <- clogit(formula, data = bdd_danish_sensi_1_3)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_base_sensi_1_3 <- rbind(heterogeneity_base_sensi_1_3, 
-                                        data.frame(explanatory = var,
-                                                   model = "base", 
-                                                   analysis = "sensi_1_3",
-                                                   p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
+heterogeneity_base_sensi_1_3 <- map_dfr(
+  proteomic_quart_sensi_1_3,
+  function(var) {
+    
+    data_sub <- bdd_danish_sensi_1_3 |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL_sensi_1_3")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, match, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "base",
+        analysis = "sensi_1_3",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    test_1 <- clogit(
+      als ~ strata(match),
+      data = data_sub)
+    
+    test_2 <- clogit(
+      reformulate(
+        termlabels = c(var, "strata(match)"),
+        response = "als"),
+      data = data_sub)
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "base",
+      analysis = "sensi_1_3",
+      p_value_heterogeneity = p_lr)
+  })
 
 
 #### trend test 
@@ -1525,7 +1582,6 @@ rm(var, test, formula, p_value_trend)
 
 ### model 1 gams ---- 
 
-
 model1_gam_sensi_1_3 <- list()
 
 for (var in proteomic_sensi_1_3) {
@@ -1542,7 +1598,6 @@ rm(var, formula, model, model_summary)
 
 
 ### model 2 sd ----
-
 
 model2_sd_sensi_1_3 <- data.frame(explanatory = character(),
                                   term = integer(),
@@ -1630,28 +1685,47 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 ### heterogeneity tests
 
-heterogeneity_adjusted_sensi_1_3 <- data.frame(explanatory = character(),
-                                               model = factor(), 
-                                               p_value_heterogeneity = numeric(), 
-                                               stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_sensi_1_3) {
-  
-  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi, data = bdd_danish_sensi_1_3)
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  test_2 <- clogit(formula, data = bdd_danish_sensi_1_3)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_adjusted_sensi_1_3 <- rbind(heterogeneity_adjusted_sensi_1_3, 
-                                            data.frame(explanatory = var,
-                                                       model = "adjusted", 
-                                                       analysis = "sensi_1_3",
-                                                       p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
+heterogeneity_adjusted_sensi_1_3 <- map_dfr(
+  proteomic_quart_sensi_1_3,
+  function(var) {
+    
+    data_sub <- bdd_danish_sensi_1_3 |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL_sensi_1_3")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, match, smoking_2cat_i, bmi, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "adjusted",
+        analysis = "sensi_1_3",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    test_1 <- clogit(
+      als ~ strata(match) + smoking_2cat_i + bmi,
+      data = data_sub)
+    
+    test_2 <- clogit(
+      reformulate(
+        termlabels = c(var, "strata(match)", "smoking_2cat_i", "bmi"),
+        response = "als"),
+      data = data_sub)
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "adjusted",
+      analysis = "sensi_1_3",
+      p_value_heterogeneity = p_lr)
+  })
 
 
 
@@ -1678,8 +1752,6 @@ rm(var, test, formula, p_value_trend)
 
 
 
-
-
 ### model 2 gams ---- 
 
 model2_gam_sensi_1_3 <- list()
@@ -1698,6 +1770,18 @@ rm(var, formula, model, model_summary)
 
 
 # Sensi 1 + sensi 3 + sensi 4 - Removing NEFL outlier + filtering cases and their controls with follow- up < 5 years + filtering follow-up <= 50%----
+proteomic_sensi_1_3_4 <-
+  proteomic |> 
+  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3_4")
+proteomic_sd_sensi_1_3_4 <-
+  proteomic_sd |> 
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_3_4_sd")
+proteomic_quart_sensi_1_3_4 <-
+  proteomic_quart |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_3_4_quart")
+proteomic_quart_med_sensi_1_3_4 <-
+  proteomic_quart_med |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_3_4_quart_med")
 
 bdd_danish_sensi_1_3_4 <- 
   bdd_danish |>
@@ -1705,8 +1789,6 @@ bdd_danish_sensi_1_3_4 <-
   filter(any(als == 1 & follow_up > 60)) |>                                     # sensi 3 : we remove cases (and their controls) with follow-up < 60 months
   ungroup() |>
   mutate(                                                                       # sensi 1 : we remove NEFL in match 159 because it's an outlier
-    proteomic_neuro_explo_NEFL_sd_sensi_1_3_4 = 
-      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd), 
     proteomic_neuro_explo_NEFL_sensi_1_3_4 = 
       ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
   mutate(seuil = quantile(follow_up, 0.5, na.rm = TRUE)) |>                     # sensi 4 : we remove 50% of the highest values of follow-up (after removing the follow-up<5years)
@@ -1714,36 +1796,23 @@ bdd_danish_sensi_1_3_4 <-
   filter(any(als == 1 & follow_up <= seuil)) |>
   ungroup() |>
   select(-seuil) |>
-  mutate(across(all_of(proteomic),
+  mutate(across(all_of(proteomic_sensi_1_3_4),
                 ~as.numeric(scale(.x)),
-                .names = "{.col}_sd_sensi_1_3_4")) |>
-  mutate(across(all_of(proteomic), ~ factor(ntile(.x, 4),                           
+                .names = "{.col}_sd")) |>
+  mutate(across(all_of(proteomic_sensi_1_3_4), ~ factor(ntile(.x, 4),                           
                                             labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart_sensi_1_3_4")) |>
+                .names = "{.col}_quart")) |>
   mutate(across(
-    all_of(proteomic),
+    all_of(proteomic_sensi_1_3_4),
     ~ {
       cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
       quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
       quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
       quart_meds[quartiles]                                                     
     },
-    .names = "{.col}_quart_med_sensi_1_3_4"
+    .names = "{.col}_quart_med"
   ))
 
-
-proteomic_sensi_1_3_4 <-
-  proteomic |> 
-  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3_4")
-proteomic_sd_sensi_1_3_4 <-
-  proteomic_sd |> 
-  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sd_sensi_1_3_4")
-proteomic_quart_sensi_1_3_4 <-
-  proteomic_quart |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_quart_sensi_1_3_4")
-proteomic_quart_med_sensi_1_3_4 <-
-  proteomic_quart_med |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_quart_med_sensi_1_3_4")
 
 
 
@@ -1839,28 +1908,47 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 #### heterogeneity test 
-heterogeneity_base_sensi_1_3_4 <- data.frame(explanatory = character(),
-                                             model = factor(),
-                                             p_value_heterogeneity = numeric(), 
-                                             stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_sensi_1_3_4) {
-  
-  test_1 <- clogit(als ~ strata(match), data = bdd_danish_sensi_1_3_4)
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  test_2 <- clogit(formula, data = bdd_danish_sensi_1_3_4)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_base_sensi_1_3_4 <- rbind(heterogeneity_base_sensi_1_3_4, 
-                                          data.frame(explanatory = var,
-                                                     model = "base", 
-                                                     analysis = "sensi_1_3_4",
-                                                     p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
+heterogeneity_base_sensi_1_3_4 <- map_dfr(
+  proteomic_quart_sensi_1_3_4,
+  function(var) {
+    
+    data_sub <- bdd_danish_sensi_1_3_4 |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL_sensi_1_3_4")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, match, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "base",
+        analysis = "sensi_1_3_4",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    test_1 <- clogit(
+      als ~ strata(match),
+      data = data_sub)
+    
+    test_2 <- clogit(
+      reformulate(
+        termlabels = c(var, "strata(match)"),
+        response = "als"),
+      data = data_sub)
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "base",
+      analysis = "sensi_1_3_4",
+      p_value_heterogeneity = p_lr)
+  })
 
 
 #### trend test 
@@ -1891,7 +1979,6 @@ rm(var, test, formula, p_value_trend)
 
 ### model 1 gams ---- 
 
-
 model1_gam_sensi_1_3_4 <- list()
 
 for (var in proteomic_sensi_1_3_4) {
@@ -1908,7 +1995,6 @@ rm(var, formula, model, model_summary)
 
 
 ### model 2 sd ----
-
 
 model2_sd_sensi_1_3_4 <- data.frame(explanatory = character(),
                                     term = integer(),
@@ -1995,29 +2081,47 @@ model2_quart_sensi_1_3_4 <- model2_quart_sensi_1_3_4 |>
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 ### heterogeneity tests
-
-heterogeneity_adjusted_sensi_1_3_4 <- data.frame(explanatory = character(),
-                                                 model = factor(), 
-                                                 p_value_heterogeneity = numeric(), 
-                                                 stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_sensi_1_3_4) {
-  
-  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi, data = bdd_danish_sensi_1_3_4)
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  test_2 <- clogit(formula, data = bdd_danish_sensi_1_3_4)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_adjusted_sensi_1_3_4 <- rbind(heterogeneity_adjusted_sensi_1_3_4, 
-                                              data.frame(explanatory = var,
-                                                         model = "adjusted", 
-                                                         analysis = "sensi_1_3_4",
-                                                         p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
+heterogeneity_adjusted_sensi_1_3_4 <- map_dfr(
+  proteomic_quart_sensi_1_3_4,
+  function(var) {
+    
+    data_sub <- bdd_danish_sensi_1_3_4 |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL_sensi_1_3_4")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, match, smoking_2cat_i, bmi, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "adjusted",
+        analysis = "sensi_1_3_4",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    test_1 <- clogit(
+      als ~ strata(match) + smoking_2cat_i + bmi,
+      data = data_sub)
+    
+    test_2 <- clogit(
+      reformulate(
+        termlabels = c(var, "strata(match)", "smoking_2cat_i", "bmi"),
+        response = "als"),
+      data = data_sub)
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "adjusted",
+      analysis = "sensi_1_3_4",
+      p_value_heterogeneity = p_lr)
+  })
 
 
 
@@ -2063,6 +2167,19 @@ rm(var, formula, model, model_summary)
 
 
 # Sensi 1 + sensi 3 + sensi 5 - Removing NEFL outlier + filtering cases and their controls with follow-up < 5 years + filtering follow-up > 50%----
+proteomic_sensi_1_3_5 <-
+  proteomic |> 
+  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3_5")
+proteomic_sd_sensi_1_3_5 <-
+  proteomic_sd |> 
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_3_5_sd")
+proteomic_quart_sensi_1_3_5 <-
+  proteomic_quart |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_3_5_quart")
+proteomic_quart_med_sensi_1_3_5 <-
+  proteomic_quart_med |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_3_5_quart_med")
+
 
 bdd_danish_sensi_1_3_5 <- 
   bdd_danish |>
@@ -2070,8 +2187,6 @@ bdd_danish_sensi_1_3_5 <-
   filter(any(als == 1 & follow_up > 60)) |>
   ungroup()|>
   mutate(                                                                       # sensi 1 : we remove NEFL in match 159 because it's an outlier
-    proteomic_neuro_explo_NEFL_sd_sensi_1_3_5 = 
-      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd), 
     proteomic_neuro_explo_NEFL_sensi_1_3_5 = 
       ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
   mutate(seuil = quantile(follow_up, 0.5, na.rm = TRUE)) |>                     # sensi 5 : we remove 50% of the lowest values of follow-up (after removing the follow-up<5years)
@@ -2079,36 +2194,22 @@ bdd_danish_sensi_1_3_5 <-
   filter(any(als == 1 & follow_up > seuil)) |>
   ungroup() |>
   select(-seuil) |>
-  mutate(across(all_of(proteomic),
+  mutate(across(all_of(proteomic_sensi_1_3_5),
               ~as.numeric(scale(.x)),
-              .names = "{.col}_sd_sensi_1_3_5")) |>
-  mutate(across(all_of(proteomic), ~ factor(ntile(.x, 4),                           
+              .names = "{.col}_sd")) |>
+  mutate(across(all_of(proteomic_sensi_1_3_5), ~ factor(ntile(.x, 4),                           
                                             labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart_sensi_1_3_5")) |>
+                .names = "{.col}_quart")) |>
   mutate(across(
-    all_of(proteomic),
+    all_of(proteomic_sensi_1_3_5),
     ~ {
       cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
       quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
       quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
       quart_meds[quartiles]                                                     
     },
-    .names = "{.col}_quart_med_sensi_1_3_5"
+    .names = "{.col}_quart_med"
   ))
-
-
-proteomic_sensi_1_3_5 <-
-  proteomic |> 
-  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3_5")
-proteomic_sd_sensi_1_3_5 <-
-  proteomic_sd |> 
-  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sd_sensi_1_3_5")
-proteomic_quart_sensi_1_3_5 <-
-  proteomic_quart |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_quart_sensi_1_3_5")
-proteomic_quart_med_sensi_1_3_5 <-
-  proteomic_quart_med |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_quart_med_sensi_1_3_5")
 
 
 
@@ -2204,29 +2305,47 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 #### heterogeneity test 
-heterogeneity_base_sensi_1_3_5 <- data.frame(explanatory = character(),
-                                             model = factor(),
-                                             p_value_heterogeneity = numeric(), 
-                                             stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_sensi_1_3_5) {
-  
-  test_1 <- clogit(als ~ strata(match), data = bdd_danish_sensi_1_3_5)
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  test_2 <- clogit(formula, data = bdd_danish_sensi_1_3_5)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_base_sensi_1_3_5 <- rbind(heterogeneity_base_sensi_1_3_5, 
-                                          data.frame(explanatory = var,
-                                                     model = "base", 
-                                                     analysis = "sensi_1_3_5",
-                                                     p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
-
+heterogeneity_base_sensi_1_3_5 <- map_dfr(
+  proteomic_quart_sensi_1_3_5,
+  function(var) {
+    
+    data_sub <- bdd_danish_sensi_1_3_5 |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL_sensi_1_3_5")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, match, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "base",
+        analysis = "sensi_1_3_5",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    test_1 <- clogit(
+      als ~ strata(match),
+      data = data_sub)
+    
+    test_2 <- clogit(
+      reformulate(
+        termlabels = c(var, "strata(match)"),
+        response = "als"),
+      data = data_sub)
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "base",
+      analysis = "sensi_1_3_5",
+      p_value_heterogeneity = p_lr)
+  })
 
 #### trend test 
 trend_base_sensi_1_3_5 <- data.frame(explanatory = character(),
@@ -2360,28 +2479,47 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 ### heterogeneity tests
 
-heterogeneity_adjusted_sensi_1_3_5 <- data.frame(explanatory = character(),
-                                                 model = factor(), 
-                                                 p_value_heterogeneity = numeric(), 
-                                                 stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_sensi_1_3_5) {
-  
-  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi, data = bdd_danish_sensi_1_3_5)
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  test_2 <- clogit(formula, data = bdd_danish_sensi_1_3_5)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_adjusted_sensi_1_3_5 <- rbind(heterogeneity_adjusted_sensi_1_3_5, 
-                                              data.frame(explanatory = var,
-                                                         model = "adjusted", 
-                                                         analysis = "sensi_1_3_5",
-                                                         p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
+heterogeneity_adjusted_sensi_1_3_5 <- map_dfr(
+  proteomic_quart_sensi_1_3_5,
+  function(var) {
+    
+    data_sub <- bdd_danish_sensi_1_3_5 |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL_sensi_1_3_5")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, match, smoking_2cat_i, bmi, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "adjusted",
+        analysis = "sensi_1_3_5",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    test_1 <- clogit(
+      als ~ strata(match) + smoking_2cat_i + bmi,
+      data = data_sub)
+    
+    test_2 <- clogit(
+      reformulate(
+        termlabels = c(var, "strata(match)", "smoking_2cat_i", "bmi"),
+        response = "als"),
+      data = data_sub)
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "adjusted",
+      analysis = "sensi_1_3_5",
+      p_value_heterogeneity = p_lr)
+  })
 
 
 
@@ -2405,8 +2543,6 @@ for (var in proteomic_quart_med_sensi_1_3_5) {
                                                  p_value_trend = p_value_trend))
 }
 rm(var, test, formula, p_value_trend)
-
-
 
 
 
@@ -3023,6 +3159,19 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var,
 
 
 # Sensi 1 + sensi 7 - Removing the oulier for NEFL + filtering to females ----
+proteomic_sensi_1_7_female <-
+  proteomic |> 
+  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_7_female")
+proteomic_sd_sensi_1_7_female <-
+  proteomic_sd |> 
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_7_female_sd")
+proteomic_quart_sensi_1_7_female <-
+  proteomic_quart |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_7_female_quart")
+proteomic_quart_med_sensi_1_7_female <-
+  proteomic_quart_med |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_7_female_quart_med")
+
 
 bdd_danish_sensi_1_7_female <- 
   bdd_danish |>
@@ -3030,41 +3179,23 @@ bdd_danish_sensi_1_7_female <-
   filter(any(als == 1 & sex == "Female")) |>
   ungroup()|>
   mutate(                                                                       # sensi 1 : we remove NEFL in match 159 because it's an outlier
-    proteomic_neuro_explo_NEFL_sd_sensi_1_7 =
-      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd),
-    proteomic_neuro_explo_NEFL_sensi_1_7 =
+    proteomic_neuro_explo_NEFL_sensi_1_7_female =
       ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
-  mutate(across(all_of(proteomic),
+  mutate(across(all_of(proteomic_sensi_1_7_female),
                 ~as.numeric(scale(.x)),
-                .names = "{.col}_sd_sensi_1_7_female")) |>
-  mutate(across(all_of(proteomic), ~ factor(ntile(.x, 4),                           
+                .names = "{.col}_sd")) |>
+  mutate(across(all_of(proteomic_sensi_1_7_female), ~ factor(ntile(.x, 4),                           
                                             labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart_sensi_1_7_female")) |>
+                .names = "{.col}_quart")) |>
   mutate(across(
-    all_of(proteomic),
+    all_of(proteomic_sensi_1_7_female),
     ~ {
       cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
       quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
       quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
       quart_meds[quartiles]                                                     
     },
-    .names = "{.col}_quart_med_sensi_1_7_female"
-  )) |>
-  rename(proteomic_neuro_explo_NEFL_sensi_1_7_female = proteomic_neuro_explo_NEFL)
-
-
-proteomic_sensi_1_7_female <-
-  proteomic |> 
-  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_7_female")
-proteomic_sd_sensi_1_7_female <-
-  proteomic_sd |> 
-  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sd_sensi_1_7_female")
-proteomic_quart_sensi_1_7_female <-
-  proteomic_quart |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_quart_sensi_1_7_female")
-proteomic_quart_med_sensi_1_7_female <-
-  proteomic_quart_med |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_quart_med_sensi_1_7_female")
+    .names = "{.col}_quart_med"))
 
 
 
@@ -3160,28 +3291,48 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 #### heterogeneity test 
-heterogeneity_base_sensi_1_7_female <- data.frame(explanatory = character(),
-                                                  model = factor(),
-                                                  p_value_heterogeneity = numeric(), 
-                                                  stringsAsFactors = FALSE)
+heterogeneity_base_sensi_1_7_female <- map_dfr(
+  proteomic_quart_sensi_1_7_female,
+  function(var) {
+    
+    data_sub <- bdd_danish_sensi_1_7_female |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL_sensi_1_7_female")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, match, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "base",
+        analysis = "sensi_1_7_female",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    test_1 <- clogit(
+      als ~ strata(match),
+      data = data_sub)
+    
+    test_2 <- clogit(
+      reformulate(
+        termlabels = c(var, "strata(match)"),
+        response = "als"),
+      data = data_sub)
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "base",
+      analysis = "sensi_1_7_female",
+      p_value_heterogeneity = p_lr)
+  })
 
-for (var in proteomic_quart_sensi_1_7_female) {
-  
-  test_1 <- clogit(als ~ strata(match), data = bdd_danish_sensi_1_7_female)
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  test_2 <- clogit(formula, data = bdd_danish_sensi_1_7_female)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_base_sensi_1_7_female <- rbind(heterogeneity_base_sensi_1_7_female, 
-                                               data.frame(explanatory = var,
-                                                          model = "base", 
-                                                          analysis = "sensi_1_7_female",
-                                                          p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
 
 
 #### trend test 
@@ -3311,29 +3462,47 @@ model2_quart_sensi_1_7_female <- model2_quart_sensi_1_7_female |>
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 ### heterogeneity tests
-
-heterogeneity_adjusted_sensi_1_7_female <- data.frame(explanatory = character(),
-                                                      model = factor(), 
-                                                      p_value_heterogeneity = numeric(), 
-                                                      stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_sensi_1_7_female) {
-  
-  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi, data = bdd_danish_sensi_1_7_female)
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  test_2 <- clogit(formula, data = bdd_danish_sensi_1_7_female)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_adjusted_sensi_1_7_female <- rbind(heterogeneity_adjusted_sensi_1_7_female, 
-                                                   data.frame(explanatory = var,
-                                                              model = "adjusted", 
-                                                              analysis = "sensi_1_7_female",
-                                                              p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
+heterogeneity_adjusted_sensi_1_7_female <- map_dfr(
+  proteomic_quart_sensi_1_7_female,
+  function(var) {
+    
+    data_sub <- bdd_danish_sensi_1_7_female |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL_sensi_1_7_female")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, match, smoking_2cat_i, bmi, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "adjusted",
+        analysis = "sensi_1_7_female",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    test_1 <- clogit(
+      als ~ strata(match) + smoking_2cat_i + bmi,
+      data = data_sub)
+    
+    test_2 <- clogit(
+      reformulate(
+        termlabels = c(var, "strata(match)", "smoking_2cat_i", "bmi"),
+        response = "als"),
+      data = data_sub)
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "adjusted",
+      analysis = "sensi_1_7_female",
+      p_value_heterogeneity = p_lr)
+  })
 
 
 
@@ -3360,8 +3529,6 @@ rm(var, test, formula, p_value_trend)
 
 
 
-
-
 ### model 2 gams ---- 
 
 model2_gam_sensi_1_7_female <- list()
@@ -3380,6 +3547,19 @@ rm(var, formula, model, model_summary)
 
 
 # Sensi 1 + sensi 7 - Removing the oulier for NEFL + filtering to male ----
+proteomic_sensi_1_7_male <-
+  proteomic |> 
+  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_7_male")
+proteomic_sd_sensi_1_7_male <-
+  proteomic_sd |> 
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_7_male_sd")
+proteomic_quart_sensi_1_7_male <-
+  proteomic_quart |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_7_male_quart")
+proteomic_quart_med_sensi_1_7_male <-
+  proteomic_quart_med |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_7_male_quart_med")
+
 
 bdd_danish_sensi_1_7_male <- 
   bdd_danish |>
@@ -3387,41 +3567,23 @@ bdd_danish_sensi_1_7_male <-
   filter(any(als == 1 & sex == "Male")) |>
   ungroup()|>
   mutate(                                                                       # sensi 1 : we remove NEFL in match 159 because it's an outlier
-    proteomic_neuro_explo_NEFL_sd_sensi_1_7 =
-      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd),
-    proteomic_neuro_explo_NEFL_sensi_1_7 =
+    proteomic_neuro_explo_NEFL_sensi_1_7_male =
       ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
-  mutate(across(all_of(proteomic),
+  mutate(across(all_of(proteomic_sensi_1_7_male),
                 ~as.numeric(scale(.x)),
-                .names = "{.col}_sd_sensi_1_7_male")) |>
-  mutate(across(all_of(proteomic), ~ factor(ntile(.x, 4),                           
+                .names = "{.col}_sd")) |>
+  mutate(across(all_of(proteomic_sensi_1_7_male), ~ factor(ntile(.x, 4),                           
                                             labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart_sensi_1_7_male")) |>
+                .names = "{.col}_quart")) |>
   mutate(across(
-    all_of(proteomic),
+    all_of(proteomic_sensi_1_7_male),
     ~ {
       cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
       quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
       quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
       quart_meds[quartiles]                                                     
     },
-    .names = "{.col}_quart_med_sensi_1_7_male"
-  )) |>
-  rename(proteomic_neuro_explo_NEFL_sensi_1_7_male = proteomic_neuro_explo_NEFL)
-
-
-proteomic_sensi_1_7_male <-
-  proteomic |> 
-  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_7_male")
-proteomic_sd_sensi_1_7_male <-
-  proteomic_sd |> 
-  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sd_sensi_1_7_male")
-proteomic_quart_sensi_1_7_male <-
-  proteomic_quart |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_quart_sensi_1_7_male")
-proteomic_quart_med_sensi_1_7_male <-
-  proteomic_quart_med |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_quart_med_sensi_1_7_male")
+    .names = "{.col}_quart_med")) 
 
 
 
@@ -3517,28 +3679,48 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 #### heterogeneity test 
-heterogeneity_base_sensi_1_7_male <- data.frame(explanatory = character(),
-                                                model = factor(),
-                                                p_value_heterogeneity = numeric(), 
-                                                stringsAsFactors = FALSE)
+heterogeneity_base_sensi_1_7_male <- map_dfr(
+  proteomic_quart_sensi_1_7_male,
+  function(var) {
+    
+    data_sub <- bdd_danish_sensi_1_7_male |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL_sensi_1_7_male")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, match, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "base",
+        analysis = "sensi_1_7_male",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    test_1 <- clogit(
+      als ~ strata(match),
+      data = data_sub)
+    
+    test_2 <- clogit(
+      reformulate(
+        termlabels = c(var, "strata(match)"),
+        response = "als"),
+      data = data_sub)
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "base",
+      analysis = "sensi_1_7_male",
+      p_value_heterogeneity = p_lr)
+  })
 
-for (var in proteomic_quart_sensi_1_7_male) {
-  
-  test_1 <- clogit(als ~ strata(match), data = bdd_danish_sensi_1_7_male)
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  test_2 <- clogit(formula, data = bdd_danish_sensi_1_7_male)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_base_sensi_1_7_male <- rbind(heterogeneity_base_sensi_1_7_male, 
-                                             data.frame(explanatory = var,
-                                                        model = "base", 
-                                                        analysis = "sensi_1_7_male",
-                                                        p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
 
 
 #### trend test 
@@ -3569,7 +3751,6 @@ rm(var, test, formula, p_value_trend)
 
 ### model 1 gams ---- 
 
-
 model1_gam_sensi_1_7_male <- list()
 
 for (var in proteomic_sensi_1_7_male) {
@@ -3586,7 +3767,6 @@ rm(var, formula, model, model_summary)
 
 
 ### model 2 sd ----
-
 
 model2_sd_sensi_1_7_male <- data.frame(explanatory = character(),
                                        term = integer(),
@@ -3672,30 +3852,52 @@ model2_quart_sensi_1_7_male <- model2_quart_sensi_1_7_male |>
   select(explanatory, model, everything())
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
+
+
 ### heterogeneity tests
 
-heterogeneity_adjusted_sensi_1_7_male <- data.frame(explanatory = character(),
-                                                    model = factor(), 
-                                                    p_value_heterogeneity = numeric(), 
-                                                    stringsAsFactors = FALSE)
+heterogeneity_adjusted_sensi_1_7_male <- map_dfr(
+  proteomic_quart_sensi_1_7_male,
+  function(var) {
+    
+    data_sub <- bdd_danish_sensi_1_7_male |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL_sensi_1_7_male")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, match, smoking_2cat_i, bmi, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "adjusted",
+        analysis = "sensi_1_7_male",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    test_1 <- clogit(
+      als ~ strata(match) + smoking_2cat_i + bmi,
+      data = data_sub)
+    
+    test_2 <- clogit(
+      reformulate(
+        termlabels = c(var, "strata(match)", "smoking_2cat_i", "bmi"),
+        response = "als"),
+      data = data_sub)
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "adjusted",
+      analysis = "sensi_1_7_male",
+      p_value_heterogeneity = p_lr)
+  })
 
-for (var in proteomic_quart_sensi_1_7_male) {
-  
-  test_1 <- clogit(als ~ strata(match) + smoking_2cat_i + bmi, data = bdd_danish_sensi_1_7_male)
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  test_2 <- clogit(formula, data = bdd_danish_sensi_1_7_male)
-  
-  anova <- anova(test_1, test_2, test = "LR")
-  p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
-  
-  heterogeneity_adjusted_sensi_1_7_male <- rbind(heterogeneity_adjusted_sensi_1_7_male, 
-                                                 data.frame(explanatory = var,
-                                                            model = "adjusted", 
-                                                            analysis = "sensi_1_7_male",
-                                                            p_value_heterogeneity = p_value_heterogeneity))
-}
-rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
 
 
 
@@ -3801,38 +4003,9 @@ main_results <- bind_rows(model1_sd,                                            
                           model1_quart_sensi_1_7_male,
                           model2_quart_sensi_1_7_male) |>
   
-  mutate(explanatory = gsub("_quart_med_sensi_1_7_female", "", explanatory), 
-         explanatory = gsub("_quart_sensi_1_7_female", "", explanatory), 
-         explanatory = gsub("_sd_sensi_1_7_female", "", explanatory),
+  mutate(explanatory = if_else(str_detect(explanatory, "NEFL"), "proteomic_neuro_explo_NEFL", explanatory), 
          
-         explanatory = gsub("_quart_med_sensi_1_7_male", "", explanatory), 
-         explanatory = gsub("_quart_sensi_1_7_male", "", explanatory), 
-         explanatory = gsub("_sd_sensi_1_7_male", "", explanatory),
-         
-         explanatory = gsub("_quart_med_sensi_1_3_5", "", explanatory), 
-         explanatory = gsub("_quart_sensi_1_3_5", "", explanatory), 
-         explanatory = gsub("_sd_sensi_1_3_5", "", explanatory),
-         
-         explanatory = gsub("_quart_med_sensi_1_3_4", "", explanatory), 
-         explanatory = gsub("_quart_sensi_1_3_4", "", explanatory), 
-         explanatory = gsub("_sd_sensi_1_3_4", "", explanatory),
-         
-         explanatory = gsub("_quart_med_sensi_1_3", "", explanatory), 
-         explanatory = gsub("_quart_sensi_1_3", "", explanatory), 
-         explanatory = gsub("_sd_sensi_1_3", "", explanatory),
-         
-         explanatory = gsub("_quart_med_sensi_3", "", explanatory), 
-         explanatory = gsub("_quart_sensi_3", "", explanatory), 
-         explanatory = gsub("_sd_sensi_3", "", explanatory),
-         
-         explanatory = gsub("_quart_med_sensi_2", "", explanatory), 
-         explanatory = gsub("_quart_sensi_2", "", explanatory), 
-         explanatory = gsub("_sd_sensi_2", "", explanatory),
-         
-         explanatory = gsub("_quart_med_sensi_1", "", explanatory), 
-         explanatory = gsub("_quart_sensi_1", "", explanatory), 
-         explanatory = gsub("_sd_sensi_1", "", explanatory),
-         
+         explanatory = gsub("_quart_med", "", explanatory), 
          explanatory = gsub("_quart", "", explanatory), 
          explanatory = gsub("_sd", "", explanatory), 
          
@@ -4108,7 +4281,7 @@ densityplot_OR <- OR_distribution |>
 exp(w_median)
 median(OR_distribution$OR_raw)
 shapiro.test(OR_distribution$OR_log)
-
+rm(w_median)
 
 # Additional analysis 2 - NEFL over time ----
 ## LOESS ----
@@ -4123,7 +4296,7 @@ ratios <-
     follow_up = unique(follow_up[als == 1])) |>
   ungroup() |> 
   mutate(follow_up_neg = -follow_up, 
-         follow_up_neg = follow_up_neg/12)
+         follow_up_neg = follow_up_neg/12) 
 
 # Visualisation avec courbe LOESS
 figure_NEFL_over_time <- 
@@ -4962,18 +5135,18 @@ youden_nefl_sensi_1_3_5_adjusted
 roc_colors <- c(
   "Main analysis (n=495)" = "#1b9e77",
   "Filtered to follow-up < 5 years (n=51)" = "blue",
-  "Filtered to follow-up > 5 years (n=447)" = "#d95f02",
+  "Filtered to follow-up > 5 years (n=444)" = "#d95f02",
   "Filtered to 5 years < follow-up < 14.6 years (n=225)" = "#7570b3",
-  "Filtered to follow-up > 14.6 years (n=222)" = "#e7298a")
+  "Filtered to follow-up > 14.6 years (n=219)" = "#e7298a")
 
 
 p <- ggroc(
   list(
     "Main analysis (n=495)" = roc_nefl_all,
     "Filtered to follow-up < 5 years (n=51)" = roc_nefl_sensi_2, 
-    "Filtered to follow-up > 5 years (n=447)" = roc_nefl_sensi_1_3,
+    "Filtered to follow-up > 5 years (n=444)" = roc_nefl_sensi_1_3,
     "Filtered to 5 years < follow-up < 14.6 years (n=225)" = roc_nefl_sensi_1_3_4,
-    "Filtered to follow-up > 14.6 years (n=222)" = roc_nefl_sensi_1_3_5),
+    "Filtered to follow-up > 14.6 years (n=219)" = roc_nefl_sensi_1_3_5),
   legacy.axes = TRUE,
   aes = c("color")) +
   geom_abline(
@@ -5034,7 +5207,7 @@ p <- ggroc(
                    "\nOptimal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3["threshold"], 2), 
                    "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3["sensitivity"], 2), 
                    " and specificity: ", round(youden_best_nefl_sensi_1_3["specificity"], 2), ")"),
-    color = roc_colors["Filtered to follow-up > 5 years (n=447)"],
+    color = roc_colors["Filtered to follow-up > 5 years (n=444)"],
     size = 4) +
 
   annotate(
@@ -5046,7 +5219,7 @@ p <- ggroc(
                    "\nOptimal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3_5["threshold"], 2), 
                    "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3_5["sensitivity"], 2), 
                    " and specificity: ", round(youden_best_nefl_sensi_1_3_5["specificity"], 2), ")"),
-    color = roc_colors["Filtered to follow-up > 14.6 years (n=222)"],
+    color = roc_colors["Filtered to follow-up > 14.6 years (n=219)"],
     size = 4) +
   theme(legend.position = "none")
 
@@ -5057,9 +5230,9 @@ p_adjusted <- ggroc(
   list(
     "Main analysis (n=495)" = roc_nefl_all_adjusted,
     "Filtered to follow-up < 5 years (n=51)" = roc_nefl_sensi_2_adjusted, 
-    "Filtered to follow-up > 5 years (n=447)" = roc_nefl_sensi_1_3_adjusted,
+    "Filtered to follow-up > 5 years (n=444)" = roc_nefl_sensi_1_3_adjusted,
     "Filtered to 5 years < follow-up < 14.6 years (n=225)" = roc_nefl_sensi_1_3_4_adjusted,
-    "Filtered to follow-up > 14.6 years (n=222)" = roc_nefl_sensi_1_3_5_adjusted),
+    "Filtered to follow-up > 14.6 years (n=219)" = roc_nefl_sensi_1_3_5_adjusted),
   legacy.axes = TRUE,
   aes = c("color")) +
   geom_abline(
@@ -5108,7 +5281,7 @@ p_adjusted <- ggroc(
     y = 0.18,
     hjust = 0, 
     label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_adjusted), 2)),
-    color = roc_colors["Filtered to follow-up > 5 years (n=447)"],
+    color = roc_colors["Filtered to follow-up > 5 years (n=444)"],
     size = 4) +
 
   annotate(
@@ -5117,7 +5290,7 @@ p_adjusted <- ggroc(
     y = 0.08,
     hjust = 0, 
     label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_5_adjusted), 2)),
-    color = roc_colors["Filtered to follow-up > 14.6 years (n=222)"],
+    color = roc_colors["Filtered to follow-up > 14.6 years (n=219)"],
     size = 4) +
   theme(legend.position = "bottom")
 
@@ -5139,7 +5312,6 @@ rm(roc_nefl_all, youden_nefl_all, youden_best_nefl_all,
    roc_nefl_sensi_1_3_5, youden_nefl_sensi_1_3_5, youden_best_nefl_sensi_1_3_5, 
    model_adjusted_sensi_1_3_5, roc_nefl_sensi_1_3_5_adjusted, youden_nefl_sensi_1_3_5_adjusted, 
    roc_colors, p, p_adjusted, legend_roc)
-
 
 # Figures and Tables ----
 
