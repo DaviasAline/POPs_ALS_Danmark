@@ -3022,6 +3022,8 @@ results_proteomic_ALS_survival <-
                 proteomic_sd_ALS_base_figure = proteomic_sd_ALS_base_figure, 
                 proteomic_sd_ALS_adjusted_figure = proteomic_sd_ALS_adjusted_figure, 
                 
+                cox_gam_results_base = cox_gam_results_base, 
+                cox_gam_results_adjusted = cox_gam_results_adjusted, 
                 plot_base_cox_gam_danish = plot_base_cox_gam_danish, 
                 plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish), 
     
@@ -3031,6 +3033,8 @@ results_proteomic_ALS_survival <-
                      proteomic_sd_ALS_base_figure_sensi_1_3 = proteomic_sd_ALS_base_figure_sensi_1_3, 
                      proteomic_sd_ALS_adjusted_figure_sensi_1_3 = proteomic_sd_ALS_adjusted_figure_sensi_1_3,
                      
+                     cox_gam_results_base_sensi_1_3 = cox_gam_results_base_sensi_1_3, 
+                     cox_gam_results_adjusted_sensi_1_3 = cox_gam_results_adjusted_sensi_1_3, 
                      plot_base_cox_gam_danish_sensi_1_3 = plot_base_cox_gam_danish_sensi_1_3, 
                      plot_adjusted_cox_gam_danish_sensi_1_3 = plot_adjusted_cox_gam_danish_sensi_1_3), 
     
@@ -3040,6 +3044,8 @@ results_proteomic_ALS_survival <-
                      proteomic_sd_ALS_base_figure_sensi_1_3_4 = proteomic_sd_ALS_base_figure_sensi_1_3_4, 
                      proteomic_sd_ALS_adjusted_figure_sensi_1_3_4 = proteomic_sd_ALS_adjusted_figure_sensi_1_3_4,
                      
+                     cox_gam_results_base_sensi_1_3_4 = cox_gam_results_base_sensi_1_3_4, 
+                     cox_gam_results_adjusted_sensi_1_3_4 = cox_gam_results_adjusted_sensi_1_3_4, 
                      plot_base_cox_gam_danish_sensi_1_3_4 = plot_base_cox_gam_danish_sensi_1_3_4, 
                      plot_adjusted_cox_gam_danish_sensi_1_3_4 = plot_adjusted_cox_gam_danish_sensi_1_3_4), 
     
@@ -3049,82 +3055,50 @@ results_proteomic_ALS_survival <-
                        proteomic_sd_ALS_base_figure_sensi_1_3_5 = proteomic_sd_ALS_base_figure_sensi_1_3_5, 
                        proteomic_sd_ALS_adjusted_figure_sensi_1_3_5 = proteomic_sd_ALS_adjusted_figure_sensi_1_3_5,
                        
+                       cox_gam_results_base_sensi_1_3_5 = cox_gam_results_base_sensi_1_3_5, 
+                       cox_gam_results_adjusted_sensi_1_3_5 = cox_gam_results_adjusted_sensi_1_3_5, 
                        plot_base_cox_gam_danish_sensi_1_3_5 = plot_base_cox_gam_danish_sensi_1_3_5, 
                        plot_adjusted_cox_gam_danish_sensi_1_3_5 = plot_adjusted_cox_gam_danish_sensi_1_3_5), 
+    
     sensi_1_7_female = list(proteomic_sd_ALS_table_sensi_1_7_female = proteomic_sd_ALS_table_sensi_1_7_female,
                             proteomic_quart_ALS_table_sensi_1_7_female = proteomic_quart_ALS_table_sensi_1_7_female,
                             
                             proteomic_sd_ALS_base_figure_sensi_1_7_female = proteomic_sd_ALS_base_figure_sensi_1_7_female, 
                             proteomic_sd_ALS_adjusted_figure_sensi_1_7_female = proteomic_sd_ALS_adjusted_figure_sensi_1_7_female,
                             
+                            cox_gam_results_base_sensi_1_7_female = cox_gam_results_base_sensi_1_7_female, 
+                            cox_gam_results_adjusted_sensi_1_7_female = cox_gam_results_adjusted_sensi_1_7_female, 
                             plot_base_cox_gam_danish_sensi_1_7_female = plot_base_cox_gam_danish_sensi_1_7_female, 
                             plot_adjusted_cox_gam_danish_sensi_1_7_female = plot_adjusted_cox_gam_danish_sensi_1_7_female), 
+    
     sensi_1_7_male = list(proteomic_sd_ALS_table_sensi_1_7_male = proteomic_sd_ALS_table_sensi_1_7_male,
                           proteomic_quart_ALS_table_sensi_1_7_male = proteomic_quart_ALS_table_sensi_1_7_male,
                           
                           proteomic_sd_ALS_base_figure_sensi_1_7_male = proteomic_sd_ALS_base_figure_sensi_1_7_male, 
                           proteomic_sd_ALS_adjusted_figure_sensi_1_7_male = proteomic_sd_ALS_adjusted_figure_sensi_1_7_male,
                           
+                          cox_gam_results_base_sensi_1_7_male = cox_gam_results_base_sensi_1_7_male, 
+                          cox_gam_results_adjusted_sensi_1_7_male = cox_gam_results_adjusted_sensi_1_7_male, 
                           plot_base_cox_gam_danish_sensi_1_7_male = plot_base_cox_gam_danish_sensi_1_7_male, 
                           plot_adjusted_cox_gam_danish_sensi_1_7_male = plot_adjusted_cox_gam_danish_sensi_1_7_male))
 
 rm(bdd_cases_danish, 
-   bdd_cases_danish_sensi_1_3, 
-   bdd_cases_danish_sensi_1_3_4, 
-   bdd_cases_danish_sensi_1_3_5, 
-   bdd_cases_danish_sensi_1_7_female,
-   bdd_cases_danish_sensi_1_7_male,
-   surv_obj, 
-   surv_obj_sensi_1_3, 
-   surv_obj_sensi_1_3_4, 
-   surv_obj_sensi_1_3_5, 
-   surv_obj_sensi_1_7_female, 
-   surv_obj_sensi_1_7_male, 
    covariates, 
    covar, 
    main_results, 
+   surv_obj, 
    proteomic_sd_ALS_table,
    proteomic_quart_ALS_table, 
    proteomic_sd_ALS_base_figure, 
    proteomic_sd_ALS_adjusted_figure, 
+   cox_gam_results_base, 
+   cox_gam_results_adjusted, 
    plot_base_cox_gam_danish, 
-   plot_adjusted_cox_gam_danish, 
-   
-   proteomic_sd_ALS_table_sensi_1_3,
-   proteomic_quart_ALS_table_sensi_1_3,
-   proteomic_sd_ALS_base_figure_sensi_1_3, 
-   proteomic_sd_ALS_adjusted_figure_sensi_1_3,
-   plot_base_cox_gam_danish_sensi_1_3, 
-   plot_adjusted_cox_gam_danish_sensi_1_3, 
-   
-   proteomic_sd_ALS_table_sensi_1_3_4,
-   proteomic_quart_ALS_table_sensi_1_3_4,
-   proteomic_sd_ALS_base_figure_sensi_1_3_4, 
-   proteomic_sd_ALS_adjusted_figure_sensi_1_3_4,
-   plot_base_cox_gam_danish_sensi_1_3_4, 
-   plot_adjusted_cox_gam_danish_sensi_1_3_4,
-   
-   proteomic_sd_ALS_table_sensi_1_3_5,
-   proteomic_quart_ALS_table_sensi_1_3_5,
-   proteomic_sd_ALS_base_figure_sensi_1_3_5,
-   proteomic_sd_ALS_adjusted_figure_sensi_1_3_5,
-   plot_base_cox_gam_danish_sensi_1_3_5,
-   plot_adjusted_cox_gam_danish_sensi_1_3_5, 
-   
-   proteomic_sd_ALS_table_sensi_1_7_female,
-   proteomic_quart_ALS_table_sensi_1_7_female,
-   proteomic_sd_ALS_base_figure_sensi_1_7_female,
-   proteomic_sd_ALS_adjusted_figure_sensi_1_7_female,
-   plot_base_cox_gam_danish_sensi_1_7_female,
-   plot_adjusted_cox_gam_danish_sensi_1_7_female, 
-   
-   proteomic_sd_ALS_table_sensi_1_7_male,
-   proteomic_quart_ALS_table_sensi_1_7_male,
-   proteomic_sd_ALS_base_figure_sensi_1_7_male,
-   proteomic_sd_ALS_adjusted_figure_sensi_1_7_male,
-   plot_base_cox_gam_danish_sensi_1_7_male,
-   plot_adjusted_cox_gam_danish_sensi_1_7_male, 
-   
+   plot_adjusted_cox_gam_danish,
    fit_and_plot_cox_gam)
 
-
+rm(list = ls(pattern = "sensi_1_3"))
+rm(list = ls(pattern = "sensi_1_3_4"))
+rm(list = ls(pattern = "sensi_1_3_5"))
+rm(list = ls(pattern = "sensi_1_7_female"))
+rm(list = ls(pattern = "sensi_1_7_male"))

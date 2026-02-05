@@ -5132,175 +5132,132 @@ youden_nefl_sensi_1_3_5_adjusted <- coords(
 youden_nefl_sensi_1_3_5_adjusted
 
 ## Plots----
-roc_colors <- c(
-  "Main analysis (n=495)" = "#1b9e77",
-  "Filtered to follow-up < 5 years (n=51)" = "blue",
-  "Filtered to follow-up > 5 years (n=444)" = "#d95f02",
-  "Filtered to 5 years < follow-up < 14.6 years (n=225)" = "#7570b3",
-  "Filtered to follow-up > 14.6 years (n=219)" = "#e7298a")
+label_main_analysis <- 
+  paste0("Main analysis (n=495)\n", 
+         "AUC = ", round(auc(roc_nefl_all), 2), 
+         "\nOptimal NfL cut-off: ", round(youden_best_nefl_all["threshold"], 2), 
+         "\n(sensitivity: ", round(youden_best_nefl_all["sensitivity"], 2), 
+         " and specificity: ", round(youden_best_nefl_all["specificity"], 2), ")")
+
+label_sensi_2 <- 
+  paste0("Follow-up < 5 years (n=51)\n", 
+         "AUC = ", round(auc(roc_nefl_sensi_2), 2), 
+         "\nOptimal NfL cut-off: ", round(youden_best_nefl_sensi_2["threshold"], 2), 
+         "\n(sensitivity: ", round(youden_best_nefl_sensi_2["sensitivity"], 2), 
+         " and specificity: ", round(youden_best_nefl_sensi_2["specificity"], 2), ")")
+
+label_sensi_1_3_4 <- 
+  paste0("Follow-up between 5 and 14.6 years (n=225)\n", 
+         "AUC = ", round(auc(roc_nefl_sensi_1_3_4), 2), 
+         "\nOptimal NfL cut-off: ", round(youden_best_nefl_sensi_1_3_4["threshold"], 2), 
+         "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3_4["sensitivity"], 2), 
+         " and specificity: ", round(youden_best_nefl_sensi_1_3_4["specificity"], 2), ")")
+
+label_sensi_1_3_5 <- 
+  paste0("Follow-up > 14.6 years (n=219)\n", 
+         "AUC = ", round(auc(roc_nefl_sensi_1_3_5), 2), 
+         "\nOptimal NfL cut-off: ", round(youden_best_nefl_sensi_1_3_5["threshold"], 2), 
+         "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3_5["sensitivity"], 2), 
+         " and specificity: ", round(youden_best_nefl_sensi_1_3_5["specificity"], 2), ")")
+
+roc_patterns <- c(
+  label_main_analysis = "solid",
+  label_sensi_2 = "dotdash",
+  label_sensi_1_3_4 = "dashed",
+  label_sensi_1_3_5 = "dotted")
+
+names(roc_patterns) <- c(
+  label_main_analysis,
+  label_sensi_2,
+  label_sensi_1_3_4,
+  label_sensi_1_3_5)
 
 
-p <- ggroc(
-  list(
-    "Main analysis (n=495)" = roc_nefl_all,
-    "Filtered to follow-up < 5 years (n=51)" = roc_nefl_sensi_2, 
-    "Filtered to follow-up > 5 years (n=444)" = roc_nefl_sensi_1_3,
-    "Filtered to 5 years < follow-up < 14.6 years (n=225)" = roc_nefl_sensi_1_3_4,
-    "Filtered to follow-up > 14.6 years (n=219)" = roc_nefl_sensi_1_3_5),
-  legacy.axes = TRUE,
-  aes = c("color")) +
+additional_analysis_4_figure_unadjusted <- ggroc(
+    list(
+      label_main_analysis = roc_nefl_all,
+      label_sensi_2 = roc_nefl_sensi_2,
+      label_sensi_1_3_4 = roc_nefl_sensi_1_3_4,
+      label_sensi_1_3_5 = roc_nefl_sensi_1_3_5) |>
+      setNames(c(
+        label_main_analysis,
+        label_sensi_2,
+        label_sensi_1_3_4,
+        label_sensi_1_3_5)),
+    legacy.axes = TRUE,
+    aes = c("linetype")) +
   geom_abline(
     intercept = 0,
     slope = 1,
     linetype = "dashed",
     color = "grey50") +
-  scale_color_manual(values = roc_colors) +
+  scale_linetype_manual(values = roc_patterns) +
   labs(
     x = "1 − Specificity",
     y = "Sensitivity",
-    title = "ROC curves for NEFL pre-disease biomarker (unmatched, unadjusted)",
-    color = "Model") +
+    title = "ROC curves for NfL pre-disease biomarker (unmatched, unadjusted)",
+    linetype = "") +
   theme_lucid() +
-  
-  annotate(
-    "text",
-    x = 0.55,
-    y = 0.48,
-    hjust = 0, 
-    label = paste0("AUC = ", round(auc(roc_nefl_sensi_2), 2), 
-                   "\nOptimal NEFL cut-off: ", round(youden_best_nefl_sensi_2["threshold"], 2), 
-                   "\n(sensitivity: ", round(youden_best_nefl_sensi_2["sensitivity"], 2), 
-                   " and specificity: ", round(youden_best_nefl_sensi_2["specificity"], 2), ")"),
-    color = roc_colors["Filtered to follow-up < 5 years (n=51)"],
-    size = 4) +
-  
-  annotate(
-    "text",
-    x = 0.46,
-    y = 0.38,
-    hjust = 0, 
-    label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_4), 2), 
-                   "\nOptimal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3_4["threshold"], 2), 
-                   "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3_4["sensitivity"], 2), 
-                   " and specificity: ", round(youden_best_nefl_sensi_1_3_4["specificity"], 2), ")"),
-    color = roc_colors["Filtered to 5 years < follow-up < 14.6 years (n=225)"],
-    size = 4) +
-  
-  annotate(
-    "text",
-    x = 0.37,
-    y = 0.28,
-    hjust = 0, 
-    label = paste0("AUC = ", round(auc(roc_nefl_all), 2), 
-                   "\nOptimal NEFL cut-off: ", round(youden_best_nefl_all["threshold"], 2), 
-                   "\n(sensitivity: ", round(youden_best_nefl_all["sensitivity"], 2), 
-                   " and specificity: ", round(youden_best_nefl_all["specificity"], 2), ")"),
-    color = roc_colors["Main analysis (n=495)"],
-    size = 4) +
-
-  annotate(
-    "text",
-    x = 0.28,
-    y = 0.18,
-    hjust = 0, 
-    label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3), 2), 
-                   "\nOptimal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3["threshold"], 2), 
-                   "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3["sensitivity"], 2), 
-                   " and specificity: ", round(youden_best_nefl_sensi_1_3["specificity"], 2), ")"),
-    color = roc_colors["Filtered to follow-up > 5 years (n=444)"],
-    size = 4) +
-
-  annotate(
-    "text",
-    x = 0.19,
-    y = 0.08,
-    hjust = 0, 
-    label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_5), 2), 
-                   "\nOptimal NEFL cut-off: ", round(youden_best_nefl_sensi_1_3_5["threshold"], 2), 
-                   "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3_5["sensitivity"], 2), 
-                   " and specificity: ", round(youden_best_nefl_sensi_1_3_5["specificity"], 2), ")"),
-    color = roc_colors["Filtered to follow-up > 14.6 years (n=219)"],
-    size = 4) +
-  theme(legend.position = "none")
+  theme(legend.position = "bottom", legend.direction = "horizontal")
 
 
+label_main_analysis <- 
+  paste0("Main analysis (n=495)\n", 
+         "AUC = ", round(auc(roc_nefl_all_adjusted), 2))
 
+label_sensi_2 <- 
+  paste0("Follow-up < 5 years (n=51)\n", 
+         "AUC = ", round(auc(roc_nefl_sensi_2_adjusted), 2))
 
-p_adjusted <- ggroc(
+label_sensi_1_3_4 <- 
+  paste0("Follow-up between 5 and 14.6 years (n=225)\n", 
+         "AUC = ", round(auc(roc_nefl_sensi_1_3_4_adjusted), 2))
+
+label_sensi_1_3_5 <- 
+  paste0("Follow-up > 14.6 years (n=219)\n", 
+         "AUC = ", round(auc(roc_nefl_sensi_1_3_5_adjusted), 2))
+
+roc_patterns <- c(
+  label_main_analysis = "solid",
+  label_sensi_2 = "dotdash",
+  label_sensi_1_3_4 = "dashed",
+  label_sensi_1_3_5 = "dotted")
+
+names(roc_patterns) <- c(
+  label_main_analysis,
+  label_sensi_2,
+  label_sensi_1_3_4,
+  label_sensi_1_3_5)
+
+additional_analysis_4_figure_adjusted <- ggroc(
   list(
-    "Main analysis (n=495)" = roc_nefl_all_adjusted,
-    "Filtered to follow-up < 5 years (n=51)" = roc_nefl_sensi_2_adjusted, 
-    "Filtered to follow-up > 5 years (n=444)" = roc_nefl_sensi_1_3_adjusted,
-    "Filtered to 5 years < follow-up < 14.6 years (n=225)" = roc_nefl_sensi_1_3_4_adjusted,
-    "Filtered to follow-up > 14.6 years (n=219)" = roc_nefl_sensi_1_3_5_adjusted),
+    label_main_analysis = roc_nefl_all_adjusted,
+    label_sensi_2 = roc_nefl_sensi_2_adjusted,
+    label_sensi_1_3_4 = roc_nefl_sensi_1_3_4_adjusted,
+    label_sensi_1_3_5 = roc_nefl_sensi_1_3_5_adjusted) |>
+    setNames(c(
+      label_main_analysis,
+      label_sensi_2,
+      label_sensi_1_3_4,
+      label_sensi_1_3_5)),
   legacy.axes = TRUE,
-  aes = c("color")) +
+  aes = c("linetype")) +
   geom_abline(
     intercept = 0,
     slope = 1,
     linetype = "dashed",
     color = "grey50") +
-  scale_color_manual(values = roc_colors) +
+  scale_linetype_manual(values = roc_patterns) +
   labs(
     x = "1 − Specificity",
     y = "Sensitivity",
-    title = "ROC curves for NEFL pre-disease biomarker (matched and adjusted)",
-    color = "Model") +
+    title = "ROC curves for NfL pre-disease biomarker (matched and adjusted)",
+    linetype = "") +
   theme_lucid() +
-  
-  annotate(
-    "text",
-    x = 0.55,
-    y = 0.48,
-    hjust = 0, 
-    label = paste0("AUC = ", round(auc(roc_nefl_sensi_2_adjusted), 2)),
-    color = roc_colors["Filtered to follow-up < 5 years (n=51)"],
-    size = 4) +
-  
-  annotate(
-    "text",
-    x = 0.46,
-    y = 0.38,
-    hjust = 0, 
-    label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_4_adjusted), 2)),
-    color = roc_colors["Filtered to 5 years < follow-up < 14.6 years (n=225)"],
-    size = 4) +
-  
-  annotate(
-    "text",
-    x = 0.37,
-    y = 0.28,
-    hjust = 0, 
-    label = paste0("AUC = ", round(auc(roc_nefl_all_adjusted), 2)),
-    color = roc_colors["Main analysis (n=495)"],
-    size = 4) +
+  theme(legend.position = "bottom", legend.direction = "horizontal")
 
-  annotate(
-    "text",
-    x = 0.28,
-    y = 0.18,
-    hjust = 0, 
-    label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_adjusted), 2)),
-    color = roc_colors["Filtered to follow-up > 5 years (n=444)"],
-    size = 4) +
 
-  annotate(
-    "text",
-    x = 0.19,
-    y = 0.08,
-    hjust = 0, 
-    label = paste0("AUC = ", round(auc(roc_nefl_sensi_1_3_5_adjusted), 2)),
-    color = roc_colors["Filtered to follow-up > 14.6 years (n=219)"],
-    size = 4) +
-  theme(legend.position = "bottom")
-
-legend_roc <- get_legend(p_adjusted)
-
-p_adjusted <- p_adjusted + theme(legend.position = "none")
-
-additional_analysis_4_figure <- (p + p_adjusted)  / legend_roc + plot_layout(heights = c(10, 1))
-additional_analysis_4_figure_raw <- p + theme(legend.position = "bottom", legend.direction = "vertical")
-
+ 
 rm(roc_nefl_all, youden_nefl_all, youden_best_nefl_all, 
    model_adjusted_all, roc_nefl_all_adjusted, youden_nefl_all_adjusted, 
    roc_nefl_sensi_2, youden_nefl_sensi_2, youden_best_nefl_sensi_2, 
@@ -5311,7 +5268,8 @@ rm(roc_nefl_all, youden_nefl_all, youden_best_nefl_all,
    model_adjusted_sensi_1_3_4, roc_nefl_sensi_1_3_4_adjusted, youden_nefl_sensi_1_3_4_adjusted, 
    roc_nefl_sensi_1_3_5, youden_nefl_sensi_1_3_5, youden_best_nefl_sensi_1_3_5, 
    model_adjusted_sensi_1_3_5, roc_nefl_sensi_1_3_5_adjusted, youden_nefl_sensi_1_3_5_adjusted, 
-   roc_colors, p, p_adjusted, legend_roc)
+   roc_patterns, additional_analysis_4_figure_unadjusted, additional_analysis_4_figure_adjusted, 
+   label_main_analysis, label_sensi_2, label_sensi_1_3_4, label_sensi_1_3_5)
 
 # Figures and Tables ----
 
@@ -8207,8 +8165,8 @@ results_proteomic_ALS_occurrence <-
       additional_analysis_3_neuro_results = additional_analysis_3_neuro_results, 
       jackknife_neuro_results = jackknife_neuro_results), 
     additional_analysis_4 = list(
-      additional_analysis_4_figure = additional_analysis_4_figure, 
-      additional_analysis_4_figure_raw = additional_analysis_4_figure_raw))
+      additional_analysis_4_figure_adjusted = additional_analysis_4_figure_adjusted, 
+      additional_analysis_4_figure_unadjusted = additional_analysis_4_figure_unadjusted))
 
 rm(covar, 
    main_results, 
@@ -8326,8 +8284,8 @@ rm(covar,
    additional_analysis_3_neuro_results, 
    jackknife_neuro_results, 
    
-   additional_analysis_4_figure, 
-   additional_analysis_4_figure_raw, 
+   additional_analysis_4_figure_adjusted, 
+   additional_analysis_4_figure_unadjusted, 
    
    make_gam_plot_base, 
    make_gam_plot_adjusted)

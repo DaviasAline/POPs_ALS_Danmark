@@ -1730,7 +1730,7 @@ rm(outcome, model3_quart_ERS_trend, p.value_trend_ERS)
 
 ### ERS s(t) curves ----
 
-# Create person-month (pooled) dataset ----
+#### Create person-month (pooled) dataset ----
 pooled_data <- 
   bdd_cases_danish |>
   select(sample, 
@@ -1749,8 +1749,8 @@ pooled_data <-
 
 
 
-### t as poly 2 ----
-#### Fit the pooled logistic regression ----
+#### t as poly 2 ----
+##### Fit the pooled logistic regression ----
 pooled_model_poly_2 <- glm(
   event_pooled ~ ERS_score_from_elastic_net_sensi_1_sd + 
     sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i +
@@ -1759,7 +1759,7 @@ pooled_model_poly_2 <- glm(
   data = pooled_data)
 
 
-#### Predict survival curves for ERS values (ERS = 0 (mean) vs ERS = +1sd ----
+##### Predict survival curves for ERS values (ERS = 0 (mean) vs ERS = +1sd ----
 newdata <- 
   expand.grid(
     t = 1:max(pooled_data$t),
@@ -1781,7 +1781,7 @@ newdata <-
   arrange(t) |>
   mutate(survival = cumprod(1 - pred_risk))
 
-#### Survival curves ----
+##### Survival curves ----
 # extraire les valeurs survie mediane pour ERS mean et ERS mean + sd (au premier temps où s(t) <= 0.5)
 median_surv <- 
   newdata |>
@@ -1829,29 +1829,29 @@ figure_survival_poly <-
 rm(pooled_data, pooled_model_poly_2, newdata, median_surv, 
    base_breaks, median_breaks, x_breaks, x_labels)
 
-# 
-### t as factor ----
-#### Fit the pooled logistic regression ----
+
+#### t as factor ----
+##### Fit the pooled logistic regression ----
 # pooled_model_f <- glm(
-#   event_pooled ~ ERS_score_from_elastic_net_sensi_1_sd + 
+#   event_pooled ~ ERS_score_from_elastic_net_sensi_1_sd +
 #     sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i +
 #     factor(t),                                                                  # we think that the risk is not linear with time
 #   family = binomial(),
 #   data = pooled_data)
-# 
-# 
-#### Predict survival curves for ERS values (ERS = 0 (mean) vs ERS = +1sd ----
-# newdata <- 
+
+
+##### Predict survival curves for ERS values (ERS = 0 (mean) vs ERS = +1sd ----
+# newdata <-
 #   expand.grid(
 #     t = 1:max(pooled_data$t),
-#     ERS_score_from_elastic_net_sensi_1_sd = c(0, 1),              
+#     ERS_score_from_elastic_net_sensi_1_sd = c(0, 1),
 #     sex = "Male",                                                               # most common category
 #     diagnosis_age = mean(bdd_cases_danish$diagnosis_age, na.rm = TRUE),         # mean
 #     smoking_2cat_i = "Ever",                                                    # most common category
 #     bmi = mean(bdd_cases_danish$bmi, na.rm = TRUE),                             # mean
 #     marital_status_2cat_i = "Married/cohabit")                                  # most common category
 # 
-# newdata <- 
+# newdata <-
 #   newdata |>
 #   mutate(
 #     pred_risk = predict(
@@ -1861,26 +1861,26 @@ rm(pooled_data, pooled_model_poly_2, newdata, median_surv,
 #   group_by(ERS_score_from_elastic_net_sensi_1_sd) |>
 #   arrange(t) |>
 #   mutate(survival = cumprod(1 - pred_risk))
-# 
-#### Survival curves ----
-# # extraire les valeurs survie mediane pour ERS mean et ERS mean + sd (au premier temps où s(t) <= 0.5)
-# median_surv <- 
+
+##### Survival curves ----
+# extraire les valeurs survie mediane pour ERS mean et ERS mean + sd (au premier temps où s(t) <= 0.5)
+# median_surv <-
 #   newdata |>
 #   group_by(ERS_score_from_elastic_net_sensi_1_sd) |>
 #   filter(survival <= 0.5) |>
-#   slice(1) |>                                                                   
-#   ungroup() 
-# 
-# # personnaliser axe x pour ajouter les valeurs survie mediane 
+#   slice(1) |>
+#   ungroup()
+
+# personnaliser axe x pour ajouter les valeurs survie mediane
 # base_breaks <- pretty(newdata$t)
 # median_breaks <- median_surv$t
 # x_breaks <- sort(unique(c(base_breaks, median_breaks)))
 # 
 # x_labels <- as.character(x_breaks)
 # x_labels[x_breaks %in% median_breaks] <- x_breaks[x_breaks %in% median_breaks]
-# 
-# # survival plot
-# figure_survival_factor <- 
+
+# survival plot
+# figure_survival_factor <-
 #   newdata |>
 #   ggplot(aes(x = t,
 #              y = survival,
@@ -1907,12 +1907,89 @@ rm(pooled_data, pooled_model_poly_2, newdata, median_surv,
 #                      labels = c("Mean ERS", "+1 SD ERS")) +
 #   theme_minimal()
 
+# rm(pooled_data, pooled_model_f, newdata, median_surv, 
+#    base_breaks, median_breaks, x_breaks, x_labels)
 
 
 
-rm(pooled_data, pooled_model_f, newdata, median_surv, 
-   base_breaks, median_breaks, x_breaks, x_labels)
+#### t as continuous ----
+##### Fit the pooled logistic regression ----
+# pooled_model_continuous <- glm(
+#   event_pooled ~ ERS_score_from_elastic_net_sensi_1_sd + 
+#     sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i + t,                                                                  # we think that the risk is not linear with time
+#   family = binomial(),
+#   data = pooled_data)
 
+
+##### Predict survival curves for ERS values (ERS = 0 (mean) vs ERS = +1sd ----
+# newdata <- 
+#   expand.grid(
+#     t = 1:max(pooled_data$t),
+#     ERS_score_from_elastic_net_sensi_1_sd = c(0, 1),              
+#     sex = "Male",                                                               # most common category
+#     diagnosis_age = mean(bdd_cases_danish$diagnosis_age, na.rm = TRUE),         # mean
+#     smoking_2cat_i = "Ever",                                                    # most common category
+#     bmi = mean(bdd_cases_danish$bmi, na.rm = TRUE),                             # mean
+#     marital_status_2cat_i = "Married/cohabit")                                  # most common category
+# 
+# newdata <- 
+#   newdata |>
+#   mutate(
+#     pred_risk = predict(
+#       pooled_model_continuous,
+#       newdata = newdata,
+#       type = "response")) |>
+#   group_by(ERS_score_from_elastic_net_sensi_1_sd) |>
+#   arrange(t) |>
+#   mutate(survival = cumprod(1 - pred_risk))
+
+##### Survival curves ----
+# extraire les valeurs survie mediane pour ERS mean et ERS mean + sd (au premier temps où s(t) <= 0.5)
+# median_surv <- 
+#   newdata |>
+#   group_by(ERS_score_from_elastic_net_sensi_1_sd) |>
+#   filter(survival <= 0.5) |>
+#   slice(1) |>                                                                   
+#   ungroup() 
+
+# personnaliser axe x pour ajouter les valeurs survie mediane 
+# base_breaks <- pretty(newdata$t)
+# median_breaks <- median_surv$t
+# x_breaks <- sort(unique(c(base_breaks, median_breaks)))
+# 
+# x_labels <- as.character(x_breaks)
+# x_labels[x_breaks %in% median_breaks] <- x_breaks[x_breaks %in% median_breaks]
+
+# survival plot
+# figure_survival_continuous <- 
+#   newdata |>
+#   ggplot(aes(x = t,
+#              y = survival,
+#              color = factor(ERS_score_from_elastic_net_sensi_1_sd))) +
+#   geom_line(size = 1.2) +
+#   geom_segment(data = median_surv,
+#                aes(x = 0, xend = t,
+#                    y = 0.5, yend = 0.5,
+#                    color = factor(ERS_score_from_elastic_net_sensi_1_sd)),
+#                linetype = "dashed",
+#                show.legend = FALSE) +
+#   geom_segment(data = median_surv,
+#                aes(x = t, xend = t,
+#                    y = 0, yend = 0.5,
+#                    color = factor(ERS_score_from_elastic_net_sensi_1_sd)),
+#                linetype = "dashed",
+#                show.legend = FALSE) +
+#   scale_x_continuous(breaks = x_breaks,
+#                      labels = x_labels) +
+#   labs(x = "Months since diagnosis",
+#        y = "Survival probability",
+#        color = "Environmental\nrisk score (ERS)") +
+#   scale_color_manual(values = c("blue", "red"),
+#                      labels = c("Mean ERS", "+1 SD ERS")) +
+#   theme_minimal()
+
+# rm(pooled_data, pooled_model_continuous, newdata, median_surv, 
+#    base_breaks, median_breaks, x_breaks, x_labels)
 
 
 
