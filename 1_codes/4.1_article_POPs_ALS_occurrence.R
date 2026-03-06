@@ -65,10 +65,6 @@ figure_4 <- results_POPs_ALS_occurrence$metanalysis$plot_metanalysis_quart
 
 # Table S1 - exposure distribution ----
 # Distribution of pre-disease POP plasma concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498).
-library(dplyr)
-library(forcats)
-library(gtsummary)
-library(flextable)
 
 make_quartile_var <- function(x, controls) {
   
@@ -83,16 +79,13 @@ make_quartile_var <- function(x, controls) {
   labs <- paste0(
     "Q", seq_len(length(brks)-1), ": (",
     head(brks_lab, -1), ", ",
-    tail(brks_lab, -1), "]"
-  )
+    tail(brks_lab, -1), "]")
   
-  cut(
-    x,
-    breaks = brks,
-    labels = labs,
-    include.lowest = TRUE,
-    right = TRUE
-  )
+  cut(x,
+      breaks = brks,
+      labels = labs,
+      include.lowest = TRUE,
+      right = TRUE)
 }
 
 POPs_tot_quart <- paste0(POPs_tot, "_quart")

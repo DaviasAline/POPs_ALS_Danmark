@@ -7,6 +7,46 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/2.1_analyses_descriptive.R")
 covariates_danish <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'fS_Kol', 'marital_status_2cat_i', 'education_i')
 covariates_finnish <- c("marital_status_2cat", 'smoking_2cat', 'bmi', 'fS_Kol')     # education removed because missing in one finnish cohort 
 
+bdd_danish <- bdd_danish |>                                                     # calcul de quartiles seulement a partir des distributions des controles  
+  mutate(
+    across(
+      all_of(POPs_group),
+      ~ {
+        q <- quantile(.x[als == 0],                              
+                      probs = c(0, 0.25, 0.5, 0.75, 1), 
+                      na.rm = TRUE,
+                      type = 7)
+        cut(.x,
+            breaks = c(-Inf, q[2:4], Inf),
+            labels = c("Q1", "Q2", "Q3", "Q4"),
+            include.lowest = TRUE)
+      },
+      .names = "{.col}_quart")) |> 
+  mutate(across(
+    all_of(POPs_group),
+    ~ {
+      q <- quantile(.x[als == 0],
+                    probs = seq(0, 1, 0.25),
+                    na.rm = TRUE)
+      cuts <- c(-Inf, q[2:4], Inf)
+      quartiles <- cut(.x,
+                       breaks = cuts,
+                       labels = FALSE,
+                       include.lowest = TRUE)
+      quart_meds <- tapply(.x[als == 0],
+                           cut(.x[als == 0],
+                               breaks = cuts,
+                               labels = FALSE,
+                               include.lowest = TRUE),
+                           median,
+                           na.rm = TRUE)
+      quart_meds[quartiles]
+    },
+    .names = "{.col}_quart_med"
+  ))
+
+
+
 # effects of the covariates on ALS ----
 covar <- tbl_merge(
   tbls = list(
@@ -624,31 +664,85 @@ run_clogit <- function(formula, data) {
 POPs_group_metanalysis <- setdiff(POPs_group, "ΣPBDE")                          # we don't include ΣPBDE in the metanalysis because low levels 
 POPs_group_metanalysis_quart <- paste0(POPs_group_metanalysis, "_quart")
 
+
+make_quartile_var <- function(x, controls) {
+  
+  qs <- quantile(x[controls], probs = c(.25,.5,.75), na.rm = TRUE)
+  qs <- unique(qs)
+  
+  brks <- c(-Inf, qs, Inf)
+  brks_lab <- formatC(brks, format = "f", digits = 1)
+  brks_lab[1] <- "-Inf"
+  brks_lab[length(brks_lab)] <- "Inf"
+  
+  labs <- paste0("Q", seq_len(length(brks) - 1))
+  
+  cut(x,
+      breaks = brks,
+      labels = labs,
+      include.lowest = TRUE,
+      right = TRUE)
+}
+
 #### Base model ----
 metanalysis_base_quart <- map_dfr(POPs_group_metanalysis_quart, function(expl) {
   formula <- as.formula(paste("als ~", expl, "+ strata(match)"))                # base formula: matched, not ajstuded
   
-  bdd_danish <- bdd |>                                                     
-    filter(study == "Danish") |>                                                # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),       # creation of quartiles cohort specific                      
-                                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                  .names = "{.col}_quart")) 
+  # bdd_danish <- bdd |>                                                     
+  #   filter(study == "Danish") |>                                                # creation of one dataset per finnish cohort
+  #   mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific                      
+  #                                                           labels = c("Q1", "Q2", "Q3", "Q4")),
+  #                 .names = "{.col}_quart")) 
   
-  bdd_finnish_FMC <- bdd |>                                                     
-    filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific                      
-                                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                  .names = "{.col}_quart")) 
-  bdd_finnish_FMCF <- bdd |> 
-    filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific    
-                                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                  .names = "{.col}_quart"))
-  bdd_finnish_MFH <- bdd |> 
-    filter(study == "MFH") |>                                                   # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific    
-                                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                  .names = "{.col}_quart"))
+  bdd_danish <- bdd |>                                             
+    filter(study == "Danish") |>
+    mutate(
+      across(
+        all_of(POPs_group_metanalysis),
+        ~ make_quartile_var(.x, als == 0),
+        .names = "{.col}_quart"))
+  
+  # bdd_finnish_FMC <- bdd |>                                                     
+  #   filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
+  #   mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific                      
+  #                                                           labels = c("Q1", "Q2", "Q3", "Q4")),
+  #                 .names = "{.col}_quart")) 
+  
+  bdd_finnish_FMC <- bdd |>                                             
+    filter(study == "FMC") |>
+    mutate(
+      across(
+        all_of(POPs_group_metanalysis),
+        ~ make_quartile_var(.x, als == 0),
+        .names = "{.col}_quart"))
+  
+  # bdd_finnish_FMCF <- bdd |> 
+  #   filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
+  #   mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific    
+  #                                                           labels = c("Q1", "Q2", "Q3", "Q4")),
+  #                 .names = "{.col}_quart"))
+  
+  bdd_finnish_FMCF <- bdd |>                                             
+    filter(study == "FMCF") |>
+    mutate(
+      across(
+        all_of(POPs_group_metanalysis),
+        ~ make_quartile_var(.x, als == 0),
+        .names = "{.col}_quart"))
+  
+  # bdd_finnish_MFH <- bdd |> 
+  #   filter(study == "MFH") |>                                                   # creation of one dataset per finnish cohort
+  #   mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific    
+  #                                                           labels = c("Q1", "Q2", "Q3", "Q4")),
+  #                 .names = "{.col}_quart"))
+  
+  bdd_finnish_MFH <- bdd |>                                             
+    filter(study == "MFH") |>
+    mutate(
+      across(
+        all_of(POPs_group_metanalysis),
+        ~ make_quartile_var(.x, als == 0),
+        .names = "{.col}_quart"))
   
   results <- list(                                                              # run of the simple conditional logistic regression
     danish = run_clogit(formula, bdd_danish),
@@ -690,27 +784,60 @@ metanalysis_adjusted_quart <- map_dfr(POPs_group_metanalysis_quart, function(exp
     as.formula(paste("als ~", expl,                                             # education mot available in one finnish cohort
                      "+ strata(match) + marital_status_2cat + smoking_2cat + bmi + fS_Kol")) 
   
-  bdd_danish <- bdd |>                                                     
-    filter(study == "Danish") |>                                                # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific                      
-                                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                  .names = "{.col}_quart")) 
+  # bdd_danish <- bdd |>                                                     
+  #   filter(study == "Danish") |>                                                # creation of one dataset per finnish cohort
+  #   mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific                      
+  #                                                           labels = c("Q1", "Q2", "Q3", "Q4")),
+  #                 .names = "{.col}_quart")) 
+  # 
+  # bdd_finnish_FMC <- bdd |>                                                     
+  #   filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
+  #   mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific                      
+  #                                                           labels = c("Q1", "Q2", "Q3", "Q4")),
+  #                 .names = "{.col}_quart")) 
+  # bdd_finnish_FMCF <- bdd |> 
+  #   filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
+  #   mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific    
+  #                                                           labels = c("Q1", "Q2", "Q3", "Q4")),
+  #                 .names = "{.col}_quart"))
+  # bdd_finnish_MFH <- bdd |> 
+  #   filter(study == "MFH") |>                                                   # creation of one dataset per finnish cohort
+  #   mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific    
+  #                                                           labels = c("Q1", "Q2", "Q3", "Q4")),
+  #                 .names = "{.col}_quart"))
+  # 
   
-  bdd_finnish_FMC <- bdd |>                                                     
-    filter(study == "FMC") |>                                                   # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific                      
-                                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                  .names = "{.col}_quart")) 
-  bdd_finnish_FMCF <- bdd |> 
-    filter(study == "FMCF") |>                                                  # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific    
-                                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                  .names = "{.col}_quart"))
-  bdd_finnish_MFH <- bdd |> 
-    filter(study == "MFH") |>                                                   # creation of one dataset per finnish cohort
-    mutate(across(all_of(POPs_group_metanalysis), ~ factor(ntile(.x, 4),        # creation of quartiles cohort specific    
-                                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                  .names = "{.col}_quart"))
+  bdd_danish <- bdd |>                                             
+    filter(study == "Danish") |>
+    mutate(
+      across(
+        all_of(POPs_group_metanalysis),
+        ~ make_quartile_var(.x, als == 0),
+        .names = "{.col}_quart"))
+  
+  bdd_finnish_FMC <- bdd |>                                             
+    filter(study == "FMC") |>
+    mutate(
+      across(
+        all_of(POPs_group_metanalysis),
+        ~ make_quartile_var(.x, als == 0),
+        .names = "{.col}_quart"))
+  
+  bdd_finnish_FMCF <- bdd |>                                             
+    filter(study == "FMCF") |>
+    mutate(
+      across(
+        all_of(POPs_group_metanalysis),
+        ~ make_quartile_var(.x, als == 0),
+        .names = "{.col}_quart"))
+  
+  bdd_finnish_MFH <- bdd |>                                             
+    filter(study == "MFH") |>
+    mutate(
+      across(
+        all_of(POPs_group_metanalysis),
+        ~ make_quartile_var(.x, als == 0),
+        .names = "{.col}_quart"))
   
   results <- list(                                                              # run of the simple conditional logistic regression
     danish = run_clogit(formula_educ, bdd_danish),
@@ -749,27 +876,60 @@ metanalysis_adjusted_quart <- map_dfr(POPs_group_metanalysis_quart, function(exp
 #### Copollutant model ----
 POPs_group_matanalysis <- setdiff(POPs_group, "ΣPBDE")  
 
-bdd_metanalysis_danish <- bdd |>                                                     
-  filter(study == "Danish") |>                                                  # creation of one dataset per finnish cohort
-  mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),          # creation of quartiles cohort specific                      
-                                                         labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) 
+# bdd_metanalysis_danish <- bdd |>                                                     
+#   filter(study == "Danish") |>                                                  # creation of one dataset per finnish cohort
+#   mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),          # creation of quartiles cohort specific                      
+#                                                          labels = c("Q1", "Q2", "Q3", "Q4")),
+#                 .names = "{.col}_quart")) 
+# 
+# bdd_metanalysis_FMC <- bdd |>                                                     
+#   filter(study == "FMC") |>                                                     # creation of one dataset per finnish cohort
+#   mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),          # creation of quartiles cohort specific                      
+#                                                          labels = c("Q1", "Q2", "Q3", "Q4")),
+#                 .names = "{.col}_quart")) 
+# bdd_metanalysis_FMCF <- bdd |> 
+#   filter(study == "FMCF") |>                                                    # creation of one dataset per finnish cohort
+#   mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),          # creation of quartiles cohort specific    
+#                                                          labels = c("Q1", "Q2", "Q3", "Q4")),
+#                 .names = "{.col}_quart"))
+# bdd_metanalysis_MFH <- bdd |> 
+#   filter(study == "MFH") |>                                                     # creation of one dataset per finnish cohort
+#   mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),          # creation of quartiles cohort specific    
+#                                                          labels = c("Q1", "Q2", "Q3", "Q4")),
+#                 .names = "{.col}_quart"))
 
-bdd_metanalysis_FMC <- bdd |>                                                     
-  filter(study == "FMC") |>                                                     # creation of one dataset per finnish cohort
-  mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),          # creation of quartiles cohort specific                      
-                                                         labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) 
-bdd_metanalysis_FMCF <- bdd |> 
-  filter(study == "FMCF") |>                                                    # creation of one dataset per finnish cohort
-  mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),          # creation of quartiles cohort specific    
-                                                         labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart"))
-bdd_metanalysis_MFH <- bdd |> 
-  filter(study == "MFH") |>                                                     # creation of one dataset per finnish cohort
-  mutate(across(all_of(POPs_group_matanalysis), ~ factor(ntile(.x, 4),          # creation of quartiles cohort specific    
-                                                         labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart"))
+bdd_metanalysis_danish <- bdd |>                                             
+  filter(study == "Danish") |>
+  mutate(
+    across(
+      all_of(POPs_group_metanalysis),
+      ~ make_quartile_var(.x, als == 0),
+      .names = "{.col}_quart"))
+
+bdd_metanalysis_FMC <- bdd |>                                             
+  filter(study == "FMC") |>
+  mutate(
+    across(
+      all_of(POPs_group_metanalysis),
+      ~ make_quartile_var(.x, als == 0),
+      .names = "{.col}_quart"))
+
+bdd_metanalysis_FMCF <- bdd |>                                             
+  filter(study == "FMCF") |>
+  mutate(
+    across(
+      all_of(POPs_group_metanalysis),
+      ~ make_quartile_var(.x, als == 0),
+      .names = "{.col}_quart"))
+
+bdd_metanalysis_MFH <- bdd |>                                             
+  filter(study == "MFH") |>
+  mutate(
+    across(
+      all_of(POPs_group_metanalysis),
+      ~ make_quartile_var(.x, als == 0),
+      .names = "{.col}_quart"))
+
 rm(POPs_group_matanalysis)
 
 ##### danish ----
@@ -1566,6 +1726,13 @@ rm(model1_quart,
 
 # sensitivity analyses pollutants not summed ----
 ### quartiles ----
+bdd_danish <- bdd_danish |>
+  mutate(
+    across(
+      all_of(POPs_included),
+      ~ make_quartile_var(.x, als == 0),
+      .names = "{.col}_quart"))
+
 model1_quart_not_summed <- data.frame(variable = character(),
                                       df = integer(),
                                       OR = numeric(),
