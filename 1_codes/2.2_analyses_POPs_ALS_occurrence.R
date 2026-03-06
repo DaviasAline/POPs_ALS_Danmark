@@ -1709,7 +1709,7 @@ plot_quart <-
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(rows = dplyr::vars(variable), cols = dplyr::vars(model), switch = "y") +  
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  scale_color_manual(values = c("p-value<0.05" = "black", "p-value≥0.05" = "grey53")) +
   labs(x = "POPs", y = "Odds Ratio (OR)", color = "p-value") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
@@ -1804,7 +1804,7 @@ plot_quart_sensi_not_summed <-
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(rows = dplyr::vars(variable), cols = dplyr::vars(model), switch = "y") +  
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  scale_color_manual(values = c("p-value<0.05" = "white", "p-value≥0.05" = "black")) +
   labs(x = "POPs", y = "Odds Ratio (OR)", color = "p-value") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
@@ -1997,8 +1997,8 @@ plot_adjusted_gam <- map(POPs_group, function(var) {
   x_label <- pollutant_labels[var] 
   
   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
+    geom_line(color = "black", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "darkgrey", alpha = 0.2) +
     labs(x = var, y = "Predicted probability of ALS") +
     annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
              hjust = 0, vjust = 1.2, size = 4, color = "black") +
@@ -2012,7 +2012,7 @@ plot_adjusted_gam <- map(POPs_group, function(var) {
   
   p2 <- ggplot(bdd_pred) +
     aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
+    geom_boxplot(fill = "white") +
     coord_flip() +
     ylab(x_label) + 
     xlab("") + 
@@ -2132,8 +2132,8 @@ plot_copollutant_gam <- map(POPs_group_bis, function(var) {
   x_label <- pollutant_labels_bis[var]
   
   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
+    geom_line(color = "black", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "darkgrey", alpha = 0.2) +
     labs(x = var, y = "Predicted probability of ALS") +
     annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
              hjust = 0, vjust = 1.2, size = 4, color = "black") +
@@ -2147,7 +2147,7 @@ plot_copollutant_gam <- map(POPs_group_bis, function(var) {
   
   p2 <- ggplot(bdd_pred) +
     aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
+    geom_boxplot(fill = "white") +
     coord_flip() +
     ylab(x_label) + 
     xlab("") + 
@@ -2226,7 +2226,7 @@ plot_metanalysis_quart <- metanalysis_quart |>
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(rows = dplyr::vars(explanatory), cols = dplyr::vars(model), switch = "y") +  
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  scale_color_manual(values = c("p-value<0.05" = "black", "p-value≥0.05" = "grey53")) +
   labs(x = "POPs", y = "Odds Ratio (OR)", color = "p-value") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 

@@ -65,24 +65,84 @@ figure_4 <- results_POPs_ALS_occurrence$metanalysis$plot_metanalysis_quart
 
 # Table S1 - exposure distribution ----
 # Distribution of pre-disease POP plasma concentrations in the Danish Diet, Cancer and Health study cohort (sample size: 498).
-table_S1 <- 
-  results_descriptive$danish$POPs_table_danish |>
-  select(-Zero.count, -"% > LOQ", -"LOQ") |>
-  rename(Exposures = variable) |>
-  flextable()  |>
-  add_footer_lines(
-    'pg/ml.
-    POPs were summed as follows: Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; ΣPBDE corresponds to PBDEs 47, 99, 153; ΣDDT corresponds to p,p’-DDT and p,p’-DDE and finally Σchlordane corresponds to trans-nonanchlor and oxychlordane.
-    PeCB, α-HCH and γ-HCH had more than 95% of the observations below the limit of quantification (LOQ) and were therefore excluded from our analyses. 
-    HCB and β-HCH were not included in any group and were therefore studied alone.')|>
-  theme_vanilla() |>  
-  bold(part = "header") |>  
-  bold(j = "Exposures", part = "body") |> 
-  align(align = "center", part = "all") |>  
-  align(j = "Exposures", align = "left", part = "all") |>
-  font(fontname = "Calibri", part = "all") |> 
+library(dplyr)
+library(forcats)
+library(gtsummary)
+library(flextable)
+
+make_quartile_var <- function(x, controls) {
+  
+  qs <- quantile(x[controls], probs = c(.25,.5,.75), na.rm = TRUE)
+  qs <- unique(qs)
+  
+  brks <- c(-Inf, qs, Inf)
+  brks_lab <- formatC(brks, format = "f", digits = 1)
+  brks_lab[1] <- "-Inf"
+  brks_lab[length(brks_lab)] <- "Inf"
+  
+  labs <- paste0(
+    "Q", seq_len(length(brks)-1), ": (",
+    head(brks_lab, -1), ", ",
+    tail(brks_lab, -1), "]"
+  )
+  
+  cut(
+    x,
+    breaks = brks,
+    labels = labs,
+    include.lowest = TRUE,
+    right = TRUE
+  )
+}
+
+POPs_tot_quart <- paste0(POPs_tot, "_quart")
+
+bdd_danish <- bdd_danish |>
+  mutate(
+    across(
+      all_of(POPs_tot),
+      ~ make_quartile_var(.x, als == 0),
+      .names = "{.col}_quart"))
+
+
+POPs_tot_labels <- setNames(
+  c("Most prevalent PCBs","Dioxin-like PCBs","PCB-118","PCB-156",
+    "Non dioxin-like PCBs","PCB-28","PCB-52","PCB-74","PCB-99","PCB-101", "PCB-138","PCB-153","PCB-170","PCB-180","PCB-183","PCB-187",
+    "HCB",
+    "ΣDDT","p,p'-DDT","p,p'-DDE",
+    "ΣHCH", "α-HCH","β-HCH","γ-HCH",
+    "Σchlordane","Oxychlordane","Transnonachlor","Pentachlorobenzene",
+    "ΣPBDE","PBDE-47","PBDE-99","PBDE-153"), 
+  POPs_tot)
+
+POPs_tot_quart_labels <- setNames(
+  c("Most prevalent PCBs","Dioxin-like PCBs","PCB-118","PCB-156",
+    "Non dioxin-like PCBs","PCB-28","PCB-52","PCB-74","PCB-99","PCB-101", "PCB-138","PCB-153","PCB-170","PCB-180","PCB-183","PCB-187",
+    "HCB",
+    "ΣDDT","p,p'-DDT","p,p'-DDE",
+    "ΣHCH", "α-HCH","β-HCH","γ-HCH",
+    "Σchlordane","Oxychlordane","Transnonachlor","Pentachlorobenzene",
+    "ΣPBDE","PBDE-47","PBDE-99","PBDE-153"), 
+  POPs_tot_quart)
+
+
+table_S1 <- bdd_danish |>
+  select(als, all_of(POPs_tot), all_of(POPs_tot_quart)) |>
+  mutate(
+    als = as.character(als), 
+    als = fct_recode(als, "Controls" = "0", "Cases" = "1"), 
+    als = fct_relevel(als, "Controls",  "Cases")) |>
+  tbl_summary(by = als, 
+              digits = all_continuous() ~1, 
+              label = c(
+                as.list(POPs_tot_labels),
+                as.list(POPs_tot_quart_labels))) |>
+  bold_labels() |> 
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
+
 
 # Table S2 - quartiles results ----
 # Estimated risk of ALS occurrence attributed to pre-disease POP plasma concentrations in the Danish Diet, Cancer and Health study cohort (conditional logistic regressions, sample size: 498).
@@ -351,7 +411,7 @@ figure_S3 <- results_POPs_ALS_occurrence$sensitivity_not_summed$sensitivity_resu
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(rows = dplyr::vars(variable), cols = dplyr::vars(model), switch = "y") +  
-  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  scale_color_manual(values = c("p-value<0.05" = "black", "p-value≥0.05" = "grey53")) +
   labs(x = "POPs", y = "Odds Ratio (OR)", color = "p-value") +
   theme_lucid() +
   theme(strip.text = element_text(face = "bold"), 
@@ -413,3 +473,4 @@ ggsave(
   height = 7,
   width = 6,
   units = "in")
+

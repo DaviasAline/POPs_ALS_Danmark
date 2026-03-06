@@ -23,11 +23,14 @@ table_1 <-
   tbl_summary(by = als, 
               missing = 'no', 
               statistic = list(all_continuous() ~ "{mean} ({sd})", 
+                               follow_up ~ "{median} ({p25}, {p75})", 
+                               follow_up_death ~ "{median} ({p25}, {p75})", 
                                all_categorical() ~ "{n} ({p})"),
               digits = list(birth_year ~ 0, 
                             baseline_age ~ 0, 
                             diagnosis_age ~ 0, 
-                            follow_up ~ 0, 
+                            follow_up ~ 1, 
+                            follow_up_death ~ 1, 
                             bmi ~ 1, 
                             fS_Kol ~ 1, 
                             proteomic_neuro_explo_NEFL ~ 1), 
@@ -65,7 +68,6 @@ figure_1 <-   bdd_danish |>                                                     
         axis.title.y = element_text(size = 12), 
         axis.text.y = element_text(size = 8),
         title = element_text(size = 14)) +
-  
   
   bdd_danish |>                                                                 # boxplot all prot
   filter(match != 159) |>
@@ -134,52 +136,53 @@ figure_3 <- results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_o
 
 # Figure 4 - Additional analysis (AUC) ----
 figure_4 <- results_proteomic_ALS_occurrence$additional_analysis_4$additional_analysis_4_figure_unadjusted
-figure_4 <- figure_4 + theme(legend.direction = "vertical") + labs(title = "")
+figure_4 <- figure_4 + labs(title = "") + 
+  guides(linetype = guide_legend(nrow = 2, byrow = TRUE))
 
 # Figure 5 - Base and adjusted Cox regressions (ALS survival) ----
-figure_5 <- results_proteomic_ALS_survival$main$main_results |> 
-  filter(term == "Continuous", 
-         explanatory == "NEFL", 
-         analysis %in% c("main", #"sensi_1_3", 
-                         "sensi_1_3_4", "sensi_1_3_5", "sensi_1_7_female", "sensi_1_7_male"), 
-         model == "adjusted") |> 
-  mutate(
-         #signif = ifelse(p_value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
-         # model = fct_recode(model,
-         #                    "Adjusted models" = "adjusted",
-         #                    "Base models" = "base"),
-         # model = fct_relevel(model, "Base models", "Adjusted models"),
-         analysis = fct_recode(analysis,
-                               "Main analyis\n(n=165)" = "main",
-                               #"Follow-up > 5 years\n (n=148)" = "sensi_1_3",
-                               "Follow-up\nbetween 5 and 14.6 years\n(n=75)" = "sensi_1_3_4",
-                               "Follow-up > 14.6 years\n (n=73)" = "sensi_1_3_5",
-                               "Females (n=64)" = "sensi_1_7_female",
-                               "Males (n=101)" = "sensi_1_7_male"),
-         analysis = fct_relevel(analysis,
-                                "Main analyis\n(n=165)",
-                                #"Follow-up > 5 years\n (n=148)",
-                                "Follow-up\nbetween 5 and 14.6 years\n(n=75)",
-                                "Follow-up > 14.6 years\n (n=73)", 
-                                "Females (n=64)", 
-                                "Males (n=101)")) |> 
-  ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI)) +
-  geom_pointrange(size = 0.5) + 
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(
-    rows = dplyr::vars(analysis), 
-    #cols = dplyr::vars(model), 
-    switch = "y") +                         
-  labs( y = "Hazard Ratios") +
-  theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
-        legend.position = "bottom", 
-        strip.text.y.left = element_text(hjust = 0.5, vjust = 0.5, angle = 0), 
-        axis.text.y  = element_blank(),
-        axis.ticks.y = element_blank(),
-        axis.title.y = element_blank()) +
-  coord_flip()
-
+# figure_5 <- results_proteomic_ALS_survival$main$main_results |> 
+#   filter(term == "Continuous", 
+#          explanatory == "NEFL", 
+#          analysis %in% c("main", #"sensi_1_3", 
+#                          "sensi_1_3_4", "sensi_1_3_5", "sensi_1_7_female", "sensi_1_7_male"), 
+#          model == "adjusted") |> 
+#   mutate(
+#          #signif = ifelse(p_value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
+#          # model = fct_recode(model,
+#          #                    "Adjusted models" = "adjusted",
+#          #                    "Base models" = "base"),
+#          # model = fct_relevel(model, "Base models", "Adjusted models"),
+#          analysis = fct_recode(analysis,
+#                                "Main analyis\n(n=165)" = "main",
+#                                #"Follow-up > 5 years\n (n=148)" = "sensi_1_3",
+#                                "Follow-up\nbetween 5 and 14.6 years\n(n=75)" = "sensi_1_3_4",
+#                                "Follow-up > 14.6 years\n (n=73)" = "sensi_1_3_5",
+#                                "Females (n=64)" = "sensi_1_7_female",
+#                                "Males (n=101)" = "sensi_1_7_male"),
+#          analysis = fct_relevel(analysis,
+#                                 "Main analyis\n(n=165)",
+#                                 #"Follow-up > 5 years\n (n=148)",
+#                                 "Follow-up\nbetween 5 and 14.6 years\n(n=75)",
+#                                 "Follow-up > 14.6 years\n (n=73)", 
+#                                 "Females (n=64)", 
+#                                 "Males (n=101)")) |> 
+#   ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI)) +
+#   geom_pointrange(size = 0.5) + 
+#   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+#   facet_grid(
+#     rows = dplyr::vars(analysis), 
+#     #cols = dplyr::vars(model), 
+#     switch = "y") +                         
+#   labs( y = "Hazard Ratios") +
+#   theme_lucid() +
+#   theme(strip.text = element_text(face = "bold"), 
+#         legend.position = "bottom", 
+#         strip.text.y.left = element_text(hjust = 0.5, vjust = 0.5, angle = 0), 
+#         axis.text.y  = element_blank(),
+#         axis.ticks.y = element_blank(),
+#         axis.title.y = element_blank()) +
+#   coord_flip()
+# 
 
 
 # Table S1 ----
@@ -252,105 +255,92 @@ table_S2 <-
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 # Table S3 ----
-table_S3 <- 
-  results_proteomic_ALS_survival$main$main_results |>
-  filter(term == "Continuous", 
-         explanatory == "NEFL", 
-         analysis %in% c("main", 
-                         #"sensi_1_3", 
-                         "sensi_1_3_4", "sensi_1_3_5", "sensi_1_7_female", "sensi_1_7_male")) |> 
-  select(analysis, model, explanatory, HR, "95% CI", p_value) |> 
-  mutate(
-    analysis = fct_recode(analysis,
-                          "Main analyis (n=165)" = "main",
-                          "Follow-up > 5 years (n=148)" = "sensi_1_3",
-                          "Follow-up between 5 and 14.6 years (n=75)" = "sensi_1_3_4",
-                          "Follow-up > 14.6 years (n=73)" = "sensi_1_3_5",
-                          "Females (n=64)" = "sensi_1_7_female",
-                          "Males (n=101)" = "sensi_1_7_male"),
-    analysis = fct_relevel(analysis,
-                           "Main analyis (n=165)",
-                           "Follow-up > 5 years (n=148)",
-                           "Follow-up between 5 and 14.6 years (n=75)",
-                           "Follow-up > 14.6 years (n=73)", 
-                           "Females (n=64)", 
-                           "Males (n=101)")) |> 
-  pivot_wider(
-    names_from = model,  
-    values_from = c(HR, `95% CI`, p_value)) |> 
-  select(analysis, explanatory, 
-         'HR' = 'HR_base', '95% CI' = '95% CI_base', 'p-value' = 'p_value_base', 
-         'HR ' = 'HR_adjusted', '95% CI ' = '95% CI_adjusted', 'p-value ' = 'p_value_adjusted') |>
-  flextable() |>
-  add_footer_lines(
-    "1All models are matched for sex and birth year. Adjusted models further account for smoking, body mass index and marital status. 
-  2Estimated risk of ALS for a one standard deviation increase of pre-disease NEFL (NPX). 
-  3CI: Confidence interval.") |>
-  add_header(
-    "explanatory" = "Explanatory variable",
-    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", 
-    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model") |>
-  merge_h(part = "header") |>
-  theme_vanilla() |>
-  bold(j = "explanatory", part = "body") |>
-  align(align = "center", part = "all") |>
-  align(j = "explanatory", align = "left", part = "all") |> 
-  merge_at(j = "explanatory", part = "header") |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")
+# table_S3 <- 
+#   results_proteomic_ALS_survival$main$main_results |>
+#   filter(term == "Continuous", 
+#          explanatory == "NEFL", 
+#          analysis %in% c("main", 
+#                          #"sensi_1_3", 
+#                          "sensi_1_3_4", "sensi_1_3_5", "sensi_1_7_female", "sensi_1_7_male")) |> 
+#   select(analysis, model, explanatory, HR, "95% CI", p_value) |> 
+#   mutate(
+#     analysis = fct_recode(analysis,
+#                           "Main analyis (n=165)" = "main",
+#                           "Follow-up > 5 years (n=148)" = "sensi_1_3",
+#                           "Follow-up between 5 and 14.6 years (n=75)" = "sensi_1_3_4",
+#                           "Follow-up > 14.6 years (n=73)" = "sensi_1_3_5",
+#                           "Females (n=64)" = "sensi_1_7_female",
+#                           "Males (n=101)" = "sensi_1_7_male"),
+#     analysis = fct_relevel(analysis,
+#                            "Main analyis (n=165)",
+#                            "Follow-up > 5 years (n=148)",
+#                            "Follow-up between 5 and 14.6 years (n=75)",
+#                            "Follow-up > 14.6 years (n=73)", 
+#                            "Females (n=64)", 
+#                            "Males (n=101)")) |> 
+#   pivot_wider(
+#     names_from = model,  
+#     values_from = c(HR, `95% CI`, p_value)) |> 
+#   select(analysis, explanatory, 
+#          'HR' = 'HR_base', '95% CI' = '95% CI_base', 'p-value' = 'p_value_base', 
+#          'HR ' = 'HR_adjusted', '95% CI ' = '95% CI_adjusted', 'p-value ' = 'p_value_adjusted') |>
+#   flextable() |>
+#   add_footer_lines(
+#     "1All models are matched for sex and birth year. Adjusted models further account for smoking, body mass index and marital status. 
+#   2Estimated risk of ALS for a one standard deviation increase of pre-disease NEFL (NPX). 
+#   3CI: Confidence interval.") |>
+#   add_header(
+#     "explanatory" = "Explanatory variable",
+#     "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", 
+#     "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model") |>
+#   merge_h(part = "header") |>
+#   theme_vanilla() |>
+#   bold(j = "explanatory", part = "body") |>
+#   align(align = "center", part = "all") |>
+#   align(j = "explanatory", align = "left", part = "all") |> 
+#   merge_at(j = "explanatory", part = "header") |>
+#   flextable::font(fontname = "Calibri", part = "all") |> 
+#   fontsize(size = 10, part = "all") |>
+#   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 
 # Export ----
 ## tables ----
 table_1 <- read_docx() |> body_add_flextable(table_1)                           # covariate descriptive table 
-print(table_1, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/table_1.docx")
+print(table_1, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_ALS/table_1.docx")
 
-table_S1 <- read_docx() |> body_add_flextable(table_S1)                         # NEFL descriptive table 
-print(table_S1, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/table_S1.docx")
+table_S1 <- read_docx() |> body_add_flextable(table_S1)                         # NfL descriptive table 
+print(table_S1, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_ALS/table_S1.docx")
 
 table_S2 <- read_docx() |> body_add_flextable(table_S2)                         # Conditional logistic regressions (als risk)
-print(table_S2, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/table_S2.docx")
-
-table_S3 <- read_docx() |> body_add_flextable(table_S3)                         # Cox regressions (als survival)
-print(table_S3, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/table_S3.docx")
-
+print(table_S2, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_ALS/table_S2.docx")
 
 ## figures ----
-ggsave(                                                                         # NEFL descriptive figure 
-  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/figure_1.tiff",
+ggsave(                                                                         # NfL descriptive figure 
+  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_ALS/figure_1.tiff",
   figure_1,
   height = 5,
   width = 10,
   units = "in")
 
 ggsave(                                                                         # Forest plots of logistic regressions results (ALS risk)
-  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/figure_2.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_ALS/figure_2.tiff",
   figure_2,
   height = 4,
   width = 7,
   units = "in")
 
-ggsave(                                                                         # LOESS curve of NEFL ratios depending on time to diagnosis
-  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/figure_3.tiff",
+ggsave(                                                                         # LOESS curve of NfL ratios depending on time to diagnosis
+  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_ALS/figure_3.tiff",
   figure_3,
   height = 5,
   width = 10,
   units = "in")
 
 ggsave(                                                                         # AUC curve
-  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/figure_4.tiff",
+  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_ALS/figure_4.tiff",
   figure_4,
-  height = 10,
+  height = 7,
   width = 7,
   units = "in")
-
-ggsave(                                                                         # Forest plot of Cox regression results (ALS survival)
-  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NEFL_ALS/figure_5.tiff",
-  figure_5,
-  height = 4,
-  width = 7,
-  units = "in")
-
-
 

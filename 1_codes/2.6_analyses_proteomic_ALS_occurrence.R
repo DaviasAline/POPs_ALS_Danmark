@@ -5137,28 +5137,28 @@ label_main_analysis <-
          "AUC = ", round(auc(roc_nefl_all), 2), 
          "\nOptimal NfL cut-off: ", round(youden_best_nefl_all["threshold"], 2), 
          "\n(sensitivity: ", round(youden_best_nefl_all["sensitivity"], 2), 
-         " and specificity: ", round(youden_best_nefl_all["specificity"], 2), ")")
+         " and specificity: ", round(youden_best_nefl_all["specificity"], 2), ")\n")
 
 label_sensi_2 <- 
   paste0("Follow-up < 5 years (n=51)\n", 
          "AUC = ", round(auc(roc_nefl_sensi_2), 2), 
          "\nOptimal NfL cut-off: ", round(youden_best_nefl_sensi_2["threshold"], 2), 
          "\n(sensitivity: ", round(youden_best_nefl_sensi_2["sensitivity"], 2), 
-         " and specificity: ", round(youden_best_nefl_sensi_2["specificity"], 2), ")")
+         " and specificity: ", round(youden_best_nefl_sensi_2["specificity"], 2), ")\n")
 
 label_sensi_1_3_4 <- 
   paste0("Follow-up between 5 and 14.6 years (n=225)\n", 
          "AUC = ", round(auc(roc_nefl_sensi_1_3_4), 2), 
          "\nOptimal NfL cut-off: ", round(youden_best_nefl_sensi_1_3_4["threshold"], 2), 
          "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3_4["sensitivity"], 2), 
-         " and specificity: ", round(youden_best_nefl_sensi_1_3_4["specificity"], 2), ")")
+         " and specificity: ", round(youden_best_nefl_sensi_1_3_4["specificity"], 2), ")\n")
 
 label_sensi_1_3_5 <- 
   paste0("Follow-up > 14.6 years (n=219)\n", 
          "AUC = ", round(auc(roc_nefl_sensi_1_3_5), 2), 
          "\nOptimal NfL cut-off: ", round(youden_best_nefl_sensi_1_3_5["threshold"], 2), 
          "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3_5["sensitivity"], 2), 
-         " and specificity: ", round(youden_best_nefl_sensi_1_3_5["specificity"], 2), ")")
+         " and specificity: ", round(youden_best_nefl_sensi_1_3_5["specificity"], 2), ")\n")
 
 roc_patterns <- c(
   label_main_analysis = "solid",
@@ -5203,19 +5203,19 @@ additional_analysis_4_figure_unadjusted <- ggroc(
 
 label_main_analysis <- 
   paste0("Main analysis (n=495)\n", 
-         "AUC = ", round(auc(roc_nefl_all_adjusted), 2))
+         "AUC = ", round(auc(roc_nefl_all_adjusted), 2), "\n")
 
 label_sensi_2 <- 
   paste0("Follow-up < 5 years (n=51)\n", 
-         "AUC = ", round(auc(roc_nefl_sensi_2_adjusted), 2))
+         "AUC = ", round(auc(roc_nefl_sensi_2_adjusted), 2), "\n")
 
 label_sensi_1_3_4 <- 
   paste0("Follow-up between 5 and 14.6 years (n=225)\n", 
-         "AUC = ", round(auc(roc_nefl_sensi_1_3_4_adjusted), 2))
+         "AUC = ", round(auc(roc_nefl_sensi_1_3_4_adjusted), 2), "\n")
 
 label_sensi_1_3_5 <- 
   paste0("Follow-up > 14.6 years (n=219)\n", 
-         "AUC = ", round(auc(roc_nefl_sensi_1_3_5_adjusted), 2))
+         "AUC = ", round(auc(roc_nefl_sensi_1_3_5_adjusted), 2), "\n")
 
 roc_patterns <- c(
   label_main_analysis = "solid",
@@ -5256,8 +5256,6 @@ additional_analysis_4_figure_adjusted <- ggroc(
   theme_lucid() +
   theme(legend.position = "bottom", legend.direction = "horizontal")
 
-
- 
 rm(roc_nefl_all, youden_nefl_all, youden_best_nefl_all, 
    model_adjusted_all, roc_nefl_all_adjusted, youden_nefl_all_adjusted, 
    roc_nefl_sensi_2, youden_nefl_sensi_2, youden_best_nefl_sensi_2, 
@@ -5268,7 +5266,7 @@ rm(roc_nefl_all, youden_nefl_all, youden_best_nefl_all,
    model_adjusted_sensi_1_3_4, roc_nefl_sensi_1_3_4_adjusted, youden_nefl_sensi_1_3_4_adjusted, 
    roc_nefl_sensi_1_3_5, youden_nefl_sensi_1_3_5, youden_best_nefl_sensi_1_3_5, 
    model_adjusted_sensi_1_3_5, roc_nefl_sensi_1_3_5_adjusted, youden_nefl_sensi_1_3_5_adjusted, 
-   roc_patterns, additional_analysis_4_figure_unadjusted, additional_analysis_4_figure_adjusted, 
+   roc_patterns, 
    label_main_analysis, label_sensi_2, label_sensi_1_3_4, label_sensi_1_3_5)
 
 # Figures and Tables ----

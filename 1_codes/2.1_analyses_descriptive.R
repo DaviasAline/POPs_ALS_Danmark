@@ -151,20 +151,21 @@ POPs_group_boxplot_danish_by_als <- bdd_danish |>
          POPs = fct_recode(POPs, !!!POPs_group_labels), 
          POPs = fct_rev(POPs),
          als = as.character(als), 
-         als = fct_recode(als, 
-                          "Controls" = "0",
-                          "Cases" = "1")) |>
-  arrange(POPs) |>
+         als = fct_recode(als, "Cases" = "1", 
+                          "Controls" = "0")) |>
+  arrange(POPs, als) |>
   ggplot() +
   aes(x = POPs, y = values, fill = als) +
   geom_boxplot() +
-  scale_fill_hue(direction = 1, 
-                 guide = guide_legend(reverse = TRUE)) +
+  scale_fill_manual(
+    breaks = c("Cases", "Controls"),
+    values = c(Cases = "darkgrey", Controls = "white")) +
   scale_y_continuous(trans = "log", 
                      labels = number_format(accuracy = 1)) +
   labs(x = "POPs", y = "Pre-disease plasma concentrations (pg/ml)", fill = "ALS") +
   coord_flip() +
   theme_lucid()
+
 
 POPs_group_boxplot_danish_by_death <- bdd_danish |>
   filter(als == 1) |>
