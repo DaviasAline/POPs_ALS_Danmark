@@ -2348,7 +2348,7 @@ trend_copollutant <-
          study = "Danish")
 
 ### ERS model avec les POP selectionnés par elastic net 0.4 ----
-#### sd -----
+#### sd all -----
 coef(sensi2_elastic_net_sd_danish, s = "lambda.min")                            # Elastic net keeps HCB and Σchlordane
 cox_model <-                                                                    # regular co-pollutant cox model to get unpenalized coefficients 
   coxph(Surv(follow_up_death, status_death) ~ 
@@ -2396,6 +2396,62 @@ sensi2_cox_model_ERS_from_elastic_net_sd <- tibble(                             
   se = coefs[, "se(coef)"], 
   `p-value` = coefs[, "Pr(>|z|)"]) |>
   filter(str_detect(term, "_sd"))
+
+
+#### sd (for POPs with OR>1 only)-----
+coef(sensi2_elastic_net_sd_danish, s = "lambda.min")                            # Elastic net keeps HCB and Σchlordane
+cox_model_positives <-                                                                    # regular co-pollutant cox model to get unpenalized coefficients 
+  coxph(Surv(follow_up_death, status_death) ~ 
+          PCB_28_sd + PCB_52_sd + OCP_oxychlordane_sd + OCP_transnonachlor_sd + 
+          #PBDE_47_sd + 
+          sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+        data = bdd_cases_danish)
+summary(cox_model_positives)
+pollutants_positives <- c("PCB_28_sd", "PCB_52_sd", "OCP_oxychlordane_sd", "OCP_transnonachlor_sd")                                        # selected POPs
+scaled_betas_positives <- c(
+  PCB_28_sd = 0.17657 / (0.17657 + 0.23046 + 0.17271 + 0.07953),     # weigths of the POPs depending on the scaled coefficients of the regular cox copollutant model
+  PCB_52_sd = 0.23046 / (0.17657 + 0.23046 + 0.17271 + 0.07953), 
+  OCP_oxychlordane_sd = 0.17271 / (0.17657 + 0.23046 + 0.17271 + 0.07953), 
+  OCP_transnonachlor_sd = 0.07953 / (0.17657 + 0.23046 + 0.17271 + 0.07953))
+Z_positives <- scale(bdd_cases_danish[, pollutants_positives])   
+bdd_cases_danish$ERS_score_from_elastic_net_sensi_2_positives <- as.numeric(Z_positives %*% scaled_betas_positives)
+bdd_cases_danish <-
+  bdd_cases_danish |>
+  mutate(ERS_score_from_elastic_net_sensi_2_positives_sd = scale(ERS_score_from_elastic_net_sensi_2_positives), 
+         ERS_score_from_elastic_net_sensi_2_positives_quart = 
+           cut(ERS_score_from_elastic_net_sensi_2_positives,
+               breaks = quantile(ERS_score_from_elastic_net_sensi_2_positives, probs = seq(0, 1, 0.25), na.rm = TRUE),
+               include.lowest = TRUE,
+               labels = c("Q1", "Q2", "Q3", "Q4")), 
+         
+         ERS_score_from_elastic_net_sensi_2_positives_quart_med = {
+           x <- ERS_score_from_elastic_net_sensi_2_positives
+           cuts <- quantile(x, probs = seq(0, 1, 0.25), na.rm = TRUE)
+           quartiles <- cut(x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
+           quart_meds <- tapply(x, quartiles, median, na.rm = TRUE)
+           quart_meds[quartiles]
+         }
+  )
+
+
+sensi2_cox_model_ERS_from_elastic_net_positives_sd <- 
+  coxph(Surv(follow_up_death, status_death) ~ 
+          ERS_score_from_elastic_net_sensi_2_positives_sd + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+        data = bdd_cases_danish)
+model_summary_positives <-  summary(sensi2_cox_model_ERS_from_elastic_net_positives_sd)
+coefs_positives <- model_summary_positives$coefficients
+sensi2_cox_model_ERS_from_elastic_net_positives_sd <- tibble(                   # creation of a table of results
+  study = "Danish", 
+  model = "ERS_positives_sd", 
+  term = rownames(coefs),
+  explanatory = rownames(coefs),
+  coef = coefs[, "coef"],
+  se = coefs[, "se(coef)"], 
+  `p-value` = coefs[, "Pr(>|z|)"]) |>
+  filter(str_detect(term, "_sd"))
+
+rm(cox_model_positives, pollutants_positives, scaled_betas_positives, Z, model_summary_positives, coefs_positives)
+
 
 #### quartiles ----
 sensi2_cox_model_ERS_from_elastic_net_quart <- coxph(Surv(follow_up_death, status_death) ~ ERS_score_from_elastic_net_sensi_2_quart + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, data = bdd_cases_danish)
@@ -2473,6 +2529,7 @@ results_sensi2 <-
   bind_rows(sensi2_model3_cox_sd_elastic_net_danish, 
             sensi2_model3_cox_quart_elastic_net_danish,
             sensi2_cox_model_ERS_from_elastic_net_sd, 
+            sensi2_cox_model_ERS_from_elastic_net_positives_sd, 
             sensi2_cox_model_ERS_from_elastic_net_quart) |>
   mutate(
     HR = exp(coef),
@@ -2547,6 +2604,7 @@ rm(results_sensi2,
    sensi2_model3_cox_sd_elastic_net_danish, 
    sensi2_model3_cox_quart_elastic_net_danish,
    sensi2_cox_model_ERS_from_elastic_net_sd, 
+   sensi2_cox_model_ERS_from_elastic_net_sd_positives, 
    sensi2_cox_model_ERS_from_elastic_net_quart, 
    
    POPs_sd_selected, POPs_sd_selected_labels,
@@ -3397,7 +3455,7 @@ POPs_sd_ALS_table_sensi2_ERS_danish <-
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_2") |>
   filter(study == "Danish") |>
-  filter(model == "ERS_sd") |>
+  filter(model %in% c("ERS_sd", "ERS_positives_sd")) |>
   select(explanatory, HR, "95% CI", "p-value") |>
   mutate(
     explanatory = fct_recode(explanatory, 
