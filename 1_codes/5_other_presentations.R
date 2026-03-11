@@ -1154,3 +1154,176 @@ ggsave(
 
 
 
+
+# AAN presentations - 2 mars 2026 ----
+## Figure 1 - Descriptive figure of NEFL distribution (density and boxplots) ----
+source("~/Documents/POP_ALS_2025_02_03/1_codes/2.6_analyses_proteomic_ALS_occurrence.R", echo=TRUE)
+
+figure_1 <-   bdd_danish |>                                                     # densityplot all prot
+  filter(match != 159) |>
+  select(proteomic_neuro_explo_NEFL, als) |>
+  mutate(als = factor(as.character(als)), 
+         als = fct_recode(als, "Controls\n(n=330)" = "0", "Cases\n(n=165)" = "1")) |>
+  ggplot() +
+  aes(x = proteomic_neuro_explo_NEFL, fill = als) +
+  geom_density(alpha = 0.4) +
+  scale_fill_hue(direction = -1) + 
+  scale_x_continuous(limits = c(1, 5)) +
+  scale_y_continuous(limits = c(0, 1)) +
+  labs(y = "Density", fill = "ALS") +
+  theme_minimal() +
+  theme(axis.title.x = element_blank(), 
+        axis.text.x = element_blank(), 
+        axis.ticks.x = element_blank(), 
+        axis.title.y = element_text(size = 16), 
+        axis.text.y = element_text(size = 16),
+        legend.text = element_text(size = 14), 
+        title = element_text(size = 16)) +
+  
+  
+  bdd_danish |>                                                                 # boxplot all prot
+  filter(match != 159) |>
+  select(proteomic_neuro_explo_NEFL, als) |>
+  mutate(als = factor(as.character(als)), 
+         als = fct_recode(als, "Controls" = "0", "Cases" = "1")) |>
+  ggplot() +
+  aes(x = proteomic_neuro_explo_NEFL, fill = als) +
+  geom_boxplot(alpha = 0.4) +
+  scale_fill_hue(direction = -1) +
+  scale_x_continuous(limits = c(1, 5)) +
+  labs(x = "Neurofilament light polypeptide (NPX)", fill = "ALS") +
+  theme_lucid() +
+  theme(legend.position = "none", 
+        axis.text.y = element_blank(), 
+        axis.title.x = element_text(size = 16), 
+        axis.text.x = element_text(size = 16)) +
+  
+  plot_layout(heights = c(5, 1), ncol = 1)
+
+
+## Figure 2 - Base and adjusted logistic regressions (ALS risk) ----
+figure_2 <- 
+  results_proteomic_ALS_occurrence$main$main_results |>
+  filter(analysis %in% c("sensi_1", 
+                         "sensi_2", 
+                         #"sensi_1_3", 
+                         "sensi_1_3_4", "sensi_1_3_5", 
+                         "sensi_1_7_female", "sensi_1_7_male"), 
+         term == "Continuous", 
+         explanatory == "NEFL", 
+         model == "adjusted") |> 
+  mutate(signif = ifelse(p_value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
+         analysis = fct_recode(analysis, 
+                               "Main analysis\n(n=495)" = "sensi_1",
+                               "Follow-up < 5 years\n (n=51)" = "sensi_2",
+                               #"Filtered to\nfollow-up > 5 years\n (n=444)" = "sensi_1_3",
+                               "Follow-up\nbetween 5 and 14.6 years\n(n=225)" = "sensi_1_3_4",
+                               "Follow-up > 14.6 years\n (n=219)" = "sensi_1_3_5", 
+                               "Females (n=192)" = "sensi_1_7_female", 
+                               "Males (n=303)" = "sensi_1_7_male"), 
+         analysis = fct_relevel(analysis, 
+                                "Main analysis\n(n=495)", 
+                                "Follow-up < 5 years\n (n=51)", 
+                                #"Filtered to\nfollow-up > 5 years\n (n=444)", 
+                                "Follow-up\nbetween 5 and 14.6 years\n(n=225)",
+                                "Follow-up > 14.6 years\n (n=219)", 
+                                "Females (n=192)",
+                                "Males (n=303)")) |> 
+  ggplot(aes(x = explanatory, y = OR_raw, ymin = lower_CI, ymax = upper_CI)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(rows = dplyr::vars(analysis),  switch = "y") +   
+  labs( y = "Odd Ratios") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold", size = 16), 
+        axis.text.x = element_text(size = 16), 
+        axis.title.x = element_text(size = 16), 
+        legend.position = "bottom", 
+        strip.text.y.left = element_text(hjust = 0.5, vjust = 0.5, angle = 0), 
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank()) +
+  coord_flip()
+
+
+## Figure 3 ----
+ratios_sensi_1 <- 
+  bdd_danish |>
+  mutate(
+    proteomic_neuro_explo_NEFL = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
+  group_by(match) |>
+  summarise(
+    ratio_proteomic_neuro_explo_NEFL = proteomic_neuro_explo_NEFL[als == 1] / mean(proteomic_neuro_explo_NEFL[als == 0]),
+    follow_up = unique(follow_up[als == 1])) |>
+  ungroup() |> 
+  mutate(follow_up_neg = -follow_up, 
+         follow_up_neg = follow_up_neg/12)
+
+# Visualisation avec courbe LOESS
+figure_3 <- 
+  ggplot(ratios_sensi_1, aes(x = follow_up_neg, y = ratio_proteomic_neuro_explo_NEFL)) +
+  geom_point(alpha = 0.6, color = "darkblue") +
+  geom_smooth(method = "loess", se = TRUE, color = "red", span = 0.75) +
+  labs(
+    x = "Time to ALS diagnosis (years)",
+    y = "Ratio of NEFL in case and matched controls") +
+  theme_lucid() + 
+  theme(axis.text = element_text(size = 16), 
+        axis.title = element_text(size = 16)) 
+rm(ratios_sensi_1)
+
+
+## Figure 4 ----
+figure_4 <- 
+  results_proteomic_ALS_occurrence$additional_analysis_4$additional_analysis_4_figure_unadjusted + 
+  labs(title = "") + 
+  theme_lucid() +
+  theme(axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16), 
+        legend.text = element_text(size = 16), 
+        legend.position = "bottom") +
+  guides(linetype = guide_legend(nrow = 2, byrow = TRUE)) 
+
+
+ggsave(                                                                         # NfL descriptive figure 
+  "~/Documents/POP_ALS_2025_02_03/2_output/Oral presentations/4. AAN_annual_meeting_2026/figure_1.jnp",
+  figure_1,
+  height = 5,
+  width = 10,
+  units = "in", 
+  dpi = 300,
+  device = "jpeg",
+  quality = 100)
+
+ggsave(                                                                         # Forest plots of logistic regressions results (ALS risk)
+  "~/Documents/POP_ALS_2025_02_03/2_output/Oral presentations/4. AAN_annual_meeting_2026/figure_2.jnp",
+  figure_2,
+  height = 6,
+  width = 7,
+  units = "in", 
+  dpi = 300,
+  device = "jpeg",
+  quality = 100)
+
+ggsave(                                                                         # LOESS curve of NfL ratios depending on time to diagnosis
+  "~/Documents/POP_ALS_2025_02_03/2_output/Oral presentations/4. AAN_annual_meeting_2026/figure_3.jnp",
+  figure_3,
+  height = 5,
+  width = 10,
+  units = "in", 
+  dpi = 300,
+  device = "jpeg",
+  quality = 100)
+
+ggsave(                                                                         # AUC curve
+  "~/Documents/POP_ALS_2025_02_03/2_output/Oral presentations/4. AAN_annual_meeting_2026/figure_4.jnp",
+  figure_4,
+  height = 9,
+  width = 10,
+  units = "in", 
+  dpi = 300,
+  device = "jpeg",
+  quality = 100)
+
+
+
