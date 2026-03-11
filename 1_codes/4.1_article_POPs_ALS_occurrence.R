@@ -72,9 +72,11 @@ make_quartile_var <- function(x, controls) {
   qs <- unique(qs)
   
   brks <- c(-Inf, qs, Inf)
-  brks_lab <- formatC(brks, format = "f", digits = 1)
-  brks_lab[1] <- "-Inf"
-  brks_lab[length(brks_lab)] <- "Inf"
+  
+  min_c <- min(x[controls], na.rm = TRUE)
+  max_c <- max(x[controls], na.rm = TRUE)
+  brks_lab <- c(min_c, qs, max_c)
+  brks_lab <- formatC(brks_lab, format = "f", digits = 1)
   
   labs <- paste0(
     "Q", seq_len(length(brks)-1), ": (",
