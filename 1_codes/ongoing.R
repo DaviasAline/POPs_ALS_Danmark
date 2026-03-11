@@ -1,8 +1,7 @@
-# work on machine learning 
-# 04/12/2025
+# Work on machine learning 04/12/2025 ----
 
-# supervised machine learning : random forest method ----
-## data preparation ----
+## supervised machine learning : random forest method ----
+### data preparation ----
 proteomic_selected <-                                                           # selection des prot avec p<0.05
   results_proteomic_ALS_occurrence$main$main_results |> 
   filter(analysis == "main", 
@@ -32,12 +31,12 @@ bdd_rf <-                                                                       
 
 
 
-## unconditional random forest -----
-### chargement des packages ----
+### unconditional random forest -----
+#### chargement des packages ----
 library(randomForest)
 library(caret)
 
-### data preparation ----
+#### data preparation ----
 set.seed(1996)
 matches <- unique(bdd_rf$match)                                                 # 70% for training, 30% for testing
 train_matches <- sample(matches, size = floor(0.7 * length(matches)))
@@ -47,7 +46,7 @@ test_data  <- bdd_rf |> filter(!match %in% train_matches) |> select(-match)     
 
 rm(matches, train_matches)
 
-### random forest with randomForest() ----
+#### random forest with randomForest() ----
 set.seed(1996)
 
 rf_model <- randomForest(
@@ -59,23 +58,23 @@ rf_model <- randomForest(
 
 print(rf_model)
 
-### importance des variables ----
+#### importance des variables ----
 importance(rf_model)
 varImpPlot(rf_model)
 
-### performance predictive ----
+#### performance predictive ----
 pred <- predict(rf_model, newdata = test_data, type = "response")
 confusionMatrix(pred, test_data$als)
 
 
 
-## conditionnal random forest ----
-### chargement des packages ----
+### conditionnal random forest ----
+#### chargement des packages ----
 library(party)
 library(pROC)
 library(groupdata2)   # pour CV / split groupé
 
-### data preparation ----
+#### data preparation ----
 set.seed(1996)
 matches <- unique(bdd_rf$match)                                                 # 70% for training, 30% for testing
 train_matches <- sample(matches, size = floor(0.7 * length(matches)))
@@ -88,7 +87,7 @@ test_data  <-
 rm(matches, train_matches)
 
 
-### conditional random forest with cforest() ----
+#### conditional random forest with cforest() ----
 set.seed(1996)
 
 cforest_ctrl <- cforest_unbiased(
@@ -100,13 +99,13 @@ rf_model <- cforest(
   data = train_data,
   controls = cforest_ctrl)
 
-### importance des variables ----
+#### importance des variables ----
 varimp_cond <- varimp(rf_model, conditional = TRUE)
 
 importance_sorted <- sort(varimp_cond, decreasing = TRUE)                       # Classement décroissant
 importance_sorted
 
-### performance predictive ----
+#### performance predictive ----
 pred_prob <- predict(rf_model, newdata = test_data, type = "prob")              # probabilités
 prob_als1 <- pred_prob[, "1"]
 
@@ -124,13 +123,13 @@ accuracy
 
 
 
-## conditional random forest avec 10 fold cross validation ----
-### chargement des packages ----
+### conditional random forest avec 10 fold cross validation ----
+#### chargement des packages ----
 library(party)
 library(pROC)
 library(groupdata2)   # group K-fold CV
 
-### data preparation ----
+#### data preparation ----
 bdd_rf <- 
   bdd_danish |>  
   select(als, match, baseline_age, sex, smoking_2cat_i, bmi, 
@@ -143,7 +142,7 @@ bdd_rf <-
 
 
 
-### 10-fold group cross-validation (group = match) ----
+#### 10-fold group cross-validation (group = match) ----
 set.seed(1996)
 bdd_cv <- fold(                                     # groupdata2 construit une colonne .folds qui respecte les groupes
   data   = bdd_rf |> select(-baseline_age, -sex),   # on retire ces deux var car on match avec var match
@@ -152,7 +151,7 @@ bdd_cv <- fold(                                     # groupdata2 construit une c
   method = "n_dist")
 
 
-### Boucle CV sur les 10 folds ----
+#### Boucle CV sur les 10 folds ----
 auc_values <- c()                                  # Stockage des métriques
 accuracy_values <- c()
 
@@ -183,7 +182,7 @@ for (fold in 1:10) {
 }
 
 
-### Results ----
+#### Results ----
 mean_auc <- mean(auc_values)
 sd_auc   <- sd(auc_values)
 
@@ -194,7 +193,7 @@ cat("\n=== Cross-Validated Performance ===\n")
 cat(sprintf("AUC (mean ± SD): %.3f ± %.3f\n", mean_auc, sd_auc))
 cat(sprintf("Accuracy (mean ± SD): %.3f ± %.3f\n", mean_acc, sd_acc))
 
-### Importance des variables sur modèle final (entraînement complet) -----
+#### Importance des variables sur modèle final (entraînement complet) -----
 cforest_ctrl_final <- cforest_unbiased(
   ntree = 500,
   mtry = floor(sqrt(ncol(bdd_rf) - 2)))
@@ -211,4 +210,25 @@ importance_sorted <- sort(varimp_cond, decreasing = TRUE)
 importance_sorted
 
 
-# unsupervised machine learning : K-mean clustering method ----
+## unsupervised machine learning : K-mean clustering method ----
+
+
+
+
+
+
+# Prise en compte differences de proteins EPIC vs UK biobank ----
+library(readxl)
+library(tidyverse)
+library(questionr)
+library(gtsummary)
+Olink_explore <- read_excel("~/Documents/Appels à projets/9. UK biobank access 2026/Olink Explore protein list.xltx")
+Olink_target <- read_excel("~/Documents/Appels à projets/9. UK biobank access 2026/Olink Target 96 protein list.xltx")
+
+
+test <- left_join(Olink_target, Olink_explore, by = c("UniProt ID", "Gene", "Protein name"))
+
+
+
+
+
