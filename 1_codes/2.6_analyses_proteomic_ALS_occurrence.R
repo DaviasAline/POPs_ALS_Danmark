@@ -3941,6 +3941,33 @@ for (var in proteomic_sensi_1_7_male) {
 rm(var, formula, model, model_summary)
 
 
+# Interaction NfL x sex ? ----
+model_interac <- 
+  clogit(als ~  sex*proteomic_neuro_explo_NEFL_sd + 
+           baseline_age + smoking_2cat_i + bmi, data = bdd_danish)
+summary(model_interac)
+
+
+model_interac_sensi_2 <- 
+  clogit(als ~  sex*proteomic_neuro_explo_NEFL_sd +
+           baseline_age + smoking_2cat_i + bmi, data = bdd_danish_sensi_2)
+summary(model_interac_sensi_2)
+
+
+model_interac_sensi_1_3_4 <- 
+  clogit(als ~  sex*proteomic_neuro_explo_NEFL_sd + 
+           baseline_age + smoking_2cat_i + bmi, data = bdd_danish_sensi_1_3_4)
+summary(model_interac_sensi_1_3_4)
+
+model_interac_sensi_1_3_5 <- 
+  clogit(als ~  sex*proteomic_neuro_explo_NEFL_sd + 
+           baseline_age + smoking_2cat_i + bmi, data = bdd_danish_sensi_1_3_5)
+summary(model_interac_sensi_1_3_5)
+
+rm(model_interac, 
+   model_interac_sensi_2, 
+   model_interac_sensi_1_3_4, 
+   model_interac_sensi_1_3_5)
 
 
 # Merging the results ----

@@ -435,3 +435,8 @@ ggsave(
   width = 8,
   units = "in")
 
+
+rm(figure_1, figure_2, figure_3, figure_4, 
+   figure_S2, 
+   table_1, 
+   table_S1, table_S2, table_S3, table_S4)
