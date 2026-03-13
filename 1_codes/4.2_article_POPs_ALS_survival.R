@@ -55,9 +55,9 @@ table_S1 <- results_descriptive$danish$POPs_table_danish_by_death |>
   merge_at(i = 1, j = 2, part = "header")  |>
   add_footer_lines("POPs were summed as follows (pg/ml): most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; ΣDDT corresponds to p,p’-DDT and p,p’-DDE; Σchlordane corresponds to trans-nonanchlor and oxychlordane and finally ΣPBDE corresponds to PBDEs 47, 99, 153.")
 
-# Table S2 - POPs - ALS survival among the Danish cohort ----
+# Table S2a - POPs - ALS survival among the Danish cohort ----
 # Association between pre-diagnostic POP concentrations and survival among ALS cases from the Danish Diet, Cancer and Health cohort (cox models by exposure quartiles; n = 166).
-table_S2 <- 
+table_S2a <- 
   results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_survival |>
   filter(term == "Continuous") |>
   filter(!model == "copollutant") |> 
@@ -89,15 +89,17 @@ table_S2 <-
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
+# Table S2b - Sensitivity analysis - POPs - ALS survival among the Danish cohort ----
+# Association between pre-diagnostic POP groups and survival among ALS cases from the Danish Diet, Cancer and Health cohort (Cox regression models; n = 166).
+table_S2b <- results_POPs_ALS_survival$sensi4$POPs_sd_ALS_table_danish_sensi_4
+
+
 
 
 # Table S3 - POPs - ALS survival among the Danish cohort (mixture model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).
 table_S3 <- results_POPs_ALS_survival$sensi2$POPs_sd_ALS_table_sensi2_ERS_danish
 
-# Table S4 - Sensitivity analysis - POPs - ALS survival among the Danish cohort ----
-# Association between pre-diagnostic POP groups and survival among ALS cases from the Danish Diet, Cancer and Health cohort (Cox regression modelsl; n = 166).
-table_S4 <- results_POPs_ALS_survival$sensi4$POPs_sd_ALS_table_danish_sensi_4
 
 
 # Figure S1 - heatmap of correlation between POP exposures ---- 
@@ -141,14 +143,14 @@ print(table_1, target = "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_
 table_S1 <- read_docx() |> body_add_flextable(table_S1)
 print(table_S1, target = "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/table_S1.docx")
 
-table_S2 <- read_docx() |> body_add_flextable(table_S2)
-print(table_S2, target = "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/table_S2.docx")
+table_S2a <- read_docx() |> body_add_flextable(table_S2a)
+print(table_S2a, target = "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/table_S2a.docx")
+
+table_S2b <- read_docx() |> body_add_flextable(table_S2b)
+print(table_S2b, target = "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/table_S2b.docx")
 
 table_S3 <- read_docx() |> body_add_flextable(table_S3)
 print(table_S3, target = "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/table_S3.docx")
-
-table_S4 <- read_docx() |> body_add_flextable(table_S4)
-print(table_S4, target = "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/table_S4.docx")
 
 
 ggsave(

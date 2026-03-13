@@ -386,33 +386,6 @@ figure_S2 <- wrap_plots(
   results_POPs_ALS_occurrence$main$plot_copollutant_gam$ΣPBDE,
   ncol = 2)
 
-# Figure S3 - not summed sensitivity analysis quartiles ----
-figure_S3 <- results_POPs_ALS_occurrence$sensitivity_not_summed$sensitivity_results_not_summed_quart |> 
-  filter(variable %in% c("PCB-153", "oxychlordane", "transnonachlor", "p,p'-DDE", "p,p'-DDT")) |>
-  mutate(df = fct_recode(df, "Quartile 2" = "2", "Quartile 3" = "3", "Quartile 4" = "4"), 
-         df = fct_relevel(df, "Quartile 4", "Quartile 3", "Quartile 2" ), 
-         p.value_shape = ifelse(p.value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
-         model = fct_recode(model, 
-                            "Adjusted model" = "adjusted_quart_not_summed",
-                            "Base model" = "base_quart_not_summed"),
-         model = fct_relevel(model, 'Base model', 'Adjusted model'), 
-         variable = fct_relevel(variable, 
-                                "PCB-153", "p,p'-DDE", "p,p'-DDT", "transnonachlor", "oxychlordane"), 
-         variable = fct_recode(variable, "Oxychlordane" = "oxychlordane", "Transnonachlor" = "transnonachlor"), 
-         OR = as.numeric(as.character(OR)), 
-         lower_CI = as.numeric(as.character(lower_CI)), 
-         upper_CI = as.numeric(as.character(upper_CI))) |>
-  ggplot(aes(x = df, y = OR, ymin = lower_CI, ymax = upper_CI, color = p.value_shape)) +
-  geom_pointrange(size = 0.5) + 
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
-  facet_grid(rows = dplyr::vars(variable), cols = dplyr::vars(model), switch = "y") +  
-  scale_color_manual(values = c("p-value<0.05" = "black", "p-value≥0.05" = "grey53")) +
-  labs(x = "POPs", y = "Odds Ratio (OR)", color = "p-value") +
-  theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
-        legend.position = "bottom", 
-        strip.text.y = element_text(hjust = 0.5)) +
-  coord_flip()
 
 # Export ----
 table_1 <- read_docx() |> body_add_flextable(table_1) 
@@ -460,12 +433,5 @@ ggsave(
   figure_S2,
   height = 15,
   width = 8,
-  units = "in")
-
-ggsave(
-  "~/Documents/POP_ALS_2025_02_03/2_output/1.Article_POPs_ALS_occurence/figure_S3.tiff",
-  figure_S3,
-  height = 7,
-  width = 6,
   units = "in")
 
