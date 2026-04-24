@@ -4332,8 +4332,10 @@ figure_NEFL_over_time <-
   geom_smooth(method = "loess", se = FALSE, color = "red", span = 0.75) +
   labs(
     x = "Time to ALS diagnosis (years)",
-    y = "Ratio of NEFL in case and matched controls") +
-  theme_minimal(base_size = 14)
+    y = "Ratio of NfL in case and matched controls") +
+  theme_lucid() +
+  theme(axis.title = element_text(size = 16, color = "black", face = "bold"), 
+        axis.text = element_text(size = 16, color = "black", face = "bold"))
 
 # Regression lineaire with x = time to diag and y = ratio NEFL
 ggplot(ratios) +
@@ -4377,8 +4379,10 @@ figure_NEFL_over_time_sensi_1 <-
   geom_smooth(method = "loess", se = TRUE, color = "red", span = 0.75) +
   labs(
     x = "Time to ALS diagnosis (years)",
-    y = "Ratio of NEFL in case and matched controls") +
-  theme_lucid(base_size = 14)
+    y = "Ratio of NfL in case and matched controls") +
+  theme_lucid() +
+  theme(axis.title = element_text(size = 16, color = "black", face = "bold"), 
+        axis.text = element_text(size = 16, color = "black", face = "bold"))
 rm(ratios_sensi_1)
 
 ## GAM ----
@@ -5160,28 +5164,28 @@ youden_nefl_sensi_1_3_5_adjusted
 
 ## Plots----
 label_main_analysis <- 
-  paste0("Main analysis (n=495)\n", 
+  paste0("All cases and controls (n=495)\n", 
          "AUC = ", round(auc(roc_nefl_all), 2), 
          "\nOptimal NfL cut-off: ", round(youden_best_nefl_all["threshold"], 2), 
          "\n(sensitivity: ", round(youden_best_nefl_all["sensitivity"], 2), 
          " and specificity: ", round(youden_best_nefl_all["specificity"], 2), ")\n")
 
 label_sensi_2 <- 
-  paste0("Follow-up < 5 years (n=51)\n", 
+  paste0("Years to ALS < 5 years (n=51)\n", 
          "AUC = ", round(auc(roc_nefl_sensi_2), 2), 
          "\nOptimal NfL cut-off: ", round(youden_best_nefl_sensi_2["threshold"], 2), 
          "\n(sensitivity: ", round(youden_best_nefl_sensi_2["sensitivity"], 2), 
          " and specificity: ", round(youden_best_nefl_sensi_2["specificity"], 2), ")\n")
 
 label_sensi_1_3_4 <- 
-  paste0("Follow-up between 5 and 14.6 years (n=225)\n", 
+  paste0("Years to ALS between 5 and 14.6 years (n=225)\n", 
          "AUC = ", round(auc(roc_nefl_sensi_1_3_4), 2), 
          "\nOptimal NfL cut-off: ", round(youden_best_nefl_sensi_1_3_4["threshold"], 2), 
          "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3_4["sensitivity"], 2), 
          " and specificity: ", round(youden_best_nefl_sensi_1_3_4["specificity"], 2), ")\n")
 
 label_sensi_1_3_5 <- 
-  paste0("Follow-up > 14.6 years (n=219)\n", 
+  paste0("Years to ALS > 14.6 years (n=219)\n", 
          "AUC = ", round(auc(roc_nefl_sensi_1_3_5), 2), 
          "\nOptimal NfL cut-off: ", round(youden_best_nefl_sensi_1_3_5["threshold"], 2), 
          "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3_5["sensitivity"], 2), 
@@ -5199,8 +5203,8 @@ names(roc_patterns) <- c(
   label_sensi_1_3_4,
   label_sensi_1_3_5)
 
-
-additional_analysis_4_figure_unadjusted <- ggroc(
+### unadjusted_pattern ----
+additional_analysis_4_figure_unadjusted_pattern <- ggroc(
     list(
       label_main_analysis = roc_nefl_all,
       label_sensi_2 = roc_nefl_sensi_2,
@@ -5212,7 +5216,8 @@ additional_analysis_4_figure_unadjusted <- ggroc(
         label_sensi_1_3_4,
         label_sensi_1_3_5)),
     legacy.axes = TRUE,
-    aes = c("linetype")) +
+    aes = c("linetype"), 
+    linewidth = 0.5) +
   geom_abline(
     intercept = 0,
     slope = 1,
@@ -5225,23 +5230,57 @@ additional_analysis_4_figure_unadjusted <- ggroc(
     title = "ROC curves for NfL pre-disease biomarker (unmatched, unadjusted)",
     linetype = "") +
   theme_lucid() +
-  theme(legend.position = "bottom", legend.direction = "horizontal")
+  theme(axis.title = element_text(size = 18, color = "black", face = "bold"),
+        axis.text = element_text(size = 18, color = "black", face = "bold"), 
+        legend.text = element_text(size = 16, color = "black"), 
+        legend.position = "bottom") 
 
+### unadjusted_color ----
+additional_analysis_4_figure_unadjusted_color <- ggroc(
+  list(
+    label_main_analysis = roc_nefl_all,
+    label_sensi_2 = roc_nefl_sensi_2,
+    label_sensi_1_3_4 = roc_nefl_sensi_1_3_4,
+    label_sensi_1_3_5 = roc_nefl_sensi_1_3_5) |>
+    setNames(c(
+      label_main_analysis,
+      label_sensi_2,
+      label_sensi_1_3_4,
+      label_sensi_1_3_5)),
+  legacy.axes = TRUE,
+  aes = c("color"), 
+  linewidth = 2) +
+  geom_abline(
+    intercept = 0,
+    slope = 1,
+    linetype = "dashed",
+    color = "grey50") +
+  #scale_linetype_manual(values = roc_patterns) +
+  labs(
+    x = "1 − Specificity",
+    y = "Sensitivity",
+    title = "ROC curves for NfL pre-disease biomarker (unmatched, unadjusted)",
+    color = "") +
+  theme_lucid() +
+  theme(legend.position = "bottom", legend.direction = "horizontal",
+        axis.title = element_text(size = 16, color = "black"), 
+        axis.text = element_text(size = 16, color = "black"))
 
+### adjusted_pattern ----
 label_main_analysis <- 
-  paste0("Main analysis (n=495)\n", 
+  paste0("All cases and controls (n=495)\n", 
          "AUC = ", round(auc(roc_nefl_all_adjusted), 2), "\n")
 
 label_sensi_2 <- 
-  paste0("Follow-up < 5 years (n=51)\n", 
+  paste0("Years to ALS < 5 years (n=51)\n", 
          "AUC = ", round(auc(roc_nefl_sensi_2_adjusted), 2), "\n")
 
 label_sensi_1_3_4 <- 
-  paste0("Follow-up between 5 and 14.6 years (n=225)\n", 
+  paste0("Years to ALS between 5 and 14.6 years (n=225)\n", 
          "AUC = ", round(auc(roc_nefl_sensi_1_3_4_adjusted), 2), "\n")
 
 label_sensi_1_3_5 <- 
-  paste0("Follow-up > 14.6 years (n=219)\n", 
+  paste0("Years to ALS > 14.6 years (n=219)\n", 
          "AUC = ", round(auc(roc_nefl_sensi_1_3_5_adjusted), 2), "\n")
 
 roc_patterns <- c(
@@ -5256,7 +5295,8 @@ names(roc_patterns) <- c(
   label_sensi_1_3_4,
   label_sensi_1_3_5)
 
-additional_analysis_4_figure_adjusted <- ggroc(
+
+additional_analysis_4_figure_adjusted_pattern <- ggroc(
   list(
     label_main_analysis = roc_nefl_all_adjusted,
     label_sensi_2 = roc_nefl_sensi_2_adjusted,
@@ -5281,7 +5321,9 @@ additional_analysis_4_figure_adjusted <- ggroc(
     title = "ROC curves for NfL pre-disease biomarker (matched and adjusted)",
     linetype = "") +
   theme_lucid() +
-  theme(legend.position = "bottom", legend.direction = "horizontal")
+  theme(legend.position = "bottom", legend.direction = "horizontal", 
+        axis.title = element_text(size = 16, color = "black"), 
+        axis.text = element_text(size = 16, color = "black"))
 
 rm(roc_nefl_all, youden_nefl_all, youden_best_nefl_all, 
    model_adjusted_all, roc_nefl_all_adjusted, youden_nefl_all_adjusted, 
@@ -8039,6 +8081,50 @@ rm(all_vars_labels,
    make_gam_plot_base_sex, 
    make_gam_plot_adjusted_sex)
 
+### NfL only results ----
+NfL_sd_ALS_adjusted_figure <- 
+  main_results |>
+  filter(analysis %in% c("sensi_1", 
+                         "sensi_2", 
+                         #"sensi_1_3", 
+                         "sensi_1_3_4", "sensi_1_3_5", 
+                         "sensi_1_7_female", "sensi_1_7_male"), 
+         term == "Continuous", 
+         explanatory == "NEFL", 
+         model == "adjusted") |> 
+  mutate(signif = ifelse(p_value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
+         analysis = fct_recode(analysis, 
+                               "All cases and\ncontrols (n=495)" = "sensi_1",
+                               "Years to ALS < 5 years\n (n=51)" = "sensi_2",
+                               #"Filtered to\nfollow-up > 5 years\n (n=444)" = "sensi_1_3",
+                               "Years to ALS\nbetween 5 and 14.6 years\n(n=225)" = "sensi_1_3_4",
+                               "Years to ALS > 14.6 years\n (n=219)" = "sensi_1_3_5", 
+                               "Females (n=192)" = "sensi_1_7_female", 
+                               "Males (n=303)" = "sensi_1_7_male"), 
+         analysis = fct_relevel(analysis, 
+                                "All cases and\ncontrols (n=495)", 
+                                "Years to ALS < 5 years\n (n=51)", 
+                                #"Filtered to\nfollow-up > 5 years\n (n=444)", 
+                                "Years to ALS\nbetween 5 and 14.6 years\n(n=225)",
+                                "Years to ALS > 14.6 years\n (n=219)", 
+                                "Females (n=192)",
+                                "Males (n=303)")) |> 
+  ggplot(aes(x = explanatory, y = OR_raw, ymin = lower_CI, ymax = upper_CI)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(rows = dplyr::vars(analysis),  switch = "y") +   
+  labs( y = "Odd Ratios") +
+  scale_x_discrete(labels = NULL) +
+  theme_lucid() +
+  theme(axis.text.x = element_text(size = 14,  color = "black", face = "bold"), 
+        axis.title.x = element_text(size = 14,  color = "black", face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y.left = element_text(hjust = 0.5, vjust = 0.5, angle = 0,  size = 12, color = "black", face = "bold"), 
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank()) +
+  coord_flip()
+
 
 
 # Assemblage ----
@@ -8190,8 +8276,10 @@ results_proteomic_ALS_occurrence <-
       additional_analysis_3_neuro_results = additional_analysis_3_neuro_results, 
       jackknife_neuro_results = jackknife_neuro_results), 
     additional_analysis_4 = list(
-      additional_analysis_4_figure_adjusted = additional_analysis_4_figure_adjusted, 
-      additional_analysis_4_figure_unadjusted = additional_analysis_4_figure_unadjusted))
+      additional_analysis_4_figure_adjusted_pattern = additional_analysis_4_figure_adjusted_pattern, 
+      additional_analysis_4_figure_unadjusted_pattern = additional_analysis_4_figure_unadjusted_pattern, 
+      additional_analysis_4_figure_unadjusted_color = additional_analysis_4_figure_unadjusted_color), 
+    Nfl_results = list(NfL_sd_ALS_adjusted_figure = NfL_sd_ALS_adjusted_figure))
 
 rm(covar, 
    main_results, 
@@ -8310,7 +8398,10 @@ rm(covar,
    jackknife_neuro_results, 
    
    additional_analysis_4_figure_adjusted, 
-   additional_analysis_4_figure_unadjusted, 
+   additional_analysis_4_figure_unadjusted_patern,
+   additional_analysis_4_figure_unadjusted_color, 
+   
+   NfL_sd_ALS_adjusted_figure, 
    
    make_gam_plot_base, 
    make_gam_plot_adjusted)

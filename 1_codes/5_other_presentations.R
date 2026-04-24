@@ -1214,32 +1214,32 @@ figure_2 <-
          model == "adjusted") |> 
   mutate(signif = ifelse(p_value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
          analysis = fct_recode(analysis, 
-                               "Main analysis\n(n=495)" = "sensi_1",
-                               "Follow-up < 5 years\n (n=51)" = "sensi_2",
+                               "All cases and\ncontrols (n=495)" = "sensi_1",
+                               "Years to ALS < 5 years\n (n=51)" = "sensi_2",
                                #"Filtered to\nfollow-up > 5 years\n (n=444)" = "sensi_1_3",
-                               "Follow-up\nbetween 5 and 14.6 years\n(n=225)" = "sensi_1_3_4",
-                               "Follow-up > 14.6 years\n (n=219)" = "sensi_1_3_5", 
+                               "Years to ALS\nbetween 5 and 14.6 years\n(n=225)" = "sensi_1_3_4",
+                               "Years to ALS > 14.6 years\n (n=219)" = "sensi_1_3_5", 
                                "Females (n=192)" = "sensi_1_7_female", 
                                "Males (n=303)" = "sensi_1_7_male"), 
          analysis = fct_relevel(analysis, 
-                                "Main analysis\n(n=495)", 
-                                "Follow-up < 5 years\n (n=51)", 
+                                "All cases and\ncontrols (n=495)", 
+                                "Years to ALS < 5 years\n (n=51)", 
                                 #"Filtered to\nfollow-up > 5 years\n (n=444)", 
-                                "Follow-up\nbetween 5 and 14.6 years\n(n=225)",
-                                "Follow-up > 14.6 years\n (n=219)", 
+                                "Years to ALS\nbetween 5 and 14.6 years\n(n=225)",
+                                "Years to ALS > 14.6 years\n (n=219)", 
                                 "Females (n=192)",
                                 "Males (n=303)")) |> 
   ggplot(aes(x = explanatory, y = OR_raw, ymin = lower_CI, ymax = upper_CI)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(rows = dplyr::vars(analysis),  switch = "y") +   
-  labs( y = "Odd Ratios") +
+  labs(y = "Odd Ratios") + 
+  scale_x_discrete(labels = NULL) +
   theme_lucid() +
-  theme(strip.text = element_text(face = "bold", size = 16), 
-        axis.text.x = element_text(size = 16), 
-        axis.title.x = element_text(size = 16), 
+  theme(axis.text.x = element_text(size = 18, face = "bold", color = "black"), 
+        axis.title.x = element_text(size = 18, face = "bold", color = "black"), 
         legend.position = "bottom", 
-        strip.text.y.left = element_text(hjust = 0.5, vjust = 0.5, angle = 0), 
+        strip.text.y.left = element_text(hjust = 0.5, vjust = 0.5, angle = 0, face = "bold", size = 18, color = "black"), 
         axis.text.y  = element_blank(),
         axis.ticks.y = element_blank(),
         axis.title.y = element_blank()) +
@@ -1264,25 +1264,26 @@ figure_3 <-
   ggplot(ratios_sensi_1, aes(x = follow_up_neg, y = ratio_proteomic_neuro_explo_NEFL)) +
   geom_point(alpha = 0.6, color = "darkblue") +
   geom_smooth(method = "loess", se = TRUE, color = "red", span = 0.75) +
+  geom_hline(yintercept = 1, color = "black") +  
   labs(
     x = "Time to ALS diagnosis (years)",
-    y = "Ratio of NEFL in case and matched controls") +
+    y = "Ratio of NfL in cases and\nmatched controls") +
   theme_lucid() + 
-  theme(axis.text = element_text(size = 16), 
-        axis.title = element_text(size = 16)) 
+  theme(axis.text = element_text(size = 18, colour = "black", face = "bold"), 
+        axis.title = element_text(size = 18, colour = "black", face = "bold")) 
 rm(ratios_sensi_1)
 
 
 ## Figure 4 ----
 figure_4 <- 
-  results_proteomic_ALS_occurrence$additional_analysis_4$additional_analysis_4_figure_unadjusted + 
+  additional_analysis_4_figure_unadjusted_color + 
   labs(title = "") + 
   theme_lucid() +
-  theme(axis.title = element_text(size = 16),
-        axis.text = element_text(size = 16), 
-        legend.text = element_text(size = 16), 
+  theme(axis.title = element_text(size = 18, colour = "black", face = "bold"),
+        axis.text = element_text(size = 18, colour = "black", face = "bold"), 
+        legend.text = element_text(size = 18, colour = "black", face = "bold"), 
         legend.position = "bottom") +
-  guides(linetype = guide_legend(nrow = 2, byrow = TRUE)) 
+  guides(color = guide_legend(nrow = 2, byrow = TRUE)) 
 
 
 ggsave(                                                                         # NfL descriptive figure 
@@ -1296,34 +1297,31 @@ ggsave(                                                                         
   quality = 100)
 
 ggsave(                                                                         # Forest plots of logistic regressions results (ALS risk)
-  "~/Documents/POP_ALS_2025_02_03/2_output/Oral presentations/4. AAN_annual_meeting_2026/figure_2.jnp",
+  "~/Documents/POP_ALS_2025_02_03/2_output/Oral presentations/4. AAN_annual_meeting_2026/figure_2.tiff",
   figure_2,
   height = 6,
-  width = 7,
+  width = 8,
   units = "in", 
   dpi = 300,
-  device = "jpeg",
-  quality = 100)
+  device = "tiff")
 
 ggsave(                                                                         # LOESS curve of NfL ratios depending on time to diagnosis
-  "~/Documents/POP_ALS_2025_02_03/2_output/Oral presentations/4. AAN_annual_meeting_2026/figure_3.jnp",
+  "~/Documents/POP_ALS_2025_02_03/2_output/Oral presentations/4. AAN_annual_meeting_2026/figure_3.tiff",
   figure_3,
   height = 5,
-  width = 10,
+  width = 8,
   units = "in", 
   dpi = 300,
-  device = "jpeg",
-  quality = 100)
+  device = "tiff")
 
 ggsave(                                                                         # AUC curve
-  "~/Documents/POP_ALS_2025_02_03/2_output/Oral presentations/4. AAN_annual_meeting_2026/figure_4.jnp",
+  "~/Documents/POP_ALS_2025_02_03/2_output/Oral presentations/4. AAN_annual_meeting_2026/figure_4.tiff",
   figure_4,
   height = 9,
-  width = 10,
+  width = 12,
   units = "in", 
   dpi = 300,
-  device = "jpeg",
-  quality = 100)
+  device = "tiff")
 
 
 

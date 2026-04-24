@@ -73,7 +73,10 @@ main_results_fattyacids_ALS_danish <-
   bind_rows(model1_sd_danish, model2_sd_danish, model1_quart_danish, model2_quart_danish) |>
   filter(str_starts(term, explanatory))   |>  # to keep only the quartiles term without the covariates (str_starts() is checking whether the string in term starts with the string in expl)
   mutate(
+    OR_raw = OR, 
     OR = as.numeric(sprintf("%.1f", OR)),
+    lower_CI_raw = lower_CI, 
+    upper_CI_raw = upper_CI, 
     lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
     upper_CI = as.numeric(sprintf("%.1f", upper_CI)),, 
     "95% CI" = paste(lower_CI, ", ", upper_CI, sep = ''),
@@ -459,7 +462,10 @@ sensi_ca_results_fattyacids_ALS_finnish <-
   bind_rows(model1_sd_sensi_ca_finnish, model2_sd_sensi_ca_finnish, 
             model1_quart_sensi_ca_finnish, model2_quart_sensi_ca_finnish) |>
   mutate(
+    OR_raw = OR, 
     OR = as.numeric(sprintf("%.1f", OR)),
+    lower_CI_raw = lower_CI, 
+    upper_CI_raw = upper_CI, 
     lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
     upper_CI = as.numeric(sprintf("%.1f", upper_CI)),, 
     "95% CI" = paste(lower_CI, ", ", upper_CI, sep = ''),
@@ -651,7 +657,7 @@ fattyacids_sd_als_figure_danish <- main_results_fattyacids_ALS_danish |>
          explanatory = fct_rev(explanatory),
          explanatory = fct_recode(explanatory, !!!fattyacids_tot_labels)) |>
   arrange(explanatory) |> 
-  ggplot(aes(x = explanatory, y = OR, ymin = lower_CI, ymax = upper_CI, color = `p-value_shape`)) +
+  ggplot(aes(x = explanatory, y = OR_raw, ymin = lower_CI_raw, ymax = upper_CI_raw, color = `p-value_shape`)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
   facet_grid(cols = dplyr::vars(model), switch = "y", scales = "free_x") +  
