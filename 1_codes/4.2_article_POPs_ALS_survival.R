@@ -62,11 +62,17 @@ table_S2a <-
   filter(term == "Continuous") |>
   filter(!model == "copollutant") |> 
   filter(analysis %in% c("main", "sensi_1")) |>
-  select(model, explanatory, term, HR, "95% CI", "p-value") |> 
-  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
+  group_by(model) |>     # adding FDR correction
+  mutate(fdr_correction = p.adjust(`p-value_raw`, method = "fdr")) |>
+  ungroup() |>
+  mutate(
+    fdr_correction = ifelse(fdr_correction < 0.01, "<0.01", number(fdr_correction, accuracy = 0.01, decimal.mark = ".")), 
+    fdr_correction = ifelse(fdr_correction == "1.00", ">0.99", fdr_correction)) |>
+  select(model, explanatory, term, HR, "95% CI", "p-value", "fdr_correction") |> 
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value", "fdr_correction")) |>
   select(explanatory, contains("base"), contains("adjusted")) |>
-  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
-         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |> 
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "FDR-adjusted p-value" = "fdr_correction_base", 
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "FDR-adjusted p-value " = "fdr_correction_adjusted") |> 
   mutate(explanatory = fct_recode(explanatory, !!!c(POPs_group_labels, "Environmental risk score" = "ERS_score_from_elastic_net_sensi_1"))) |> 
   flextable() |>
   add_footer_lines(
@@ -76,8 +82,8 @@ table_S2a <-
     4CI: Confidence interval.") |>
   add_header(
     "explanatory" = "Exposures", 
-    "HR" = "Base Model", "95% CI" = "Base Model", "p-value" = "Base Model", 
-    "HR " = "Adjusted Model", "95% CI " = "Adjusted Model", "p-value " = "Adjusted Model") |>
+    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", "FDR-adjusted p-value" = "Base model", 
+    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model", "FDR-adjusted p-value " = "Adjusted model") |>
   merge_h(part = "header") |>
   merge_v(j = "explanatory") |>
   theme_vanilla() |>
@@ -91,10 +97,35 @@ table_S2a <-
 
 # Table S2b - Sensitivity analysis - POPs - ALS survival among the Danish cohort ----
 # Association between pre-diagnostic POP groups and survival among ALS cases from the Danish Diet, Cancer and Health cohort (Cox regression models; n = 166).
-table_S2b <- results_POPs_ALS_survival$sensi4$POPs_sd_ALS_table_danish_sensi_4
-
-
-
+table_S2b <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_survival |>
+  filter(term == "Continuous") |>
+  filter(model == "adjusted") |>
+  filter(analysis == "sensi_4") |>
+  filter(!explanatory %in% c("ERS_score_from_elastic_net_sensi_1", "ERS_score_from_elastic_net_sensi_2")) |> View()
+  mutate(fdr_correction = p.adjust(`p-value_raw`, method = "fdr"), 
+         fdr_correction = ifelse(fdr_correction < 0.01, "<0.01", number(fdr_correction, accuracy = 0.01, decimal.mark = ".")), 
+         fdr_correction = ifelse(fdr_correction == "1.00", ">0.99", fdr_correction), 
+         explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
+  select(explanatory, HR, "95% CI", "p-value", "FDR-adjusted p-value" = fdr_correction) |> 
+  flextable() |>
+  add_footer_lines(
+    "1POPs were summed as follows: most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; ΣDDT corresponds to p,p’-DDT and p,p’-DDE, Σchlordane corresponds to trans-nonanchlor and oxychlordane and finally ΣPBDE corresponds to PBDEs 47, 99, 153.
+    2All models are adjusted for age at diagnosis,  sex,or smoking, BMI and marital status. 
+    3Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease serum concentration of POPs.
+    4CI: Confidence interval.") |>
+  add_header(
+    "explanatory" = "Exposures", 
+    "HR" = "Sensitivity analysis", "95% CI" = "Sensitivity analysis", "p-value" = "Sensitivity analysis", "FDR-adjusted p-value" = "Sensitivity analysis") |>
+  merge_h(part = "header") |>
+  merge_v(j = "explanatory") |>
+  theme_vanilla() |>
+  bold(j = "explanatory", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 # Table S3 - POPs - ALS survival among the Danish cohort (mixture model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).

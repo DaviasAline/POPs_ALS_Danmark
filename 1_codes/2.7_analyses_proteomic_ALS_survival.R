@@ -3,7 +3,7 @@
 # Analysis of als survival depending on proteomic profile
 
 # Data loading - package loading ----
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2.6_analyses_proteomic_ALS_occurrence.R", echo=TRUE)
+source("~/Documents/POP_ALS_2025_02_03/1_codes/2.6_analyses_proteomic_ALS_occurrence.R")
 
 fit_and_plot_cox_gam <- function(
     data,
@@ -29,7 +29,7 @@ fit_and_plot_cox_gam <- function(
       "outcome ~ s(", var, ") + ",
       paste(covariates, collapse = " + "))
     
-    model <- gam(as.formula(formula_str),
+    model <- mgcv::gam(as.formula(formula_str),
                  data = data,
                  family = cox.ph())
     
@@ -1225,7 +1225,6 @@ cox_gam_results_adjusted_sensi_1_3_5 <-
                        covariates = c("sex", "diagnosis_age", "smoking_2cat_i", "bmi"), 
                        title = "Adjusted model")
 rm(vars_labels)
-
 
 
 # Sensi 1 + sensi 7 - Removing the oulier for NEFL + filtering to females ----
@@ -3081,6 +3080,10 @@ results_proteomic_ALS_survival <-
                           cox_gam_results_adjusted_sensi_1_7_male = cox_gam_results_adjusted_sensi_1_7_male, 
                           plot_base_cox_gam_danish_sensi_1_7_male = plot_base_cox_gam_danish_sensi_1_7_male, 
                           plot_adjusted_cox_gam_danish_sensi_1_7_male = plot_adjusted_cox_gam_danish_sensi_1_7_male))
+
+
+#saveRDS(results_proteomic_ALS_survival, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_survival.rds")
+
 
 rm(bdd_cases_danish, 
    covariates, 

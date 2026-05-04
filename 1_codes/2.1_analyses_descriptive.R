@@ -1138,6 +1138,8 @@ results_descriptive <- list(
     POPs_heatmap_cases = POPs_heatmap_cases, 
     POPs_heatmap_cases_group = POPs_heatmap_cases_group))
 
+saveRDS(results_descriptive, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_descriptive.rds")
+
 
 rm(
   bdd_danish_POPs_loq, 

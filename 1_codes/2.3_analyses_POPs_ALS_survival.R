@@ -3,7 +3,7 @@
 # Analysis of survival after ALS diagnosis depending on POPs levels  
 
 # Data loading - package loading ----
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2.2_analyses_POPs_ALS_occurrence.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 
 # Creation of cases specific datasets ----
 bdd_cases_danish <- 
@@ -174,7 +174,7 @@ model2_cox_quart_danish <- map_dfr(POPs_group_quart, function(expl) {
 outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
 model3_quart_PCB_DL <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         PCB_DL_quart + 
         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -187,7 +187,7 @@ model3_quart_PCB_DL <- model3_quart_PCB_DL$p.table |>
   rownames_to_column("variable") 
 
 model3_quart_PCB_NDL <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         PCB_NDL_quart + 
         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -200,7 +200,7 @@ model3_quart_PCB_NDL <- model3_quart_PCB_NDL$p.table |>
   rownames_to_column("variable") 
 
 model3_quart_HCB <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         OCP_HCB_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -213,7 +213,7 @@ model3_quart_HCB <- model3_quart_HCB$p.table |>
   rownames_to_column("variable") 
 
 model3_quart_ΣDDT <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         ΣDDT_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -226,7 +226,7 @@ model3_quart_ΣDDT <- model3_quart_ΣDDT$p.table |>
   rownames_to_column("variable") 
 
 model3_quart_β_HCH <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         OCP_β_HCH_quart +
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i,  
@@ -239,7 +239,7 @@ model3_quart_β_HCH <- model3_quart_β_HCH$p.table |>
   rownames_to_column("variable") 
 
 model3_quart_Σchlordane <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         Σchlordane_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -252,7 +252,7 @@ model3_quart_Σchlordane <- model3_quart_Σchlordane$p.table |>
   rownames_to_column("variable") 
 
 model3_quart_ΣPBDE <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         ΣPBDE_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -337,7 +337,7 @@ rm(expl, formula_raw, model_raw, formula, model, anova, p.value_heterogeneity)
 outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
 model3_quart_PCB_DL_full <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         PCB_DL_quart + 
         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -346,7 +346,7 @@ model3_quart_PCB_DL_full <-
       data = bdd_cases_danish) 
 
 model3_quart_PCB_DL_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #PCB_DL_quart + 
         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -358,7 +358,7 @@ anova <- anova(model3_quart_PCB_DL_raw, model3_quart_PCB_DL_full, test = "Chisq"
 p.value_heterogeneity_PCB_DL <- tibble(explanatory = "PCB_DL_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
 model3_quart_PCB_NDL_full <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         PCB_NDL_quart + 
         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -367,7 +367,7 @@ model3_quart_PCB_NDL_full <-
       data = bdd_cases_danish)
 
 model3_quart_PCB_NDL_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #PCB_NDL_quart + 
         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -379,7 +379,7 @@ anova <- anova(model3_quart_PCB_NDL_raw, model3_quart_PCB_NDL_full, test = "Chis
 p.value_heterogeneity_PCB_NDL <- tibble(explanatory = "PCB_NDL_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
 model3_quart_HCB_full <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         OCP_HCB_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -388,7 +388,7 @@ model3_quart_HCB_full <-
       data = bdd_cases_danish)
 
 model3_quart_HCB_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #OCP_HCB_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -401,7 +401,7 @@ p.value_heterogeneity_HCB <- tibble(explanatory = "OCP_HCB_quart", p.value_heter
 
 
 model3_quart_ΣDDT_full <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         ΣDDT_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -410,7 +410,7 @@ model3_quart_ΣDDT_full <-
       data = bdd_cases_danish) 
 
 model3_quart_ΣDDT_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #ΣDDT_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -422,7 +422,7 @@ anova <- anova(model3_quart_ΣDDT_raw, model3_quart_ΣDDT_full, test = "Chisq")
 p.value_heterogeneity_ΣDDT <- tibble(explanatory = "ΣDDT_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
 model3_quart_β_HCH_full <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         OCP_β_HCH_quart +
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i,  
@@ -431,7 +431,7 @@ model3_quart_β_HCH_full <-
       data = bdd_cases_danish) 
 
 model3_quart_β_HCH_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #OCP_β_HCH_quart +
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i,  
@@ -443,7 +443,7 @@ anova <- anova(model3_quart_β_HCH_raw, model3_quart_β_HCH_full, test = "Chisq"
 p.value_heterogeneity_β_HCH <- tibble(explanatory = "OCP_β_HCH_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
 model3_quart_Σchlordane_full <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         Σchlordane_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -452,7 +452,7 @@ model3_quart_Σchlordane_full <-
       data = bdd_cases_danish)
 
 model3_quart_Σchlordane_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #Σchlordane_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -464,7 +464,7 @@ anova <- anova(model3_quart_Σchlordane_raw, model3_quart_Σchlordane_full, test
 p.value_heterogeneity_Σchlordane <- tibble(explanatory = "Σchlordane_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
 model3_quart_ΣPBDE_full <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         ΣPBDE_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -473,7 +473,7 @@ model3_quart_ΣPBDE_full <-
       data = bdd_cases_danish) 
 
 model3_quart_ΣPBDE_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #ΣPBDE_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -561,7 +561,7 @@ rm(expl, model, formula, p.value_trend)
 outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
 model3_quart_PCB_DL_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         PCB_DL_quart_med + 
         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -572,7 +572,7 @@ model3_quart_PCB_DL_trend <-
 p.value_trend_PCB_DL <- model3_quart_PCB_DL_trend$p.table["PCB_DL_quart_med", "Pr(>|z|)"]
 
 model3_quart_PCB_NDL_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         PCB_NDL_quart_med + 
         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -583,7 +583,7 @@ model3_quart_PCB_NDL_trend <-
 p.value_trend_PCB_NDL <- model3_quart_PCB_NDL_trend$p.table["PCB_NDL_quart_med", "Pr(>|z|)"]
 
 model3_quart_HCB_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         OCP_HCB_quart_med + 
         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -594,7 +594,7 @@ model3_quart_HCB_trend <-
 p.value_trend_HCB <- model3_quart_HCB_trend$p.table["OCP_HCB_quart_med", "Pr(>|z|)"]
 
 model3_quart_ΣDDT_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         ΣDDT_quart_med + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -605,7 +605,7 @@ model3_quart_ΣDDT_trend <-
 p.value_trend_ΣDDT <- model3_quart_ΣDDT_trend$p.table["ΣDDT_quart_med", "Pr(>|z|)"]
 
 model3_quart_β_HCH_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         OCP_β_HCH_quart_med +
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i,  
@@ -616,7 +616,7 @@ model3_quart_β_HCH_trend <-
 p.value_trend_β_HCH <- model3_quart_β_HCH_trend$p.table["OCP_β_HCH_quart_med", "Pr(>|z|)"]
 
 model3_quart_Σchlordane_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         Σchlordane_quart_med + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -627,7 +627,7 @@ model3_quart_Σchlordane_trend <-
 p.value_trend_Σchlordane <- model3_quart_Σchlordane_trend$p.table["Σchlordane_quart_med", "Pr(>|z|)"]
 
 model3_quart_ΣPBDE_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         ΣPBDE_quart_med + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -686,7 +686,7 @@ fit_cox_gam_base <- function(var, data = bdd_cases_danish) {
 
   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
   formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age")
-  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
+  model <- mgcv::gam(as.formula(formula_str), data = data, family = cox.ph())
   
   smry <- summary(model)
   edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
@@ -749,7 +749,7 @@ plot_base_cox_gam_danish <- map(cox_gam_results_base, function(res) {
     #labs(x = res$x_label) +
     theme(
       axis.title.x = element_text(size = 12),
-      plot.margin = margin(t = -10, r = 5, b = 5, l = 5)) 
+      plot.margin = ggplot2::margin(t = -10, r = 5, b = 5, l = 5)) 
   
   p1 / p2 + plot_layout(heights = c(10, 1))
 }) |> 
@@ -769,7 +769,7 @@ fit_cox_gam_adjusted <- function(var, data = bdd_cases_danish) {
 
   outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
   formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i")
-  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
+  model <- mgcv::gam(as.formula(formula_str), data = data, family = cox.ph())
   
   smry <- summary(model)
   edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
@@ -832,7 +832,7 @@ plot_adjusted_cox_gam_danish <- map(cox_gam_results_adjusted, function(res) {
     #labs(x = res$x_label) +
     theme(
       axis.title.x = element_text(size = 12),
-      plot.margin = margin(t = -10, r = 5, b = 5, l = 5)) 
+      plot.margin = ggplot2::margin(t = -10, r = 5, b = 5, l = 5)) 
   
   p1 / p2 + plot_layout(heights = c(10, 1))
 }) |> 
@@ -996,7 +996,7 @@ POPs_group_labels_cox_gam <- set_names(
 fit_cox_gam_base_sensi_4 <- function(var, data = bdd_cases_danish_sensi_4) {
   outcome <- with(bdd_cases_danish_sensi_4, cbind(follow_up_death, status_death))
   formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age")
-  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
+  model <- mgcv::gam(as.formula(formula_str), data = data, family = cox.ph())
   
   smry <- summary(model)
   edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
@@ -1058,7 +1058,7 @@ plot_base_cox_gam_danish_sensi_4 <- map(cox_gam_results_base_sensi_4, function(r
     #labs(x = res$x_label) +
     theme(
       axis.title.x = element_text(size = 12),
-      plot.margin = margin(t = -10, r = 5, b = 5, l = 5)) 
+      plot.margin = ggplot2::margin(t = -10, r = 5, b = 5, l = 5)) 
   
   p1 / p2 + plot_layout(heights = c(10, 1))
 }) |> 
@@ -1076,7 +1076,7 @@ fit_cox_gam_adjusted_sensi_4 <- function(var, data = bdd_cases_danish_sensi_4) {
 
   outcome <- with(bdd_cases_danish_sensi_4, cbind(follow_up_death, status_death))
   formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i")
-  model <- gam(as.formula(formula_str), data = data, family = cox.ph())
+  model <- mgcv::gam(as.formula(formula_str), data = data, family = cox.ph())
   
   smry <- summary(model)
   edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
@@ -1138,7 +1138,7 @@ plot_adjusted_cox_gam_danish_sensi_4 <- map(cox_gam_results_adjusted, function(r
     #labs(x = res$x_label) +
     theme(
       axis.title.x = element_text(size = 12),
-      plot.margin = margin(t = -10, r = 5, b = 5, l = 5)) 
+      plot.margin = ggplot2::margin(t = -10, r = 5, b = 5, l = 5)) 
   
   p1 / p2 + plot_layout(heights = c(10, 1))
 }) |> 
@@ -1423,7 +1423,7 @@ sensi1_model3_cox_quart_elastic_net_danish <- tibble(                           
 outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
 model3_quart_HCB_full <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         OCP_HCB_quart + s(Σchlordane) + 
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
@@ -1431,7 +1431,7 @@ model3_quart_HCB_full <-
       data = bdd_cases_danish)
 
 model3_quart_HCB_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #OCP_HCB_quart + 
         s(Σchlordane) + 
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -1443,7 +1443,7 @@ anova <- anova(model3_quart_HCB_raw, model3_quart_HCB_full, test = "Chisq")
 p.value_heterogeneity_HCB <- tibble(explanatory = "OCP_HCB_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
 model3_quart_Σchlordane_full <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         Σchlordane_quart + 
         s(OCP_HCB) + 
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -1452,7 +1452,7 @@ model3_quart_Σchlordane_full <-
       data = bdd_cases_danish)
 
 model3_quart_Σchlordane_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #Σchlordane_quart + 
         s(OCP_HCB) + 
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -1479,7 +1479,7 @@ rm(anova, outcome,
 outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
 model3_quart_HCB_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         OCP_HCB_quart_med + 
          s(Σchlordane) + 
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -1490,7 +1490,7 @@ model3_quart_HCB_trend <-
 p.value_trend_HCB <- model3_quart_HCB_trend$p.table["OCP_HCB_quart_med", "Pr(>|z|)"]
 
 model3_quart_Σchlordane_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         Σchlordane_quart_med + 
         s(OCP_HCB) + 
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -1611,14 +1611,14 @@ rm(cox_model, coefs, model_summary, weight_HCB, weight_Σchlordane)
 outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
 model3_quart_ERS <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         ERS_score_from_elastic_net_sensi_1_quart + sex + diagnosis_age, 
       family = cox.ph(), 
       method = 'ML',
       data = bdd_cases_danish)
 
 model3_quart_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #ERS_score_from_elastic_net_sensi_1_quart +
         sex + diagnosis_age, 
       family = cox.ph(), 
@@ -1638,7 +1638,7 @@ rm(anova, outcome, model3_quart_ERS, model3_quart_raw, p.value_heterogeneity_ERS
 outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
 model3_quart_ERS_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         ERS_score_from_elastic_net_sensi_1_quart_med + sex + diagnosis_age, 
       family = cox.ph(), 
       method = 'ML',
@@ -1674,7 +1674,7 @@ sensi1_cox_model2_ERS_from_elastic_net_quart <- tibble(
   `p-value` = coefs[, "Pr(>|z|)"]) |>
   filter(str_detect(term, "_quart"))
 
-rm(cox_model, coefs, model_summary, weight_HCB, weight_Σchlordane)
+rm(coefs, model_summary)
 
 
 
@@ -1682,7 +1682,7 @@ rm(cox_model, coefs, model_summary, weight_HCB, weight_Σchlordane)
 outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
 model3_quart_ERS <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         ERS_score_from_elastic_net_sensi_1_quart +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
@@ -1690,7 +1690,7 @@ model3_quart_ERS <-
       data = bdd_cases_danish)
 
 model3_quart_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #ERS_score_from_elastic_net_sensi_1_quart +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
@@ -1710,7 +1710,7 @@ rm(anova, outcome, model3_quart_ERS, model3_quart_raw, p.value_heterogeneity_ERS
 outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
 model3_quart_ERS_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         ERS_score_from_elastic_net_sensi_1_quart_med + 
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
@@ -2267,7 +2267,7 @@ sensi2_model3_cox_quart_elastic_net_danish <- tibble(                           
 outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
 model3_quart_PCB_28_full <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         PCB_28_quart + 
         s(PCB_52) + s(OCP_oxychlordane) + s(OCP_transnonachlor) + s(PBDE_47) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -2276,7 +2276,7 @@ model3_quart_PCB_28_full <-
       data = bdd_cases_danish)
 
 model3_quart_PCB_28_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #PCB_28_quart + 
         s(PCB_52) + s(OCP_oxychlordane) + s(OCP_transnonachlor) + s(PBDE_47) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -2288,7 +2288,7 @@ anova <- anova(model3_quart_PCB_28_raw, model3_quart_PCB_28_full, test = "Chisq"
 p.value_heterogeneity_PCB_28 <- tibble(explanatory = "PCB_28_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
 model3_quart_PCB_52_full <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         PCB_52_quart + 
         s(PCB_28) + s(OCP_oxychlordane) + s(OCP_transnonachlor) + s(PBDE_47) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -2297,7 +2297,7 @@ model3_quart_PCB_52_full <-
       data = bdd_cases_danish)
 
 model3_quart_PCB_52_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #PCB_52_quart + 
         s(PCB_28) + s(OCP_oxychlordane) + s(OCP_transnonachlor) + s(PBDE_47) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -2310,7 +2310,7 @@ anova <- anova(model3_quart_PCB_52_raw, model3_quart_PCB_52_full, test = "Chisq"
 p.value_heterogeneity_PCB_52 <- tibble(explanatory = "PCB_52_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
 model3_quart_oxychlordane_full <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         OCP_oxychlordane_quart + 
         s(PCB_28) + s(PCB_52) + s(OCP_transnonachlor) + s(PBDE_47) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -2319,7 +2319,7 @@ model3_quart_oxychlordane_full <-
       data = bdd_cases_danish)
 
 model3_quart_oxychlordane_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #OCP_oxychlordane_quart + 
         s(PCB_28) + s(PCB_52) + s(OCP_transnonachlor) + s(PBDE_47) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -2331,7 +2331,7 @@ anova <- anova(model3_quart_oxychlordane_raw, model3_quart_oxychlordane_full, te
 p.value_heterogeneity_oxychlordane <- tibble(explanatory = "OCP_oxychlordane_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
 model3_quart_transnonachlor_full <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         OCP_transnonachlor_quart +
         s(PCB_28) + s(PCB_52) + s(OCP_oxychlordane) + s(PBDE_47) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -2340,7 +2340,7 @@ model3_quart_transnonachlor_full <-
       data = bdd_cases_danish)
 
 model3_quart_transnonachlor_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #OCP_transnonachlor_quart +
         s(PCB_28) + s(PCB_52) + s(OCP_oxychlordane) + s(PBDE_47) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -2352,7 +2352,7 @@ anova <- anova(model3_quart_transnonachlor_raw, model3_quart_transnonachlor_full
 p.value_heterogeneity_transnonachlor <- tibble(explanatory = "OCP_transnonachlor_quart", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
 model3_quart_PBDE_47_full <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         PBDE_47_quart +
         s(PCB_28) + s(PCB_52) + s(OCP_oxychlordane) + s(OCP_transnonachlor) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -2361,7 +2361,7 @@ model3_quart_PBDE_47_full <-
       data = bdd_cases_danish)
 
 model3_quart_PBDE_47_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #PBDE_47_quart +
         s(PCB_28) + s(PCB_52) + s(OCP_oxychlordane) + s(OCP_transnonachlor) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -2399,7 +2399,7 @@ rm(anova, outcome,
 outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
 model3_quart_PCB_28_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         PCB_28_quart_med + 
         s(PCB_52) + s(OCP_oxychlordane) + s(OCP_transnonachlor) + s(PBDE_47) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -2410,7 +2410,7 @@ model3_quart_PCB_28_trend <-
 p.value_trend_PCB_28 <- model3_quart_PCB_28_trend$p.table["PCB_28_quart_med", "Pr(>|z|)"]
 
 model3_quart_PCB_52_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         PCB_52_quart_med + 
         s(PCB_28) + s(OCP_oxychlordane) + s(OCP_transnonachlor) + s(PBDE_47) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -2421,7 +2421,7 @@ model3_quart_PCB_52_trend <-
 p.value_trend_PCB_52 <- model3_quart_PCB_52_trend$p.table["PCB_52_quart_med", "Pr(>|z|)"]
 
 model3_quart_oxychlordane_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         OCP_oxychlordane_quart_med + 
         s(PCB_28) + s(PCB_52) + s(OCP_transnonachlor) + s(PBDE_47) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -2432,7 +2432,7 @@ model3_quart_oxychlordane_trend <-
 p.value_trend_oxychlordane <- model3_quart_oxychlordane_trend$p.table["OCP_oxychlordane_quart_med", "Pr(>|z|)"]
 
 model3_quart_transnonachlor_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         OCP_transnonachlor_quart_med + 
         s(PCB_28) + s(PCB_52) + s(OCP_transnonachlor) + s(OCP_oxychlordane) + 
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -2443,7 +2443,7 @@ model3_quart_transnonachlor_trend <-
 p.value_trend_transnonachlor <- model3_quart_transnonachlor_trend$p.table["OCP_transnonachlor_quart_med", "Pr(>|z|)"]
 
 model3_quart_PBDE_47_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         PBDE_47_quart_med + 
         s(PCB_28) + s(PCB_52) + s(OCP_oxychlordane) + s(PBDE_47) +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
@@ -2558,14 +2558,14 @@ rm(cox_model, pollutants, scaled_betas, Z, model_summary, coefs)
 outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
 model3_quart_ERS <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         ERS_score_from_elastic_net_sensi_2_quart + sex + diagnosis_age, 
       family = cox.ph(), 
       method = 'ML',
       data = bdd_cases_danish)
 
 model3_quart_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #ERS_score_from_elastic_net_sensi_2_quart +
         sex + diagnosis_age, 
       family = cox.ph(), 
@@ -2585,7 +2585,7 @@ rm(anova, outcome, model3_quart_ERS, model3_quart_raw, p.value_heterogeneity_ERS
 outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
 model3_quart_ERS_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         ERS_score_from_elastic_net_sensi_2_quart_med + sex + diagnosis_age, 
       family = cox.ph(), 
       method = 'ML',
@@ -2628,7 +2628,7 @@ rm(model_summary, coefs)
 outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
 model3_quart_ERS <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         ERS_score_from_elastic_net_sensi_2_quart +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
@@ -2636,7 +2636,7 @@ model3_quart_ERS <-
       data = bdd_cases_danish)
 
 model3_quart_raw <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         #ERS_score_from_elastic_net_sensi_2_quart +
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
@@ -2656,7 +2656,7 @@ rm(anova, outcome, model3_quart_ERS, model3_quart_raw, p.value_heterogeneity_ERS
 outcome <- with(bdd_cases_danish, cbind(follow_up_death, status_death))
 
 model3_quart_ERS_trend <- 
-  gam(outcome ~ 
+  mgcv::gam(outcome ~ 
         ERS_score_from_elastic_net_sensi_2_quart_med + 
         sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
       family = cox.ph(), 
@@ -3899,6 +3899,8 @@ results_POPs_ALS_survival <-
       POPs_sd_ALS_figure_danish_sensi_4 = POPs_sd_ALS_figure_danish_sensi_4, 
       plot_base_cox_gam_danish_sensi_4 = plot_base_cox_gam_danish_sensi_4, 
       plot_adjusted_cox_gam_danish_sensi_4 = plot_adjusted_cox_gam_danish_sensi_4))
+
+#saveRDS(results_POPs_ALS_survival, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_POPs_ALS_survival.rds")
 
 rm(bdd_cases_danish, 
    main_results_POPs_ALS_survival, 

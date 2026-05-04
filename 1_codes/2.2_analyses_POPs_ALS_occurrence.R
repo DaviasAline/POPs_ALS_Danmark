@@ -2,7 +2,7 @@
 # 03/02/2025
 
 # data loading - package loading ----
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2.1_analyses_descriptive.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 
 covariates_danish <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'fS_Kol', 'marital_status_2cat_i', 'education_i')
 covariates_finnish <- c("marital_status_2cat", 'smoking_2cat', 'bmi', 'fS_Kol')     # education removed because missing in one finnish cohort 
@@ -122,7 +122,7 @@ model1_gam <- list()
 for (var in POPs_group) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
   model1_gam[[var]] <- model_summary
 }
@@ -176,7 +176,7 @@ model2_gam <- list()
 for (var in POPs_group) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
   model2_gam[[var]] <- model_summary
 }
@@ -187,7 +187,7 @@ rm(var, formula, model, model_summary)
 #### quartiles ----
 ##### pollutant of interest as quartile while the others are s() transformed in a gam model 
 model3_quart_PCB_DL <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         PCB_DL_quart + 
         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -200,7 +200,7 @@ model3_quart_PCB_DL <- model3_quart_PCB_DL$p.table |>
   rownames_to_column("variable") 
 
 model3_quart_PCB_NDL <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         PCB_NDL_quart + 
         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -213,7 +213,7 @@ model3_quart_PCB_NDL <- model3_quart_PCB_NDL$p.table |>
   rownames_to_column("variable") 
 
 model3_quart_HCB <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         OCP_HCB_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -226,7 +226,7 @@ model3_quart_HCB <- model3_quart_HCB$p.table |>
   rownames_to_column("variable") 
 
 model3_quart_ΣDDT <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         ΣDDT_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
         sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -239,7 +239,7 @@ model3_quart_ΣDDT <- model3_quart_ΣDDT$p.table |>
   rownames_to_column("variable") 
 
 model3_quart_β_HCH <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         OCP_β_HCH_quart +
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
         sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -252,7 +252,7 @@ model3_quart_β_HCH <- model3_quart_β_HCH$p.table |>
   rownames_to_column("variable") 
 
 model3_quart_Σchlordane <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         Σchlordane_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
         sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -265,7 +265,7 @@ model3_quart_Σchlordane <- model3_quart_Σchlordane$p.table |>
   rownames_to_column("variable") 
 
 model3_quart_ΣPBDE <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         ΣPBDE_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -370,13 +370,13 @@ rm(var, test_1, test_2, formula, anova, p.value_heterogeneity)
 
 
 #### model 3 quartile ----
-test_1 <- gam(als ~ 
+test_1 <- mgcv::gam(als ~ 
                 s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
-test_2 <- gam(als ~ 
+test_2 <- mgcv::gam(als ~ 
                 PCB_DL_quart + 
                 s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -387,13 +387,13 @@ test_2 <- gam(als ~
 anova <- anova(test_1, test_2, test = "Chisq")
 p.value_heterogeneity_PCB_DL <- tibble(variable = "PCB_DL", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
-test_1 <- gam(als ~ 
+test_1 <- mgcv::gam(als ~ 
                 s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
-test_2 <- gam(als ~ 
+test_2 <- mgcv::gam(als ~ 
                 PCB_NDL_quart + 
                 s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -404,13 +404,13 @@ test_2 <- gam(als ~
 anova <- anova(test_1, test_2, test = "Chisq")
 p.value_heterogeneity_PCB_NDL <- tibble(variable = "PCB_NDL", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
-test_1 <- gam(als ~ 
+test_1 <- mgcv::gam(als ~ 
                 s(PCB_DL) + s(PCB_DL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
-test_2 <- gam(als ~ 
+test_2 <- mgcv::gam(als ~ 
                 OCP_HCB_quart + 
                 s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -421,13 +421,13 @@ test_2 <- gam(als ~
 anova <- anova(test_1, test_2, test = "Chisq")
 p.value_heterogeneity_OCP_HCB <- tibble(variable = "OCP_HCB", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
-test_1 <- gam(als ~ 
+test_1 <- mgcv::gam(als ~ 
                 s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
-test_2 <- gam(als ~ 
+test_2 <- mgcv::gam(als ~ 
                 ΣDDT_quart + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -438,13 +438,13 @@ test_2 <- gam(als ~
 anova <- anova(test_1, test_2, test = "Chisq")
 p.value_heterogeneity_ΣDDT <- tibble(variable = "ΣDDT", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
-test_1 <- gam(als ~ 
+test_1 <- mgcv::gam(als ~ 
                 s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
-test_2 <- gam(als ~ 
+test_2 <- mgcv::gam(als ~ 
                 OCP_β_HCH_quart + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -455,13 +455,13 @@ test_2 <- gam(als ~
 anova <- anova(test_1, test_2, test = "Chisq")
 p.value_heterogeneity_OCP_β_HCH <- tibble(variable = "OCP_β_HCH", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
-test_1 <- gam(als ~ 
+test_1 <- mgcv::gam(als ~ 
                 s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
-test_2 <- gam(als ~ 
+test_2 <- mgcv::gam(als ~ 
                 Σchlordane_quart + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -472,13 +472,13 @@ test_2 <- gam(als ~
 anova <- anova(test_1, test_2, test = "Chisq")
 p.value_heterogeneity_Σchlordane <- tibble(variable = "Σchlordane", p.value_heterogeneity = anova$`Pr(>Chi)`[2])
 
-test_1 <- gam(als ~ 
+test_1 <- mgcv::gam(als ~ 
                 s(PCB_DL) + s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
               family = binomial, 
               method = 'ML',
               data = bdd_danish)
-test_2 <- gam(als ~ 
+test_2 <- mgcv::gam(als ~ 
                 ΣPBDE_quart + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -555,7 +555,7 @@ for (var in POPs_group_quart_med) {
 rm(var, test, formula, p.value_trend)
 
 #### model 3 quartile ----
-test <- gam(als ~ 
+test <- mgcv::gam(als ~ 
                 PCB_DL_quart_med + 
                 s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -565,7 +565,7 @@ test <- gam(als ~
   summary()
 p.value_trend_PCB_DL <- test$p.table["PCB_DL_quart_med", "Pr(>|z|)"]
 
-test <- gam(als ~ 
+test <- mgcv::gam(als ~ 
                 PCB_NDL_quart_med + 
                 s(PCB_DL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -575,7 +575,7 @@ test <- gam(als ~
   summary()
 p.value_trend_PCB_NDL <- test$p.table["PCB_NDL_quart_med", "Pr(>|z|)"]
 
-test <- gam(als ~ 
+test <- mgcv::gam(als ~ 
                 OCP_HCB_quart_med + 
                 s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -585,7 +585,7 @@ test <- gam(als ~
   summary()
 p.value_trend_OCP_HCB <- test$p.table["OCP_HCB_quart_med", "Pr(>|z|)"]
 
-test <- gam(als ~ 
+test <- mgcv::gam(als ~ 
                 ΣDDT_quart_med + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -595,7 +595,7 @@ test <- gam(als ~
   summary()
 p.value_trend_ΣDDT <- test$p.table["ΣDDT_quart_med", "Pr(>|z|)"]
 
-test <- gam(als ~ 
+test <- mgcv::gam(als ~ 
                 OCP_β_HCH_quart_med + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -605,7 +605,7 @@ test <- gam(als ~
   summary()
 p.value_trend_OCP_β_HCH <- test$p.table["OCP_β_HCH_quart_med", "Pr(>|z|)"]
 
-test <- gam(als ~ 
+test <- mgcv::gam(als ~ 
                 Σchlordane_quart_med + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(ΣPBDE) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -615,7 +615,7 @@ test <- gam(als ~
   summary()
 p.value_trend_Σchlordane <- test$p.table["Σchlordane_quart_med", "Pr(>|z|)"]
 
-test <- gam(als ~ 
+test <- mgcv::gam(als ~ 
                 ΣPBDE_quart_med + 
                 s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
                 sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -934,7 +934,7 @@ rm(POPs_group_matanalysis)
 
 ##### danish ----
 model3_quart_PCB_DL_danish <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         PCB_DL_quart + 
         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education, 
@@ -947,7 +947,7 @@ model3_quart_PCB_DL_danish <- model3_quart_PCB_DL_danish$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_PCB_NDL_danish <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         PCB_NDL_quart + 
         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education, 
@@ -960,7 +960,7 @@ model3_quart_PCB_NDL_danish <- model3_quart_PCB_NDL_danish$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_HCB_danish <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         OCP_HCB_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education, 
@@ -973,7 +973,7 @@ model3_quart_HCB_danish <- model3_quart_HCB_danish$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_ΣDDT_danish <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         ΣDDT_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education, 
@@ -986,7 +986,7 @@ model3_quart_ΣDDT_danish <- model3_quart_ΣDDT_danish$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_β_HCH_danish <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         OCP_β_HCH_quart +
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) +
         sex + baseline_age + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education, 
@@ -999,7 +999,7 @@ model3_quart_β_HCH_danish <- model3_quart_β_HCH_danish$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_Σchlordane_danish <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         Σchlordane_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) +
         sex + baseline_age + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education, 
@@ -1013,7 +1013,7 @@ model3_quart_Σchlordane_danish <- model3_quart_Σchlordane_danish$p.table |>
 
 ##### FMC ----
 model3_quart_PCB_DL_FMC <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         PCB_DL_quart + 
         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat, # no education data forFMC cohort
@@ -1026,7 +1026,7 @@ model3_quart_PCB_DL_FMC <- model3_quart_PCB_DL_FMC$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_PCB_NDL_FMC <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         PCB_NDL_quart + 
         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat, # no education data forFMC cohort
@@ -1039,7 +1039,7 @@ model3_quart_PCB_NDL_FMC <- model3_quart_PCB_NDL_FMC$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_HCB_FMC <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         OCP_HCB_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat, # no education data forFMC cohort
@@ -1052,7 +1052,7 @@ model3_quart_HCB_FMC <- model3_quart_HCB_FMC$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_ΣDDT_FMC <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         ΣDDT_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat, # no education data forFMC cohort 
@@ -1065,7 +1065,7 @@ model3_quart_ΣDDT_FMC <- model3_quart_ΣDDT_FMC$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_β_HCH_FMC <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         OCP_β_HCH_quart +
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat, # no education data forFMC cohort
@@ -1078,7 +1078,7 @@ model3_quart_β_HCH_FMC <- model3_quart_β_HCH_FMC$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_Σchlordane_FMC <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         Σchlordane_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat, # no education data forFMC cohort
@@ -1092,7 +1092,7 @@ model3_quart_Σchlordane_FMC <- model3_quart_Σchlordane_FMC$p.table |>
 
 ##### FMCF ----
 model3_quart_PCB_DL_FMCF <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         PCB_DL_quart + 
         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
@@ -1105,7 +1105,7 @@ model3_quart_PCB_DL_FMCF <- model3_quart_PCB_DL_FMCF$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_PCB_NDL_FMCF <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         PCB_NDL_quart + 
         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
@@ -1118,7 +1118,7 @@ model3_quart_PCB_NDL_FMCF <- model3_quart_PCB_NDL_FMCF$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_HCB_FMCF <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         OCP_HCB_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
@@ -1131,7 +1131,7 @@ model3_quart_HCB_FMCF <- model3_quart_HCB_FMCF$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_ΣDDT_FMCF <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         ΣDDT_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education, 
@@ -1144,7 +1144,7 @@ model3_quart_ΣDDT_FMCF <- model3_quart_ΣDDT_FMCF$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_β_HCH_FMCF <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         OCP_β_HCH_quart +
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
@@ -1157,7 +1157,7 @@ model3_quart_β_HCH_FMCF <- model3_quart_β_HCH_FMCF$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_Σchlordane_FMCF <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         Σchlordane_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
@@ -1171,7 +1171,7 @@ model3_quart_Σchlordane_FMCF <- model3_quart_Σchlordane_FMCF$p.table |>
 
 ##### MFH -----
 model3_quart_PCB_DL_MFH <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         PCB_DL_quart + 
         s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
@@ -1184,7 +1184,7 @@ model3_quart_PCB_DL_MFH <- model3_quart_PCB_DL_MFH$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_PCB_NDL_MFH <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         PCB_NDL_quart + 
         s(PCB_DL)  + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
@@ -1197,7 +1197,7 @@ model3_quart_PCB_NDL_MFH <- model3_quart_PCB_NDL_MFH$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_HCB_MFH <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         OCP_HCB_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(ΣDDT) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
@@ -1210,7 +1210,7 @@ model3_quart_HCB_MFH <- model3_quart_HCB_MFH$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_ΣDDT_MFH <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         ΣDDT_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(OCP_β_HCH) + s(Σchlordane) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education, 
@@ -1223,7 +1223,7 @@ model3_quart_ΣDDT_MFH <- model3_quart_ΣDDT_MFH$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_β_HCH_MFH <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         OCP_β_HCH_quart +
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(Σchlordane) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
@@ -1236,7 +1236,7 @@ model3_quart_β_HCH_MFH <- model3_quart_β_HCH_MFH$p.table |>
   rownames_to_column("explanatory") 
 
 model3_quart_Σchlordane_MFH <- 
-  gam(als ~ 
+  mgcv::gam(als ~ 
         Σchlordane_quart + 
         s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + s(OCP_β_HCH) +
         sex + baseline_age + thawed + level_urbanization + smoking_2cat + bmi + fS_Kol + marital_status_2cat + education,
@@ -1360,7 +1360,7 @@ model2_gam_sensi_lipid <- list()
 for (var in POPs_group) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi + lipid_tot_phillips_g_L + marital_status_2cat_i + education_i"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
   model2_gam_sensi_lipid[[var]] <- model_summary
 }
@@ -1475,7 +1475,7 @@ model2_gam_sensi_diabetes_chol <- list()
 for (var in POPs_group) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i + diabetes_i"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
   model2_gam_sensi_diabetes_chol[[var]] <- model_summary
 }
@@ -1590,7 +1590,7 @@ model2_gam_sensi_diabetes <- list()
 for (var in POPs_group) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi + marital_status_2cat_i + education_i + diabetes_i"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
   model2_gam_sensi_diabetes[[var]] <- model_summary
 }
@@ -1830,7 +1830,7 @@ model1_gam_not_summed <- list()
 for (var in POPs_included) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
   model1_gam_not_summed[[var]] <- model_summary
 }
@@ -1843,7 +1843,7 @@ for (var in POPs_included) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + 
                               smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
   model2_gam_not_summed[[var]] <- model_summary
 }
@@ -1989,7 +1989,7 @@ plot_base_gam <- map(POPs_group, function(var) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
   
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
+  model <- mgcv::gam(formula, family = binomial, method = "REML", data = bdd_danish)
   
   bdd_pred <- bdd_danish |>                                                     # création bdd avec expo + covariables ramenées à leur moyenne
     mutate(
@@ -2051,7 +2051,7 @@ pollutant_labels <- set_names(c(POPs_included_labels, POPs_included))
 plot_base_gam_not_summed <- map(POPs_included, function(var) {
   formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
   
-  model <- gam(formula,
+  model <- mgcv::gam(formula,
                family = binomial,
                method = "REML",
                data = bdd_danish)
@@ -2140,7 +2140,7 @@ plot_adjusted_gam <- map(POPs_group, function(var) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + {paste(covariates_danish, collapse = ' + ')}"))
   
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
+  model <- mgcv::gam(formula, family = binomial, method = "REML", data = bdd_danish)
   
   bdd_pred <- bdd_danish |>                                                    # création bdd avec expo + covariables ramenées à leur moyenne
     mutate(across(all_of(covariates_danish), 
@@ -2204,7 +2204,7 @@ plot_adjusted_gam_not_summed <- map(POPs_included, function(var) {
   formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age + 
                               smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i"))
   
-  model <- gam(formula, family = binomial, method = "REML", data = bdd_danish)
+  model <- mgcv::gam(formula, family = binomial, method = "REML", data = bdd_danish)
   
   bdd_pred <- bdd_danish |>                                                    # création bdd avec covariables ramenées à leur moyenne
     mutate(across(all_of(c("sex", "baseline_age", 'smoking_2cat_i', 'bmi', 'fS_Kol', 'marital_status_2cat_i', 'education_i')), 
@@ -2266,7 +2266,7 @@ pollutant_labels_bis <- set_names(
     "HCB", "ΣDDT", "β-HCH", "Σchlordane", "ΣPBDE"), 
   POPs_group_bis)
 
-model <- gam(als ~ s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + 
+model <- mgcv::gam(als ~ s(PCB_DL) + s(PCB_NDL) + s(OCP_HCB) + s(ΣDDT) + 
                s(OCP_β_HCH) + s(Σchlordane) + s(ΣPBDE) + 
                sex + baseline_age + 
                smoking_2cat_i + bmi + fS_Kol + marital_status_2cat_i + education_i, 
@@ -2604,6 +2604,8 @@ results_POPs_ALS_occurrence <-
                                      plot_adjusted_gam_not_summed = plot_adjusted_gam_not_summed), 
        metanalysis = list(metanalysis_quart = metanalysis_quart, 
                           plot_metanalysis_quart = plot_metanalysis_quart))
+
+saveRDS(results_POPs_ALS_occurrence, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_POPs_ALS_occurrence.rds")
 
 rm(main_results, covar, results_quart, model1_gam, model2_gam, 
    sensitivity_results_not_summed_quart, model1_gam_not_summed, model2_gam_not_summed, model1_quart_not_summed, model2_quart_not_summed, 

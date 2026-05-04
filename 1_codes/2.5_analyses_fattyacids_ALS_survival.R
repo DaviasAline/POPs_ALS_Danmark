@@ -3,7 +3,7 @@
 # Analysis of survival after ALS diagnosis depending on fatty acids levels  
 
 # Data loading - package loading ----
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2.4_analyses_fattyacids_ALS_occurrence.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 covariates_danish <- c('sex', 'baseline_age', 'smoking_2cat_i', 'bmi', 'cholesterol_i', 'marital_status_2cat_i', 'education_i')
 
 # Danish cohort ----
@@ -356,6 +356,10 @@ results_fattyacids_ALS_survival <-
          fattyacids_sd_als_figure_danish = fattyacids_sd_als_figure_danish, 
          fattyacids_quart_als_figure_danish = fattyacids_quart_als_figure_danish, 
          survival_plots_danish = survival_plots_danish))
+
+
+saveRDS(results_fattyacids_ALS_survival, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_fattyacids_ALS_survival.rds")
+
 
 rm(main_results_fattyacids_ALS_survival, 
    covar_danish, 

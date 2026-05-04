@@ -1,8 +1,4 @@
-# Charger les bibliothèques nécessaires
-library(glmnet)
-library(survival)
-library(dplyr)
-library(pROC)
+
 
 
 # Lasso ----
@@ -20,14 +16,13 @@ y_cox <- Surv(time = rep(1, nrow(bdd_danish)), event = bdd_danish$als)
 # Extraction uniquement des colonnes de protéines
 X_prot <- as.matrix(bdd_danish[, proteomic_sd])
 
-set.seed(123) # Pour la reproductibilité de la cross-validation
+set.seed(1996) # Pour la reproductibilité de la cross-validation
 cv_m1 <- cv.glmnet(
   x = X_prot, 
   y = y_cox, 
   family = "cox", 
   strata = bdd_danish$match, # Indispensable pour respecter l'appariement
-  alpha = 1                  # Lasso
-)
+  alpha = 1)                  # Lasso
 
 plot(cv_m1)
 title("Modèle 1 : Protéines seules", line = 3)
@@ -89,7 +84,7 @@ p.fac <- rep(1, ncol(X_full))
 idx_covar <- grep("bmi|smoking", colnames(X_full))
 p.fac[idx_covar] <- 0
 
-set.seed(123)
+set.seed(1996)
 cv_m2 <- cv.glmnet(
   x = X_full, 
   y = y_cox, 
@@ -154,3 +149,39 @@ print(final_perf)
 roc_obj <- roc(bdd_danish$als, as.numeric(real_risk_scores))
 
 plot(roc_obj, main = paste("Courbe ROC - AUC:", round(auc(roc_obj), 3)))
+
+
+# Random forest ----
+df_rf <- bdd_danish |> 
+  select(als, match, bmi, smoking_2cat_i, all_of(proteomic_sd)) |>
+  mutate(als = as.factor(als))                                                  # als variable has to be a factor in rf models 
+
+set.seed(1996)
+
+n_cases <- sum(df_rf$als == 1)                                                  # Calcul du nombre de cas pour l'échantillonnage
+
+rf_fit <- randomForest(
+  als ~ . - match,                                                              # On prédit ALS avec tout SAUF la variable match
+  data = df_rf,
+  ntree = 1000,                                                                 # Nombre d'arbres (plus c'est haut, plus c'est stable)
+  mtry = sqrt(300),                                                             # Nombre de protéines testées à chaque division
+  importance = TRUE,                                                            # Pour calculer le poids de chaque protéine
+  sampsize = c(n_cases, n_cases),                                               # Équilibrage Cas/Témoins (Optionnel mais recommandé)
+  proximity = TRUE)
+
+print(rf_fit)
+
+# Extraction des 20 protéines les plus importantes
+importance_df <- as.data.frame(importance(rf_fit))
+importance_df$Protein <- rownames(importance_df)
+
+# Figure
+varImpPlot(rf_fit, n.var = 20, main = "Top 20 des protéines (Random Forest)")
+
+# Probabilités prédites pour le statut "1" (ALS)
+rf_probs <- predict(rf_fit, type = "prob")[, "1"]
+
+# Courbe ROC
+roc_rf <- roc(df_rf$als, rf_probs)
+plot(roc_rf, col = "green", main = paste("ROC Random Forest - AUC:", round(auc(roc_rf), 3)))
+

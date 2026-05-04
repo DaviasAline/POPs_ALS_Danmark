@@ -16,6 +16,13 @@ execute:
 
 ```{r}
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2.7_analyses_proteomic_ALS_survival.R")
+results_descriptive <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_descriptive.rds")
+results_POPs_ALS_occurrence <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_POPs_ALS_occurrence.rds")
+results_POPs_ALS_survival <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_POPs_ALS_survival.rds")
+results_fattyacids_ALS_occurrence <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_fattyacids_ALS_occurrence.rds")
+results_fattyacids_ALS_survival <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_fattyacids_ALS_survival.rds")
+# results_proteomic_ALS_occurrence <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_occurrence.rds")
+# results_proteomic_ALS_survival <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_survival.rds")
 ```
 
 # Danish data description
@@ -1583,8 +1590,10 @@ results_fattyacids_ALS_survival$danish$fattyacids_quart_als_table_danish |>
 results_fattyacids_ALS_survival$danish$fattyacids_quart_als_figure_danish
 ```
 
-```{r, fig.height=12, fig.width=12}
+```{r fig.height=12, fig.width=12}
+#| eval: false
 #| column: screen-inset-right
+#| include: false
 arrange_ggsurvplots(
   results_fattyacids_ALS_survival$danish$survival_plots_danish[1:4],
   ncol = 2,              
@@ -2898,6 +2907,68 @@ results_proteomic_ALS_occurrence$additional_analysis_3$jackknife_neuro_results |
   select(d_stat_percent) |> 
   mutate(d_stat_percent = round(d_stat_percent, 1)) |>
   tbl_summary()
+```
+
+# Additional analysis 5 - superlearner
+
+## Test 1
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_occurrence$additional_analysis_5$test_1$summary_sl_fit_CV_1
+results_proteomic_ALS_occurrence$additional_analysis_5$test_1$plot_roc_sl_fit_CV_1
+plot(results_proteomic_ALS_occurrence$additional_analysis_5$test_1$plot_roc_sl_fit_CV_1)
+
+print("Protéines sélectionnées par Leekasso :")
+print(results_proteomic_ALS_occurrence$additional_analysis_5$test_1$genes_selected_1)
+
+# Magnitude of the coefficients 
+results_proteomic_ALS_occurrence$additional_analysis_5$test_1$leek_coeffs_1
+
+# Correlation matrix of the selected proteins
+corrplot(results_proteomic_ALS_occurrence$additional_analysis_5$test_1$cor_matrix_1, method = "color", type = "upper", tl.col = "black", tl.srt = 45)
+```
+
+## Test 2
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_occurrence$additional_analysis_5$test_2$summary_sl_fit_CV_2
+results_proteomic_ALS_occurrence$additional_analysis_5$test_2$plot_roc_sl_fit_CV_2
+plot(results_proteomic_ALS_occurrence$additional_analysis_5$test_2$plot_roc_sl_fit_CV_2)
+
+print("Protéines sélectionnées par Leekasso :")
+print(results_proteomic_ALS_occurrence$additional_analysis_5$test_2$genes_selected_2)
+
+# Magnitude of the coefficients 
+results_proteomic_ALS_occurrence$additional_analysis_5$test_2$leek_coeffs_2
+
+# Correlation matrix of the selected proteins
+corrplot(results_proteomic_ALS_occurrence$additional_analysis_5$test_2$cor_matrix_2, method = "color", type = "upper", tl.col = "black", tl.srt = 45)
+```
+
+## Test 3
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+results_proteomic_ALS_occurrence$additional_analysis_5$test_3$summary_sl_fit_CV_3
+results_proteomic_ALS_occurrence$additional_analysis_5$test_3$plot_roc_sl_fit_CV_3
+plot(results_proteomic_ALS_occurrence$additional_analysis_5$test_3$plot_roc_sl_fit_CV_3)
+
+print("Protéines sélectionnées par Leekasso :")
+print(results_proteomic_ALS_occurrence$additional_analysis_5$test_3$genes_selected_3)
+
+# Magnitude of the coefficients 
+results_proteomic_ALS_occurrence$additional_analysis_5$test_3$leek_coeffs_3
+
+# Correlation matrix of the selected proteins
+corrplot(results_proteomic_ALS_occurrence$additional_analysis_5$test_3$cor_matrix_3, method = "color", type = "upper", tl.col = "black", tl.srt = 45)
 ```
 
 # Proteomic and ALS survival

@@ -4,7 +4,7 @@
 
 
 # Data loading - package loading ----
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2.5_analyses_fattyacids_ALS_survival.R", echo=TRUE)
+source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 
 
 # Effects of the covariates on ALS ----
@@ -172,7 +172,7 @@ model1_gam <- list()
 for (var in proteomic) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
   model1_gam[[var]] <- model_summary
 }
@@ -310,7 +310,7 @@ model2_gam <- list()
 for (var in proteomic) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish)
   model_summary <- summary(model)
   model2_gam[[var]] <- model_summary
 }
@@ -527,7 +527,7 @@ model1_gam_sensi_1 <- list()
 for (var in proteomic_sensi_1) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1)
   model_summary <- summary(model)
   model1_gam_sensi_1[[var]] <- model_summary
 }
@@ -696,7 +696,7 @@ model2_gam_sensi_1 <- list()
 for (var in proteomic_sensi_1) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1)
   model_summary <- summary(model)
   model2_gam_sensi_1[[var]] <- model_summary
 }
@@ -881,7 +881,7 @@ model1_gam_sensi_2 <- list()
 for (var in proteomic) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_2)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_2)
   model_summary <- summary(model)
   model1_gam_sensi_2[[var]] <- model_summary
 }
@@ -1036,7 +1036,7 @@ model2_gam_sensi_2 <- list()
 for (var in proteomic) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_2)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_2)
   model_summary <- summary(model)
   model2_gam_sensi_2[[var]] <- model_summary
 }
@@ -1213,7 +1213,7 @@ model1_gam_sensi_3 <- list()
 for (var in proteomic) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_3)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_3)
   model_summary <- summary(model)
   model1_gam_sensi_3[[var]] <- model_summary
 }
@@ -1366,7 +1366,7 @@ model2_gam_sensi_3 <- list()
 for (var in proteomic) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_3)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_3)
   model_summary <- summary(model)
   model2_gam_sensi_3[[var]] <- model_summary
 }
@@ -1587,7 +1587,7 @@ model1_gam_sensi_1_3 <- list()
 for (var in proteomic_sensi_1_3) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_3)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_3)
   model_summary <- summary(model)
   model1_gam_sensi_1_3[[var]] <- model_summary
 }
@@ -1759,7 +1759,7 @@ model2_gam_sensi_1_3 <- list()
 for (var in proteomic_sensi_1_3) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_3)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_3)
   model_summary <- summary(model)
   model2_gam_sensi_1_3[[var]] <- model_summary
 }
@@ -1984,7 +1984,7 @@ model1_gam_sensi_1_3_4 <- list()
 for (var in proteomic_sensi_1_3_4) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_3_4)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_3_4)
   model_summary <- summary(model)
   model1_gam_sensi_1_3_4[[var]] <- model_summary
 }
@@ -2157,7 +2157,7 @@ model2_gam_sensi_1_3_4 <- list()
 for (var in proteomic_sensi_1_3_4) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_3_4)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_3_4)
   model_summary <- summary(model)
   model2_gam_sensi_1_3_4[[var]] <- model_summary
 }
@@ -2381,7 +2381,7 @@ model1_gam_sensi_1_3_5 <- list()
 for (var in proteomic_sensi_1_3_5) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_3_5)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_3_5)
   model_summary <- summary(model)
   model1_gam_sensi_1_3_5[[var]] <- model_summary
 }
@@ -2553,7 +2553,7 @@ model2_gam_sensi_1_3_5 <- list()
 for (var in proteomic_sensi_1_3_5) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + sex + baseline_age + smoking_2cat_i + bmi"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_3_5)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_3_5)
   model_summary <- summary(model)
   model2_gam_sensi_1_3_5[[var]] <- model_summary
 }
@@ -3367,7 +3367,7 @@ model1_gam_sensi_1_7_female <- list()
 for (var in proteomic_sensi_1_7_female) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + baseline_age"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_7_female)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_7_female)
   model_summary <- summary(model)
   model1_gam_sensi_1_7_female[[var]] <- model_summary
 }
@@ -3536,7 +3536,7 @@ model2_gam_sensi_1_7_female <- list()
 for (var in proteomic_sensi_1_7_female) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + baseline_age + smoking_2cat_i + bmi"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_7_female)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_7_female)
   model_summary <- summary(model)
   model2_gam_sensi_1_7_female[[var]] <- model_summary
 }
@@ -3756,7 +3756,7 @@ model1_gam_sensi_1_7_male <- list()
 for (var in proteomic_sensi_1_7_male) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + baseline_age"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_7_male)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_7_male)
   model_summary <- summary(model)
   model1_gam_sensi_1_7_male[[var]] <- model_summary
 }
@@ -3933,7 +3933,7 @@ model2_gam_sensi_1_7_male <- list()
 for (var in proteomic_sensi_1_7_male) {
   
   formula <- as.formula(paste("als ~ s(", var, ") + baseline_age + smoking_2cat_i + bmi"))
-  model <- gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_7_male)
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_7_male)
   model_summary <- summary(model)
   model2_gam_sensi_1_7_male[[var]] <- model_summary
 }
@@ -5338,13 +5338,204 @@ rm(roc_nefl_all, youden_nefl_all, youden_best_nefl_all,
    roc_patterns, 
    label_main_analysis, label_sensi_2, label_sensi_1_3_4, label_sensi_1_3_5)
 
+
+
+# Additional analysis 5 - Super learner ----
+listWrappers()     # Check available algorithms
+X_sl <- bdd_danish |> 
+  select(bmi, smoking_2cat_i, all_of(proteomic_sd)) |>                         
+  mutate(smoking_2cat_i = as.numeric(smoking_2cat_i) - 1)                       # SuperLearner demande des variables numériques
+
+## test 1 ----
+list_lib_1 <- c(
+  "SL.leekasso",    
+  "SL.glmnet",   
+  "SL.bayesglm",   
+  "SL.ranger",     
+  "SL.ksvm",        
+  "SL.polymars",   
+  "SL.mean")        
+
+set.seed(1996)
+sl_fit_CV_1 <- CV.SuperLearner(
+  Y = bdd_danish$als,                                                           # outcome
+  X = X_sl,                                                                     # predictors (proteins + covariates)
+  family = binomial(),                                                          # binary outcome (0/1)
+  SL.library = list_lib_1,                                                      # list of algorithms to try
+  id = bdd_danish$match,                                                        # matching
+  method = "method.NNLS",                                                       # Non-Negative Least Squares, performance method (default), 
+  cvControl = list(V = 10),                                                     # 10-fold cross-validation (default)
+  control = list(
+    saveFitLibrary = TRUE,                                                      # Retain individual model fits for variable extraction
+    trimLogit = 0.001))                                                         # Prevents numerical instability for probabilities near 0 or 1
+
+summary_sl_fit_CV_1 <- summary(sl_fit_CV_1)
+plot_sl_fit_CV_1 <- plot(sl_fit_CV_1) +                                         # summary of performance of candidate learners 
+  theme_minimal() +  
+  labs(title = "Performance of Candidate Learners",
+       subtitle = "Vertical bars represent the 95% Confidence Interval")
+
+# AUC
+roc_sl_fit_CV_1 <- roc(bdd_danish$als, as.vector(sl_fit_CV_1$SL.predict))
+plot_roc_sl_fit_CV_1 <- plot(roc_sl_fit_CV_1, col = "royalblue", main = "ROC Curve - ALS Prediction")
+
+# Extraction of the main contributors selected by Leekasso
+set.seed(1996)
+sl_fit_1 <- SuperLearner(
+  Y = bdd_danish$als,                                                           # outcome
+  X = X_sl,                                                                     # predictors (proteins + covariates)
+  family = binomial(),                                                          # binary outcome (0/1)
+  SL.library = list_lib_1,                                                      # list of algorithms to try
+  id = bdd_danish$match,                                                        # matching
+  method = "method.NNLS",                                                       # Non-Negative Least Squares, performance method (default), other options: method.NNloglik, method.AUC
+  cvControl = list(V = 10),                                                     # 10-fold cross-validation (default)
+  control = list(
+    saveFitLibrary = TRUE,                                                      # Retain individual model fits for variable extraction
+    trimLogit = 0.001))                                                         # Prevents numerical instability for probabilities near 0 or 1
+
+
+leekasso_fit_1 <- sl_fit_1$fitLibrary$SL.leekasso_All
+genes_selected_1 <- names(leekasso_fit_1$object$coefficients)[-1]               # [-1] pour enlever l'Intercept
+
+# Magnitude of the coefficients 
+leek_coeffs_1 <- summary(leekasso_fit_1$object)$coefficients
+leek_coeffs_1 <- leek_coeffs_1[order(-abs(leek_coeffs_1[,1])), ]
+
+# Correlation matrix of the selected proteins
+selected_data_1 <- X_sl[, genes_selected_1]
+cor_matrix_1 <- cor(selected_data_1)
+
+rm(list_lib_1, selected_data_1)
+
+## test 2 ----
+screen.corP50 <- function(...) {
+  screen.corP(..., ntree = 50)                                                  # Pour preselectionner 50 prot, sinon utiliser le default screen.corP (20)
+}
+
+list_lib_2 <- list(
+  c("SL.glmnet", "All"),                                                        # models qui tournent sur toutes les proteines (pre screening)
+  c("SL.leekasso", "All"),
+  c("SL.ranger", "screen.corP"),                                                # models qui tournent sur top 20 proteins
+  c("SL.polymars", "screen.corP"),                                              
+  c("SL.bayesglm", "screen.ttest"),                                             # models qui tournent sur les protéines avec une p-valeur < 0.1
+  "SL.mean")                                                                    # mean to compare
+
+set.seed(1996)
+sl_fit_CV_2 <- CV.SuperLearner(
+  Y = bdd_danish$als,                                                           # outcome
+  X = X_sl,                                                                     # predictors (proteins + covariates)
+  family = binomial(),                                                          # binary outcome (0/1)
+  SL.library = list_lib_2,                                                      # list of algorithms to try
+  id = bdd_danish$match,                                                        # matching
+  method = "method.NNLS",                                                       # Non-Negative Least Squares, performance method (default), other options: method.NNloglik, method.AUC
+  cvControl = list(V = 10),                                                     # 10-fold cross-validation (default)
+  control = list(
+    saveFitLibrary = TRUE,                                                      # Retain individual model fits for variable extraction
+    trimLogit = 0.001))                                                         # Prevents numerical instability for probabilities near 0 or 1
+
+summary_sl_fit_CV_2 <- summary(sl_fit_CV_2)
+plot_sl_fit_CV_2 <- plot(sl_fit_CV_2) +                                                             # summary of performance of candidate learners 
+  theme_minimal() + 
+  labs(title = "Performance of Candidate Learners",
+       subtitle = "Vertical bars represent the 95% Confidence Interval")
+
+# AUC
+roc_sl_fit_CV_2 <- roc(bdd_danish$als, as.vector(sl_fit_CV_2$SL.predict))
+plot_roc_sl_fit_CV_2 <- plot(roc_sl_fit_CV_2, col = "royalblue", main = "ROC Curve - ALS Prediction")
+
+# Extraction of the main contributors selected by Leekasso
+set.seed(1996)
+sl_fit_2 <- SuperLearner(
+  Y = bdd_danish$als,                                                           # outcome
+  X = X_sl,                                                                     # predictors (proteins + covariates)
+  family = binomial(),                                                          # binary outcome (0/1)
+  SL.library = list_lib_2,                                                      # list of algorithms to try
+  id = bdd_danish$match,                                                        # matching
+  method = "method.NNLS",                                                       # Non-Negative Least Squares, performance method (default), other options: method.NNloglik, method.AUC
+  cvControl = list(V = 10),                                                     # 10-fold cross-validation (default)
+  control = list(
+    saveFitLibrary = TRUE,                                                      # Retain individual model fits for variable extraction
+    trimLogit = 0.001))                                                         # Prevents numerical instability for probabilities near 0 or 1
+
+leekasso_fit_2 <- sl_fit_2$fitLibrary$SL.leekasso_All
+genes_selected_2 <- names(leekasso_fit_2$object$coefficients)[-1]               # [-1] pour enlever l'Intercept
+
+# Magnitude of the coefficients 
+leek_coeffs_2 <- summary(leekasso_fit_2$object)$coefficients
+leek_coeffs_2 <- leek_coeffs_2[order(-abs(leek_coeffs_2[,1])), ]
+
+# Correlation matrix of the selected proteins
+selected_data_2 <- X_sl[, genes_selected_2]
+cor_matrix_2 <- cor(selected_data_2)
+
+rm(screen.corP50, list_lib_2, selected_data_2)
+
+
+## test 3 ----
+list_lib_3 <- c(
+  "SL.leekasso",  
+  "SL.glmnet",    
+  "SL.mean")      
+
+set.seed(1996)
+sl_fit_CV_3 <- CV.SuperLearner(
+  Y = bdd_danish$als,                                                           # outcome
+  X = X_sl,                                                                     # predictors (proteins + covariates)
+  family = binomial(),                                                          # binary outcome (0/1)
+  SL.library = list_lib_3,                                                      # list of algorithms to try
+  id = bdd_danish$match,                                                        # matching
+  method = "method.NNLS",                                                       # Non-Negative Least Squares, performance method (default), other options: method.NNloglik, method.AUC
+  cvControl = list(V = 10),                                                     # 10-fold cross-validation (default)
+  control = list(
+    saveFitLibrary = TRUE,                                                      # Retain individual model fits for variable extraction
+    trimLogit = 0.001))                                                         # Prevents numerical instability for probabilities near 0 or 1
+
+summary_sl_fit_CV_3 <- summary(sl_fit_CV_3)
+plot_sl_fit_CV_3 <- plot(sl_fit_CV_3) +                                                             # summary of performance of candidate learners 
+  theme_minimal() + 
+  labs(title = "Performance of Candidate Learners",
+       subtitle = "Vertical bars represent the 95% Confidence Interval")
+
+# AUC
+roc_sl_fit_CV_3 <- roc(bdd_danish$als, as.vector(sl_fit_CV_3$SL.predict))
+plot_roc_sl_fit_CV_3 <- plot(roc_sl_fit_CV_3, col = "royalblue", main = "ROC Curve - ALS Prediction")
+
+# Extraction of the main contributors selected by Leekasso
+set.seed(1996)
+sl_fit_3 <- SuperLearner(
+  Y = bdd_danish$als,                                                           # outcome
+  X = X_sl,                                                                     # predictors (proteins + covariates)
+  family = binomial(),                                                          # binary outcome (0/1)
+  SL.library = list_lib_3,                                                      # list of algorithms to try
+  id = bdd_danish$match,                                                        # matching
+  method = "method.NNLS",                                                       # Non-Negative Least Squares, performance method (default), other options: method.NNloglik, method.AUC
+  cvControl = list(V = 10),                                                     # 10-fold cross-validation (default)
+  control = list(
+    saveFitLibrary = TRUE,                                                      # Retain individual model fits for variable extraction
+    trimLogit = 0.001))                                                         # Prevents numerical instability for probabilities near 0 or 1
+
+leekasso_fit_3 <- sl_fit_3$fitLibrary$SL.leekasso_All
+genes_selected_3 <- names(leekasso_fit_3$object$coefficients)[-1] # [-1] pour enlever l'Intercept
+
+# Magnitude of the coefficients 
+leek_coeffs_3 <- summary(leekasso_fit_3$object)$coefficients
+leek_coeffs_3 <- leek_coeffs_3[order(-abs(leek_coeffs_3[,1])), ]
+
+# Correlation matrix of the selected proteins
+selected_data_3 <- X_sl[, genes_selected_3]
+cor_matrix_3 <- cor(selected_data_3)
+
+rm(list_lib_3, selected_data_3, X_sl)
+
+
+
 # Figures and Tables ----
 
 make_gam_plot_base <- function(var, data) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
   
-  model <- gam(formula, family = binomial, method = "REML", data = data)
+  model <- mgcv::gam(formula, family = binomial, method = "REML", data = data)
   
   bdd_pred <- data |>
     mutate(
@@ -5408,7 +5599,7 @@ make_gam_plot_adjusted <- function(var, data) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age  + smoking_2cat_i + bmi"))
   
-  model <- gam(formula, family = binomial, method = "REML", data = data)
+  model <- mgcv::gam(formula, family = binomial, method = "REML", data = data)
   
   bdd_pred <- data |>
     mutate(
@@ -7887,7 +8078,7 @@ make_gam_plot_base_sex <- function(var, data) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + baseline_age"))
   
-  model <- gam(formula, family = binomial, method = "REML", data = data)
+  model <- mgcv::gam(formula, family = binomial, method = "REML", data = data)
   
   bdd_pred <- data |>
     mutate(
@@ -7978,7 +8169,7 @@ make_gam_plot_adjusted_sex <- function(var, data) {
   
   formula <- as.formula(glue::glue("als ~ s({var}) + baseline_age  + smoking_2cat_i + bmi"))
   
-  model <- gam(formula, family = binomial, method = "REML", data = data)
+  model <- mgcv::gam(formula, family = binomial, method = "REML", data = data)
   
   bdd_pred <- data |>
     mutate(
@@ -8279,7 +8470,35 @@ results_proteomic_ALS_occurrence <-
       additional_analysis_4_figure_adjusted_pattern = additional_analysis_4_figure_adjusted_pattern, 
       additional_analysis_4_figure_unadjusted_pattern = additional_analysis_4_figure_unadjusted_pattern, 
       additional_analysis_4_figure_unadjusted_color = additional_analysis_4_figure_unadjusted_color), 
+    
+    additional_analysis_5 = list(test_1 = list(sl_fit_CV_1 = sl_fit_CV_1, 
+                                                summary_sl_fit_CV_1 = summary_sl_fit_CV_1, 
+                                                plot_roc_sl_fit_CV_1 = plot_roc_sl_fit_CV_1, 
+                                                sl_fit_1 = sl_fit_1, 
+                                                leekasso_fit_1 = leekasso_fit_1, 
+                                                genes_selected_1 = genes_selected_1, 
+                                                leek_coeffs_1 = leek_coeffs_1, 
+                                                cor_matrix_1 = cor_matrix_1), 
+                                  test_2 = list(sl_fit_CV_2 = sl_fit_CV_2, 
+                                                summary_sl_fit_CV_2 = summary_sl_fit_CV_2, 
+                                                plot_roc_sl_fit_CV_2 = plot_roc_sl_fit_CV_2, 
+                                                sl_fit_2 = sl_fit_2, 
+                                                leekasso_fit_2 = leekasso_fit_2, 
+                                                genes_selected_2 = genes_selected_2, 
+                                                leek_coeffs_2 = leek_coeffs_2, 
+                                                cor_matrix_2 = cor_matrix_2), 
+                                  test_3 = list(sl_fit_CV_3 = sl_fit_CV_3, 
+                                                summary_sl_fit_CV_3 = summary_sl_fit_CV_3, 
+                                                plot_roc_sl_fit_CV_3 = plot_roc_sl_fit_CV_3, 
+                                                sl_fit_3 = sl_fit_3, 
+                                                leekasso_fit_3 = leekasso_fit_3, 
+                                                genes_selected_3 = genes_selected_3, 
+                                                leek_coeffs_3 = leek_coeffs_3, 
+                                                cor_matrix_3 = cor_matrix_3)), 
     Nfl_results = list(NfL_sd_ALS_adjusted_figure = NfL_sd_ALS_adjusted_figure))
+
+
+saveRDS(results_proteomic_ALS_occurrence, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_occurrence.rds")
 
 rm(covar, 
    main_results, 
@@ -8397,9 +8616,37 @@ rm(covar,
    additional_analysis_3_neuro_results, 
    jackknife_neuro_results, 
    
-   additional_analysis_4_figure_adjusted, 
-   additional_analysis_4_figure_unadjusted_patern,
+   additional_analysis_4_figure_unadjusted_pattern,
    additional_analysis_4_figure_unadjusted_color, 
+   
+   sl_fit_CV_1, 
+   summary_sl_fit_CV_1, 
+   roc_sl_fit_CV_1, 
+   plot_roc_sl_fit_CV_1, 
+   sl_fit_1, 
+   leekasso_fit_1, 
+   genes_selected_1, 
+   leek_coeffs_1, 
+   cor_matrix_1, 
+   
+   sl_fit_CV_2, 
+              summary_sl_fit_CV_2, 
+   roc_sl_fit_CV_2,
+              plot_roc_sl_fit_CV_2, 
+              sl_fit_2, 
+              leekasso_fit_2, 
+              genes_selected_2, 
+              leek_coeffs_2, 
+              cor_matrix_2, 
+   sl_fit_CV_3, 
+              summary_sl_fit_CV_3, 
+   roc_sl_fit_CV_3, 
+              plot_roc_sl_fit_CV_3, 
+              sl_fit_3, 
+              leekasso_fit_3, 
+              genes_selected_3, 
+              leek_coeffs_3, 
+              cor_matrix_3, 
    
    NfL_sd_ALS_adjusted_figure, 
    

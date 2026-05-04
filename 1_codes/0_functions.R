@@ -54,6 +54,10 @@ library(ggrepel)
 library(adelie)
 library(fasano.franceschini.test)
 library(pROC)
+library(randomForest)
+library(SuperLearner)
+library(sva)
+
 
 ## Tableau descriptif variables numériques
 descrip_num <- function(data, vars) {                                           
