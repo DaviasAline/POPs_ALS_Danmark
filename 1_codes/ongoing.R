@@ -230,13 +230,11 @@ test <- left_join(Olink_target, Olink_explore, by = c("UniProt ID", "Gene", "Pro
 
 
 # investigation des autres maladies neurologiques -----
-
-library(haven)
-lpr_DKEPIC_ALS_sum_3k_johnni_cancer_dk_long <- 
+bdd_danish_icd_long <- 
   read_dta("/Volumes/shared/EOME/Weisskopf/POPs-ALS/Data/Danish EPIC data/lpr_DKEPIC_ALS_sum_3k(johnni@cancer.dk).dta")
 
-lpr_DKEPIC_ALS_sum_3k_johnni_cancer_dk_ <- 
-  lpr_DKEPIC_ALS_sum_3k_johnni_cancer_dk_long |> 
+bdd_danish_icd <- 
+  bdd_danish_icd_long |> 
   rename(sample = code, serial_no = loebenr, match = saet) |>
   group_by(sample, serial_no, match) |>
   mutate(id_temp = row_number()) |>
@@ -247,8 +245,8 @@ lpr_DKEPIC_ALS_sum_3k_johnni_cancer_dk_ <-
     names_sep = "_",
     names_vary = "slowest")
 
-lpr_DKEPIC_ALS_sum_3k_johnni_cancer_dk_long <-   
-  lpr_DKEPIC_ALS_sum_3k_johnni_cancer_dk_long |> 
+bdd_danish_icd_long <-   
+  bdd_danish_icd_long |> 
   rename(sample = code, serial_no = loebenr, match = saet)  |> 
   mutate(c_diag = as.factor(c_diag))
 
@@ -257,13 +255,13 @@ als_data <-
   select(sample, serial_no, match, als, proteomic_neuro_explo_NEFL) |>
   mutate(sample = as.numeric(sample))
 
-lpr_DKEPIC_ALS_sum_3k_johnni_cancer_dk_long <- 
-  lpr_DKEPIC_ALS_sum_3k_johnni_cancer_dk_long |> 
+bdd_danish_icd_long <- 
+  bdd_danish_icd_long |> 
   left_join(als_data, by = c("sample", "serial_no", "match")) 
 rm(als_data)
 
-lpr_DKEPIC_ALS_sum_3k_johnni_cancer_dk_long <- 
-  lpr_DKEPIC_ALS_sum_3k_johnni_cancer_dk_long |>
+bdd_danish_icd_long <- 
+  bdd_danish_icd_long |>
   mutate(
     c_diag_name = 
       case_when(
@@ -283,7 +281,7 @@ lpr_DKEPIC_ALS_sum_3k_johnni_cancer_dk_long <-
   arrange(sample, match, serial_no, als)
 
 
-lpr_DKEPIC_ALS_sum_3k_johnni_cancer_dk_long |>
+bdd_danish_icd_long |>
   filter(
     str_starts(c_diag, "DG35") | str_starts(c_diag, "34009") |                  # ICD-10 and ICD-8 for multiple sclerosis (MS)
       str_starts(c_diag, "DG30") | str_starts(c_diag, "29010") |                  # ICD-10 and ICD-8 for Alzheimer's disease
@@ -311,7 +309,7 @@ lpr_DKEPIC_ALS_sum_3k_johnni_cancer_dk_long |>
   bold_labels()
 
 
-ident_other_neuro <- lpr_DKEPIC_ALS_sum_3k_johnni_cancer_dk_long |>
+ident_other_neuro <- bdd_danish_icd_long |>
   #filter(als == 0) |>
   filter(
     str_starts(c_diag, "DG35") | str_starts(c_diag, "34009") |                  # ICD-10 and ICD-8 for multiple sclerosis (MS)
@@ -328,7 +326,7 @@ ident_other_neuro <- lpr_DKEPIC_ALS_sum_3k_johnni_cancer_dk_long |>
   distinct(sample, c_diag_name, .keep_all = TRUE) |>
   pull(sample)
 
-diagnostics_lookup <- lpr_DKEPIC_ALS_sum_3k_johnni_cancer_dk_long |>
+diagnostics_lookup <- bdd_danish_icd_long |>
   filter(!is.na(c_diag_name)) |>
   distinct(sample, c_diag_name) |>
   mutate(sample = as.character(sample))
@@ -366,5 +364,6 @@ ggplot(bdd_plot, aes(x = als_label, y = proteomic_neuro_explo_NEFL)) +
     y = "NfL distribution",
     color = "Other neurologic\ndiagnostic")
 
+rm(bdd_plot, diagnostics_lookup, n_diseases)
 
 

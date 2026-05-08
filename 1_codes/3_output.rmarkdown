@@ -27,9 +27,13 @@ results_fattyacids_ALS_survival <- readRDS("~/Documents/POP_ALS_2025_02_03/2_out
 # results_proteomic_ALS_survival <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_survival.rds")
 ```
 
+
+
 # Danish data description
 
 ## ALS survival
+
+
 
 ```{r}
 bdd_danish |> 
@@ -48,9 +52,13 @@ descrip_num(data = bdd_danish, vars = "follow_up_death") |>
   set_table_properties(align = "left")
 ```
 
+
+
 ## Metadata
 
 Not imputed for missing data
+
+
 
 ```{r}
 results_descriptive$danish$covar_danish |>
@@ -61,7 +69,11 @@ results_descriptive$danish$covar_danish |>
   set_table_properties(align = "left")
 ```
 
+
+
 ### Multiple cholesterol variables
+
+
 
 ```{r, fig.height=5}
 boxplot(data = bdd_danish, vars = c("fS_Kol", "cholesterol"))
@@ -74,7 +86,11 @@ descrip_num(data = bdd_danish, vars = c("fS_Kol", "cholesterol")) |>
 cor.test(bdd_danish$fS_Kol, bdd_danish$cholesterol)
 ```
 
+
+
 ### Timing between baseline, ALS diagnosis and death
+
+
 
 ```{r}
 timing <- bdd |> 
@@ -100,9 +116,13 @@ descrip_num(data = timing, vars = colnames(timing))   |>
 rm(timing)
 ```
 
+
+
 ## POPs
 
 ### Distribution tables
+
+
 
 ```{r}
 results_descriptive$danish$POPs_table_danish |>
@@ -113,7 +133,11 @@ results_descriptive$danish$POPs_table_danish |>
   set_table_properties(align = "left")
 ```
 
+
+
 ### Comparison of distribution cases/controls
+
+
 
 ```{r}
 results_descriptive$danish$POPs_table_danish_by_als|>
@@ -124,7 +148,11 @@ results_descriptive$danish$POPs_table_danish_by_als|>
   set_table_properties(align = "left")
 ```
 
+
+
 ### Heatmap of correlation
+
+
 
 ```{r fig.height=11, fig.width=11}
 corrplot(results_descriptive$danish$POPs_heatmap_danish, 
@@ -139,7 +167,11 @@ corrplot(results_descriptive$danish$POPs_heatmap_danish,
          col = rev(COL2(diverging = "RdYlBu")))
 ```
 
+
+
 ### Boxplots
+
+
 
 ```{r, fig.width=10, fig.height=10}
 results_descriptive$danish$POPs_boxplot_danish_by_als
@@ -149,15 +181,23 @@ results_descriptive$danish$POPs_boxplot_danish_by_als
 results_descriptive$danish$POPs_group_boxplot_danish_by_als
 ```
 
+
+
 POPs distribution depending on alive/deceased status at the end of the follow-up (among cases)
+
+
 
 ```{r}
 results_descriptive$danish$POPs_group_boxplot_danish_by_death
 ```
 
+
+
 ### Detailed distribution
 
 #### Summed
+
+
 
 ```{r}
 densityplot(data = bdd_danish, vars = POPs_group)
@@ -165,7 +205,11 @@ boxplot(data = bdd_danish, vars = POPs_group)
 heatmap_cor(cormat = bdd_danish[POPs_group], decimal = 1)
 ```
 
+
+
 #### PCBs
+
+
 
 ```{r}
 PCBs <- bdd_danish |> select(all_of(POPs)) |> select(contains("PCB")) |> colnames()
@@ -189,7 +233,11 @@ heatmap_cor(cormat = bdd_danish[PCBs], decimal = 1)
 rm(PCBs)
 ```
 
+
+
 #### OCPs
+
+
 
 ```{r}
 OCPs <- bdd_danish |> select(all_of(POPs)) |> select(contains("OCP")) |> colnames()
@@ -198,7 +246,11 @@ boxplot(data = bdd_danish, vars = OCPs)
 heatmap_cor(cormat = bdd_danish[OCPs], decimal = 1)
 ```
 
+
+
 #### PBDEs
+
+
 
 ```{r,  fig.width=7, fig.height=3}
 PBDEs <- bdd_danish |> select(all_of(POPs)) |> select(contains("PBDE")) |> colnames()
@@ -210,9 +262,13 @@ boxplot(data = bdd_danish, vars = PBDEs)
 heatmap_cor(cormat = bdd_danish[PBDEs], decimal = 1)
 ```
 
+
+
 ## Fatty acids
 
 ### Distribution tables
+
+
 
 ```{r}
 results_descriptive$danish$fattyacids_table_danish|>
@@ -223,7 +279,11 @@ results_descriptive$danish$fattyacids_table_danish|>
   set_table_properties(align = "left")
 ```
 
+
+
 ### Comparison of distribution cases/controls
+
+
 
 ```{r}
 results_descriptive$danish$fattyacids_table_danish_by_als |>
@@ -234,7 +294,11 @@ results_descriptive$danish$fattyacids_table_danish_by_als |>
   set_table_properties(align = "left")
 ```
 
+
+
 ### Heatmap of correlation
+
+
 
 ```{r, fig.height=12, fig.width=12}
 corrplot(results_descriptive$danish$fattyacids_heatmap_danish, 
@@ -249,15 +313,23 @@ corrplot(results_descriptive$danish$fattyacids_heatmap_danish,
          col = rev(COL2(diverging = "RdYlBu")))
 ```
 
+
+
 ### Boxplots
+
+
 
 ```{r, fig.height=10, fig.width=10}
 results_descriptive$danish$fattyacids_boxplot_danish_by_als
 ```
 
+
+
 ### Detailed distribution
 
 #### Density plots
+
+
 
 ```{r, fig.height=10, fig.width=10}
 bdd_danish |> 
@@ -271,15 +343,23 @@ bdd_danish |>
   facet_wrap(~fattyacids, scales = "free", ncol = 4)
 ```
 
+
+
 ## Heatmap POPs/Fatty acids
+
+
 
 ```{r, fig.width=12, fig.height=12}
 results_descriptive$danish$POPs_fattyacids_heatmap_danish
 ```
 
+
+
 ## Proteomic
 
 ### Distribution table
+
+
 
 ```{r}
 results_descriptive$danish$proteomic_table_danish  |>
@@ -290,7 +370,11 @@ results_descriptive$danish$proteomic_table_danish  |>
   set_table_properties(align = "left")
 ```
 
+
+
 ### Comparison of distribution cases/controls
+
+
 
 ```{r}
 #| eval: false
@@ -305,9 +389,13 @@ results_descriptive$danish$proteomic_table_danish_by_als|>
   set_table_properties(align = "left")
 ```
 
+
+
 ### Heatmap of correlation
 
 All
+
+
 
 ```{r fig.height=11, fig.width=11}
 #| eval: false
@@ -353,7 +441,11 @@ corrplot(results_descriptive$danish$proteomic_heatmap_danish,
 rm(vars, col_labels, corr_order, col_labels_ordered)
 ```
 
+
+
 Neuro explo
+
+
 
 ```{r fig.height=11, fig.width=11}
 
@@ -370,7 +462,11 @@ corrplot(results_descriptive$danish$proteomic_heatmap_danish_neuro_explo,
          col = rev(COL2(diverging = "RdYlBu")))
 ```
 
+
+
 Immune response
+
+
 
 ```{r fig.height=11, fig.width=11}
 
@@ -387,7 +483,11 @@ corrplot(results_descriptive$danish$proteomic_heatmap_danish_immun_res,
          col = rev(COL2(diverging = "RdYlBu")))
 ```
 
+
+
 Metabolism
+
+
 
 ```{r fig.height=11, fig.width=11}
 
@@ -405,33 +505,53 @@ corrplot(results_descriptive$danish$proteomic_heatmap_danish_metabolism,
 
 ```
 
+
+
 ### Boxplots
+
+
 
 ```{r, fig.width=10, fig.height=30}
 results_descriptive$danish$proteomic_boxplot_danish
 ```
 
+
+
 Comparison between cases and controls
+
+
 
 ```{r, fig.width=10, fig.height=30}
 results_descriptive$danish$proteomic_boxplot_danish_by_als
 ```
 
+
+
 Comparison between alive/deceased status at the end of the follow-up (among cases)
+
+
 
 ```{r, fig.width=10, fig.height=30}
 results_descriptive$danish$proteomic_boxplot_danish_by_death
 ```
 
+
+
 ### NEFL
+
+
 
 ```{r}
 results_descriptive$danish$figure_NEFL
 ```
 
+
+
 ## EVs
 
 ### Distribution tables
+
+
 
 ```{r}
 results_descriptive$danish$EVs_table_danish |>
@@ -442,7 +562,11 @@ results_descriptive$danish$EVs_table_danish |>
   set_table_properties(align = "left")
 ```
 
+
+
 ### Comparison of distribution cases/controls
+
+
 
 ```{r}
 results_descriptive$danish$EVs_table_danish_by_als |>
@@ -453,7 +577,11 @@ results_descriptive$danish$EVs_table_danish_by_als |>
   set_table_properties(align = "left")
 ```
 
+
+
 ### Heatmap of correlation
+
+
 
 ```{r, fig.height=12, fig.width=12}
 corrplot(results_descriptive$danish$EVs_heatmap_danish, 
@@ -469,27 +597,43 @@ corrplot(results_descriptive$danish$EVs_heatmap_danish,
 
 ```
 
+
+
 ### Boxplots
+
+
 
 ```{r, fig.height=10, fig.width=10}
 results_descriptive$danish$EVs_boxplot_danish
 ```
 
+
+
 Comparison between cases and controls
+
+
 
 ```{r, fig.height=10, fig.width=10}
 results_descriptive$danish$EVs_boxplot_danish_by_als
 ```
 
+
+
 Comparison between alive/deceased status at the end of the follow-up (among cases)
+
+
 
 ```{r, fig.width=10, fig.height=10}
 results_descriptive$danish$EVs_boxplot_danish_by_death
 ```
 
+
+
 # Finnish data description
 
 ## ALS survival
+
+
 
 ```{r}
 bdd_finnish |> 
@@ -511,7 +655,11 @@ descrip_num(data = bdd_finnish, vars = "follow_up_death") |>
   set_table_properties(align = "left")
 ```
 
+
+
 ## Metadata
+
+
 
 ```{r}
 results_descriptive$finnish$covar_finnish |>
@@ -522,9 +670,13 @@ results_descriptive$finnish$covar_finnish |>
   set_table_properties(align = "left")
 ```
 
+
+
 ## POPs
 
 ### Distribution tables
+
+
 
 ```{r}
 results_descriptive$finnish$POPs_table_finnish |>
@@ -535,7 +687,11 @@ results_descriptive$finnish$POPs_table_finnish |>
   set_table_properties(align = "left")
 ```
 
+
+
 ### Comparison of distribution cases/controls
+
+
 
 ```{r}
 results_descriptive$finnish$POPs_table_finnish_by_als |>
@@ -546,7 +702,11 @@ results_descriptive$finnish$POPs_table_finnish_by_als |>
   set_table_properties(align = "left")
 ```
 
+
+
 ### Heatmap of correlation
+
+
 
 ```{r fig.height=11, fig.width=11}
 corrplot(results_descriptive$finnish$POPs_heatmap_finnish, 
@@ -561,16 +721,24 @@ corrplot(results_descriptive$finnish$POPs_heatmap_finnish,
          col = rev(COL2(diverging = "RdYlBu")))
 ```
 
+
+
 ### Boxplots
+
+
 
 ```{r, fig.width=10, fig.height=10}
 # results_descriptive$finnish$POPs_boxplot_finnish
 results_descriptive$finnish$POPs_boxplot_finnish_by_als
 ```
 
+
+
 ### Detailed distribution
 
 #### Summed
+
+
 
 ```{r}
 densityplot(data = bdd_finnish, vars = POPs_group)
@@ -578,7 +746,11 @@ boxplot(data = bdd_finnish, vars = POPs_group)
 heatmap_cor(cormat = bdd_finnish[POPs_group], decimal = 1)
 ```
 
+
+
 #### PCBs
+
+
 
 ```{r}
 PCBs <- bdd_finnish |> select(all_of(POPs_finnish)) |> select(contains("PCB")) |> colnames()
@@ -602,7 +774,11 @@ heatmap_cor(cormat = bdd_finnish[PCBs], decimal = 1)
 rm(PCBs)
 ```
 
+
+
 #### OCPs
+
+
 
 ```{r}
 OCPs <- bdd_finnish |> select(all_of(POPs_finnish)) |> select(contains("OCP")) |> colnames()
@@ -611,7 +787,11 @@ boxplot(data = bdd_finnish, vars = OCPs)
 # heatmap_cor(cormat = bdd_finnish[OCPs], decimal = 1)
 ```
 
+
+
 #### PBDEs
+
+
 
 ```{r,  fig.width=7, fig.height=3}
 PBDEs <- bdd_finnish |> select(all_of(POPs_finnish)) |> select(contains("PBDE")) |> colnames()
@@ -623,9 +803,13 @@ boxplot(data = bdd_finnish, vars = PBDEs)
 heatmap_cor(cormat = bdd_finnish[PBDEs], decimal = 1)
 ```
 
+
+
 ## Fatty acids
 
 ### Distribution tables
+
+
 
 ```{r}
 results_descriptive$finnish$fattyacids_table_finnish |>
@@ -636,7 +820,11 @@ results_descriptive$finnish$fattyacids_table_finnish |>
   set_table_properties(align = "left")
 ```
 
+
+
 ### Comparison of distribution cases/controls
+
+
 
 ```{r}
 results_descriptive$finnish$fattyacids_table_finnish_by_als |>
@@ -647,7 +835,11 @@ results_descriptive$finnish$fattyacids_table_finnish_by_als |>
   set_table_properties(align = "left")
 ```
 
+
+
 ### Heatmap of correlation
+
+
 
 ```{r, fig.height=12, fig.width=12}
 corrplot(results_descriptive$finnish$fattyacids_heatmap_finnish, 
@@ -662,13 +854,21 @@ corrplot(results_descriptive$finnish$fattyacids_heatmap_finnish,
          col = rev(COL2(diverging = "RdYlBu")))
 ```
 
+
+
 ### Boxplots
+
+
 
 ```{r, fig.height=10, fig.width=10}
 results_descriptive$finnish$fattyacids_boxplot_finnish_by_als
 ```
 
+
+
 ### Detailed distribution
+
+
 
 ```{r, fig.height=10, fig.width=10}
 bdd_finnish |> 
@@ -684,15 +884,23 @@ bdd_finnish |>
   facet_wrap(~fattyacids, scales = "free", ncol = 3L, nrow = 14L)
 ```
 
+
+
 ## Heatmap POPs/Fatty acids
+
+
 
 ```{r, fig.width=12, fig.height=12}
 results_descriptive$finnish$POPs_fattyacids_heatmap_finnish
 ```
 
+
+
 ## Multiple cholesterol variables issue
 
 Why do we have 3 cholesterol variables in the finnish data ?
+
+
 
 ```{r, fig.height=4}
 boxplot(data = bdd_finnish, vars = c("fS_Kol", "chol", "cholesterol"))
@@ -719,9 +927,13 @@ corrplot(heatmap_cholesterol,
 
 ```
 
+
+
 ## Timing between baseline, ALS diagnosis and death
 
 ### FMC
+
+
 
 ```{r}
 timing <- bdd |> 
@@ -749,7 +961,11 @@ descrip_num(data = timing, vars = colnames(timing)) |>
 rm(timing)
 ```
 
+
+
 ### FMCF
+
+
 
 ```{r}
 timing <- bdd |> 
@@ -776,7 +992,11 @@ descrip_num(data = timing, vars = colnames(timing)) |>
 rm(timing)
 ```
 
+
+
 ### MFH
+
+
 
 ```{r}
 timing <- bdd |> 
@@ -802,11 +1022,15 @@ descrip_num(data = timing, vars = colnames(timing)) |>
 rm(timing)
 ```
 
+
+
 # Comparison danish/finnish data
 
 ## On the total population
 
 ### Metadata
+
+
 
 ```{r}
 results_descriptive$comp$covar_comp |>
@@ -817,7 +1041,11 @@ results_descriptive$comp$covar_comp |>
   set_table_properties(align = "left")
 ```
 
+
+
 ### POPs
+
+
 
 ```{r, fig.width=10, fig.height=10}
 results_descriptive$comp$POPs_table_comp |>
@@ -829,7 +1057,11 @@ results_descriptive$comp$POPs_table_comp |>
 results_descriptive$comp$POPs_boxplot_comp
 ```
 
+
+
 ### Fatty acids
+
+
 
 ```{r, fig.height=12, fig.width=12}
 results_descriptive$comp$fattyacids_table_comp |>
@@ -841,11 +1073,15 @@ results_descriptive$comp$fattyacids_table_comp |>
 results_descriptive$comp$fattyacids_boxplot_comp 
 ```
 
+
+
 ## Among cases
 
 (for ALS survival analyses)
 
 ### Metadata
+
+
 
 ```{r}
 results_descriptive$comp$covar_comp_cases |>
@@ -856,7 +1092,11 @@ results_descriptive$comp$covar_comp_cases |>
   set_table_properties(align = "left")
 ```
 
+
+
 ### POPs
+
+
 
 ```{r}
 results_descriptive$comp$POPs_table_comp_cases |>
@@ -886,11 +1126,15 @@ corrplot(results_descriptive$comp$POPs_heatmap_cases,
          col = rev(COL2(diverging = "RdYlBu")))
 ```
 
+
+
 # POPs and ALS occurence
 
 ## Danish cohort
 
 ### Effects of subject characteristics on ALS occurence
+
+
 
 ```{r}
 results_POPs_ALS_occurrence$main$covar |>
@@ -901,11 +1145,15 @@ results_POPs_ALS_occurrence$main$covar |>
   set_table_properties(align = "left")
 ```
 
+
+
 ### Main analysis
 
 #### Quartile models
 
 In the copollutant models, the pollutant of interest is quartile while the others are s() in a GAM model
+
+
 
 ```{r fig.height=9, fig.width=9}
 results_POPs_ALS_occurrence$main$plot_quart
@@ -993,7 +1241,11 @@ table_S2
 rm(extra_rows, table_S2)
 ```
 
+
+
 #### q-gcomp analysis
+
+
 
 ```{r}
 results_POPs_ALS_occurrence$main$POPs_ALS_qgcomp_table_danish |>
@@ -1005,9 +1257,13 @@ results_POPs_ALS_occurrence$main$POPs_ALS_qgcomp_table_danish |>
 results_POPs_ALS_occurrence$main$POPs_ALS_qgcomp_figure_danish
 ```
 
+
+
 #### GAM models
 
 Relationship between POPs exposure at baseline time and ALS occurrence estimated using a generalized additive model (gam) from the Danish Diet, Cancer and Health study cohort established between December 1993 and May 1997. The solid blue line represents the predicted ALS occurrence by POPs exposure given that all other covariates are at their respective means. The light blue represents the 95% confidence intervals. All models were adjusted for sex and age. Adjusted models further account for serum cholesterol, BMI, smoking status, marital status and education. The effective degrees of freedom (EDF) for the POPs smooth terms is a summary statistic of a gam that reflects the degree of nonlinearity (edf=1: linear, edf=2: quadratic, edf\>2: more complex than quadratic).
+
+
 
 ```{r, fig.height=3.5, fig.width=9}
 wrap_plots(
@@ -1052,7 +1308,11 @@ wrap_plots(
   nrow = 1)
 ```
 
+
+
 ### Sensitivity analysis total lipid instead of total cholesterol
+
+
 
 ```{r fig.height=9, fig.width=9}
 
@@ -1066,7 +1326,11 @@ results_POPs_ALS_occurrence$main$table_quart_sensi_lipid
 
 ```
 
+
+
 ### Sensitivity analysis about diabetes
+
+
 
 ```{r fig.height=9, fig.width=9}
 
@@ -1080,15 +1344,23 @@ results_POPs_ALS_occurrence$main$table_quart_sensi_diabetes
 
 ```
 
+
+
 ### Sensitivity analysis POPs not summed
 
 #### quartiles
+
+
 
 ```{r,  fig.height=15, fig.width=10}
 results_POPs_ALS_occurrence$sensitivity_not_summed$plot_quart_sensi_not_summed
 ```
 
+
+
 #### GAMs
+
+
 
 ```{r, fig.height=6, fig.width=15}
 #| column: screen-inset-right
@@ -1097,7 +1369,11 @@ wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_
 wrap_plots(results_POPs_ALS_occurrence$sensitivity_not_summed$plot_adjusted_gam_not_summed[17:22], ncol = 4)
 ```
 
+
+
 ## Metanalysis (quartiles)
+
+
 
 ```{r fig.height=9, fig.width=9}
 results_POPs_ALS_occurrence$metanalysis$plot_metanalysis_quart
@@ -1165,9 +1441,13 @@ table_S4
 rm(extra_rows, table_S4)
 ```
 
+
+
 # POPs ans ALS survival
 
 ## Subjects characteristics (among cases only)
+
+
 
 ```{r}
 #| echo: false
@@ -1182,9 +1462,13 @@ results_descriptive$comp$covar_comp_cases |>
   set_table_properties(align = "left")
 ```
 
+
+
 ## Danish cohort
 
 ### Effects of subject characteristics on ALS survival
+
+
 
 ```{r}
 results_POPs_ALS_survival$main_analysis$covar_danish |>
@@ -1195,9 +1479,13 @@ results_POPs_ALS_survival$main_analysis$covar_danish |>
   set_table_properties(align = "left")
 ```
 
+
+
 ### Effects of POPs on ALS survival
 
 #### Continuous coding (standardized)
+
+
 
 ```{r}
 results_POPs_ALS_survival$main_analysis$POPs_sd_ALS_table_danish  |>
@@ -1208,7 +1496,11 @@ results_POPs_ALS_survival$main_analysis$POPs_sd_ALS_table_danish  |>
 results_POPs_ALS_survival$main_analysis$POPs_sd_ALS_figure_danish
 ```
 
+
+
 #### Quartiles
+
+
 
 ```{r}
 #| column: screen-inset-right
@@ -1220,7 +1512,11 @@ results_POPs_ALS_survival$main_analysis$POPs_quart_ALS_table_danish |>
 results_POPs_ALS_survival$main_analysis$POPs_quart_ALS_figure_danish
 ```
 
+
+
 #### Cox-gam
+
+
 
 ```{r fig.height=11, fig.width=8}
 
@@ -1252,9 +1548,13 @@ wrap_plots(list(results_POPs_ALS_survival$main_analysis$plot_base_cox_gam_danish
 
 ```
 
+
+
 #### Q-gcomp analysis
 
 Including all the pollutants
+
+
 
 ```{r}
 results_POPs_ALS_survival$main_analysis$qgcomp$POPs_ALS_qgcomp_table_danish  |>
@@ -1266,7 +1566,11 @@ results_POPs_ALS_survival$main_analysis$qgcomp$POPs_ALS_qgcomp_table_danish  |>
 results_POPs_ALS_survival$main_analysis$qgcomp$POPs_ALS_qgcomp_figure_danish
 ```
 
+
+
 Selecting the pollutants with a positive weight and adjusting for the others
+
+
 
 ```{r}
 results_POPs_ALS_survival$main_analysis$qgcomp$POPs_ALS_qgcomp_positive_table_danish  |>
@@ -1278,6 +1582,8 @@ results_POPs_ALS_survival$main_analysis$qgcomp$POPs_ALS_qgcomp_positive_table_da
 results_POPs_ALS_survival$main_analysis$qgcomp$POPs_ALS_qgcomp_positive_figure_danish
 ```
 
+
+
 ## Sensitivity analyses 1
 
 Mixture models with POPs pre-selection
@@ -1286,21 +1592,33 @@ Mixture models with POPs pre-selection
 
 Using LASSO
 
+
+
 ```{r}
 plot(results_POPs_ALS_survival$sensi1$sensi1_lasso_sd_danish)  
 ```
 
+
+
 Using ridge
+
+
 
 ```{r}
 plot(results_POPs_ALS_survival$sensi1$sensi1_ridge_sd_danish)  
 ```
 
+
+
 Using elastic net
+
+
 
 ```{r}
 plot(results_POPs_ALS_survival$sensi1$sensi1_elastic_net_sd_danish)
 ```
+
+
 
 These plot the cross-validation curve (red dotted line) along with upper and lower standard deviation curves along the 𝜆sequence (error bars). Two special values along the 𝜆sequence are indicated by the vertical dotted lines.
 
@@ -1308,73 +1626,113 @@ lambda.min is the value of 𝜆that gives minimum mean cross-validated error
 
 coefficients using lambda.min Using LASSO
 
+
+
 ```{r}
 coef(results_POPs_ALS_survival$sensi1$sensi1_lasso_sd_danish, s = "lambda.min")  
 ```
 
+
+
 Using ridge
+
+
 
 ```{r}
 coef(results_POPs_ALS_survival$sensi1$sensi1_ridge_sd_danish, s = "lambda.min")  
 ```
 
+
+
 Using elastic net
+
+
 
 ```{r}
 coef(results_POPs_ALS_survival$sensi1$sensi1_elastic_net_sd_danish, s = "lambda.min")
 ```
 
+
+
 while lambda.1se is the value of 𝜆that gives the most regularized model such that the cross-validated error is within one standard error of the minimum.
 
 coefficients using lambda.1se Using LASSO
+
+
 
 ```{r}
 coef(results_POPs_ALS_survival$sensi1$sensi1_lasso_sd_danish, s = "lambda.1se")  
 ```
 
+
+
 Using ridge
+
+
 
 ```{r}
 coef(results_POPs_ALS_survival$sensi1$sensi1_ridge_sd_danish, s = "lambda.1se")  
 ```
 
+
+
 Using elastic net
+
+
 
 ```{r}
 coef(results_POPs_ALS_survival$sensi1$sensi1_elastic_net_sd_danish, s = "lambda.1se")
 ```
 
+
+
 ### New co-pollutant model with selected POPs using elastic net (to get unbiaised coefficients and 95%CI and p-values)
 
 #### Continuous coding
+
+
 
 ```{r}
 results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_danish
 results_POPs_ALS_survival$sensi1$POPs_sd_ALS_table_sensi1_danish
 ```
 
+
+
 #### Quartile coding
+
+
 
 ```{r}
 results_POPs_ALS_survival$sensi1$POPs_quart_ALS_figure_sensi1_danish
 results_POPs_ALS_survival$sensi1$POPs_quart_ALS_table_sensi1_danish
 ```
 
+
+
 ### ERS model with the POPs selestec with elastic net
 
 #### Continuous coding (standardized)
+
+
 
 ```{r}
 results_POPs_ALS_survival$sensi1$POPs_sd_ALS_figure_sensi1_ERS_danish
 results_POPs_ALS_survival$sensi1$POPs_sd_ALS_table_sensi1_ERS_danish
 ```
 
+
+
 #### Quartile coding
+
+
 
 ```{r}
 results_POPs_ALS_survival$sensi1$POPs_quart_ALS_figure_sensi1_ERS_danish
 results_POPs_ALS_survival$sensi1$POPs_quart_ALS_table_sensi1_ERS_danish
 ```
+
+
 
 ## Sensitivity analyses 2
 
@@ -1384,49 +1742,75 @@ coefficients using lambda.min (lambda.min is the value of 𝜆that gives minimum
 
 Using LASSO
 
+
+
 ```{r}
 coef(results_POPs_ALS_survival$sensi2$sensi2_lasso_sd_danish, s = "lambda.min")  
 ```
 
+
+
 Using elastic net
+
+
 
 ```{r}
 coef(results_POPs_ALS_survival$sensi2$sensi2_elastic_net_sd_danish, s = "lambda.min")
 ```
 
+
+
 ### New co-pollutant model with selected POPs using elastic net (to get unbiaised coefficients and 95%CI and p-values)
 
 #### Continuous coding (standardized)
+
+
 
 ```{r}
 results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_danish
 results_POPs_ALS_survival$sensi2$POPs_sd_ALS_table_sensi2_danish
 ```
 
+
+
 #### Quartile coding
+
+
 
 ```{r}
 results_POPs_ALS_survival$sensi2$POPs_quart_ALS_figure_sensi2_danish
 results_POPs_ALS_survival$sensi2$POPs_quart_ALS_table_sensi2_danish
 ```
 
+
+
 ### ERS model with the POPs selestec with elastic net
 
 #### Continuous coding (standardized)
+
+
 
 ```{r}
 results_POPs_ALS_survival$sensi2$POPs_sd_ALS_figure_sensi2_ERS_danish
 results_POPs_ALS_survival$sensi2$POPs_sd_ALS_table_sensi2_ERS_danish
 ```
 
+
+
 #### Quartile coding
+
+
 
 ```{r}
 results_POPs_ALS_survival$sensi2$POPs_quart_ALS_figure_sensi2_ERS_danish
 results_POPs_ALS_survival$sensi2$POPs_quart_ALS_table_sensi2_ERS_danish
 ```
 
+
+
 ## Sensitivity analyses 3
+
+
 
 ```{r}
 results_POPs_ALS_survival$sensi3$sensi3_figure
@@ -1436,16 +1820,24 @@ results_POPs_ALS_survival$sensi3$sensi3_figure
 results_POPs_ALS_survival$sensi3$sensi3_table
 ```
 
+
+
 ## Sensitivity analysis 4
 
 ### Cox models (sd)
+
+
 
 ```{r}
 results_POPs_ALS_survival$sensi4$POPs_sd_ALS_table_danish_sensi_4
 results_POPs_ALS_survival$sensi4$POPs_sd_ALS_figure_danish_sensi_4
 ```
 
+
+
 ### Cox-GAMs models
+
+
 
 ```{r fig.height=11, fig.width=8}
 
@@ -1478,20 +1870,28 @@ wrap_plots(list(
 
 ```
 
+
+
 # Fatty acids and ALS occurence
 
 ## Danish cohort
 
 ### Effects of subject characterist on ALS occurence in the Danish cohort
 
+
+
 ```{r}
 results_fattyacids_ALS_occurrence$danish$covar_als_table_danish  |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
+
+
 ### Effects of fatty acids on ALS occurence in the Danish cohort
 
 #### Continuous coding (standardized)
+
+
 
 ```{r}
 results_fattyacids_ALS_occurrence$danish$fattyacids_sd_als_table_danish |>
@@ -1502,7 +1902,11 @@ results_fattyacids_ALS_occurrence$danish$fattyacids_sd_als_table_danish |>
 results_fattyacids_ALS_occurrence$danish$fattyacids_sd_als_figure_danish
 ```
 
+
+
 #### Quartiles
+
+
 
 ```{r}
 results_fattyacids_ALS_occurrence$danish$fattyacids_quart_als_table_danish |>
@@ -1513,11 +1917,15 @@ results_fattyacids_ALS_occurrence$danish$fattyacids_quart_als_table_danish |>
 results_fattyacids_ALS_occurrence$danish$fattyacids_quart_als_figure_danish
 ```
 
+
+
 ## Finnish cohorts
 
 ### Effects of fatty acids on ALS occurence in the Finnish cohorts
 
 #### Continuous coding (standardized)
+
+
 
 ```{r}
 results_fattyacids_ALS_occurrence$finnish$fattyacids_sd_als_table_finnish |>
@@ -1528,7 +1936,11 @@ results_fattyacids_ALS_occurrence$finnish$fattyacids_sd_als_table_finnish |>
 results_fattyacids_ALS_occurrence$finnish$fattyacids_sd_als_figure_finnish
 ```
 
+
+
 #### Quartiles
+
+
 
 ```{r}
 results_fattyacids_ALS_occurrence$finnish$fattyacids_quart_als_table_finnish |>
@@ -1539,16 +1951,24 @@ results_fattyacids_ALS_occurrence$finnish$fattyacids_quart_als_table_finnish |>
 results_fattyacids_ALS_occurrence$finnish$fattyacids_quart_als_figure_finnish
 ```
 
+
+
 ### Sensitivity Ca
 
 #### Continuous coding (standardized)
+
+
 
 ```{r}
 results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_sd_als_table_sensi_ca_finnish 
 results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_sd_als_figure_sensi_ca_finnish
 ```
 
+
+
 #### Quartiles
+
+
 
 ```{r}
 results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_table_sensi_ca_finnish 
@@ -1558,11 +1978,15 @@ results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_table_sensi_ca_f
 results_fattyacids_ALS_occurrence$sensi_ca$fattyacids_quart_als_figure_sensi_ca_finnish
 ```
 
+
+
 # Fatty acids ans ALS survival
 
 ## Danish cohort
 
 ### Effects of covariates on ALS survival
+
+
 
 ```{r}
 results_fattyacids_ALS_survival$danish$covar_danish |>
@@ -1573,7 +1997,11 @@ results_fattyacids_ALS_survival$danish$covar_danish |>
   set_table_properties(align = "left")
 ```
 
+
+
 ### Continuous coding (standardized)
+
+
 
 ```{r}
 results_fattyacids_ALS_survival$danish$fattyacids_sd_als_table_danish |>
@@ -1581,7 +2009,11 @@ results_fattyacids_ALS_survival$danish$fattyacids_sd_als_table_danish |>
 results_fattyacids_ALS_survival$danish$fattyacids_sd_als_figure_danish
 ```
 
+
+
 ### Quartiles
+
+
 
 ```{r}
 results_fattyacids_ALS_survival$danish$fattyacids_quart_als_table_danish |>
@@ -1602,11 +2034,15 @@ arrange_ggsurvplots(
   nrow = 2)
 ```
 
+
+
 # NEFL and ALS risk
 
 ## Main analysis
 
 ### Continuous coding (standardized)
+
+
 
 ```{r, fig.height=2}
 results_proteomic_ALS_occurrence$Nfl_results$NfL_sd_ALS_figure_sensi_1 
@@ -1617,22 +2053,34 @@ results_proteomic_ALS_occurrence$Nfl_results$NfL_sd_ALS_figure_sensi_1
 results_proteomic_ALS_occurrence$Nfl_results$NfL_sd_ALS_table_sensi_1 
 ```
 
+
+
 ### Quartiles
+
+
 
 ```{r}
 results_proteomic_ALS_occurrence$Nfl_results$NfL_quart_ALS_table_sensi_1
 ```
 
+
+
 ### GAMs
+
+
 
 ```{r, fig.height=4}
 wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_base_gam_sensi_1$signif$proteomic_neuro_explo_NEFL_sensi_1,  
            results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$signif$proteomic_neuro_explo_NEFL_sensi_1)
 ```
 
+
+
 ## Sensitivity analysis: effect of follow_up duration
 
 ### Continuous (standardized)
+
+
 
 ```{r}
 results_proteomic_ALS_occurrence$NfL_results$NfL_sd_ALS_figure_sensi_follow_up_base_adj
@@ -1643,7 +2091,11 @@ results_proteomic_ALS_occurrence$NfL_results$NfL_sd_ALS_figure_sensi_follow_up_b
 results_proteomic_ALS_occurrence$NfL_results$NfL_sd_ALS_table_sensi_follow_up_base_adj
 ```
 
+
+
 ### GAMs
+
+
 
 ```{r, fig.height=8, fig.width=9}
 wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$signif$proteomic_neuro_explo_NEFL_sensi_1, 
@@ -1653,21 +2105,33 @@ wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$si
            results_proteomic_ALS_occurrence$sensi_1_3_5$plot_adjusted_gam_sensi_1_3_5$not_signif$proteomic_neuro_explo_NEFL_sensi_1_3_5)
 ```
 
+
+
 ### Additional analysis: NEFL over time
+
+
 
 ```{r}
 results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_over_time_sensi_1
 ```
 
+
+
 ## Sensitivity analysis: effect of sex
 
 ### Continuous (standardized)
+
+
 
 ```{r}
 results_proteomic_ALS_occurrence$NfL_results$NfL_sd_ALS_table_sensi_sex_adj 
 ```
 
+
+
 ### GAMs
+
+
 
 ```{r, fig.height=4}
 #| column: screen-inset-right
@@ -1677,7 +2141,11 @@ wrap_plots(results_proteomic_ALS_occurrence$sensi_1$plot_adjusted_gam_sensi_1$si
            ncol = 3)
 ```
 
+
+
 ## Additional analysis: AUC
+
+
 
 ```{r, fig.height=8, fig.width=12}
 results_proteomic_ALS_occurrence$additional_analysis_4$additional_analysis_4_figure_adjusted
@@ -1685,30 +2153,46 @@ results_proteomic_ALS_occurrence$additional_analysis_4$additional_analysis_4_fig
 
 ```
 
+
+
 # NEFL and ALS survival
 
 ## Main analyses
 
 ### Continuous coding (standardized)
 
+
+
 ```{r}
 results_proteomic_ALS_survival$NfL_results$NfL_sd_ALS_table 
 ```
 
+
+
 ### Quartiles
+
+
 
 ```{r}
 results_proteomic_ALS_survival$NfL_results$NfL_quart_ALS_table 
 ```
 
+
+
 ### GAMs
+
+
 
 ```{r, fig.height=4}
 wrap_plots(results_proteomic_ALS_survival$main$plot_base_cox_gam_danish$not_signif$NEFL, 
            results_proteomic_ALS_survival$main$plot_adjusted_cox_gam_danish$not_signif$NEFL)
 ```
 
+
+
 ## Sensitivity analysis: effect of follow-up duration
+
+
 
 ```{r, fig.height=4}
 results_proteomic_ALS_survival$NfL_results$NfL_sd_ALS_figure_sensi_follow_up
@@ -1718,15 +2202,23 @@ results_proteomic_ALS_survival$NfL_results$NfL_sd_ALS_figure_sensi_follow_up
 results_proteomic_ALS_survival$NfL_results$NfL_sd_ALS_table_sensi_follow_up
 ```
 
+
+
 ## Sensitivity analysis: effect of sex
+
+
 
 ```{r}
 results_proteomic_ALS_survival$NfL_results$NfL_sd_ALS_table_sensi_sex
 ```
 
+
+
 # Proteomic and ALS occurrence
 
 ## Effects of subject characterist on ALS occurence in the Danish cohort
+
+
 
 ```{r}
 results_proteomic_ALS_occurrence$main$covar |>
@@ -1737,11 +2229,15 @@ results_proteomic_ALS_occurrence$main$covar |>
   set_table_properties(align = "left")
 ```
 
+
+
 ## Main analysis
 
 ### Logistic regressions
 
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+
+
 
 ```{r, fig.width=15, fig.height=6}
 results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_table |>
@@ -1755,7 +2251,11 @@ results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_base_figure +  theme(lege
   plot_layout(ncol = 2)
 ```
 
+
+
 Conditional logistic regressions (quartiles), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+
+
 
 ```{r}
 #| column: screen-inset-right
@@ -1763,9 +2263,13 @@ results_proteomic_ALS_occurrence$main$proteomic_quart_ALS_table  |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
+
+
 ### GAMs
 
 Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
+
+
 
 ```{r, fig.width=9, fig.height=60}
 
@@ -1794,11 +2298,15 @@ rm(plots_lists, all_proteins, plot_grid)
 
 ```
 
+
+
 ## Sensitivity 1: Removing NEFL outlier
 
 ### Logistic regressions
 
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+
+
 
 ```{r, fig.width=15, fig.height=6}
 results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_table_sensi_1 |>
@@ -1816,7 +2324,11 @@ results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_adjusted_figure + labs(ti
   plot_layout(ncol = 2)
 ```
 
+
+
 Conditional logistic regressions (quartiles), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+
+
 
 ```{r}
 #| column: screen-inset-right
@@ -1824,9 +2336,13 @@ results_proteomic_ALS_occurrence$sensi_1$proteomic_quart_ALS_table_sensi_1 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
+
+
 ### GAMs
 
 Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
+
+
 
 ```{r, fig.width=10, fig.height=5}
 wrap_plots(results_proteomic_ALS_occurrence$main$plot_base_gam$signif$proteomic_neuro_explo_NEFL,
@@ -1840,9 +2356,13 @@ wrap_plots(results_proteomic_ALS_occurrence$main$plot_adjusted_gam$signif$proteo
            ncol = 2)
 ```
 
+
+
 ## Sensitivity 2: Filtering to cases and their controls with follow-up \< 5 years
 
 ### Logistic regressions
+
+
 
 ```{r}
 
@@ -1869,7 +2389,11 @@ results_proteomic_ALS_occurrence$sensi_3$proteomic_quart_ALS_table_sensi_3 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
+
+
 ### GAMs
+
+
 
 ```{r fig.height=60, fig.width=9}
 #| column: screen-inset-right
@@ -1900,9 +2424,13 @@ rm(plots_lists, all_proteins, plot_grid)
 
 ```
 
+
+
 ## Sensitivity 3: Filtering to cases and their controls with follow-up \> 5 years
 
 ### Logistic regressions
+
+
 
 ```{r}
 results_proteomic_ALS_occurrence$sensi_3$proteomic_sd_ALS_table_sensi_3 |>
@@ -1928,7 +2456,11 @@ results_proteomic_ALS_occurrence$sensi_3$proteomic_quart_ALS_table_sensi_3 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
+
+
 ### GAMs
+
+
 
 ```{r fig.height=60, fig.width=9}
 #| column: screen-inset-right
@@ -1959,11 +2491,15 @@ rm(plots_lists, all_proteins, plot_grid)
 
 ```
 
+
+
 ## Sensitivity 1 + 3: Removing NEFL outlier + filtering cases and their controls with follow-up \> 5 years
 
 ### Logistic regressions
 
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+
+
 
 ```{r, fig.width=15, fig.height=6}
 
@@ -1990,7 +2526,11 @@ results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_
   plot_layout(ncol = 2)
 ```
 
+
+
 Conditional logistic regressions (quartiles), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+
+
 
 ```{r}
 #| column: screen-inset-right
@@ -1999,9 +2539,13 @@ results_proteomic_ALS_occurrence$sensi_1_3$proteomic_quart_ALS_table_sensi_1_3 |
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
+
+
 ### GAMs
 
 Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
+
+
 
 ```{r fig.width=12, fig.height=60}
 #| column: screen-inset-right
@@ -2032,11 +2576,15 @@ rm(plots_lists, all_proteins, plot_grid)
 
 ```
 
+
+
 ## Sensitivity 1 + 3 + 4: Removing NEFL outlier + filtering cases and their controls with follow-up \> 5 years + filtering follow-up \< 50%
 
 ### Logistic regressions
 
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+
+
 
 ```{r, fig.width=15, fig.height=6}
 
@@ -2063,7 +2611,11 @@ results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_
   plot_layout(ncol = 2)
 ```
 
+
+
 Conditional logistic regressions (quartiles), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+
+
 
 ```{r}
 #| column: screen-inset-right
@@ -2072,9 +2624,13 @@ results_proteomic_ALS_occurrence$sensi_1_3_4$proteomic_quart_ALS_table_sensi_1_3
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
+
+
 ### GAMs
 
 Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
+
+
 
 ```{r fig.width=12, fig.height=60}
 #| column: screen-inset-right
@@ -2105,11 +2661,15 @@ rm(plots_lists, all_proteins, plot_grid)
 
 ```
 
+
+
 ## Sensitivity 1 + 3 + 5: Removing NEFL outlier + filtering cases and their controls with follow-up \> 5 years + filtering follow-up \> 50%
 
 ### Logistic regressions
 
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+
+
 
 ```{r, fig.width=15, fig.height=6}
 
@@ -2136,7 +2696,11 @@ results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_
   plot_layout(ncol = 2)
 ```
 
+
+
 Conditional logistic regressions (quartiles), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+
+
 
 ```{r}
 #| column: screen-inset-right
@@ -2145,9 +2709,13 @@ results_proteomic_ALS_occurrence$sensi_1_3_5$proteomic_quart_ALS_table_sensi_1_3
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
+
+
 ### GAMs
 
 Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
+
+
 
 ```{r fig.width=12, fig.height=60}
 #| column: screen-inset-right
@@ -2178,9 +2746,13 @@ rm(plots_lists, all_proteins, plot_grid)
 
 ```
 
+
+
 ## Sensitivity 6: stratifiyng the analysis in tertiles of follow-up duration
 
 Data not shown because of merging sensi 1 and sensi 6
+
+
 
 ```{r fig.height=12, fig.width=15}
 #| eval: false
@@ -2199,16 +2771,24 @@ results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_adjusted_figure + labs(ti
   results_proteomic_ALS_occurrence$sensi_6$proteomic_sd_ALS_adjusted_figure_sensi_6_T3 + labs(title = "Filtered to follow-up T3 (>16 years)") + theme(legend.position = "bottom") 
 ```
 
+
+
 ## Sensitivity 1 + 6: Removing NEFL outlier + stratifiyng the analysis in tertiles of follow-up duration
+
+
 
 ```{r}
 results_proteomic_ALS_occurrence$sensi_6$sensi_6_table_follow_up
 results_proteomic_ALS_occurrence$sensi_6$sensi_6_densityplot_follow_up
 ```
 
+
+
 ### Logistic regressions
 
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
+
+
 
 ```{r fig.width=15, fig.height=12}
 #| column: screen-inset-right
@@ -2224,11 +2804,15 @@ results_proteomic_ALS_occurrence$sensi_1_6$proteomic_sd_ALS_adjusted_figure_sens
 results_proteomic_ALS_occurrence$sensi_1_6$proteomic_sd_ALS_adjusted_figure_sensi_1_6_T3 + labs(title = "Filtered to follow-up T3 (>16 years)\n+ NEFL outlier excluded \n Adjusted model") + theme(legend.position = "bottom")  
 ```
 
+
+
 NEFL is not significantly associated with ALS occurence when the follow-up duration is \>16 years. We don't see many associations in the follow-up group T1: I suspect that it is because of high heterogeneity in follow-up duration among this sub-group (0-11 years). --\> then I trust more the sensi 2 results where we just remove the cases (and their controls) with follow-up \<5 years.
 
 ## Sensitivity 1 + 7: Removing NEFL outlier + stratifiyng the analysis on sex
 
 ### Continuous coding (standardized)
+
+
 
 ```{r}
 results_proteomic_ALS_occurrence$sensi_1_7$proteomic_sd_ALS_table_sensi_1_7
@@ -2254,14 +2838,22 @@ results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_
 
 ```
 
+
+
 ### Quartiles
+
+
 
 ```{r}
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence$sensi_1_7$proteomic_quart_ALS_table_sensi_1_7
 ```
 
+
+
 ### GAMs
+
+
 
 ```{r fig.width=12, fig.height=70}
 #| column: screen-inset-right
@@ -2292,7 +2884,11 @@ rm(plots_lists, all_proteins, plot_grid)
 
 ```
 
+
+
 ## Additionnal analysis 1
+
+
 
 ```{r}
 shapiro.test(results_proteomic_ALS_occurrence$additional_analysis_1$OR_distribution$OR_log)
@@ -2301,19 +2897,29 @@ results_proteomic_ALS_occurrence$additional_analysis_1$boxplot_OR
 results_proteomic_ALS_occurrence$additional_analysis_1$densityplot_OR
 ```
 
+
+
 ## Additionnal analysis 2
 
 The locally estimated scatterplot smoothing (LOESS) curve illustrates the changes in the ratio of NEFL levels in each case–control pair/triplet over time. Each point corresponds to 1 case–control pair/triplet.
+
+
 
 ```{r}
 results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_over_time
 ```
 
+
+
 After removing the NEFL outlier
+
+
 
 ```{r}
 results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_over_time_sensi_1 
 ```
+
+
 
 ## Additionnal analysis 3
 
@@ -2326,6 +2932,8 @@ It works by evaluating, for every point of one dataset, how the cumulative distr
 The null hypothesis (H₀) is: H₀: The two datasets come from the same multivariate distribution. A small p-value indicates a significant deviation between the two distributions.
 
 ### all proteins
+
+
 
 ```{r, fig.height=3}
 #| column: screen-inset-right
@@ -2340,11 +2948,15 @@ results_proteomic_ALS_occurrence$additional_analysis_3$jackknife_all_results |>
 
 ```
 
+
+
 Because the p-value is 0.00587, which is well below the standard 0.05 threshold, we reject the null hypothesis that the two sets of results (OR ≥ 1 vs. OR \< 1) come from the same distribution.
 
 This means that the two groups of proteins, those associated with increased risk and those associated with decreased risk, show significantly different joint distributions of odds ratios and p-values. Therefore, the asymmetric patterns we observe are unlikely to be due to random fluctuation caused by multiple testing. The results support the idea that the proteins associated with increased disease risk and those associated with decreased disease risk represent genuinely different biological signals, rather than artifacts of high-dimensional multiple testing.
 
 ### Immune response
+
+
 
 ```{r, fig.height=3}
 #| column: screen-inset-right
@@ -2357,7 +2969,11 @@ results_proteomic_ALS_occurrence$additional_analysis_3$jackknife_immune_results 
   tbl_summary()
 ```
 
+
+
 ### Metbolism
+
+
 
 ```{r, fig.height=3}
 #| column: screen-inset-right
@@ -2371,7 +2987,11 @@ results_proteomic_ALS_occurrence$additional_analysis_3$jackknife_metabolism_resu
 
 ```
 
+
+
 ### Neuro explo
+
+
 
 ```{r, fig.height=3}
 #| column: screen-inset-right
@@ -2384,9 +3004,13 @@ results_proteomic_ALS_occurrence$additional_analysis_3$jackknife_neuro_results |
   tbl_summary()
 ```
 
+
+
 # Additional analysis 5 - superlearner
 
 ## Test 1
+
+
 
 ```{r}
 #| echo: false
@@ -2406,7 +3030,11 @@ results_proteomic_ALS_occurrence$additional_analysis_5$test_1$leek_coeffs_1
 corrplot(results_proteomic_ALS_occurrence$additional_analysis_5$test_1$cor_matrix_1, method = "color", type = "upper", tl.col = "black", tl.srt = 45)
 ```
 
+
+
 ## Test 2
+
+
 
 ```{r}
 #| echo: false
@@ -2426,7 +3054,11 @@ results_proteomic_ALS_occurrence$additional_analysis_5$test_2$leek_coeffs_2
 corrplot(results_proteomic_ALS_occurrence$additional_analysis_5$test_2$cor_matrix_2, method = "color", type = "upper", tl.col = "black", tl.srt = 45)
 ```
 
+
+
 ## Test 3
+
+
 
 ```{r}
 #| echo: false
@@ -2446,9 +3078,13 @@ results_proteomic_ALS_occurrence$additional_analysis_5$test_3$leek_coeffs_3
 corrplot(results_proteomic_ALS_occurrence$additional_analysis_5$test_3$cor_matrix_3, method = "color", type = "upper", tl.col = "black", tl.srt = 45)
 ```
 
+
+
 # Proteomic and ALS survival
 
 ## Effects of subject characteristics on ALS survival
+
+
 
 ```{r}
 results_proteomic_ALS_survival$main$covar |>
@@ -2459,9 +3095,13 @@ results_proteomic_ALS_survival$main$covar |>
   set_table_properties(align = "left")
 ```
 
+
+
 ## Main analyses
 
 ### continuous standardized
+
+
 
 ```{r, fig.width=9, fig.height=3}
 #| column: screen-inset-right
@@ -2472,7 +3112,11 @@ wrap_plots(results_proteomic_ALS_survival$main$proteomic_sd_ALS_base_figure,
            ncol = 2)
 ```
 
+
+
 ### quartiles
+
+
 
 ```{r}
 #| column: screen-inset-right
@@ -2480,7 +3124,11 @@ results_proteomic_ALS_survival$main$proteomic_quart_ALS_table  |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
+
+
 ### GAMs
+
+
 
 ```{r fig.height=60}
 #| column: screen-inset-right
@@ -2508,9 +3156,13 @@ rm(plots_lists, all_proteins, plot_grid)
 
 ```
 
+
+
 ## Sensi 1 + 3 : Removing NEFL outlier + filtering cases with follow-up \> 5 years
 
 ### continuous standardized
+
+
 
 ```{r, fig.width=9, fig.height=3}
 #| column: screen-inset-right
@@ -2524,7 +3176,11 @@ wrap_plots(results_proteomic_ALS_survival$sensi_1_3$proteomic_sd_ALS_base_figure
 
 ```
 
+
+
 ### quartiles
+
+
 
 ```{r}
 #| column: screen-inset-right
@@ -2532,7 +3188,11 @@ results_proteomic_ALS_survival$sensi_1_3$proteomic_quart_ALS_table_sensi_1_3  |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
+
+
 ### GAMs
+
+
 
 ```{r fig.height=60, fig.width=9}
 #| column: screen-inset-right
@@ -2559,9 +3219,13 @@ wrap_plots(
 rm(plots_lists, all_proteins, plot_grid)
 ```
 
+
+
 ## Sensi 1 + 3 + 4 : Removing NEFL outlier + filtering cases with follow-up \> 5 years + filtering follow-up \< 50%
 
 ### continuous standardized
+
+
 
 ```{r, fig.width=9, fig.height=3}
 #| column: screen-inset-right
@@ -2575,7 +3239,11 @@ wrap_plots(results_proteomic_ALS_survival$sensi_1_3_4$proteomic_sd_ALS_base_figu
 
 ```
 
+
+
 ### quartiles
+
+
 
 ```{r}
 #| column: screen-inset-right
@@ -2583,7 +3251,11 @@ results_proteomic_ALS_survival$sensi_1_3_4$proteomic_quart_ALS_table_sensi_1_3_4
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
+
+
 ### GAMs
+
+
 
 ```{r fig.height=60, fig.width=9}
 #| column: screen-inset-right
@@ -2610,9 +3282,13 @@ wrap_plots(
 rm(plots_lists, all_proteins, plot_grid)
 ```
 
+
+
 ## Sensi 1 + 3 + 5 : Removing NEFL outlier + filtering cases with follow-up \> 5 years + filtering follow-up \> 50%
 
 ### continuous standardized
+
+
 
 ```{r, fig.width=9, fig.height=3}
 #| column: screen-inset-right
@@ -2626,7 +3302,11 @@ wrap_plots(results_proteomic_ALS_survival$sensi_1_3_5$proteomic_sd_ALS_base_figu
 
 ```
 
+
+
 ### quartiles
+
+
 
 ```{r}
 #| column: screen-inset-right
@@ -2634,7 +3314,11 @@ results_proteomic_ALS_survival$sensi_1_3_5$proteomic_quart_ALS_table_sensi_1_3_5
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
+
+
 ### GAMs
+
+
 
 ```{r fig.height=60, fig.width=9}
 
@@ -2662,9 +3346,13 @@ rm(plots_lists, all_proteins, plot_grid)
 
 ```
 
+
+
 ## Sensi 1 + 7 females : Removing NEFL outlier + filtering female cases
 
 ### continuous standardized
+
+
 
 ```{r, fig.width=9, fig.height=3}
 #| column: screen-inset-right
@@ -2678,7 +3366,11 @@ wrap_plots(results_proteomic_ALS_survival$sensi_1_7_female$proteomic_sd_ALS_base
 
 ```
 
+
+
 ### quartiles
+
+
 
 ```{r}
 #| column: screen-inset-right
@@ -2686,7 +3378,11 @@ results_proteomic_ALS_survival$sensi_1_7_female$proteomic_quart_ALS_table_sensi_
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
+
+
 ### GAMs
+
+
 
 ```{r fig.height=60, fig.width=9}
 #| column: screen-inset-right
@@ -2713,9 +3409,13 @@ wrap_plots(
 rm(plots_lists, all_proteins, plot_grid)
 ```
 
+
+
 ## Sensi 1 + 7 males : Removing NEFL outlier + male cases
 
 ### continuous standardized
+
+
 
 ```{r, fig.width=9, fig.height=3}
 #| column: screen-inset-right
@@ -2729,7 +3429,11 @@ wrap_plots(results_proteomic_ALS_survival$sensi_1_7_male$proteomic_sd_ALS_base_f
 
 ```
 
+
+
 ### quartiles
+
+
 
 ```{r}
 #| column: screen-inset-right
@@ -2738,7 +3442,11 @@ results_proteomic_ALS_survival$sensi_1_7_male$proteomic_quart_ALS_table_sensi_1_
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
+
+
 ### GAMs
+
+
 
 ```{r fig.height=60, fig.width=9}
 #| column: screen-inset-right
@@ -2765,3 +3473,4 @@ wrap_plots(
 rm(plots_lists, all_proteins, plot_grid)
 
 ```
+
