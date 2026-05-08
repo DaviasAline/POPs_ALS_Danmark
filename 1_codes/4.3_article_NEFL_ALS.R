@@ -52,7 +52,7 @@ figure_1 <-
 
 # Figure 2 - Base and adjusted logistic regressions (ALS risk) ----
 figure_2 <- 
-  results_proteomic_ALS_occurrence$Nfl_results$NfL_sd_ALS_adjusted_figure
+  results_proteomic_ALS_occurrence$Nfl_results$NfL_sd_ALS_figure_sensi_follow_up_adj
 
 # Figure 3 - Additional analysis (NfL level over follow-up time) ----
 figure_3 <- 
@@ -83,56 +83,7 @@ table_S1 <-
 
 # Table S2 ----
 table_S2 <- 
-  results_proteomic_ALS_occurrence$main$main_results |>
-  filter(analysis %in% c("sensi_1", "sensi_2", 
-                         #"sensi_1_3", 
-                         "sensi_1_3_4", "sensi_1_3_5", "sensi_1_7_female", "sensi_1_7_male"), 
-         term == "Continuous", 
-         explanatory == "NEFL") |>
-  mutate(analysis = fct_recode(analysis, 
-                               "Main analysis (n=495)" = "sensi_1",
-                               "Follow-up < 5 years (n=51)" = "sensi_2", 
-                               #"Follow-up > 5 years (n=444)" = "sensi_1_3",
-                               "Follow-up between 5 and 14.6 years (n=225)" = "sensi_1_3_4",
-                               "Follow-up > 14.6 years (n=219)" = "sensi_1_3_5", 
-                               "Females (n=192)" = "sensi_1_7_female", 
-                               "Males (n=303)" = "sensi_1_7_male"), 
-         analysis = fct_relevel(analysis, 
-                                "Main analysis (n=495)", 
-                                "Follow-up < 5 years (n=51)", 
-                                #"Follow-up > 5 years (n=444)", 
-                                "Follow-up between 5 and 14.6 years (n=225)",
-                                "Follow-up > 14.6 years (n=219)", 
-                                "Females (n=192)", 
-                                "Males (n=303)")) |> 
-  select(analysis, model, explanatory, OR, "95% CI", p_value) |> 
-  pivot_wider(
-    names_from = model,  
-    values_from = c(OR, `95% CI`, p_value)) |> 
-  select(analysis, explanatory, 'OR' = 'OR_base', '95% CI' = '95% CI_base', 'p-value' = 'p_value_base', 
-         'OR ' = 'OR_adjusted', '95% CI ' = '95% CI_adjusted', 'p-value ' = 'p_value_adjusted') |>
-  flextable() |>
-  add_footer_lines(
-    "1All models are matched for sex and birth year. Adjusted models further account for smoking, body mass index and marital status. 
-  2Estimated risk of ALS for a one standard deviation increase of pre-disease NEFL (NPX). 
-  3CI: Confidence interval.") |>
-  add_header(
-    "analysis" = "Analyses",
-    "explanatory" = "Explanatory variable", 
-    "OR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", 
-    "OR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model") |>
-  merge_h(part = "header") |>
-  theme_vanilla() |>
-  bold(j = "analysis", part = "body") |>
-  bold(j = "explanatory", part = "body") |>
-  align(align = "center", part = "all") |>
-  align(j = "analysis", align = "left", part = "all") |> 
-  align(j = "explanatory", align = "left", part = "all") |> 
-  merge_at(j = "analysis", part = "header") |>
-  merge_at(j = "explanatory", part = "header") |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")
+  results_proteomic_ALS_occurrence$NfL_results$NfL_sd_ALS_table_sensi_follow_up_sex_base_adj
 
 
 # Export ----

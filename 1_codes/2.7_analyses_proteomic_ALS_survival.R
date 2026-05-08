@@ -3,7 +3,9 @@
 # Analysis of als survival depending on proteomic profile
 
 # Data loading - package loading ----
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2.6_analyses_proteomic_ALS_occurrence.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/2.6_analyses_proteomic_ALS_occurrence.R") |>
+  suppressMessages() |> 
+  suppressWarnings()
 
 fit_and_plot_cox_gam <- function(
     data,
@@ -3007,7 +3009,229 @@ plot_adjusted_cox_gam_danish_sensi_1_7_male <- list(
   signif = map(keep(cox_gam_results_adjusted_sensi_1_7_male, ~ .x$pval_raw <= 0.05), "plot"),
   not_signif = map(keep(cox_gam_results_adjusted_sensi_1_7_male, ~ .x$pval_raw > 0.05), "plot"))
 
+## NfL only results ----
+### Table NfL - als occurrence - base and adjusted sd ----
+NfL_sd_ALS_table <- main_results |>
+  filter(model %in% c("base", "adjusted") & 
+           term == "Continuous" & 
+           analysis == "main" &
+           explanatory == "NEFL") |>            
+  select(model, explanatory, protein_group, term, HR, "95% CI", "p_value") |>
+  arrange(protein_group, explanatory) |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p_value")) |>
+  select(protein_group, explanatory, contains("base"), contains("adjusted")) |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base", 
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p_value_adjusted") |>
+  flextable() |>
+  add_footer_lines(
+    "1Base model is adjusted for age at diagnosis and sex. Adjusted model further accounts for smoking and body mass index. 
+    2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease plasma concentration of proteins. 
+    3CI: Confidence interval.") |>
+  add_header(
+    "explanatory" = "Pre-disease plasma proteins", 
+    "protein_group" = "Protein group", 
+    "HR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models", 
+    "HR " = "Adjusted models", "95% CI " = "Adjusted models", "p-value " = "Adjusted models") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  merge_v(j = "protein_group") |>
+  merge_v(j = "explanatory") |>
+  bold(j = "explanatory", part = "body") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
 
+### Table NfL - als occurrence - base and adjusted quart ----
+extra_rows <- 
+  main_results |>
+  filter(model %in% c("base", "adjusted") & 
+           term != "Continuous" & 
+           analysis == "main" & 
+           explanatory == "NEFL") |>   
+  distinct(protein_group, explanatory) |> 
+  mutate(
+    quartiles = "Quartile 1",
+    "HR_base" = '-', "95% CI_base" = '-', "p_value_base" = '', "p_value_heterogeneity_base" = '', "p_value_trend_base" = '',
+    "HR_adjusted" = '-', "95% CI_adjusted" = '-', "p_value_adjusted" = '', "p_value_heterogeneity_adjusted" = '', "p_value_trend_adjusted" = '')
+
+NfL_quart_ALS_table <- 
+  main_results |>
+  filter(model %in% c("base", "adjusted") & 
+           term != "Continuous" & 
+           analysis == "main" & 
+           explanatory == "NEFL") |>    
+  select(model, protein_group, explanatory, term, HR, "95% CI", "p_value", "p_value_heterogeneity", "p_value_trend") |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p_value", "p_value_heterogeneity", "p_value_trend")) |>
+  select(protein_group, explanatory, quartiles = term, contains("base"), contains("adjusted")) 
+
+NfL_quart_ALS_table <- 
+  NfL_quart_ALS_table |>
+  mutate_if(is.numeric, as.character) |>
+  bind_rows(extra_rows) |>
+  group_by(explanatory) |>
+  mutate(p_value_heterogeneity_base = ifelse(quartiles == 'Quartile 1', p_value_heterogeneity_base[quartiles == 'Quartile 2'], ''), 
+         p_value_trend_base = ifelse(quartiles == 'Quartile 1', p_value_trend_base[quartiles == 'Quartile 2'], ''),
+         p_value_heterogeneity_adjusted = ifelse(quartiles == 'Quartile 1', p_value_heterogeneity_adjusted[quartiles == 'Quartile 2'], ''), 
+         p_value_trend_adjusted = ifelse(quartiles == 'Quartile 1', p_value_trend_adjusted[quartiles == 'Quartile 2'], '')) |>
+  ungroup() |>
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base", "Heterogeneity test" = "p_value_heterogeneity_base",  "Trend test" = "p_value_trend_base",
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p_value_adjusted", "Heterogeneity test " = "p_value_heterogeneity_adjusted",  "Trend test " = "p_value_trend_adjusted") |>
+  arrange(protein_group, explanatory, quartiles) |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are adjusted for age at baseline and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
+    3CI: Confidence interval.") |>
+  add_header(
+    "explanatory" = "Pre-disease plasma proteins", 
+    "protein_group" = "Protein group", 
+    "quartiles" = "Quartiles",
+    "HR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models", 
+    "Heterogeneity test" = "Base models",  "Trend test" = "Base models",
+    "HR " = "Adjusted models", "95% CI " = "Adjusted models", "p-value " = "Adjusted models", 
+    "Heterogeneity test " = "Adjusted models",  "Trend test " = "Adjusted models") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  merge_v(j = "protein_group") |>
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  merge_v(j = "explanatory") |>
+  bold(j = "explanatory", part = "body") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  merge_at(j = "quartiles", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
+rm(extra_rows)
+
+
+### Table NfL - als occurrence - base and adjusted sd (sensi follow up) ----
+NfL_sd_ALS_table_sensi_follow_up <- main_results |>
+  filter(analysis %in% c("main", "sensi_1_3", "sensi_1_3_4", "sensi_1_3_5"), 
+         term == "Continuous", 
+         explanatory == "NEFL") |>
+  mutate(analysis = fct_recode(analysis, 
+                               "Main analysis (n=165)" = "main",
+                               "Filtered to follow-up > 5 years (n=148)" = "sensi_1_3",
+                               "Filtered to follow-up between 5 and 14.6 years (n=74)" = "sensi_1_3_4",
+                               "Filtered to follow-up > 14.6 years (n=74)" = "sensi_1_3_5"), 
+         analysis = fct_relevel(analysis, 
+                                "Main analysis (n=165)", 
+                                "Filtered to follow-up > 5 years (n=148)", 
+                                "Filtered to follow-up between 5 and 14.6 years (n=74)",
+                                "Filtered to follow-up > 14.6 years (n=74)")) |> 
+  select(analysis, model, explanatory, HR, "95% CI", p_value) |> 
+  pivot_wider(
+    names_from = model,  
+    values_from = c(HR, `95% CI`, p_value)) |> 
+  select(analysis, explanatory, 'HR' = 'HR_base', '95% CI' = '95% CI_base', 'p-value' = 'p_value_base', 
+         'HR ' = 'HR_adjusted', '95% CI ' = '95% CI_adjusted', 'p-value ' = 'p_value_adjusted') |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are matched for sex and birth year. Adjusted models further account for smoking, body mass index and marital status. 
+  2Estimated risk of ALS for a one standard deviation increase of pre-disease NEFL (NPX). 
+  3CI: Confidence interval.") |>
+  add_header(
+    "analysis" = "Analyses",
+    "explanatory" = "Explanatory variable", 
+    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", 
+    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model") |>
+  merge_h(part = "header") |>
+  theme_vanilla() |>
+  bold(j = "analysis", part = "body") |>
+  bold(j = "explanatory", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "analysis", align = "left", part = "all") |> 
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "analysis", part = "header") |>
+  merge_at(j = "explanatory", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
+### Figure NfL - als occurrence - base and adjusted sd (sensi follow up) ----
+NfL_sd_ALS_figure_sensi_follow_up <- main_results |>
+  filter(analysis %in% c("main", "sensi_1_3", "sensi_1_3_4", "sensi_1_3_5"), 
+         term == "Continuous", 
+         explanatory == "NEFL") |>
+  mutate(signif = ifelse(p_value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
+         model = fct_recode(model, 
+                            "Adjusted models" = "adjusted",
+                            "Base models" = "base"), 
+         model = fct_relevel(model, "Base models", "Adjusted models"), 
+         analysis = fct_recode(analysis, 
+                               "Main analysis\n(n=165)" = "main",
+                               "Filtered to\nfollow-up > 5 years\n (n=148)" = "sensi_1_3",
+                               "Filtered to follow-up\nbetween 5 and 14.6 years\n(n=74)" = "sensi_1_3_4",
+                               "Filtered to\nfollow-up > 14.6 years\n (n=74)" = "sensi_1_3_5"), 
+         analysis = fct_relevel(analysis, 
+                                "Main analysis\n(n=165)", 
+                                "Filtered to\nfollow-up > 5 years\n (n=148)", 
+                                "Filtered to follow-up\nbetween 5 and 14.6 years\n(n=74)",
+                                "Filtered to\nfollow-up > 14.6 years\n (n=74)")) |> 
+  ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI, color = signif)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(rows = dplyr::vars(analysis), cols = dplyr::vars(model), switch = "y") +                         # , scales = "free_x"
+  scale_color_manual(values = c("p-value<0.05" = "red", "p-value≥0.05" = "black")) +
+  labs( y = "Hazard ratios (HRs)", color = "p-value") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y.left = element_text(hjust = 0.5, vjust = 0.5, angle = 0), 
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank()) +
+  coord_flip()
+
+### Table NfL - als occurrence - base and adjusted sd (sensi sex) ----
+NfL_sd_ALS_table_sensi_sex <- main_results |>
+  filter(model == "adjusted" & 
+           term == "Continuous" & 
+           analysis %in% c("main", "sensi_1_7_female", "sensi_1_7_male") &
+           explanatory == "NEFL") |>         
+  select(analysis, explanatory, protein_group, term, HR, "95% CI", "p_value") |>
+  arrange(protein_group, explanatory) |>
+  pivot_wider(names_from = "analysis", values_from = c("HR", "95% CI", "p_value")) |>
+  select(protein_group, explanatory, contains("main"), contains("sensi_1_7_female"), contains("sensi_1_7_male")) |>
+  rename("HR" = "HR_main", "95% CI" = "95% CI_main", "p-value" = "p_value_main", 
+         "HR " = "HR_sensi_1_7_female", "95% CI " = "95% CI_sensi_1_7_female", "p-value " = "p_value_sensi_1_7_female", 
+         " HR " = "HR_sensi_1_7_male", " 95% CI " = "95% CI_sensi_1_7_male", " p-value " = "p_value_sensi_1_7_male") |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are adjusted for age at diagnosis and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease plasma concentration of proteins. 
+    3CI: Confidence interval.") |>
+  add_header(
+    "explanatory" = "Pre-disease plasma proteins", 
+    "protein_group" = "Protein group", 
+    "HR" = "Main analysis\n(females and males)", "95% CI" = "Main analysis\n(females and males)", "p-value" = "Main analysis\n(females and males)", 
+    "HR " = "Females", "95% CI " = "Females", "p-value " = "Females", 
+    " HR " = "Males", " 95% CI " = "Males", " p-value " = "Males") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  merge_v(j = "protein_group") |>
+  merge_v(j = "explanatory") |>
+  bold(j = "explanatory", part = "body") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 # Assemblage ----
 results_proteomic_ALS_survival <- 
@@ -3079,7 +3303,12 @@ results_proteomic_ALS_survival <-
                           cox_gam_results_base_sensi_1_7_male = cox_gam_results_base_sensi_1_7_male, 
                           cox_gam_results_adjusted_sensi_1_7_male = cox_gam_results_adjusted_sensi_1_7_male, 
                           plot_base_cox_gam_danish_sensi_1_7_male = plot_base_cox_gam_danish_sensi_1_7_male, 
-                          plot_adjusted_cox_gam_danish_sensi_1_7_male = plot_adjusted_cox_gam_danish_sensi_1_7_male))
+                          plot_adjusted_cox_gam_danish_sensi_1_7_male = plot_adjusted_cox_gam_danish_sensi_1_7_male), 
+    NfL_results = list(NfL_sd_ALS_table = NfL_sd_ALS_table, 
+                       NfL_quart_ALS_table = NfL_quart_ALS_table, 
+                       NfL_sd_ALS_table_sensi_follow_up = NfL_sd_ALS_table_sensi_follow_up, 
+                       NfL_sd_ALS_figure_sensi_follow_up = NfL_sd_ALS_figure_sensi_follow_up, 
+                       NfL_sd_ALS_table_sensi_sex = NfL_sd_ALS_table_sensi_sex))
 
 
 #saveRDS(results_proteomic_ALS_survival, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_survival.rds")
@@ -3098,7 +3327,12 @@ rm(bdd_cases_danish,
    cox_gam_results_adjusted, 
    plot_base_cox_gam_danish, 
    plot_adjusted_cox_gam_danish,
-   fit_and_plot_cox_gam)
+   fit_and_plot_cox_gam, 
+   NfL_sd_ALS_table,
+   NfL_quart_ALS_table,
+   NfL_sd_ALS_table_sensi_follow_up,
+   NfL_sd_ALS_figure_sensi_follow_up,
+   NfL_sd_ALS_table_sensi_sex)
 
 rm(list = ls(pattern = "sensi_1_3"))
 rm(list = ls(pattern = "sensi_1_3_4"))

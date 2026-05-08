@@ -929,237 +929,14 @@ qgcomp_positive_noboot_danish <-
 rm(formula_danish)
 
 
-
-# Sensitivity analysis 4 - removing the highest 2.5%----
-
-bdd_cases_danish_sensi_4 <- bdd_cases_danish |>
-  mutate(across(all_of(POPs_group), ~{
-    q_low  <- quantile(., 0.01, na.rm = TRUE)                                   # 1% quantile
-    q_high <- quantile(., 0.99, na.rm = TRUE)                                   # 99% quantile
-    ifelse(. < q_low | . > q_high, NA, .)
-    })) |>
-  mutate(across(all_of(POPs_group),
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd")) 
-
-surv_obj_danish_sensi_4 <- 
-  Surv(time = bdd_cases_danish_sensi_4$follow_up_death,                         # set the outcomes
-       event = bdd_cases_danish_sensi_4$status_death)
-
-## Cox model (sd) ----
-model1_cox_sd_danish_sensi_4 <- map_dfr(POPs_group_sd, function(expl) {
-  
-  formula_danish <- 
-    as.formula(paste("surv_obj_danish_sensi_4 ~", expl, "+ diagnosis_age + sex"))       # set the formulas                
-  model_summary <- coxph(formula_danish, data = bdd_cases_danish_sensi_4) |> summary()  # run cox model
-  
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    model = "base", 
-    analysis = "sensi_4",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results 
-})
-
-model2_cox_sd_danish_sensi_4 <- map_dfr(POPs_group_sd, function(expl) {
-  
-  formula_danish <-                                                             # set the formulas
-    as.formula(paste("surv_obj_danish_sensi_4 ~", expl, "+",  
-                     paste(covariates_danish, collapse = " + ")))
-  
-  model_summary <- 
-    coxph(formula_danish, data = bdd_cases_danish_sensi_4) |>                   # run cox model
-    summary()  
-  coefs <- model_summary$coefficients
-  tibble(                                                                       # creation of a table of results
-    model = "adjusted", 
-    analysis = "sensi_4",
-    term = rownames(coefs),
-    explanatory = expl, 
-    coef = coefs[, "coef"],
-    se = coefs[, "se(coef)"], 
-    `p-value` = coefs[, "Pr(>|z|)"]) |>
-    filter(str_starts(term, explanatory))                                       # remove the covariates results 
-})
-rm(surv_obj_danish_sensi_4)
-
-## Cox-GAMs ----
-### Base model ----
-POPs_group_labels_cox_gam <- set_names(
-  POPs_group, 
-  c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"))
-
-fit_cox_gam_base_sensi_4 <- function(var, data = bdd_cases_danish_sensi_4) {
-  outcome <- with(bdd_cases_danish_sensi_4, cbind(follow_up_death, status_death))
-  formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age")
-  model <- mgcv::gam(as.formula(formula_str), data = data, family = cox.ph())
-  
-  smry <- summary(model)
-  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
-  pval <- case_when(pval < 0.01 ~ "< 0.01", 
-                    pval >0.99 ~ "> 0.99",
-                    .default = format(pval, nsmall =2, digits = 2))
-  #x_label <- POPs_group_labels_cox_gam[[var]] 
-  
-  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
-  smooth_df <- data.frame(
-    x = plot_data$x,
-    fit = plot_data$fit,
-    se = plot_data$se)
-  
-  list(
-    model = model,
-    plot_data = smooth_df,
-    edf = edf,
-    pval = pval,
-    var = var
-    #x_label = x_label
-  )
-}
-
-
-cox_gam_results_base_sensi_4 <- map(POPs_group, fit_cox_gam_base_sensi_4)
-
-
-all_fits_base_sensi_4 <- map_dfr(cox_gam_results_base_sensi_4, "plot_data", .id = "var")
-y_range_base_sensi_4 <- range(all_fits_base_sensi_4$fit - 2 * all_fits_base_sensi_4$se,
-                              all_fits_base_sensi_4$fit + 2 * all_fits_base_sensi_4$se, na.rm = TRUE)
-
-
-plot_base_cox_gam_danish_sensi_4 <- map(cox_gam_results_base_sensi_4, function(res) {
-  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
-    geom_line(size = 1.2, color = "steelblue") +
-    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
-                alpha = 0.2, fill = "steelblue") +
-    labs(
-      #title = paste0("Cox-GAM smooth term for ", res$var),
-      title = "Base model - sensitivity analysis", 
-      x = NULL,
-      y = "LogHR (smooth estimate)") +
-    annotate(
-      "text",
-      x = -Inf, y = Inf,
-      hjust = -0.1, vjust = 1.5,
-      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
-      size = 4.2,
-      color = "black") +
-    coord_cartesian(ylim = y_range_base_sensi_4) +
-    theme_minimal(base_size = 14)
-  
-  p2 <- ggplot(bdd_cases_danish_sensi_4, aes_string(x = res$var, y = 1)) +
-    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
-    coord_cartesian(xlim = range(res$plot_data$x, na.rm = TRUE)) +
-    theme_void() +
-    #labs(x = res$x_label) +
-    theme(
-      axis.title.x = element_text(size = 12),
-      plot.margin = ggplot2::margin(t = -10, r = 5, b = 5, l = 5)) 
-  
-  p1 / p2 + plot_layout(heights = c(10, 1))
-}) |> 
-  set_names(POPs_group_labels_cox_gam)
-
-rm(POPs_group_labels_cox_gam, fit_cox_gam_base_sensi_4, all_fits_base_sensi_4, y_range_base_sensi_4, cox_gam_results_base_sensi_4)
-
-
-### Adjusted model ----
-POPs_group_labels_cox_gam <- set_names(
-  POPs_group, 
-  c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"))
-
-fit_cox_gam_adjusted_sensi_4 <- function(var, data = bdd_cases_danish_sensi_4) {
-
-  outcome <- with(bdd_cases_danish_sensi_4, cbind(follow_up_death, status_death))
-  formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i")
-  model <- mgcv::gam(as.formula(formula_str), data = data, family = cox.ph())
-  
-  smry <- summary(model)
-  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
-  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
-  pval <- case_when(pval < 0.01 ~ "< 0.01", 
-                    pval >0.99 ~ "> 0.99",
-                    .default = format(pval, nsmall =2, digits = 2))
-  #x_label <- POPs_group_labels_cox_gam[[var]] 
-  
-  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
-  smooth_df <- data.frame(
-    x = plot_data$x,
-    fit = plot_data$fit,
-    se = plot_data$se)
-  
-  list(
-    model = model,
-    plot_data = smooth_df,
-    edf = edf,
-    pval = pval,
-    var = var
-    #x_label = x_label
-  )
-}
-
-
-cox_gam_results_adjusted <- map(POPs_group, fit_cox_gam_adjusted_sensi_4)
-
-
-all_fits_adjusted_sensi_4 <- map_dfr(cox_gam_results_adjusted, "plot_data", .id = "var")
-y_range_adjusted_sensi_4 <- range(all_fits_adjusted_sensi_4$fit - 2 * all_fits_adjusted_sensi_4$se,
-                                  all_fits_adjusted_sensi_4$fit + 2 * all_fits_adjusted_sensi_4$se, na.rm = TRUE)
-
-
-plot_adjusted_cox_gam_danish_sensi_4 <- map(cox_gam_results_adjusted, function(res) {
-  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
-    geom_line(size = 1.2, color = "steelblue") +
-    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
-                alpha = 0.2, fill = "steelblue") +
-    labs(
-      #title = paste0("Cox-GAM smooth term for ", res$var),
-      title = "Adjusted model - sensitivity analysis", 
-      x = NULL,
-      y = "LogHR (smooth estimate)") +
-    annotate(
-      "text",
-      x = -Inf, y = Inf,
-      hjust = -0.1, vjust = 1.5,
-      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
-      size = 4.2,
-      color = "black") +
-    coord_cartesian(ylim = y_range_adjusted_sensi_4) +
-    theme_minimal(base_size = 14)
-  
-  p2 <- ggplot(bdd_cases_danish_sensi_4, aes_string(x = res$var, y = 1)) +
-    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
-    coord_cartesian(xlim = range(res$plot_data$x, na.rm = TRUE)) +
-    theme_void() +
-    #labs(x = res$x_label) +
-    theme(
-      axis.title.x = element_text(size = 12),
-      plot.margin = ggplot2::margin(t = -10, r = 5, b = 5, l = 5)) 
-  
-  p1 / p2 + plot_layout(heights = c(10, 1))
-}) |> 
-  set_names(POPs_group_labels_cox_gam)
-
-
-
-rm(POPs_group_labels_cox_gam, fit_cox_gam_adjusted_sensi_4, 
-   all_fits_adjusted_sensi_4, y_range_adjusted_sensi_4, 
-   cox_gam_results_adjusted, bdd_cases_danish_sensi_4)
-
-
-
-
 # Assemblage main analyses ----
 main_results_POPs_ALS_survival <-       
   bind_rows(
     model1_cox_sd_danish, model2_cox_sd_danish, model3_cox_sd_danish,
     model1_cox_quart_danish, model2_cox_quart_danish, model3_cox_quart_danish, 
     
-    model1_cox_sd_danish_sensi_4, model2_cox_sd_danish_sensi_4) |> 
+    #model1_cox_sd_danish_sensi_4, model2_cox_sd_danish_sensi_4
+    ) |> 
   mutate(
     HR = exp(coef),
     lower_CI = exp(coef - 1.96 * se),
@@ -1201,7 +978,7 @@ rm(model1_cox_sd_danish,
    model2_cox_sd_danish, 
    model3_cox_sd_danish, 
    model1_cox_quart_danish, model2_cox_quart_danish, model3_cox_quart_danish,
-   model1_cox_sd_danish_sensi_4, model2_cox_sd_danish_sensi_4, 
+   #model1_cox_sd_danish_sensi_4, model2_cox_sd_danish_sensi_4, 
    heterogeneity_tests, trend_tests)
 
 
@@ -1728,6 +1505,84 @@ trend_ERS_adjusted <-
 rm(outcome, model3_quart_ERS_trend, p.value_trend_ERS)
 
 
+
+### ERS model stratified on follow up duration above and below median ----
+bdd_cases_danish_short_follow_up <- 
+  bdd_cases_danish |>
+  filter(follow_up <= median(follow_up))
+bdd_cases_danish_long_follow_up <- 
+  bdd_cases_danish |>
+  filter(follow_up > median(follow_up))
+
+#### base sd ----
+sensi1_cox_model1_ERS_from_elastic_net_sd_short_follow_up <- 
+  coxph(Surv(follow_up_death, status_death) ~ 
+          ERS_score_from_elastic_net_sensi_1_sd + 
+          sex + diagnosis_age, 
+        data = bdd_cases_danish_short_follow_up)
+model_summary <- summary(sensi1_cox_model1_ERS_from_elastic_net_sd_short_follow_up)
+coefs <- model_summary$coefficients
+sensi1_cox_model1_ERS_from_elastic_net_sd_short_follow_up <- tibble(                             
+  model = "base_short_follow_up", 
+  term = rownames(coefs),
+  explanatory = rownames(coefs),
+  coef = coefs[, "coef"],
+  se = coefs[, "se(coef)"], 
+  `p-value` = coefs[, "Pr(>|z|)"]) |>
+  filter(str_detect(term, "_sd"))
+
+#### adjusted sd ----
+sensi1_cox_model2_ERS_from_elastic_net_sd_short_follow_up <- 
+  coxph(Surv(follow_up_death, status_death) ~ 
+          ERS_score_from_elastic_net_sensi_1_sd + 
+          sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+        data = bdd_cases_danish_short_follow_up)
+model_summary <- summary(sensi1_cox_model2_ERS_from_elastic_net_sd_short_follow_up)
+coefs <- model_summary$coefficients
+sensi1_cox_model2_ERS_from_elastic_net_sd_short_follow_up <- tibble(                             
+  model = "adjusted_short_follow_up", 
+  term = rownames(coefs),
+  explanatory = rownames(coefs),
+  coef = coefs[, "coef"],
+  se = coefs[, "se(coef)"], 
+  `p-value` = coefs[, "Pr(>|z|)"]) |>
+  filter(str_detect(term, "_sd"))
+
+#### base sd ----
+sensi1_cox_model1_ERS_from_elastic_net_sd_long_follow_up <- 
+  coxph(Surv(follow_up_death, status_death) ~ 
+          ERS_score_from_elastic_net_sensi_1_sd + 
+          sex + diagnosis_age, 
+        data = bdd_cases_danish_long_follow_up)
+model_summary <- summary(sensi1_cox_model1_ERS_from_elastic_net_sd_long_follow_up)
+coefs <- model_summary$coefficients
+sensi1_cox_model1_ERS_from_elastic_net_sd_long_follow_up <- tibble(                             
+  model = "base_long_follow_up", 
+  term = rownames(coefs),
+  explanatory = rownames(coefs),
+  coef = coefs[, "coef"],
+  se = coefs[, "se(coef)"], 
+  `p-value` = coefs[, "Pr(>|z|)"]) |>
+  filter(str_detect(term, "_sd"))
+
+#### adjusted sd ----
+sensi1_cox_model2_ERS_from_elastic_net_sd_long_follow_up <- 
+  coxph(Surv(follow_up_death, status_death) ~ 
+          ERS_score_from_elastic_net_sensi_1_sd + 
+          sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i, 
+        data = bdd_cases_danish_long_follow_up)
+model_summary <- summary(sensi1_cox_model2_ERS_from_elastic_net_sd_long_follow_up)
+coefs <- model_summary$coefficients
+sensi1_cox_model2_ERS_from_elastic_net_sd_long_follow_up <- tibble(                             
+  model = "adjusted_long_follow_up", 
+  term = rownames(coefs),
+  explanatory = rownames(coefs),
+  coef = coefs[, "coef"],
+  se = coefs[, "se(coef)"], 
+  `p-value` = coefs[, "Pr(>|z|)"]) |>
+  filter(str_detect(term, "_sd"))
+rm(model_summary, coefs, bdd_cases_danish_short_follow_up, bdd_cases_danish_long_follow_up)
+
 ### ERS s(t) curves ----
 
 #### Create person-month (pooled) dataset ----
@@ -1993,6 +1848,8 @@ rm(pooled_data, pooled_model_poly_2, newdata, median_surv,
 
 
 
+
+
 ### assemblage ----
 results_sensi1 <-
   bind_rows(sensi1_model3_cox_sd_elastic_net_danish, 
@@ -2000,7 +1857,11 @@ results_sensi1 <-
             sensi1_cox_model1_ERS_from_elastic_net_sd, 
             sensi1_cox_model1_ERS_from_elastic_net_quart, 
             sensi1_cox_model2_ERS_from_elastic_net_sd, 
-            sensi1_cox_model2_ERS_from_elastic_net_quart) |>
+            sensi1_cox_model2_ERS_from_elastic_net_quart, 
+            sensi1_cox_model1_ERS_from_elastic_net_sd_short_follow_up, 
+            sensi1_cox_model2_ERS_from_elastic_net_sd_short_follow_up, 
+            sensi1_cox_model1_ERS_from_elastic_net_sd_long_follow_up, 
+            sensi1_cox_model2_ERS_from_elastic_net_sd_long_follow_up) |>
   mutate(
     HR = exp(coef),
     lower_CI = exp(coef - 1.96 * se),
@@ -2047,6 +1908,7 @@ results_sensi1 <- results_sensi1 |>
 
 main_results_POPs_ALS_survival <- bind_rows(main_results_POPs_ALS_survival, results_sensi1)
 
+
 rm(results_sensi1, 
    
    heterogeneity_copollutant, 
@@ -2067,6 +1929,11 @@ rm(results_sensi1,
    sensi1_cox_model2_ERS_from_elastic_net_sd, 
    sensi1_cox_model2_ERS_from_elastic_net_quart, 
    
+   sensi1_cox_model1_ERS_from_elastic_net_sd_short_follow_up, 
+   sensi1_cox_model2_ERS_from_elastic_net_sd_short_follow_up, 
+   sensi1_cox_model1_ERS_from_elastic_net_sd_long_follow_up, 
+   sensi1_cox_model2_ERS_from_elastic_net_sd_long_follow_up, 
+   
    POPs_group_sd_bis, POPs_group_quart_bis, 
    X_matrix_sd, X_matrix_quart, 
    penalty_factor_sd, penalty_factor_quart, 
@@ -2078,6 +1945,8 @@ rm(results_sensi1,
    sensi1_elastic_net_quart_danish, 
    sensi1_model3_cox_sd_elastic_net_danish, 
    sensi1_model3_cox_quart_elastic_net_danish)
+
+
 
 
 # Sensitivity analysis 2 - elastic net on all the POPs (ungrouped) ----
@@ -2805,6 +2674,256 @@ sensi3_table <-
   add_overall()
 
 
+# Sensitivity analysis 4 - removing the highest 2.5%----
+
+bdd_cases_danish_sensi_4 <- bdd_cases_danish |>
+  mutate(across(all_of(POPs_group), ~{
+    q_low  <- quantile(., 0.01, na.rm = TRUE)                                   # 1% quantile
+    q_high <- quantile(., 0.99, na.rm = TRUE)                                   # 99% quantile
+    ifelse(. < q_low | . > q_high, NA, .)
+  })) |>
+  mutate(across(all_of(POPs_group),
+                ~as.numeric(scale(.x)),
+                .names = "{.col}_sd")) 
+
+surv_obj_danish_sensi_4 <- 
+  Surv(time = bdd_cases_danish_sensi_4$follow_up_death,                         # set the outcomes
+       event = bdd_cases_danish_sensi_4$status_death)
+
+## Cox model (sd) ----
+model1_cox_sd_danish_sensi_4 <- map_dfr(POPs_group_sd, function(expl) {
+  
+  formula_danish <- 
+    as.formula(paste("surv_obj_danish_sensi_4 ~", expl, "+ diagnosis_age + sex"))       # set the formulas                
+  model_summary <- coxph(formula_danish, data = bdd_cases_danish_sensi_4) |> summary()  # run cox model
+  
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    model = "base", 
+    analysis = "sensi_4",
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                       # remove the covariates results 
+})
+
+model2_cox_sd_danish_sensi_4 <- map_dfr(POPs_group_sd, function(expl) {
+  
+  formula_danish <-                                                             # set the formulas
+    as.formula(paste("surv_obj_danish_sensi_4 ~", expl, "+",  
+                     paste(covariates_danish, collapse = " + ")))
+  
+  model_summary <- 
+    coxph(formula_danish, data = bdd_cases_danish_sensi_4) |>                   # run cox model
+    summary()  
+  coefs <- model_summary$coefficients
+  tibble(                                                                       # creation of a table of results
+    model = "adjusted", 
+    analysis = "sensi_4",
+    term = rownames(coefs),
+    explanatory = expl, 
+    coef = coefs[, "coef"],
+    se = coefs[, "se(coef)"], 
+    `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))                                       # remove the covariates results 
+})
+rm(surv_obj_danish_sensi_4)
+
+## Cox-GAMs ----
+### Base model ----
+POPs_group_labels_cox_gam <- set_names(
+  POPs_group, 
+  c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"))
+
+fit_cox_gam_base_sensi_4 <- function(var, data = bdd_cases_danish_sensi_4) {
+  outcome <- with(bdd_cases_danish_sensi_4, cbind(follow_up_death, status_death))
+  formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age")
+  model <- mgcv::gam(as.formula(formula_str), data = data, family = cox.ph())
+  
+  smry <- summary(model)
+  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
+  pval <- case_when(pval < 0.01 ~ "< 0.01", 
+                    pval >0.99 ~ "> 0.99",
+                    .default = format(pval, nsmall =2, digits = 2))
+  #x_label <- POPs_group_labels_cox_gam[[var]] 
+  
+  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
+  smooth_df <- data.frame(
+    x = plot_data$x,
+    fit = plot_data$fit,
+    se = plot_data$se)
+  
+  list(
+    model = model,
+    plot_data = smooth_df,
+    edf = edf,
+    pval = pval,
+    var = var
+    #x_label = x_label
+  )
+}
+
+
+cox_gam_results_base_sensi_4 <- map(POPs_group, fit_cox_gam_base_sensi_4)
+
+
+all_fits_base_sensi_4 <- map_dfr(cox_gam_results_base_sensi_4, "plot_data", .id = "var")
+y_range_base_sensi_4 <- range(all_fits_base_sensi_4$fit - 2 * all_fits_base_sensi_4$se,
+                              all_fits_base_sensi_4$fit + 2 * all_fits_base_sensi_4$se, na.rm = TRUE)
+
+
+plot_base_cox_gam_danish_sensi_4 <- map(cox_gam_results_base_sensi_4, function(res) {
+  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
+    geom_line(size = 1.2, color = "steelblue") +
+    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
+                alpha = 0.2, fill = "steelblue") +
+    labs(
+      #title = paste0("Cox-GAM smooth term for ", res$var),
+      title = "Base model - sensitivity analysis", 
+      x = NULL,
+      y = "LogHR (smooth estimate)") +
+    annotate(
+      "text",
+      x = -Inf, y = Inf,
+      hjust = -0.1, vjust = 1.5,
+      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
+      size = 4.2,
+      color = "black") +
+    coord_cartesian(ylim = y_range_base_sensi_4) +
+    theme_minimal(base_size = 14)
+  
+  p2 <- ggplot(bdd_cases_danish_sensi_4, aes_string(x = res$var, y = 1)) +
+    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
+    coord_cartesian(xlim = range(res$plot_data$x, na.rm = TRUE)) +
+    theme_void() +
+    #labs(x = res$x_label) +
+    theme(
+      axis.title.x = element_text(size = 12),
+      plot.margin = ggplot2::margin(t = -10, r = 5, b = 5, l = 5)) 
+  
+  p1 / p2 + plot_layout(heights = c(10, 1))
+}) |> 
+  set_names(POPs_group_labels_cox_gam)
+
+rm(POPs_group_labels_cox_gam, fit_cox_gam_base_sensi_4, all_fits_base_sensi_4, y_range_base_sensi_4, cox_gam_results_base_sensi_4)
+
+
+### Adjusted model ----
+POPs_group_labels_cox_gam <- set_names(
+  POPs_group, 
+  c("Most prevalent PCBs", "Dioxin-like PCBs","Non-dioxin-like PCBs", "HCB","ΣDDT","β-HCH","Σchlordane","ΣPBDE"))
+
+fit_cox_gam_adjusted_sensi_4 <- function(var, data = bdd_cases_danish_sensi_4) {
+  
+  outcome <- with(bdd_cases_danish_sensi_4, cbind(follow_up_death, status_death))
+  formula_str <- paste0("outcome ~ s(", var, ") + sex + diagnosis_age + smoking_2cat_i + bmi + marital_status_2cat_i")
+  model <- mgcv::gam(as.formula(formula_str), data = data, family = cox.ph())
+  
+  smry <- summary(model)
+  edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1) 
+  pval <- format(smry$s.table[1, "p-value"], nsmall = 2, digits = 2) 
+  pval <- case_when(pval < 0.01 ~ "< 0.01", 
+                    pval >0.99 ~ "> 0.99",
+                    .default = format(pval, nsmall =2, digits = 2))
+  #x_label <- POPs_group_labels_cox_gam[[var]] 
+  
+  plot_data <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE, pages = 0)[[1]]
+  smooth_df <- data.frame(
+    x = plot_data$x,
+    fit = plot_data$fit,
+    se = plot_data$se)
+  
+  list(
+    model = model,
+    plot_data = smooth_df,
+    edf = edf,
+    pval = pval,
+    var = var
+    #x_label = x_label
+  )
+}
+
+
+cox_gam_results_adjusted <- map(POPs_group, fit_cox_gam_adjusted_sensi_4)
+
+
+all_fits_adjusted_sensi_4 <- map_dfr(cox_gam_results_adjusted, "plot_data", .id = "var")
+y_range_adjusted_sensi_4 <- range(all_fits_adjusted_sensi_4$fit - 2 * all_fits_adjusted_sensi_4$se,
+                                  all_fits_adjusted_sensi_4$fit + 2 * all_fits_adjusted_sensi_4$se, na.rm = TRUE)
+
+
+plot_adjusted_cox_gam_danish_sensi_4 <- map(cox_gam_results_adjusted, function(res) {
+  p1 <- ggplot(res$plot_data, aes(x = x, y = fit)) +
+    geom_line(size = 1.2, color = "steelblue") +
+    geom_ribbon(aes(ymin = fit - 2 * se, ymax = fit + 2 * se),
+                alpha = 0.2, fill = "steelblue") +
+    labs(
+      #title = paste0("Cox-GAM smooth term for ", res$var),
+      title = "Adjusted model - sensitivity analysis", 
+      x = NULL,
+      y = "LogHR (smooth estimate)") +
+    annotate(
+      "text",
+      x = -Inf, y = Inf,
+      hjust = -0.1, vjust = 1.5,
+      label = paste0("EDF: ", res$edf, "\np-value: ", res$pval),
+      size = 4.2,
+      color = "black") +
+    coord_cartesian(ylim = y_range_adjusted_sensi_4) +
+    theme_minimal(base_size = 14)
+  
+  p2 <- ggplot(bdd_cases_danish_sensi_4, aes_string(x = res$var, y = 1)) +
+    geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
+    coord_cartesian(xlim = range(res$plot_data$x, na.rm = TRUE)) +
+    theme_void() +
+    #labs(x = res$x_label) +
+    theme(
+      axis.title.x = element_text(size = 12),
+      plot.margin = ggplot2::margin(t = -10, r = 5, b = 5, l = 5)) 
+  
+  p1 / p2 + plot_layout(heights = c(10, 1))
+}) |> 
+  set_names(POPs_group_labels_cox_gam)
+
+
+
+rm(POPs_group_labels_cox_gam, fit_cox_gam_adjusted_sensi_4, 
+   all_fits_adjusted_sensi_4, y_range_adjusted_sensi_4, 
+   cox_gam_results_adjusted, bdd_cases_danish_sensi_4)
+
+## assemblage ----
+sensi_4 <-       
+  bind_rows(model1_cox_sd_danish_sensi_4, model2_cox_sd_danish_sensi_4) |> 
+  mutate(
+    HR = exp(coef),
+    lower_CI = exp(coef - 1.96 * se),
+    upper_CI = exp(coef + 1.96 * se)) |>
+  mutate(
+    term = case_when(
+      str_detect(term, "_sd") ~ "Continuous", 
+      str_detect(term, "Q2") ~ "quartile 2",
+      str_detect(term, "Q3") ~ "quartile 3",
+      str_detect(term, "Q4") ~ "quartile 4"), 
+    explanatory = gsub("_sd", "", explanatory), 
+    explanatory = gsub("_quart", "", explanatory), 
+    HR_raw = HR, 
+    HR = as.numeric(sprintf("%.1f", HR)),
+    lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
+    upper_CI = as.numeric(sprintf("%.1f", upper_CI)),, 
+    `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
+    `p-value_raw` = `p-value`, 
+    `p-value_shape` = ifelse(`p-value_raw`<=0.05, "p-value≤0.05", "p-value>0.05"), 
+    `p-value` = ifelse(`p-value` < 0.01, "<0.01", number(`p-value`, accuracy = 0.01, decimal.mark = ".")), 
+    `p-value` = ifelse(`p-value` == "1.00", ">0.99", `p-value`)) |>
+  select(model, explanatory, term,  analysis, HR, HR_raw, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI)
+
+main_results_POPs_ALS_survival <- 
+  bind_rows(main_results_POPs_ALS_survival, sensi_4)
+
+rm(model1_cox_sd_danish_sensi_4, model2_cox_sd_danish_sensi_4, sensi_4)
 
 # Tables and figures ----
 
@@ -3256,10 +3375,10 @@ POPs_sd_ALS_table_sensi1_ERS_danish <-
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_1") |>
   filter(term == "Continuous") |> 
-  filter(!model == "copollutant") |>
+  filter(model %in% c("base", "adjusted")) |>
   select(model, explanatory, HR, "95% CI", "p-value") |>
   pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
-  select(explanatory, matches("_base$"), matches("_adjusted$")) |>
+  select(explanatory, matches("_base$"), matches("_adjusted$")) |> 
   mutate(
     explanatory = fct_recode(explanatory, 
                              "Environmental risk score" = "ERS_score_from_elastic_net_sensi_1")) |> 
@@ -3289,7 +3408,7 @@ POPs_sd_ALS_table_sensi1_ERS_danish <-
 ## table quart ERS (sensi_1) ----
 quartile1_rows <- main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_1") |>
-  filter(!model == "copollutant") |>
+  filter(model %in% c("base", "adjusted")) |>
   filter(!term == "Continuous") |>
   distinct(model, explanatory) |>
   mutate(
@@ -3303,7 +3422,7 @@ quartile1_rows <- main_results_POPs_ALS_survival |>
 POPs_quart_ALS_table_sensi1_ERS_danish <- 
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_1") |>
-  filter(!model == "copollutant") |>
+  filter(model %in% c("base", "adjusted")) |>
   filter(!term == "Continuous") |>
   select(model, explanatory, term, HR, "95% CI", "p-value", "p.value_heterogeneity", "p.value_trend") |>
   mutate(across(everything(), as.character))
@@ -3354,12 +3473,60 @@ POPs_quart_ALS_table_sensi1_ERS_danish <-
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 rm(quartile1_rows)
 
+## table sd ERS by follow-up (sensi_1) ----
+POPs_sd_ALS_table_sensi1_ERS_danish_by_follow_up <- main_results_POPs_ALS_survival |>
+  filter(analysis == "sensi_1") |>
+  filter(term == "Continuous") |> 
+  filter(model %in% c("base", "adjusted", "base_short_follow_up", "adjusted_short_follow_up", "base_long_follow_up", "adjusted_long_follow_up")) |>
+  select(model, explanatory, HR, "95% CI", "p-value") |> 
+  mutate(analysis = fct_recode(model, 
+                               "all" = "adjusted",
+                               "follow-up> 14.6 years" = "adjusted_long_follow_up",
+                               "follow-up< 14.6 years" = "adjusted_short_follow_up",
+                               "all" = "base",
+                               "follow-up> 14.6 years" = "base_long_follow_up",
+                               "follow-up< 14.6 years" = "base_short_follow_up"), 
+         model = fct_recode(model, 
+                            "adjusted" = "adjusted",
+                            "adjusted" = "adjusted_long_follow_up",
+                            "adjusted" = "adjusted_short_follow_up",
+                            "base" = "base",
+                            "base" = "base_long_follow_up",
+                            "base" = "base_short_follow_up")) |>
+  pivot_wider(names_from = "model", values_from = c("HR", "95% CI", "p-value")) |>
+  select(explanatory, analysis, matches("_base$"), matches("_adjusted$")) |> 
+  mutate(
+    explanatory = fct_recode(explanatory, 
+                             "Environmental risk score" = "ERS_score_from_elastic_net_sensi_1")) |> 
+  rename("HR" = "HR_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", 
+         "HR " = "HR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted") |>
+  flextable() |>
+  add_footer_lines(
+    "1Environmental risk score is the weighted sum of relevant pollutants (HCB and Σchlordane) selected with elastic net regularization.
+     2Base model was adjusted for sex, age at diagnosis. Adjusted model further accounts for smoking, BMI and marital status.
+     3Estimated risk of death after ALS diagnosis associated with a one standard deviation increase of the environmental risk score.
+    4CI: Confidence interval.") |>
+  add_header(
+    "explanatory" = "Exposures", 
+    "HR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", 
+    "HR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model") |>
+  merge_h(part = "header") |>
+  merge_v(j = "explanatory") |>
+  theme_vanilla() |>
+  bold(j = "explanatory", part = "body") |>
+  align(align = "center", part = "all") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
 
 ## figure sd ERS (sensi_1) ----
 POPs_sd_ALS_figure_sensi1_ERS_danish <- 
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_1") |>
-  filter(!model == "copollutant") |>
+  filter(model %in% c("base", "adjusted")) |>
   filter(term == "Continuous") |>
   mutate(model = fct_recode(model, 
                             "Base model" = "base",
@@ -3384,7 +3551,7 @@ POPs_sd_ALS_figure_sensi1_ERS_danish <-
 POPs_quart_ALS_figure_sensi1_ERS_danish <- 
   main_results_POPs_ALS_survival |>
   filter(analysis == "sensi_1") |>
-  filter(!model == "copollutant") |>
+  filter(model %in% c("base", "adjusted")) |>
   filter(!term == "Continuous") |>
   mutate(model = fct_recode(model, 
                             "Base model" = "base",
@@ -3879,7 +4046,8 @@ results_POPs_ALS_survival <-
       POPs_quart_ALS_figure_sensi1_ERS_danish = POPs_quart_ALS_figure_sensi1_ERS_danish, 
       POPs_sd_ALS_table_sensi1_ERS_danish = POPs_sd_ALS_table_sensi1_ERS_danish, 
       POPs_quart_ALS_table_sensi1_ERS_danish = POPs_quart_ALS_table_sensi1_ERS_danish, 
-      figure_survival_poly = figure_survival_poly), 
+      figure_survival_poly = figure_survival_poly, 
+      POPs_sd_ALS_table_sensi1_ERS_danish_by_follow_up = POPs_sd_ALS_table_sensi1_ERS_danish_by_follow_up), 
     sensi2 = list(
       sensi2_lasso_sd_danish = sensi2_lasso_sd_danish, 
       sensi2_elastic_net_sd_danish = sensi2_elastic_net_sd_danish, 
@@ -3900,7 +4068,7 @@ results_POPs_ALS_survival <-
       plot_base_cox_gam_danish_sensi_4 = plot_base_cox_gam_danish_sensi_4, 
       plot_adjusted_cox_gam_danish_sensi_4 = plot_adjusted_cox_gam_danish_sensi_4))
 
-#saveRDS(results_POPs_ALS_survival, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_POPs_ALS_survival.rds")
+saveRDS(results_POPs_ALS_survival, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_POPs_ALS_survival.rds")
 
 rm(bdd_cases_danish, 
    main_results_POPs_ALS_survival, 
@@ -3936,6 +4104,7 @@ rm(bdd_cases_danish,
    POPs_sd_ALS_table_sensi1_ERS_danish, 
    POPs_quart_ALS_table_sensi1_ERS_danish,
    figure_survival_poly, 
+   POPs_sd_ALS_table_sensi1_ERS_danish_by_follow_up, 
    
    sensi2_lasso_sd_danish, 
    sensi2_elastic_net_sd_danish, 

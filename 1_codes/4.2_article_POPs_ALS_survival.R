@@ -60,7 +60,7 @@ table_S1 <- results_descriptive$danish$POPs_table_danish_by_death |>
 table_S2a <- 
   results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_survival |>
   filter(term == "Continuous") |>
-  filter(!model == "copollutant") |> 
+  filter(model %in% c("base", "adjusted")) |> 
   filter(analysis %in% c("main", "sensi_1")) |>
   group_by(model) |>     # adding FDR correction
   mutate(fdr_correction = p.adjust(`p-value_raw`, method = "fdr")) |>
