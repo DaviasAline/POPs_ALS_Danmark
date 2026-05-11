@@ -108,7 +108,115 @@ fit_and_plot_cox_gam <- function(
   results
 }
 
-
+fit_and_plot_cox_gam <- function(
+    data,
+    vars = proteomic,
+    time = "follow_up_death",
+    status = "status_death", 
+    covariates = c("sex", "diagnosis_age"),
+    vars_labels = NULL,
+    y_limits = c(-12, 12),
+    title = "Base model"
+) {
+  
+  # 1. Gestion des labels
+  if (is.null(vars_labels)) {
+    vars_labels <- set_names(vars, vars)
+  }
+  
+  # Sous-fonction pour traiter une protéine
+  fit_one <- function(var) {
+    
+    # 2. Construction du modèle Cox-GAM
+    outcome <- cbind(data[[time]], data[[status]])
+    formula_str <- paste0(
+      "outcome ~ s(", var, ") + ",
+      paste(covariates, collapse = " + ")
+    )
+    
+    model <- mgcv::gam(as.formula(formula_str),
+                       data = data,
+                       family = cox.ph())
+    
+    # 3. Extraction des statistiques (EDF et P-value)
+    smry <- summary(model)
+    edf_val <- smry$s.table[1, "edf"]
+    pval_raw <- smry$s.table[1, "p-value"]
+    
+    edf_label <- format(edf_val, nsmall = 1, digits = 1)
+    pval_label <- case_when(
+      pval_raw < 0.01 ~ "< 0.01",
+      pval_raw > 0.99 ~ "> 0.99",
+      TRUE ~ format(pval_raw, nsmall = 2, digits = 2)
+    )
+    
+    # 4. Extraction SILENCIEUSE des données du spline
+    # On utilise pdf(NULL) pour empêcher l'affichage des plots de mgcv
+    pdf(NULL)
+    plot_data_raw <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE)
+    dev.off()
+    
+    if (length(plot_data_raw) == 0) return(NULL)
+    
+    plot_data <- plot_data_raw[[1]]
+    smooth_df <- data.frame(
+      x = plot_data$x,
+      fit = plot_data$fit,
+      se = plot_data$se
+    )
+    
+    # 5. Création du graphique principal (Spline) avec ggplot2
+    p1 <- ggplot(smooth_df, aes(x = x, y = fit)) +
+      geom_line(linewidth = 1.2, color = "steelblue") +
+      geom_ribbon(aes(ymin = fit - 2 * se, 
+                      ymax = fit + 2 * se),
+                  alpha = 0.2, fill = "steelblue") +
+      labs(
+        title = title,
+        y = "LogHR (smooth estimate)",
+        x = NULL
+      ) +
+      annotate(
+        "text",
+        x = -Inf, y = Inf,
+        hjust = -0.1, vjust = 1.5,
+        label = paste0("EDF: ", edf_label, "\np-value: ", pval_label),
+        size = 4.2
+      ) +
+      scale_y_continuous(limits = y_limits) +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.line.x = element_blank(),
+        axis.ticks.x = element_blank()
+      )
+    
+    # 6. Création du boxplot de distribution en dessous
+    p2 <- ggplot(data, aes(x = .data[[var]], y = 1)) +
+      geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
+      labs(x = vars_labels[[var]]) +
+      theme_minimal() +
+      theme(
+        axis.text.y = element_blank(),
+        axis.title.y = element_blank(),
+        axis.ticks.y = element_blank()
+      )
+    
+    # 7. Assemblage avec patchwork et retour des objets
+    list(
+      model = model,
+      pval_raw = pval_raw,
+      plot = p1 / p2 + plot_layout(heights = c(10, 1))
+    )
+  }
+  
+  # Exécution sur toutes les variables
+  results <- map(vars, fit_one)
+  names(results) <- vars_labels[vars]
+  
+  return(results)
+}
 
 # Creation of cases specific datasets ----
 bdd_cases_danish <- 

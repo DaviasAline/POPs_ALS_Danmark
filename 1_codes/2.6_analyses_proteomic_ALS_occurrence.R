@@ -30,8 +30,6 @@ covar <- tbl_merge(
   tab_spanner = c("**Univariate**", "**Adjusted**"))
 
 
-
-
 # Main analysis ----
 ## model 1 sd ----
 model1_sd <- data.frame(explanatory = character(),
@@ -5340,194 +5338,6 @@ rm(roc_nefl_all, youden_nefl_all, youden_best_nefl_all,
 
 
 
-# Additional analysis 5 - Super learner ----
-listWrappers()     # Check available algorithms
-X_sl <- bdd_danish |> 
-  select(bmi, smoking_2cat_i, all_of(proteomic_sd)) |>                         
-  mutate(smoking_2cat_i = as.numeric(smoking_2cat_i) - 1)                       # SuperLearner demande des variables numériques
-
-## test 1 ----
-list_lib_1 <- c(
-  "SL.leekasso",    
-  "SL.glmnet",   
-  "SL.bayesglm",   
-  "SL.ranger",     
-  "SL.ksvm",        
-  "SL.polymars",   
-  "SL.mean")        
-
-set.seed(1996)
-sl_fit_CV_1 <- CV.SuperLearner(
-  Y = bdd_danish$als,                                                           # outcome
-  X = X_sl,                                                                     # predictors (proteins + covariates)
-  family = binomial(),                                                          # binary outcome (0/1)
-  SL.library = list_lib_1,                                                      # list of algorithms to try
-  id = bdd_danish$match,                                                        # matching
-  method = "method.NNLS",                                                       # Non-Negative Least Squares, performance method (default), 
-  cvControl = list(V = 10),                                                     # 10-fold cross-validation (default)
-  control = list(
-    saveFitLibrary = TRUE,                                                      # Retain individual model fits for variable extraction
-    trimLogit = 0.001))                                                         # Prevents numerical instability for probabilities near 0 or 1
-
-summary_sl_fit_CV_1 <- summary(sl_fit_CV_1)
-plot_sl_fit_CV_1 <- plot(sl_fit_CV_1) +                                         # summary of performance of candidate learners 
-  theme_minimal() +  
-  labs(title = "Performance of Candidate Learners",
-       subtitle = "Vertical bars represent the 95% Confidence Interval")
-
-# AUC
-roc_sl_fit_CV_1 <- roc(bdd_danish$als, as.vector(sl_fit_CV_1$SL.predict))
-plot_roc_sl_fit_CV_1 <- plot(roc_sl_fit_CV_1, col = "royalblue", main = "ROC Curve - ALS Prediction")
-
-# Extraction of the main contributors selected by Leekasso
-set.seed(1996)
-sl_fit_1 <- SuperLearner(
-  Y = bdd_danish$als,                                                           # outcome
-  X = X_sl,                                                                     # predictors (proteins + covariates)
-  family = binomial(),                                                          # binary outcome (0/1)
-  SL.library = list_lib_1,                                                      # list of algorithms to try
-  id = bdd_danish$match,                                                        # matching
-  method = "method.NNLS",                                                       # Non-Negative Least Squares, performance method (default), other options: method.NNloglik, method.AUC
-  cvControl = list(V = 10),                                                     # 10-fold cross-validation (default)
-  control = list(
-    saveFitLibrary = TRUE,                                                      # Retain individual model fits for variable extraction
-    trimLogit = 0.001))                                                         # Prevents numerical instability for probabilities near 0 or 1
-
-
-leekasso_fit_1 <- sl_fit_1$fitLibrary$SL.leekasso_All
-genes_selected_1 <- names(leekasso_fit_1$object$coefficients)[-1]               # [-1] pour enlever l'Intercept
-
-# Magnitude of the coefficients 
-leek_coeffs_1 <- summary(leekasso_fit_1$object)$coefficients
-leek_coeffs_1 <- leek_coeffs_1[order(-abs(leek_coeffs_1[,1])), ]
-
-# Correlation matrix of the selected proteins
-selected_data_1 <- X_sl[, genes_selected_1]
-cor_matrix_1 <- cor(selected_data_1)
-
-rm(list_lib_1, selected_data_1)
-
-## test 2 ----
-screen.corP50 <- function(...) {
-  screen.corP(..., ntree = 50)                                                  # Pour preselectionner 50 prot, sinon utiliser le default screen.corP (20)
-}
-
-list_lib_2 <- list(
-  c("SL.glmnet", "All"),                                                        # models qui tournent sur toutes les proteines (pre screening)
-  c("SL.leekasso", "All"),
-  c("SL.ranger", "screen.corP"),                                                # models qui tournent sur top 20 proteins
-  c("SL.polymars", "screen.corP"),                                              
-  c("SL.bayesglm", "screen.ttest"),                                             # models qui tournent sur les protéines avec une p-valeur < 0.1
-  "SL.mean")                                                                    # mean to compare
-
-set.seed(1996)
-sl_fit_CV_2 <- CV.SuperLearner(
-  Y = bdd_danish$als,                                                           # outcome
-  X = X_sl,                                                                     # predictors (proteins + covariates)
-  family = binomial(),                                                          # binary outcome (0/1)
-  SL.library = list_lib_2,                                                      # list of algorithms to try
-  id = bdd_danish$match,                                                        # matching
-  method = "method.NNLS",                                                       # Non-Negative Least Squares, performance method (default), other options: method.NNloglik, method.AUC
-  cvControl = list(V = 10),                                                     # 10-fold cross-validation (default)
-  control = list(
-    saveFitLibrary = TRUE,                                                      # Retain individual model fits for variable extraction
-    trimLogit = 0.001))                                                         # Prevents numerical instability for probabilities near 0 or 1
-
-summary_sl_fit_CV_2 <- summary(sl_fit_CV_2)
-plot_sl_fit_CV_2 <- plot(sl_fit_CV_2) +                                                             # summary of performance of candidate learners 
-  theme_minimal() + 
-  labs(title = "Performance of Candidate Learners",
-       subtitle = "Vertical bars represent the 95% Confidence Interval")
-
-# AUC
-roc_sl_fit_CV_2 <- roc(bdd_danish$als, as.vector(sl_fit_CV_2$SL.predict))
-plot_roc_sl_fit_CV_2 <- plot(roc_sl_fit_CV_2, col = "royalblue", main = "ROC Curve - ALS Prediction")
-
-# Extraction of the main contributors selected by Leekasso
-set.seed(1996)
-sl_fit_2 <- SuperLearner(
-  Y = bdd_danish$als,                                                           # outcome
-  X = X_sl,                                                                     # predictors (proteins + covariates)
-  family = binomial(),                                                          # binary outcome (0/1)
-  SL.library = list_lib_2,                                                      # list of algorithms to try
-  id = bdd_danish$match,                                                        # matching
-  method = "method.NNLS",                                                       # Non-Negative Least Squares, performance method (default), other options: method.NNloglik, method.AUC
-  cvControl = list(V = 10),                                                     # 10-fold cross-validation (default)
-  control = list(
-    saveFitLibrary = TRUE,                                                      # Retain individual model fits for variable extraction
-    trimLogit = 0.001))                                                         # Prevents numerical instability for probabilities near 0 or 1
-
-leekasso_fit_2 <- sl_fit_2$fitLibrary$SL.leekasso_All
-genes_selected_2 <- names(leekasso_fit_2$object$coefficients)[-1]               # [-1] pour enlever l'Intercept
-
-# Magnitude of the coefficients 
-leek_coeffs_2 <- summary(leekasso_fit_2$object)$coefficients
-leek_coeffs_2 <- leek_coeffs_2[order(-abs(leek_coeffs_2[,1])), ]
-
-# Correlation matrix of the selected proteins
-selected_data_2 <- X_sl[, genes_selected_2]
-cor_matrix_2 <- cor(selected_data_2)
-
-rm(screen.corP50, list_lib_2, selected_data_2)
-
-
-## test 3 ----
-list_lib_3 <- c(
-  "SL.leekasso",  
-  "SL.glmnet",    
-  "SL.mean")      
-
-set.seed(1996)
-sl_fit_CV_3 <- CV.SuperLearner(
-  Y = bdd_danish$als,                                                           # outcome
-  X = X_sl,                                                                     # predictors (proteins + covariates)
-  family = binomial(),                                                          # binary outcome (0/1)
-  SL.library = list_lib_3,                                                      # list of algorithms to try
-  id = bdd_danish$match,                                                        # matching
-  method = "method.NNLS",                                                       # Non-Negative Least Squares, performance method (default), other options: method.NNloglik, method.AUC
-  cvControl = list(V = 10),                                                     # 10-fold cross-validation (default)
-  control = list(
-    saveFitLibrary = TRUE,                                                      # Retain individual model fits for variable extraction
-    trimLogit = 0.001))                                                         # Prevents numerical instability for probabilities near 0 or 1
-
-summary_sl_fit_CV_3 <- summary(sl_fit_CV_3)
-plot_sl_fit_CV_3 <- plot(sl_fit_CV_3) +                                                             # summary of performance of candidate learners 
-  theme_minimal() + 
-  labs(title = "Performance of Candidate Learners",
-       subtitle = "Vertical bars represent the 95% Confidence Interval")
-
-# AUC
-roc_sl_fit_CV_3 <- roc(bdd_danish$als, as.vector(sl_fit_CV_3$SL.predict))
-plot_roc_sl_fit_CV_3 <- plot(roc_sl_fit_CV_3, col = "royalblue", main = "ROC Curve - ALS Prediction")
-
-# Extraction of the main contributors selected by Leekasso
-set.seed(1996)
-sl_fit_3 <- SuperLearner(
-  Y = bdd_danish$als,                                                           # outcome
-  X = X_sl,                                                                     # predictors (proteins + covariates)
-  family = binomial(),                                                          # binary outcome (0/1)
-  SL.library = list_lib_3,                                                      # list of algorithms to try
-  id = bdd_danish$match,                                                        # matching
-  method = "method.NNLS",                                                       # Non-Negative Least Squares, performance method (default), other options: method.NNloglik, method.AUC
-  cvControl = list(V = 10),                                                     # 10-fold cross-validation (default)
-  control = list(
-    saveFitLibrary = TRUE,                                                      # Retain individual model fits for variable extraction
-    trimLogit = 0.001))                                                         # Prevents numerical instability for probabilities near 0 or 1
-
-leekasso_fit_3 <- sl_fit_3$fitLibrary$SL.leekasso_All
-genes_selected_3 <- names(leekasso_fit_3$object$coefficients)[-1] # [-1] pour enlever l'Intercept
-
-# Magnitude of the coefficients 
-leek_coeffs_3 <- summary(leekasso_fit_3$object)$coefficients
-leek_coeffs_3 <- leek_coeffs_3[order(-abs(leek_coeffs_3[,1])), ]
-
-# Correlation matrix of the selected proteins
-selected_data_3 <- X_sl[, genes_selected_3]
-cor_matrix_3 <- cor(selected_data_3)
-
-rm(list_lib_3, selected_data_3, X_sl)
-
-
 
 # Figures and Tables ----
 
@@ -8272,8 +8082,8 @@ rm(all_vars_labels,
    make_gam_plot_base_sex, 
    make_gam_plot_adjusted_sex)
 
-### NfL only results ----
-#### Table NfL - als occurrence - base and adjusted sd (sensi_1) ----
+## NfL only results ----
+### Table NfL - als occurrence - base and adjusted sd (sensi_1) ----
 NfL_sd_ALS_table_sensi_1 <- 
   main_results |>
   filter(analysis == "sensi_1", 
@@ -8309,7 +8119,7 @@ NfL_sd_ALS_table_sensi_1 <-
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
-#### Table NfL - als occurrence - base and adjusted quart (sensi_1) ----
+### Table NfL - als occurrence - base and adjusted quart (sensi_1) ----
 extra_rows <- 
   main_results |>
   filter(model %in% c("base", "adjusted") &                                     # select only quartile results
@@ -8378,7 +8188,7 @@ NfL_quart_ALS_table_sensi_1 <-
 
 rm(extra_rows)
 
-#### Figure NfL - als occurrence - base and adjusted sd (sensi_1) ----
+### Figure NfL - als occurrence - base and adjusted sd (sensi_1) ----
 NfL_sd_ALS_figure_sensi_1 <- main_results |>
   filter(analysis == "sensi_1", 
          term == "Continuous", 
@@ -8404,9 +8214,11 @@ NfL_sd_ALS_figure_sensi_1 <- main_results |>
         axis.title.y = element_blank()) +
   coord_flip()
 
-#### Table NfL - als occurrence - base and adjusted sd (sensi_follow-up) ----
+### Table NfL - als occurrence - base and adjusted sd (sensi_follow-up) ----
 NfL_sd_ALS_table_sensi_follow_up_base_adj <- main_results |>
-  filter(analysis %in% c("sensi_1", "sensi_2", "sensi_1_3", "sensi_1_3_4", "sensi_1_3_5"), 
+  filter(analysis %in% c("sensi_1", "sensi_2", 
+                         #"sensi_1_3", 
+                         "sensi_1_3_4", "sensi_1_3_5"), 
          term == "Continuous", 
          explanatory == "NEFL") |>
   mutate(    analysis = fct_recode(analysis, 
@@ -8451,9 +8263,11 @@ NfL_sd_ALS_table_sensi_follow_up_base_adj <- main_results |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 
-#### Figure NfL - als occurrence - base and adjusted sd (sensi_follow-up) ----
+### Figure NfL - als occurrence - base and adjusted sd (sensi_follow-up) ----
 NfL_sd_ALS_figure_sensi_follow_up_base_adj <- main_results |>
-  filter(analysis %in% c("sensi_1", "sensi_2", "sensi_1_3", "sensi_1_3_4", "sensi_1_3_5"), 
+  filter(analysis %in% c("sensi_1", "sensi_2", 
+                         #"sensi_1_3", 
+                         "sensi_1_3_4", "sensi_1_3_5"), 
          term == "Continuous", 
          explanatory == "NEFL") |>
   mutate(signif = ifelse(p_value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
@@ -8489,7 +8303,7 @@ NfL_sd_ALS_figure_sensi_follow_up_base_adj <- main_results |>
   coord_flip()
 
 
-#### Table NfL - als occurrence - adjusted sd (sensi_sex) ----
+### Table NfL - als occurrence - adjusted sd (sensi_sex) ----
 NfL_sd_ALS_table_sensi_sex_adj <- 
   main_results |>   
   filter(model == "adjusted" &                                                  # select only adjusted results
@@ -8531,7 +8345,7 @@ NfL_sd_ALS_table_sensi_sex_adj <-
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
-#### Table NfL - als occurrence - base and adjusted sd (sensi_follow-up and sex, for article) ----
+### Table NfL - als occurrence - base and adjusted sd (sensi_follow-up and sex, for article) ----
 NfL_sd_ALS_table_sensi_follow_up_sex_base_adj <- 
   main_results |>
   filter(analysis %in% c("sensi_1", "sensi_2", 
@@ -8586,7 +8400,7 @@ NfL_sd_ALS_table_sensi_follow_up_sex_base_adj <-
 
 
 
-#### Figure NfL - als occurrence - adjusted sd (sensi_follow-up and sex, pour article) ----
+### Figure NfL - als occurrence - adjusted sd (sensi_follow-up and sex, pour article) ----
 NfL_sd_ALS_figure_sensi_follow_up_sex_adj <- 
   main_results |>
   filter(analysis %in% c("sensi_1", 
@@ -8784,30 +8598,6 @@ results_proteomic_ALS_occurrence <-
       additional_analysis_4_figure_unadjusted_pattern = additional_analysis_4_figure_unadjusted_pattern, 
       additional_analysis_4_figure_unadjusted_color = additional_analysis_4_figure_unadjusted_color), 
     
-    additional_analysis_5 = list(test_1 = list(sl_fit_CV_1 = sl_fit_CV_1, 
-                                                summary_sl_fit_CV_1 = summary_sl_fit_CV_1, 
-                                                plot_roc_sl_fit_CV_1 = plot_roc_sl_fit_CV_1, 
-                                                sl_fit_1 = sl_fit_1, 
-                                                leekasso_fit_1 = leekasso_fit_1, 
-                                                genes_selected_1 = genes_selected_1, 
-                                                leek_coeffs_1 = leek_coeffs_1, 
-                                                cor_matrix_1 = cor_matrix_1), 
-                                  test_2 = list(sl_fit_CV_2 = sl_fit_CV_2, 
-                                                summary_sl_fit_CV_2 = summary_sl_fit_CV_2, 
-                                                plot_roc_sl_fit_CV_2 = plot_roc_sl_fit_CV_2, 
-                                                sl_fit_2 = sl_fit_2, 
-                                                leekasso_fit_2 = leekasso_fit_2, 
-                                                genes_selected_2 = genes_selected_2, 
-                                                leek_coeffs_2 = leek_coeffs_2, 
-                                                cor_matrix_2 = cor_matrix_2), 
-                                  test_3 = list(sl_fit_CV_3 = sl_fit_CV_3, 
-                                                summary_sl_fit_CV_3 = summary_sl_fit_CV_3, 
-                                                plot_roc_sl_fit_CV_3 = plot_roc_sl_fit_CV_3, 
-                                                sl_fit_3 = sl_fit_3, 
-                                                leekasso_fit_3 = leekasso_fit_3, 
-                                                genes_selected_3 = genes_selected_3, 
-                                                leek_coeffs_3 = leek_coeffs_3, 
-                                                cor_matrix_3 = cor_matrix_3)), 
     Nfl_results = list(NfL_sd_ALS_table_sensi_1 = NfL_sd_ALS_table_sensi_1, 
                        NfL_quart_ALS_table_sensi_1 = NfL_quart_ALS_table_sensi_1, 
                        NfL_sd_ALS_figure_sensi_1 = NfL_sd_ALS_figure_sensi_1, 
@@ -8818,7 +8608,7 @@ results_proteomic_ALS_occurrence <-
                        NfL_sd_ALS_table_sensi_sex_adj = NfL_sd_ALS_table_sensi_sex_adj))
 
 
-saveRDS(results_proteomic_ALS_occurrence, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_occurrence.rds")
+#saveRDS(results_proteomic_ALS_occurrence, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_occurrence.rds")
 
 rm(covar, 
    main_results, 
@@ -8938,35 +8728,6 @@ rm(covar,
    
    additional_analysis_4_figure_unadjusted_pattern,
    additional_analysis_4_figure_unadjusted_color, 
-   
-   sl_fit_CV_1, 
-   summary_sl_fit_CV_1, 
-   roc_sl_fit_CV_1, 
-   plot_roc_sl_fit_CV_1, 
-   sl_fit_1, 
-   leekasso_fit_1, 
-   genes_selected_1, 
-   leek_coeffs_1, 
-   cor_matrix_1, 
-   
-   sl_fit_CV_2, 
-              summary_sl_fit_CV_2, 
-   roc_sl_fit_CV_2,
-              plot_roc_sl_fit_CV_2, 
-              sl_fit_2, 
-              leekasso_fit_2, 
-              genes_selected_2, 
-              leek_coeffs_2, 
-              cor_matrix_2, 
-   sl_fit_CV_3, 
-              summary_sl_fit_CV_3, 
-   roc_sl_fit_CV_3, 
-              plot_roc_sl_fit_CV_3, 
-              sl_fit_3, 
-              leekasso_fit_3, 
-              genes_selected_3, 
-              leek_coeffs_3, 
-              cor_matrix_3, 
    
    NfL_sd_ALS_table_sensi_1, 
    NfL_quart_ALS_table_sensi_1, 

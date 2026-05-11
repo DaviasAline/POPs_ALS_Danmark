@@ -53,9 +53,6 @@ figure_2 <- wrap_plots(
   ncol = 2)
 
 
-# Figure 3 - Additional analysis (NEFL level over follow-up time) ----
-figure_3 <- results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_over_time_sensi_1
-
 
 # Supplementary table 1 - Sensitivity analysis (volcano plot filtered to > 5 years of follow-up) ----
 #table_S1 <- results_proteomic_ALS_occurrence$sensi_1_2$proteomic_sd_ALS_table_sensi_1_2
