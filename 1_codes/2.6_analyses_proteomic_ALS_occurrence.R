@@ -2,10 +2,8 @@
 # October 20, 2025 
 # Analysis of als risk depending on proteomic profile
 
-
 # Data loading - package loading ----
 source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
-
 
 # Effects of the covariates on ALS ----
 covar <- tbl_merge(
@@ -316,7 +314,7 @@ for (var in proteomic) {
 rm(var, formula, model, model_summary)
 
 
-# Sensi 1 - Removing NEFL outlier ----
+# Sensi 1 - Removing NfL outlier ----
 proteomic_sensi_1 <-
   proteomic |> 
   str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1")
@@ -1264,9 +1262,6 @@ model2_sd_sensi_3 <- model2_sd_sensi_3 |>
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
-
-
-
 ## model 2 quartiles ----
 model2_quart_sensi_3 <- data.frame(explanatory = character(),
                                    term = integer(),
@@ -1373,7 +1368,7 @@ rm(var, formula, model, model_summary)
 
 
 
-# Sensi 1 + sensi 3 - Removing the oulier for NEFL + filtering cases and their controls with follow_up > 5 years ----
+# Sensi 1 + sensi 3 - Removing the oulier for NfL + filtering cases and their controls with follow_up > 5 years ----
 
 proteomic_sensi_1_3 <-
   proteomic |> 
@@ -1391,10 +1386,10 @@ proteomic_quart_med_sensi_1_3 <-
 
 bdd_danish_sensi_1_3 <- 
   bdd_danish |>
-  group_by(match) |>                                                            # sensi 3 : we remove cases (and their controls) with follow-up <60 months to see if the association with NEFL really happens a long time before ALS diagnosis 
+  group_by(match) |>                                                            # sensi 3 : we remove cases (and their controls) with follow-up <60 months to see if the association with NfL really happens a long time before ALS diagnosis 
   filter(any(als == 1 & follow_up > 60)) |>
   ungroup()|>
-  mutate(                                                                       # sensi 1 : we remove NEFL in match 159 because it's an outlier
+  mutate(                                                                       # sensi 1 : we remove NfL in match 159 because it's an outlier
     proteomic_neuro_explo_NEFL_sensi_1_3 =
       ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
   mutate(across(all_of(proteomic_sensi_1_3),
@@ -1767,7 +1762,7 @@ rm(var, formula, model, model_summary)
 
 
 
-# Sensi 1 + sensi 3 + sensi 4 - Removing NEFL outlier + filtering cases and their controls with follow- up < 5 years + filtering follow-up <= 50%----
+# Sensi 1 + sensi 3 + sensi 4 - Removing NfL outlier + filtering cases and their controls with follow- up < 5 years + filtering follow-up <= 50%----
 proteomic_sensi_1_3_4 <-
   proteomic |> 
   str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3_4")
@@ -1786,7 +1781,7 @@ bdd_danish_sensi_1_3_4 <-
   group_by(match) |>                                                              
   filter(any(als == 1 & follow_up > 60)) |>                                     # sensi 3 : we remove cases (and their controls) with follow-up < 60 months
   ungroup() |>
-  mutate(                                                                       # sensi 1 : we remove NEFL in match 159 because it's an outlier
+  mutate(                                                                       # sensi 1 : we remove NfL in match 159 because it's an outlier
     proteomic_neuro_explo_NEFL_sensi_1_3_4 = 
       ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
   mutate(seuil = quantile(follow_up, 0.5, na.rm = TRUE)) |>                     # sensi 4 : we remove 50% of the highest values of follow-up (after removing the follow-up<5years)
@@ -2164,7 +2159,7 @@ rm(var, formula, model, model_summary)
 
 
 
-# Sensi 1 + sensi 3 + sensi 5 - Removing NEFL outlier + filtering cases and their controls with follow-up < 5 years + filtering follow-up > 50%----
+# Sensi 1 + sensi 3 + sensi 5 - Removing NfL outlier + filtering cases and their controls with follow-up < 5 years + filtering follow-up > 50%----
 proteomic_sensi_1_3_5 <-
   proteomic |> 
   str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3_5")
@@ -2184,7 +2179,7 @@ bdd_danish_sensi_1_3_5 <-
   group_by(match) |>                                                            # sensi 3 : we remove cases (and their controls) with follow-up < 60 months  
   filter(any(als == 1 & follow_up > 60)) |>
   ungroup()|>
-  mutate(                                                                       # sensi 1 : we remove NEFL in match 159 because it's an outlier
+  mutate(                                                                       # sensi 1 : we remove NfL in match 159 because it's an outlier
     proteomic_neuro_explo_NEFL_sensi_1_3_5 = 
       ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
   mutate(seuil = quantile(follow_up, 0.5, na.rm = TRUE)) |>                     # sensi 5 : we remove 50% of the lowest values of follow-up (after removing the follow-up<5years)
@@ -2870,7 +2865,7 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var,
 
 
 
-# Sensi 1 + sensi 6 - Removing the oulier for NEFL + stratifiyng the analysis in tertiles of follow-up duration  ----
+# Sensi 1 + sensi 6 - Removing the oulier for NfL + stratifiyng the analysis in tertiles of follow-up duration  ----
 
 bdd_danish_sensi_1_6 <- 
   bdd_danish  |>
@@ -3156,7 +3151,7 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var,
    proteomic_sd_sensi_1_6)
 
 
-# Sensi 1 + sensi 7 - Removing the oulier for NEFL + filtering to females ----
+# Sensi 1 + sensi 7 - Removing the oulier for NfL + filtering to females ----
 proteomic_sensi_1_7_female <-
   proteomic |> 
   str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_7_female")
@@ -3176,7 +3171,7 @@ bdd_danish_sensi_1_7_female <-
   group_by(match) |>                                                            # sensi 7 : we keep cases (and their controls) that are females 
   filter(any(als == 1 & sex == "Female")) |>
   ungroup()|>
-  mutate(                                                                       # sensi 1 : we remove NEFL in match 159 because it's an outlier
+  mutate(                                                                       # sensi 1 : we remove NfL in match 159 because it's an outlier
     proteomic_neuro_explo_NEFL_sensi_1_7_female =
       ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
   mutate(across(all_of(proteomic_sensi_1_7_female),
@@ -3544,7 +3539,7 @@ rm(var, formula, model, model_summary)
 
 
 
-# Sensi 1 + sensi 7 - Removing the oulier for NEFL + filtering to male ----
+# Sensi 1 + sensi 7 - Removing the oulier for NfL + filtering to male ----
 proteomic_sensi_1_7_male <-
   proteomic |> 
   str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_7_male")
@@ -3564,7 +3559,7 @@ bdd_danish_sensi_1_7_male <-
   group_by(match) |>                                                            # sensi 7 : we keep cases (and their controls) that are male 
   filter(any(als == 1 & sex == "Male")) |>
   ungroup()|>
-  mutate(                                                                       # sensi 1 : we remove NEFL in match 159 because it's an outlier
+  mutate(                                                                       # sensi 1 : we remove NfL in match 159 because it's an outlier
     proteomic_neuro_explo_NEFL_sensi_1_7_male =
       ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
   mutate(across(all_of(proteomic_sensi_1_7_male),
@@ -3939,36 +3934,7 @@ for (var in proteomic_sensi_1_7_male) {
 rm(var, formula, model, model_summary)
 
 
-# Interaction NfL x sex ? ----
-model_interac <- 
-  clogit(als ~  sex*proteomic_neuro_explo_NEFL_sd + 
-           baseline_age + smoking_2cat_i + bmi, data = bdd_danish)
-summary(model_interac)
-
-
-model_interac_sensi_2 <- 
-  clogit(als ~  sex*proteomic_neuro_explo_NEFL_sd +
-           baseline_age + smoking_2cat_i + bmi, data = bdd_danish_sensi_2)
-summary(model_interac_sensi_2)
-
-
-model_interac_sensi_1_3_4 <- 
-  clogit(als ~  sex*proteomic_neuro_explo_NEFL_sd + 
-           baseline_age + smoking_2cat_i + bmi, data = bdd_danish_sensi_1_3_4)
-summary(model_interac_sensi_1_3_4)
-
-model_interac_sensi_1_3_5 <- 
-  clogit(als ~  sex*proteomic_neuro_explo_NEFL_sd + 
-           baseline_age + smoking_2cat_i + bmi, data = bdd_danish_sensi_1_3_5)
-summary(model_interac_sensi_1_3_5)
-
-rm(model_interac, 
-   model_interac_sensi_2, 
-   model_interac_sensi_1_3_4, 
-   model_interac_sensi_1_3_5)
-
-
-# Merging the results ----
+# Merging the main results ----
 main_results <- bind_rows(model1_sd,                                            # main analyses
                           model2_sd, 
                           model1_quart, 
@@ -4308,88 +4274,9 @@ median(OR_distribution$OR_raw)
 shapiro.test(OR_distribution$OR_log)
 rm(w_median)
 
-# Additional analysis 2 - NEFL over time ----
-## LOESS ----
-# The locally estimated scatterplot smoothing (LOESS) curve illustrates the changes in the ratio of NEFL levels in each case–control pair/triplet over time. Each point corresponds to 1 case–control pair/triplet.
-
-# Calcul du ratio : proteomic_neuro_explo_NEFL_case / moyenne(proteomic_neuro_explo_NEFL_controls)
-ratios <- 
-  bdd_danish |>
-  group_by(match) |>
-  summarise(
-    ratio_proteomic_neuro_explo_NEFL = proteomic_neuro_explo_NEFL[als == 1] / mean(proteomic_neuro_explo_NEFL[als == 0]),
-    follow_up = unique(follow_up[als == 1])) |>
-  ungroup() |> 
-  mutate(follow_up_neg = -follow_up, 
-         follow_up_neg = follow_up_neg/12) 
-
-# Visualisation avec courbe LOESS
-figure_NEFL_over_time <- 
-  ggplot(ratios, aes(x = follow_up_neg, y = ratio_proteomic_neuro_explo_NEFL)) +
-  geom_point(alpha = 0.6, color = "darkblue") +
-  geom_smooth(method = "loess", se = FALSE, color = "red", span = 0.75) +
-  labs(
-    x = "Time to ALS diagnosis (years)",
-    y = "Ratio of NfL in case and matched controls") +
-  theme_lucid() +
-  theme(axis.title = element_text(size = 16, color = "black", face = "bold"), 
-        axis.text = element_text(size = 16, color = "black", face = "bold"))
-
-# Regression lineaire with x = time to diag and y = ratio NEFL
-ggplot(ratios) +
-  aes(x = ratio_proteomic_neuro_explo_NEFL) +
-  geom_histogram(bins = 30L, fill = "#112446") +
-  theme_minimal()
-
-lm(ratio_proteomic_neuro_explo_NEFL ~ follow_up_neg, data = ratios) |> 
-  tbl_regression()
-
-ratios_sensi <- ratios |>
-  filter(match != 159) 
-
-ggplot(ratios_sensi) +
-  aes(x = ratio_proteomic_neuro_explo_NEFL) +
-  geom_histogram(bins = 30L, fill = "#112446") +
-  theme_minimal()
-
-lm(ratio_proteomic_neuro_explo_NEFL ~ follow_up_neg, data = ratios_sensi) |> 
-  tbl_regression()
-  
-rm(ratios, ratios_sensi)
-
-# Calcul du ratio : proteomic_neuro_explo_NEFL_case / moyenne(proteomic_neuro_explo_NEFL_controls)
-ratios_sensi_1 <- 
-  bdd_danish |>
-  mutate(
-    proteomic_neuro_explo_NEFL = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
-  group_by(match) |>
-  summarise(
-    ratio_proteomic_neuro_explo_NEFL = proteomic_neuro_explo_NEFL[als == 1] / mean(proteomic_neuro_explo_NEFL[als == 0]),
-    follow_up = unique(follow_up[als == 1])) |>
-  ungroup() |> 
-  mutate(follow_up_neg = -follow_up, 
-         follow_up_neg = follow_up_neg/12)
-
-# Visualisation avec courbe LOESS
-figure_NEFL_over_time_sensi_1 <- 
-  ggplot(ratios_sensi_1, aes(x = follow_up_neg, y = ratio_proteomic_neuro_explo_NEFL)) +
-  geom_point(alpha = 0.6, color = "darkblue") +
-  geom_smooth(method = "loess", se = TRUE, color = "red", span = 0.75) +
-  labs(
-    x = "Time to ALS diagnosis (years)",
-    y = "Ratio of NfL in case and matched controls") +
-  theme_lucid() +
-  theme(axis.title = element_text(size = 16, color = "black", face = "bold"), 
-        axis.text = element_text(size = 16, color = "black", face = "bold"))
-rm(ratios_sensi_1)
-
-## GAM ----
-# to do, or not if we choose a more clinical journal?
 
 
-
-
-# Additional analysis 3 - test for multiple testing -----
+# Additionnal analysis 2 - Test for multiple testing -----
 # Fasano–Franceschini and Jackknife Leave-One-Out 
 
 # Function to compute FF statistic on numeric columns only
@@ -4430,13 +4317,13 @@ data_matrix2_all <-
 
 
 ### Fasano Franceschini test ----
-additional_analysis_3_all_results <- 
+additional_analysis_2_all_results <- 
   fasano.franceschini.test(data_matrix1_all[, c("OR_log2", "p_value_log")],
                            data_matrix2_all[, c("OR_log2", "p_value_log")],
                            seed = 0)
 
 ### Jackknife approach ----
-T0 <- additional_analysis_3_all_results$statistic                               # d statistic from the inital ff test with all observations 
+T0 <- additional_analysis_2_all_results$statistic                               # d statistic from the inital ff test with all observations 
 
 influence_1 <- numeric(nrow(data_matrix1_all))                                  # Initialize vectors
 influence_2 <- numeric(nrow(data_matrix2_all))
@@ -4520,7 +4407,7 @@ plot2_all <-
   ylim(0, 3.5) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
 
-additional_analysis_3_all_figure <- plot1_all + plot2_all
+additional_analysis_2_all_figure <- plot1_all + plot2_all
 
 
 rm(data_matrix1_all, data_matrix2_all, 
@@ -4558,13 +4445,13 @@ data_matrix2_immune <-
 
 
 ### Fasano Franceschini test ----
-additional_analysis_3_immune_results <- 
+additional_analysis_2_immune_results <- 
   fasano.franceschini.test(data_matrix1_immune[, c("OR_log2", "p_value_log")],
                            data_matrix2_immune[, c("OR_log2", "p_value_log")],
                            seed = 0)
 
 ### Jackknife approach ----
-T0 <- additional_analysis_3_immune_results$statistic                               # d statistic from the inital ff test with all observations 
+T0 <- additional_analysis_2_immune_results$statistic                               # d statistic from the inital ff test with all observations 
 
 influence_1 <- numeric(nrow(data_matrix1_immune))                                      # Initialize vectors
 influence_2 <- numeric(nrow(data_matrix2_immune))
@@ -4652,7 +4539,7 @@ plot2_immune <-
   ylim(0, 3.5) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
 
-additional_analysis_3_immune_figure <- plot1_immune + plot2_immune
+additional_analysis_2_immune_figure <- plot1_immune + plot2_immune
 
 
 rm(data_matrix1_immune, data_matrix2_immune, 
@@ -4692,13 +4579,13 @@ data_matrix2_metabolism <-
 
 
 ### Fasano Franceschini test ----
-additional_analysis_3_metabolism_results <- 
+additional_analysis_2_metabolism_results <- 
   fasano.franceschini.test(data_matrix1_metabolism[, c("OR_log2", "p_value_log")],
                            data_matrix2_metabolism[, c("OR_log2", "p_value_log")],
                            seed = 0)
 
 ### Jackknife approach ----
-T0 <- additional_analysis_3_metabolism_results$statistic                        # d statistic from the inital ff test with all observations 
+T0 <- additional_analysis_2_metabolism_results$statistic                        # d statistic from the inital ff test with all observations 
 
 influence_1 <- numeric(nrow(data_matrix1_metabolism))                           # Initialize vectors
 influence_2 <- numeric(nrow(data_matrix2_metabolism))
@@ -4786,7 +4673,7 @@ plot2_metabolism <-
   ylim(0, 3.5) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
 
-additional_analysis_3_metabolism_figure <- plot1_metabolism + plot2_metabolism
+additional_analysis_2_metabolism_figure <- plot1_metabolism + plot2_metabolism
 
 rm(data_matrix1_metabolism, data_matrix2_metabolism, 
    plot1_metabolism, plot2_metabolism, 
@@ -4822,13 +4709,13 @@ data_matrix2_neuro <-
   select(explanatory, OR_log2, p_value_log)
 
 ### Fasano Franceschini test ----
-additional_analysis_3_neuro_results <- 
+additional_analysis_2_neuro_results <- 
   fasano.franceschini.test(data_matrix1_neuro[, c("OR_log2", "p_value_log")],
                            data_matrix2_neuro[, c("OR_log2", "p_value_log")],
                            seed = 0)
 
 ### Jackknife approach ----
-T0 <- additional_analysis_3_neuro_results$statistic                             # d statistic from the inital ff test with all observations 
+T0 <- additional_analysis_2_neuro_results$statistic                             # d statistic from the inital ff test with all observations 
 
 influence_1 <- numeric(nrow(data_matrix1_neuro))                                # Initialize vectors
 influence_2 <- numeric(nrow(data_matrix2_neuro))
@@ -4917,425 +4804,311 @@ plot2_neuro <-
   ylim(0, 3.5) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed") 
 
-additional_analysis_3_neuro_figure <- plot1_neuro + plot2_neuro
-  
+additional_analysis_2_neuro_figure <- plot1_neuro + plot2_neuro
+
 
 rm(data_matrix1_neuro, data_matrix2_neuro, 
    plot1_neuro, plot2_neuro, 
    T0, influence_1, influence_2, i, j, mat1_minus, mat2_minus, Ti, Tj, 
    proteomic_influence, proteomic_selected, valeurs_communes)
 
+# Additionnal analysis 3 - SL learner ----
+# cf specific code 
 
-# Additional analysis 4 - AUS, sensi, speci ----
-## All data, unadjusted ----
-roc_nefl_all <- roc(
+
+
+
+# Analyses special NfL ----
+## NfL x sex interaction ----
+model_interac <- 
+  clogit(als ~  sex*proteomic_neuro_explo_NEFL_sd + 
+           baseline_age + smoking_2cat_i + bmi, data = bdd_danish)
+summary(model_interac)
+
+
+model_interac_sensi_2 <- 
+  clogit(als ~  sex*proteomic_neuro_explo_NEFL_sd +
+           baseline_age + smoking_2cat_i + bmi, data = bdd_danish_sensi_2)
+summary(model_interac_sensi_2)
+
+
+model_interac_sensi_1_3_4 <- 
+  clogit(als ~  sex*proteomic_neuro_explo_NEFL_sd + 
+           baseline_age + smoking_2cat_i + bmi, data = bdd_danish_sensi_1_3_4)
+summary(model_interac_sensi_1_3_4)
+
+model_interac_sensi_1_3_5 <- 
+  clogit(als ~  sex*proteomic_neuro_explo_NEFL_sd + 
+           baseline_age + smoking_2cat_i + bmi, data = bdd_danish_sensi_1_3_5)
+summary(model_interac_sensi_1_3_5)
+
+rm(model_interac, 
+   model_interac_sensi_2, 
+   model_interac_sensi_1_3_4, 
+   model_interac_sensi_1_3_5)
+
+
+## NfL over time (LOESS) ----
+# The locally estimated scatterplot smoothing (LOESS) curve illustrates the changes in the ratio of NfL levels in each case–control pair/triplet over time. Each point corresponds to 1 case–control pair/triplet.
+
+# Calcul du ratio : proteomic_neuro_explo_NEFL_case / moyenne(proteomic_neuro_explo_NEFL_controls)
+ratios <- 
+  bdd_danish |>
+  group_by(match) |>
+  summarise(
+    ratio_proteomic_neuro_explo_NEFL = proteomic_neuro_explo_NEFL[als == 1] / mean(proteomic_neuro_explo_NEFL[als == 0]),
+    follow_up = unique(follow_up[als == 1])) |>
+  ungroup() |> 
+  mutate(follow_up_neg = -follow_up, 
+         follow_up_neg = follow_up_neg/12) 
+
+# Calcul du ratio : proteomic_neuro_explo_NEFL_case / moyenne(proteomic_neuro_explo_NEFL_controls)
+ratios_sensi_1 <- 
+  bdd_danish |>
+  mutate(
+    proteomic_neuro_explo_NEFL = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
+  group_by(match) |>
+  summarise(
+    ratio_proteomic_neuro_explo_NEFL = proteomic_neuro_explo_NEFL[als == 1] / mean(proteomic_neuro_explo_NEFL[als == 0]),
+    follow_up = unique(follow_up[als == 1])) |>
+  ungroup() |> 
+  mutate(follow_up_neg = -follow_up, 
+         follow_up_neg = follow_up_neg/12)
+
+
+## NfL AUC, sensi, speci ----
+### All data, unadjusted ----
+roc_NfL_all <- roc(
   response = bdd_danish_sensi_1$als,
   predictor = bdd_danish_sensi_1$proteomic_neuro_explo_NEFL,
   levels = c(0, 1), 
   direction = "<")
 
-auc(roc_nefl_all)
-ci.auc(roc_nefl_all)
+auc(roc_NfL_all)
+ci.auc(roc_NfL_all)
 
-youden_nefl_all <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
-  roc_nefl_all,
+youden_NfL_all <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
+  roc_NfL_all,
   x = "best",
   best.method = "youden",
   ret = c("threshold", "sensitivity", "specificity")) |>
   as.data.frame()
 
-youden_best_nefl_all <- 
-  youden_nefl_all |>
+youden_best_NfL_all <- 
+  youden_NfL_all |>
   slice_max(sensitivity, n = 1)
 
-## All data, adjusted ----
+### All data, adjusted ----
 model_adjusted_all <- clogit(
   als ~ proteomic_neuro_explo_NEFL + strata(match) + smoking_2cat_i + bmi,
   data = bdd_danish_sensi_1)
 
 bdd_danish_sensi_1$pred_adjusted_all <- predict(model_adjusted_all, type = "lp")
 
-roc_nefl_all_adjusted <- 
+roc_NfL_all_adjusted <- 
   roc(
     response = bdd_danish_sensi_1$als, 
     predictor = bdd_danish_sensi_1$pred_adjusted_all, 
     direction = "<")
 
-auc(roc_nefl_all_adjusted)
-ci.auc(roc_nefl_all_adjusted)
+auc(roc_NfL_all_adjusted)
+ci.auc(roc_NfL_all_adjusted)
 
-youden_nefl_all_adjusted <- coords(
-  roc_nefl_all_adjusted,
+youden_NfL_all_adjusted <- coords(
+  roc_NfL_all_adjusted,
   x = "best",
   best.method = "youden",
   ret = c("threshold", "sensitivity", "specificity"))
 
-youden_nefl_all_adjusted
+youden_NfL_all_adjusted
 
 
 
-## Follow-up < 5 years, unadjusted ----
-roc_nefl_sensi_2 <- roc(
+### Follow-up < 5 years, unadjusted ----
+roc_NfL_sensi_2 <- roc(
   response = bdd_danish_sensi_2$als,
   predictor = bdd_danish_sensi_2$proteomic_neuro_explo_NEFL,
   levels = c(0, 1), 
   direction = "<")
 
-auc(roc_nefl_sensi_2)
-ci.auc(roc_nefl_sensi_2)
+auc(roc_NfL_sensi_2)
+ci.auc(roc_NfL_sensi_2)
 
-youden_nefl_sensi_2 <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
-  roc_nefl_sensi_2,
+youden_NfL_sensi_2 <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
+  roc_NfL_sensi_2,
   x = "best",
   best.method = "youden",
   ret = c("threshold", "sensitivity", "specificity")) |>
   as.data.frame()
 
-youden_best_nefl_sensi_2 <- 
-  youden_nefl_sensi_2 |>
+youden_best_NfL_sensi_2 <- 
+  youden_NfL_sensi_2 |>
   slice_max(sensitivity, n = 1)
 
-## Follow-up < 5 years, adjusted ----
+### Follow-up < 5 years, adjusted ----
 model_adjusted_sensi_2 <- clogit(
   als ~ proteomic_neuro_explo_NEFL + strata(match) + smoking_2cat_i + bmi,
   data = bdd_danish_sensi_2)
 
 bdd_danish_sensi_2$pred_adjusted_sensi_2 <- predict(model_adjusted_sensi_2, type = "lp")
 
-roc_nefl_sensi_2_adjusted <- 
+roc_NfL_sensi_2_adjusted <- 
   roc(
     response = bdd_danish_sensi_2$als, 
     predictor = bdd_danish_sensi_2$pred_adjusted_sensi_2, 
     direction = "<")
 
-auc(roc_nefl_sensi_2_adjusted)
-ci.auc(roc_nefl_sensi_2_adjusted)
+auc(roc_NfL_sensi_2_adjusted)
+ci.auc(roc_NfL_sensi_2_adjusted)
 
-youden_nefl_sensi_2_adjusted <- coords(
-  roc_nefl_sensi_2_adjusted,
+youden_NfL_sensi_2_adjusted <- coords(
+  roc_NfL_sensi_2_adjusted,
   x = "best",
   best.method = "youden",
   ret = c("threshold", "sensitivity", "specificity"))
 
-youden_nefl_sensi_2_adjusted
+youden_NfL_sensi_2_adjusted
 
 
-## Follow-up > 5 years, unadjusted ----
-roc_nefl_sensi_1_3 <- roc(
+### Follow-up > 5 years, unadjusted ----
+roc_NfL_sensi_1_3 <- roc(
   response = bdd_danish_sensi_1_3$als,
   predictor = bdd_danish_sensi_1_3$proteomic_neuro_explo_NEFL,
   levels = c(0, 1), 
   direction = "<")
 
-auc(roc_nefl_sensi_1_3)
-ci.auc(roc_nefl_sensi_1_3)
+auc(roc_NfL_sensi_1_3)
+ci.auc(roc_NfL_sensi_1_3)
 
-youden_nefl_sensi_1_3 <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
-  roc_nefl_sensi_1_3,
+youden_NfL_sensi_1_3 <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
+  roc_NfL_sensi_1_3,
   x = "best",
   best.method = "youden",
   ret = c("threshold", "sensitivity", "specificity")) |>
   as.data.frame()
 
-youden_best_nefl_sensi_1_3 <- 
-  youden_nefl_sensi_1_3 |>
+youden_best_NfL_sensi_1_3 <- 
+  youden_NfL_sensi_1_3 |>
   slice_max(sensitivity, n = 1)
 
-## Follow-up > 5 years, adjusted ----
+### Follow-up > 5 years, adjusted ----
 model_adjusted_sensi_1_3 <- clogit(
   als ~ proteomic_neuro_explo_NEFL + strata(match) + smoking_2cat_i + bmi,
   data = bdd_danish_sensi_1_3)
 
 bdd_danish_sensi_1_3$pred_adjusted_sensi_1_3 <- predict(model_adjusted_sensi_1_3, type = "lp")
 
-roc_nefl_sensi_1_3_adjusted <- 
+roc_NfL_sensi_1_3_adjusted <- 
   roc(
     response = bdd_danish_sensi_1_3$als, 
     predictor = bdd_danish_sensi_1_3$pred_adjusted_sensi_1_3, 
     direction = "<")
 
-auc(roc_nefl_sensi_1_3_adjusted)
-ci.auc(roc_nefl_sensi_1_3_adjusted)
+auc(roc_NfL_sensi_1_3_adjusted)
+ci.auc(roc_NfL_sensi_1_3_adjusted)
 
-youden_nefl_sensi_1_3_adjusted <- coords(
-  roc_nefl_sensi_1_3_adjusted,
+youden_NfL_sensi_1_3_adjusted <- coords(
+  roc_NfL_sensi_1_3_adjusted,
   x = "best",
   best.method = "youden",
   ret = c("threshold", "sensitivity", "specificity"))
 
-youden_nefl_sensi_1_3_adjusted
+youden_NfL_sensi_1_3_adjusted
 
 
-## Follow-up > 5 years and < 14.6 years, unadjusted ----
-roc_nefl_sensi_1_3_4 <- roc(
+### Follow-up > 5 years and < 14.6 years, unadjusted ----
+roc_NfL_sensi_1_3_4 <- roc(
   response = bdd_danish_sensi_1_3_4$als,
   predictor = bdd_danish_sensi_1_3_4$proteomic_neuro_explo_NEFL,
   levels = c(0, 1), 
   direction = "<")
 
-auc(roc_nefl_sensi_1_3_4)
-ci.auc(roc_nefl_sensi_1_3_4)
+auc(roc_NfL_sensi_1_3_4)
+ci.auc(roc_NfL_sensi_1_3_4)
 
-youden_nefl_sensi_1_3_4 <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
-  roc_nefl_sensi_1_3_4,
+youden_NfL_sensi_1_3_4 <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
+  roc_NfL_sensi_1_3_4,
   x = "best",
   best.method = "youden",
   ret = c("threshold", "sensitivity", "specificity")) |>
   as.data.frame()
 
-youden_best_nefl_sensi_1_3_4 <- 
-  youden_nefl_sensi_1_3_4 |>
+youden_best_NfL_sensi_1_3_4 <- 
+  youden_NfL_sensi_1_3_4 |>
   slice_max(sensitivity, n = 1)
 
 
-## Follow-up > 5 years and < 14.6 years, adjusted ----
+### Follow-up > 5 years and < 14.6 years, adjusted ----
 model_adjusted_sensi_1_3_4 <- clogit(
   als ~ proteomic_neuro_explo_NEFL + strata(match) + smoking_2cat_i + bmi,
   data = bdd_danish_sensi_1_3_4)
 
 bdd_danish_sensi_1_3_4$pred_adjusted_sensi_1_3_4 <- predict(model_adjusted_sensi_1_3_4, type = "lp")
 
-roc_nefl_sensi_1_3_4_adjusted <- 
+roc_NfL_sensi_1_3_4_adjusted <- 
   roc(
     response = bdd_danish_sensi_1_3_4$als, 
     predictor = bdd_danish_sensi_1_3_4$pred_adjusted_sensi_1_3_4, 
     direction = "<")
 
-auc(roc_nefl_sensi_1_3_4_adjusted)
-ci.auc(roc_nefl_sensi_1_3_4_adjusted)
+auc(roc_NfL_sensi_1_3_4_adjusted)
+ci.auc(roc_NfL_sensi_1_3_4_adjusted)
 
-youden_nefl_sensi_1_3_4_adjusted <- coords(
-  roc_nefl_sensi_1_3_4_adjusted,
+youden_NfL_sensi_1_3_4_adjusted <- coords(
+  roc_NfL_sensi_1_3_4_adjusted,
   x = "best",
   best.method = "youden",
   ret = c("threshold", "sensitivity", "specificity"))
 
-youden_nefl_sensi_1_3_4_adjusted
+youden_NfL_sensi_1_3_4_adjusted
 
 
-## Follow-up > 14.6 years, unadjusted ----
-roc_nefl_sensi_1_3_5 <- roc(
+### Follow-up > 14.6 years, unadjusted ----
+roc_NfL_sensi_1_3_5 <- roc(
   response = bdd_danish_sensi_1_3_5$als,
   predictor = bdd_danish_sensi_1_3_5$proteomic_neuro_explo_NEFL,
   levels = c(0, 1), 
   direction = "<")
 
-auc(roc_nefl_sensi_1_3_5)
-ci.auc(roc_nefl_sensi_1_3_5)
+auc(roc_NfL_sensi_1_3_5)
+ci.auc(roc_NfL_sensi_1_3_5)
 
-youden_nefl_sensi_1_3_5 <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
-  roc_nefl_sensi_1_3_5,
+youden_NfL_sensi_1_3_5 <- coords(             # youden = J=Se+Sp−1 donc rapporte 3 memes valeurs youden. donc il vaut mieux choisir celle avec la meilleur sensibilité (ne pas rater des ALS) 
+  roc_NfL_sensi_1_3_5,
   x = "best",
   best.method = "youden",
   ret = c("threshold", "sensitivity", "specificity")) |>
   as.data.frame()
 
-youden_best_nefl_sensi_1_3_5 <- 
-  youden_nefl_sensi_1_3_5 |>
+youden_best_NfL_sensi_1_3_5 <- 
+  youden_NfL_sensi_1_3_5 |>
   slice_max(sensitivity, n = 1)
 
 
 
-## Follow-up > 14.6 years, adjusted ----
+### Follow-up > 14.6 years, adjusted ----
 model_adjusted_sensi_1_3_5 <- clogit(
   als ~ proteomic_neuro_explo_NEFL + strata(match) + smoking_2cat_i + bmi,
   data = bdd_danish_sensi_1_3_5)
 
 bdd_danish_sensi_1_3_5$pred_adjusted_sensi_1_3_5 <- predict(model_adjusted_sensi_1_3_5, type = "lp")
 
-roc_nefl_sensi_1_3_5_adjusted <- 
+roc_NfL_sensi_1_3_5_adjusted <- 
   roc(
     response = bdd_danish_sensi_1_3_5$als, 
     predictor = bdd_danish_sensi_1_3_5$pred_adjusted_sensi_1_3_5, 
     direction = "<")
 
-auc(roc_nefl_sensi_1_3_5_adjusted)
-ci.auc(roc_nefl_sensi_1_3_5_adjusted)
+auc(roc_NfL_sensi_1_3_5_adjusted)
+ci.auc(roc_NfL_sensi_1_3_5_adjusted)
 
-youden_nefl_sensi_1_3_5_adjusted <- coords(
-  roc_nefl_sensi_1_3_5_adjusted,
+youden_NfL_sensi_1_3_5_adjusted <- coords(
+  roc_NfL_sensi_1_3_5_adjusted,
   x = "best",
   best.method = "youden",
   ret = c("threshold", "sensitivity", "specificity"))
 
-youden_nefl_sensi_1_3_5_adjusted
-
-## Plots----
-label_main_analysis <- 
-  paste0("All cases and controls (n=495)\n", 
-         "AUC = ", round(auc(roc_nefl_all), 2), 
-         "\nOptimal NfL cut-off: ", round(youden_best_nefl_all["threshold"], 2), 
-         "\n(sensitivity: ", round(youden_best_nefl_all["sensitivity"], 2), 
-         " and specificity: ", round(youden_best_nefl_all["specificity"], 2), ")\n")
-
-label_sensi_2 <- 
-  paste0("Years to ALS < 5 years (n=51)\n", 
-         "AUC = ", round(auc(roc_nefl_sensi_2), 2), 
-         "\nOptimal NfL cut-off: ", round(youden_best_nefl_sensi_2["threshold"], 2), 
-         "\n(sensitivity: ", round(youden_best_nefl_sensi_2["sensitivity"], 2), 
-         " and specificity: ", round(youden_best_nefl_sensi_2["specificity"], 2), ")\n")
-
-label_sensi_1_3_4 <- 
-  paste0("Years to ALS between 5 and 14.6 years (n=225)\n", 
-         "AUC = ", round(auc(roc_nefl_sensi_1_3_4), 2), 
-         "\nOptimal NfL cut-off: ", round(youden_best_nefl_sensi_1_3_4["threshold"], 2), 
-         "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3_4["sensitivity"], 2), 
-         " and specificity: ", round(youden_best_nefl_sensi_1_3_4["specificity"], 2), ")\n")
-
-label_sensi_1_3_5 <- 
-  paste0("Years to ALS > 14.6 years (n=219)\n", 
-         "AUC = ", round(auc(roc_nefl_sensi_1_3_5), 2), 
-         "\nOptimal NfL cut-off: ", round(youden_best_nefl_sensi_1_3_5["threshold"], 2), 
-         "\n(sensitivity: ", round(youden_best_nefl_sensi_1_3_5["sensitivity"], 2), 
-         " and specificity: ", round(youden_best_nefl_sensi_1_3_5["specificity"], 2), ")\n")
-
-roc_patterns <- c(
-  label_main_analysis = "solid",
-  label_sensi_2 = "dotdash",
-  label_sensi_1_3_4 = "dashed",
-  label_sensi_1_3_5 = "dotted")
-
-names(roc_patterns) <- c(
-  label_main_analysis,
-  label_sensi_2,
-  label_sensi_1_3_4,
-  label_sensi_1_3_5)
-
-### unadjusted_pattern ----
-additional_analysis_4_figure_unadjusted_pattern <- ggroc(
-    list(
-      label_main_analysis = roc_nefl_all,
-      label_sensi_2 = roc_nefl_sensi_2,
-      label_sensi_1_3_4 = roc_nefl_sensi_1_3_4,
-      label_sensi_1_3_5 = roc_nefl_sensi_1_3_5) |>
-      setNames(c(
-        label_main_analysis,
-        label_sensi_2,
-        label_sensi_1_3_4,
-        label_sensi_1_3_5)),
-    legacy.axes = TRUE,
-    aes = c("linetype"), 
-    linewidth = 0.5) +
-  geom_abline(
-    intercept = 0,
-    slope = 1,
-    linetype = "dashed",
-    color = "grey50") +
-  scale_linetype_manual(values = roc_patterns) +
-  labs(
-    x = "1 − Specificity",
-    y = "Sensitivity",
-    title = "ROC curves for NfL pre-disease biomarker (unmatched, unadjusted)",
-    linetype = "") +
-  theme_lucid() +
-  theme(axis.title = element_text(size = 18, color = "black", face = "bold"),
-        axis.text = element_text(size = 18, color = "black", face = "bold"), 
-        legend.text = element_text(size = 16, color = "black"), 
-        legend.position = "bottom") 
-
-### unadjusted_color ----
-additional_analysis_4_figure_unadjusted_color <- ggroc(
-  list(
-    label_main_analysis = roc_nefl_all,
-    label_sensi_2 = roc_nefl_sensi_2,
-    label_sensi_1_3_4 = roc_nefl_sensi_1_3_4,
-    label_sensi_1_3_5 = roc_nefl_sensi_1_3_5) |>
-    setNames(c(
-      label_main_analysis,
-      label_sensi_2,
-      label_sensi_1_3_4,
-      label_sensi_1_3_5)),
-  legacy.axes = TRUE,
-  aes = c("color"), 
-  linewidth = 2) +
-  geom_abline(
-    intercept = 0,
-    slope = 1,
-    linetype = "dashed",
-    color = "grey50") +
-  #scale_linetype_manual(values = roc_patterns) +
-  labs(
-    x = "1 − Specificity",
-    y = "Sensitivity",
-    title = "ROC curves for NfL pre-disease biomarker (unmatched, unadjusted)",
-    color = "") +
-  theme_lucid() +
-  theme(legend.position = "bottom", legend.direction = "horizontal",
-        axis.title = element_text(size = 16, color = "black"), 
-        axis.text = element_text(size = 16, color = "black"))
-
-### adjusted_pattern ----
-label_main_analysis <- 
-  paste0("All cases and controls (n=495)\n", 
-         "AUC = ", round(auc(roc_nefl_all_adjusted), 2), "\n")
-
-label_sensi_2 <- 
-  paste0("Years to ALS < 5 years (n=51)\n", 
-         "AUC = ", round(auc(roc_nefl_sensi_2_adjusted), 2), "\n")
-
-label_sensi_1_3_4 <- 
-  paste0("Years to ALS between 5 and 14.6 years (n=225)\n", 
-         "AUC = ", round(auc(roc_nefl_sensi_1_3_4_adjusted), 2), "\n")
-
-label_sensi_1_3_5 <- 
-  paste0("Years to ALS > 14.6 years (n=219)\n", 
-         "AUC = ", round(auc(roc_nefl_sensi_1_3_5_adjusted), 2), "\n")
-
-roc_patterns <- c(
-  label_main_analysis = "solid",
-  label_sensi_2 = "dotdash",
-  label_sensi_1_3_4 = "dashed",
-  label_sensi_1_3_5 = "dotted")
-
-names(roc_patterns) <- c(
-  label_main_analysis,
-  label_sensi_2,
-  label_sensi_1_3_4,
-  label_sensi_1_3_5)
-
-
-additional_analysis_4_figure_adjusted_pattern <- ggroc(
-  list(
-    label_main_analysis = roc_nefl_all_adjusted,
-    label_sensi_2 = roc_nefl_sensi_2_adjusted,
-    label_sensi_1_3_4 = roc_nefl_sensi_1_3_4_adjusted,
-    label_sensi_1_3_5 = roc_nefl_sensi_1_3_5_adjusted) |>
-    setNames(c(
-      label_main_analysis,
-      label_sensi_2,
-      label_sensi_1_3_4,
-      label_sensi_1_3_5)),
-  legacy.axes = TRUE,
-  aes = c("linetype")) +
-  geom_abline(
-    intercept = 0,
-    slope = 1,
-    linetype = "dashed",
-    color = "grey50") +
-  scale_linetype_manual(values = roc_patterns) +
-  labs(
-    x = "1 − Specificity",
-    y = "Sensitivity",
-    title = "ROC curves for NfL pre-disease biomarker (matched and adjusted)",
-    linetype = "") +
-  theme_lucid() +
-  theme(legend.position = "bottom", legend.direction = "horizontal", 
-        axis.title = element_text(size = 16, color = "black"), 
-        axis.text = element_text(size = 16, color = "black"))
-
-rm(roc_nefl_all, youden_nefl_all, youden_best_nefl_all, 
-   model_adjusted_all, roc_nefl_all_adjusted, youden_nefl_all_adjusted, 
-   roc_nefl_sensi_2, youden_nefl_sensi_2, youden_best_nefl_sensi_2, 
-   model_adjusted_sensi_2, roc_nefl_sensi_2_adjusted, youden_nefl_sensi_2_adjusted, 
-   roc_nefl_sensi_1_3, youden_nefl_sensi_1_3, youden_best_nefl_sensi_1_3, 
-   model_adjusted_sensi_1_3, roc_nefl_sensi_1_3_adjusted, youden_nefl_sensi_1_3_adjusted, 
-   roc_nefl_sensi_1_3_4, youden_nefl_sensi_1_3_4, youden_best_nefl_sensi_1_3_4, 
-   model_adjusted_sensi_1_3_4, roc_nefl_sensi_1_3_4_adjusted, youden_nefl_sensi_1_3_4_adjusted, 
-   roc_nefl_sensi_1_3_5, youden_nefl_sensi_1_3_5, youden_best_nefl_sensi_1_3_5, 
-   model_adjusted_sensi_1_3_5, roc_nefl_sensi_1_3_5_adjusted, youden_nefl_sensi_1_3_5_adjusted, 
-   roc_patterns, 
-   label_main_analysis, label_sensi_2, label_sensi_1_3_4, label_sensi_1_3_5)
-
+youden_NfL_sensi_1_3_5_adjusted
 
 
 
@@ -8083,7 +7856,8 @@ rm(all_vars_labels,
    make_gam_plot_adjusted_sex)
 
 ## NfL only results ----
-### Table NfL - als occurrence - base and adjusted sd (sensi_1) ----
+### Main analysis ----
+#### Table NfL - als occurrence - base and adjusted sd (sensi_1) ----
 NfL_sd_ALS_table_sensi_1 <- 
   main_results |>
   filter(analysis == "sensi_1", 
@@ -8119,7 +7893,7 @@ NfL_sd_ALS_table_sensi_1 <-
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
-### Table NfL - als occurrence - base and adjusted quart (sensi_1) ----
+#### Table NfL - als occurrence - base and adjusted quart (sensi_1) ----
 extra_rows <- 
   main_results |>
   filter(model %in% c("base", "adjusted") &                                     # select only quartile results
@@ -8188,7 +7962,7 @@ NfL_quart_ALS_table_sensi_1 <-
 
 rm(extra_rows)
 
-### Figure NfL - als occurrence - base and adjusted sd (sensi_1) ----
+#### Figure NfL - als occurrence - base and adjusted sd (sensi_1) ----
 NfL_sd_ALS_figure_sensi_1 <- main_results |>
   filter(analysis == "sensi_1", 
          term == "Continuous", 
@@ -8214,7 +7988,7 @@ NfL_sd_ALS_figure_sensi_1 <- main_results |>
         axis.title.y = element_blank()) +
   coord_flip()
 
-### Table NfL - als occurrence - base and adjusted sd (sensi_follow-up) ----
+#### Table NfL - als occurrence - base and adjusted sd (sensi_follow-up) ----
 NfL_sd_ALS_table_sensi_follow_up_base_adj <- main_results |>
   filter(analysis %in% c("sensi_1", "sensi_2", 
                          #"sensi_1_3", 
@@ -8263,7 +8037,7 @@ NfL_sd_ALS_table_sensi_follow_up_base_adj <- main_results |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 
-### Figure NfL - als occurrence - base and adjusted sd (sensi_follow-up) ----
+#### Figure NfL - als occurrence - base and adjusted sd (sensi_follow-up) ----
 NfL_sd_ALS_figure_sensi_follow_up_base_adj <- main_results |>
   filter(analysis %in% c("sensi_1", "sensi_2", 
                          #"sensi_1_3", 
@@ -8303,7 +8077,7 @@ NfL_sd_ALS_figure_sensi_follow_up_base_adj <- main_results |>
   coord_flip()
 
 
-### Table NfL - als occurrence - adjusted sd (sensi_sex) ----
+#### Table NfL - als occurrence - adjusted sd (sensi_sex) ----
 NfL_sd_ALS_table_sensi_sex_adj <- 
   main_results |>   
   filter(model == "adjusted" &                                                  # select only adjusted results
@@ -8345,7 +8119,7 @@ NfL_sd_ALS_table_sensi_sex_adj <-
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
-### Table NfL - als occurrence - base and adjusted sd (sensi_follow-up and sex, for article) ----
+#### Table NfL - als occurrence - base and adjusted sd (sensi_follow-up and sex, for article) ----
 NfL_sd_ALS_table_sensi_follow_up_sex_base_adj <- 
   main_results |>
   filter(analysis %in% c("sensi_1", "sensi_2", 
@@ -8400,7 +8174,7 @@ NfL_sd_ALS_table_sensi_follow_up_sex_base_adj <-
 
 
 
-### Figure NfL - als occurrence - adjusted sd (sensi_follow-up and sex, pour article) ----
+#### Figure NfL - als occurrence - adjusted sd (sensi_follow-up and sex, pour article) ----
 NfL_sd_ALS_figure_sensi_follow_up_sex_adj <- 
   main_results |>
   filter(analysis %in% c("sensi_1", 
@@ -8443,6 +8217,216 @@ NfL_sd_ALS_figure_sensi_follow_up_sex_adj <-
         axis.ticks.y = element_blank(),
         axis.title.y = element_blank()) +
   coord_flip()
+
+
+
+### NfL over time (LOESS) ----
+figure_NfL_over_time <- 
+  ggplot(ratios, aes(x = follow_up_neg, y = ratio_proteomic_neuro_explo_NEFL)) +
+  geom_point(alpha = 0.6, color = "darkblue") +
+  geom_smooth(method = "loess", se = FALSE, color = "red", span = 0.75) +
+  labs(
+    x = "Time to ALS diagnosis (years)",
+    y = "Ratio of NfL in case and matched controls") +
+  theme_lucid() +
+  theme(axis.title = element_text(size = 16, color = "black", face = "bold"), 
+        axis.text = element_text(size = 16, color = "black", face = "bold"))
+rm(ratios)
+
+figure_NfL_over_time_sensi_1 <- 
+  ggplot(ratios_sensi_1, aes(x = follow_up_neg, y = ratio_proteomic_neuro_explo_NEFL)) +
+  geom_point(alpha = 0.6, color = "darkblue") +
+  geom_smooth(method = "loess", se = TRUE, color = "red", span = 0.75) +
+  labs(
+    x = "Time to ALS diagnosis (years)",
+    y = "Ratio of NfL in case and matched controls") +
+  theme_lucid() +
+  theme(axis.title = element_text(size = 16, color = "black", face = "bold"), 
+        axis.text = element_text(size = 16, color = "black", face = "bold"))
+rm(ratios_sensi_1)
+
+
+### NfL AUC, sensi, speci ----
+label_main_analysis <- 
+  paste0("All cases and controls (n=495)\n", 
+         "AUC = ", round(auc(roc_NfL_all), 2), 
+         "\nOptimal NfL cut-off: ", round(youden_best_NfL_all["threshold"], 2), 
+         "\n(sensitivity: ", round(youden_best_NfL_all["sensitivity"], 2), 
+         " and specificity: ", round(youden_best_NfL_all["specificity"], 2), ")\n")
+
+label_sensi_2 <- 
+  paste0("Years to ALS < 5 years (n=51)\n", 
+         "AUC = ", round(auc(roc_NfL_sensi_2), 2), 
+         "\nOptimal NfL cut-off: ", round(youden_best_NfL_sensi_2["threshold"], 2), 
+         "\n(sensitivity: ", round(youden_best_NfL_sensi_2["sensitivity"], 2), 
+         " and specificity: ", round(youden_best_NfL_sensi_2["specificity"], 2), ")\n")
+
+label_sensi_1_3_4 <- 
+  paste0("Years to ALS between 5 and 14.6 years (n=225)\n", 
+         "AUC = ", round(auc(roc_NfL_sensi_1_3_4), 2), 
+         "\nOptimal NfL cut-off: ", round(youden_best_NfL_sensi_1_3_4["threshold"], 2), 
+         "\n(sensitivity: ", round(youden_best_NfL_sensi_1_3_4["sensitivity"], 2), 
+         " and specificity: ", round(youden_best_NfL_sensi_1_3_4["specificity"], 2), ")\n")
+
+label_sensi_1_3_5 <- 
+  paste0("Years to ALS > 14.6 years (n=219)\n", 
+         "AUC = ", round(auc(roc_NfL_sensi_1_3_5), 2), 
+         "\nOptimal NfL cut-off: ", round(youden_best_NfL_sensi_1_3_5["threshold"], 2), 
+         "\n(sensitivity: ", round(youden_best_NfL_sensi_1_3_5["sensitivity"], 2), 
+         " and specificity: ", round(youden_best_NfL_sensi_1_3_5["specificity"], 2), ")\n")
+
+roc_patterns <- c(
+  label_main_analysis = "solid",
+  label_sensi_2 = "dotdash",
+  label_sensi_1_3_4 = "dashed",
+  label_sensi_1_3_5 = "dotted")
+
+names(roc_patterns) <- c(
+  label_main_analysis,
+  label_sensi_2,
+  label_sensi_1_3_4,
+  label_sensi_1_3_5)
+
+#### unadjusted_pattern ----
+AUC_figure_unadjusted_pattern <- ggroc(
+  list(
+    label_main_analysis = roc_NfL_all,
+    label_sensi_2 = roc_NfL_sensi_2,
+    label_sensi_1_3_4 = roc_NfL_sensi_1_3_4,
+    label_sensi_1_3_5 = roc_NfL_sensi_1_3_5) |>
+    setNames(c(
+      label_main_analysis,
+      label_sensi_2,
+      label_sensi_1_3_4,
+      label_sensi_1_3_5)),
+  legacy.axes = TRUE,
+  aes = c("linetype"), 
+  linewidth = 0.5) +
+  geom_abline(
+    intercept = 0,
+    slope = 1,
+    linetype = "dashed",
+    color = "grey50") +
+  scale_linetype_manual(values = roc_patterns) +
+  labs(
+    x = "1 − Specificity",
+    y = "Sensitivity",
+    title = "ROC curves for NfL pre-disease biomarker (unmatched, unadjusted)",
+    linetype = "") +
+  theme_lucid() +
+  theme(axis.title = element_text(size = 18, color = "black", face = "bold"),
+        axis.text = element_text(size = 18, color = "black", face = "bold"), 
+        legend.text = element_text(size = 16, color = "black"), 
+        legend.position = "bottom") 
+
+#### unadjusted_color ----
+AUC_figure_unadjusted_color <- ggroc(
+  list(
+    label_main_analysis = roc_NfL_all,
+    label_sensi_2 = roc_NfL_sensi_2,
+    label_sensi_1_3_4 = roc_NfL_sensi_1_3_4,
+    label_sensi_1_3_5 = roc_NfL_sensi_1_3_5) |>
+    setNames(c(
+      label_main_analysis,
+      label_sensi_2,
+      label_sensi_1_3_4,
+      label_sensi_1_3_5)),
+  legacy.axes = TRUE,
+  aes = c("color"), 
+  linewidth = 2) +
+  geom_abline(
+    intercept = 0,
+    slope = 1,
+    linetype = "dashed",
+    color = "grey50") +
+  #scale_linetype_manual(values = roc_patterns) +
+  labs(
+    x = "1 − Specificity",
+    y = "Sensitivity",
+    title = "ROC curves for NfL pre-disease biomarker (unmatched, unadjusted)",
+    color = "") +
+  theme_lucid() +
+  theme(axis.title = element_text(size = 18, color = "black", face = "bold"),
+        axis.text = element_text(size = 18, color = "black", face = "bold"), 
+        legend.text = element_text(size = 16, color = "black"), 
+        title = element_text(size = 16, color = "black"), 
+        legend.position = "bottom") 
+
+#### adjusted_pattern ----
+label_main_analysis <- 
+  paste0("All cases and controls (n=495)\n", 
+         "AUC = ", round(auc(roc_NfL_all_adjusted), 2), "\n")
+
+label_sensi_2 <- 
+  paste0("Years to ALS < 5 years (n=51)\n", 
+         "AUC = ", round(auc(roc_NfL_sensi_2_adjusted), 2), "\n")
+
+label_sensi_1_3_4 <- 
+  paste0("Years to ALS between 5 and 14.6 years (n=225)\n", 
+         "AUC = ", round(auc(roc_NfL_sensi_1_3_4_adjusted), 2), "\n")
+
+label_sensi_1_3_5 <- 
+  paste0("Years to ALS > 14.6 years (n=219)\n", 
+         "AUC = ", round(auc(roc_NfL_sensi_1_3_5_adjusted), 2), "\n")
+
+roc_patterns <- c(
+  label_main_analysis = "solid",
+  label_sensi_2 = "dotdash",
+  label_sensi_1_3_4 = "dashed",
+  label_sensi_1_3_5 = "dotted")
+
+names(roc_patterns) <- c(
+  label_main_analysis,
+  label_sensi_2,
+  label_sensi_1_3_4,
+  label_sensi_1_3_5)
+
+
+AUC_figure_adjusted_pattern <- ggroc(
+  list(
+    label_main_analysis = roc_NfL_all_adjusted,
+    label_sensi_2 = roc_NfL_sensi_2_adjusted,
+    label_sensi_1_3_4 = roc_NfL_sensi_1_3_4_adjusted,
+    label_sensi_1_3_5 = roc_NfL_sensi_1_3_5_adjusted) |>
+    setNames(c(
+      label_main_analysis,
+      label_sensi_2,
+      label_sensi_1_3_4,
+      label_sensi_1_3_5)),
+  legacy.axes = TRUE,
+  aes = c("linetype")) +
+  geom_abline(
+    intercept = 0,
+    slope = 1,
+    linetype = "dashed",
+    color = "grey50") +
+  scale_linetype_manual(values = roc_patterns) +
+  labs(
+    x = "1 − Specificity",
+    y = "Sensitivity",
+    title = "ROC curves for NfL pre-disease biomarker (matched and adjusted)",
+    linetype = "") +
+  theme_lucid() +
+  theme(axis.title = element_text(size = 18, color = "black", face = "bold"),
+        axis.text = element_text(size = 18, color = "black", face = "bold"), 
+        legend.text = element_text(size = 16, color = "black"), 
+        title = element_text(size = 16, color = "black"), 
+        legend.position = "bottom") 
+
+rm(roc_NfL_all, youden_NfL_all, youden_best_NfL_all, 
+   model_adjusted_all, roc_NfL_all_adjusted, youden_NfL_all_adjusted, 
+   roc_NfL_sensi_2, youden_NfL_sensi_2, youden_best_NfL_sensi_2, 
+   model_adjusted_sensi_2, roc_NfL_sensi_2_adjusted, youden_NfL_sensi_2_adjusted, 
+   roc_NfL_sensi_1_3, youden_NfL_sensi_1_3, youden_best_NfL_sensi_1_3, 
+   model_adjusted_sensi_1_3, roc_NfL_sensi_1_3_adjusted, youden_NfL_sensi_1_3_adjusted, 
+   roc_NfL_sensi_1_3_4, youden_NfL_sensi_1_3_4, youden_best_NfL_sensi_1_3_4, 
+   model_adjusted_sensi_1_3_4, roc_NfL_sensi_1_3_4_adjusted, youden_NfL_sensi_1_3_4_adjusted, 
+   roc_NfL_sensi_1_3_5, youden_NfL_sensi_1_3_5, youden_best_NfL_sensi_1_3_5, 
+   model_adjusted_sensi_1_3_5, roc_NfL_sensi_1_3_5_adjusted, youden_NfL_sensi_1_3_5_adjusted, 
+   roc_patterns, 
+   label_main_analysis, label_sensi_2, label_sensi_1_3_4, label_sensi_1_3_5)
+
+
 
 
 # Assemblage ----
@@ -8574,43 +8558,57 @@ results_proteomic_ALS_occurrence <-
       OR_distribution = OR_distribution, 
       boxplot_OR = boxplot_OR, 
       densityplot_OR = densityplot_OR), 
+    
     additional_analysis_2 = list(
-      figure_NEFL_over_time = figure_NEFL_over_time ,
-      figure_NEFL_over_time_sensi_1 = figure_NEFL_over_time_sensi_1), 
-    additional_analysis_3 = list(
-      additional_analysis_3_all_figure = additional_analysis_3_all_figure, 
-      additional_analysis_3_all_results = additional_analysis_3_all_results, 
+      additional_analysis_2_all_figure = additional_analysis_2_all_figure, 
+      additional_analysis_2_all_results = additional_analysis_2_all_results, 
       jackknife_all_results = jackknife_all_results, 
       
-      additional_analysis_3_immune_figure = additional_analysis_3_immune_figure, 
-      additional_analysis_3_immune_results = additional_analysis_3_immune_results, 
+      additional_analysis_2_immune_figure = additional_analysis_2_immune_figure, 
+      additional_analysis_2_immune_results = additional_analysis_2_immune_results, 
       jackknife_immune_results = jackknife_immune_results, 
       
-      additional_analysis_3_metabolism_figure = additional_analysis_3_metabolism_figure, 
-      additional_analysis_3_metabolism_results = additional_analysis_3_metabolism_results, 
+      additional_analysis_2_metabolism_figure = additional_analysis_2_metabolism_figure, 
+      additional_analysis_2_metabolism_results = additional_analysis_2_metabolism_results, 
       jackknife_metabolism_results = jackknife_metabolism_results, 
       
-      additional_analysis_3_neuro_figure = additional_analysis_3_neuro_figure, 
-      additional_analysis_3_neuro_results = additional_analysis_3_neuro_results, 
+      additional_analysis_2_neuro_figure = additional_analysis_2_neuro_figure, 
+      additional_analysis_2_neuro_results = additional_analysis_2_neuro_results, 
       jackknife_neuro_results = jackknife_neuro_results), 
-    additional_analysis_4 = list(
-      additional_analysis_4_figure_adjusted_pattern = additional_analysis_4_figure_adjusted_pattern, 
-      additional_analysis_4_figure_unadjusted_pattern = additional_analysis_4_figure_unadjusted_pattern, 
-      additional_analysis_4_figure_unadjusted_color = additional_analysis_4_figure_unadjusted_color), 
     
-    Nfl_results = list(NfL_sd_ALS_table_sensi_1 = NfL_sd_ALS_table_sensi_1, 
+    #additional_analysis_3 = SL (check specific code)
+    
+    additional_analysis_4 = list(
+      main_results_cox = main_results_cox,                                 # additionnal analysis 4
+      cox_gam_results_base = cox_gam_results_base, 
+      cox_gam_results_adjusted = cox_gam_results_adjusted, 
+      proteomic_sd_ALS_table_cox = proteomic_sd_ALS_table_cox, 
+      proteomic_quart_ALS_table_cox = proteomic_quart_ALS_table_cox, 
+      proteomic_sd_ALS_base_figure_cox = proteomic_sd_ALS_base_figure_cox, 
+      proteomic_sd_ALS_adjusted_figure_cox = proteomic_sd_ALS_adjusted_figure_cox, 
+      plot_base_cox_gam_danish = plot_base_cox_gam_danish, 
+      plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish), 
+    
+    NfL_results = list(NfL_sd_ALS_table_sensi_1 = NfL_sd_ALS_table_sensi_1, 
                        NfL_quart_ALS_table_sensi_1 = NfL_quart_ALS_table_sensi_1, 
                        NfL_sd_ALS_figure_sensi_1 = NfL_sd_ALS_figure_sensi_1, 
                        NfL_sd_ALS_table_sensi_follow_up_base_adj = NfL_sd_ALS_table_sensi_follow_up_base_adj, 
                        NfL_sd_ALS_table_sensi_follow_up_sex_base_adj = NfL_sd_ALS_table_sensi_follow_up_sex_base_adj, 
                        NfL_sd_ALS_figure_sensi_follow_up_base_adj = NfL_sd_ALS_figure_sensi_follow_up_base_adj, 
                        NfL_sd_ALS_figure_sensi_follow_up_sex_adj = NfL_sd_ALS_figure_sensi_follow_up_sex_adj, 
-                       NfL_sd_ALS_table_sensi_sex_adj = NfL_sd_ALS_table_sensi_sex_adj))
+                       NfL_sd_ALS_table_sensi_sex_adj = NfL_sd_ALS_table_sensi_sex_adj, 
+                       NfL_over_time = list(
+                         figure_NfL_over_time = figure_NfL_over_time ,
+                         figure_NfL_over_time_sensi_1 = figure_NfL_over_time_sensi_1), 
+                       AUC_NfL = list(
+                         AUC_figure_adjusted_pattern = AUC_figure_adjusted_pattern, 
+                         AUC_figure_unadjusted_pattern = AUC_figure_unadjusted_pattern, 
+                         AUC_figure_unadjusted_color = AUC_figure_unadjusted_color)))
 
 
 #saveRDS(results_proteomic_ALS_occurrence, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_occurrence.rds")
 
-rm(covar, 
+rm(covar,                                   # main results 
    main_results, 
    proteomic_sd_ALS_table,
    proteomic_quart_ALS_table, 
@@ -8621,7 +8619,7 @@ rm(covar,
    plot_base_gam, 
    plot_adjusted_gam, 
    
-   proteomic_sd_ALS_table_sensi_1, 
+   proteomic_sd_ALS_table_sensi_1,         # sensi_1
    proteomic_quart_ALS_table_sensi_1, 
    proteomic_sd_ALS_base_figure_sensi_1, 
    model1_gam_sensi_1, 
@@ -8630,7 +8628,7 @@ rm(covar,
    model2_gam_sensi_1, 
    plot_adjusted_gam_sensi_1, 
    
-   proteomic_quart_ALS_table_sensi_2, 
+   proteomic_quart_ALS_table_sensi_2,       # sensi_2
    proteomic_sd_ALS_table_sensi_2, 
    proteomic_sd_ALS_base_figure_sensi_2, 
    model1_gam_sensi_2, 
@@ -8639,7 +8637,7 @@ rm(covar,
    model2_gam_sensi_2, 
    plot_adjusted_gam_sensi_2, 
    
-   proteomic_sd_ALS_table_sensi_3, 
+   proteomic_sd_ALS_table_sensi_3,         # sensi_3
    proteomic_quart_ALS_table_sensi_3, 
    proteomic_sd_ALS_base_figure_sensi_3,
    model1_gam_sensi_3, 
@@ -8648,7 +8646,7 @@ rm(covar,
    model2_gam_sensi_3, 
    plot_adjusted_gam_sensi_3, 
    
-   proteomic_sd_ALS_table_sensi_1_3, 
+   proteomic_sd_ALS_table_sensi_1_3,          # sensi_1_3
    proteomic_quart_ALS_table_sensi_1_3, 
    proteomic_sd_ALS_base_figure_sensi_1_3,
    model1_gam_sensi_1_3, 
@@ -8657,7 +8655,7 @@ rm(covar,
    model2_gam_sensi_1_3, 
    plot_adjusted_gam_sensi_1_3, 
    
-   proteomic_sd_ALS_table_sensi_1_3_4, 
+   proteomic_sd_ALS_table_sensi_1_3_4,       # sensi_1_3_4
    proteomic_quart_ALS_table_sensi_1_3_4, 
    proteomic_sd_ALS_base_figure_sensi_1_3_4,
    model1_gam_sensi_1_3_4, 
@@ -8666,7 +8664,7 @@ rm(covar,
    model2_gam_sensi_1_3_4, 
    plot_adjusted_gam_sensi_1_3_4, 
    
-   proteomic_sd_ALS_table_sensi_1_3_5, 
+   proteomic_sd_ALS_table_sensi_1_3_5,        # sensi_1_3_5
    proteomic_quart_ALS_table_sensi_1_3_5, 
    proteomic_sd_ALS_base_figure_sensi_1_3_5,
    model1_gam_sensi_1_3_5, 
@@ -8675,7 +8673,7 @@ rm(covar,
    model2_gam_sensi_1_3_5, 
    plot_adjusted_gam_sensi_1_3_5, 
    
-   sensi_6_table_follow_up, 
+   sensi_6_table_follow_up,                       # sensi_6  
    sensi_6_densityplot_follow_up, 
    proteomic_sd_ALS_base_figure_sensi_6_T1, 
    proteomic_sd_ALS_base_figure_sensi_6_T2, 
@@ -8684,14 +8682,14 @@ rm(covar,
    proteomic_sd_ALS_adjusted_figure_sensi_6_T2, 
    proteomic_sd_ALS_adjusted_figure_sensi_6_T3, 
    
-   proteomic_sd_ALS_base_figure_sensi_1_6_T1, 
+   proteomic_sd_ALS_base_figure_sensi_1_6_T1,      # sensi_1_6
    proteomic_sd_ALS_base_figure_sensi_1_6_T2, 
    proteomic_sd_ALS_base_figure_sensi_1_6_T3, 
    proteomic_sd_ALS_adjusted_figure_sensi_1_6_T1, 
    proteomic_sd_ALS_adjusted_figure_sensi_1_6_T2, 
    proteomic_sd_ALS_adjusted_figure_sensi_1_6_T3, 
    
-   proteomic_sd_ALS_table_sensi_1_7, 
+   proteomic_sd_ALS_table_sensi_1_7,               # sensi_1_7
    proteomic_quart_ALS_table_sensi_1_7, 
    proteomic_sd_ALS_base_figure_sensi_1_7, 
    proteomic_sd_ALS_adjusted_figure_sensi_1_7, 
@@ -8704,32 +8702,39 @@ rm(covar,
    model2_gam_sensi_1_7_female, 
    model2_gam_sensi_1_7_male,
    
-   OR_distribution, 
+   OR_distribution,                        # additionnal analysis 1
    boxplot_OR, 
    densityplot_OR, 
-   figure_NEFL_over_time, 
-   figure_NEFL_over_time_sensi_1, 
    
-   additional_analysis_3_all_figure, 
-   additional_analysis_3_all_results, 
+   additional_analysis_2_all_figure,      # additionnal analysis 2
+   additional_analysis_2_all_results, 
    jackknife_all_results, 
    
-   additional_analysis_3_immune_figure, 
-   additional_analysis_3_immune_results, 
+   additional_analysis_2_immune_figure, 
+   additional_analysis_2_immune_results, 
    jackknife_immune_results, 
    
-   additional_analysis_3_metabolism_figure, 
-   additional_analysis_3_metabolism_results, 
+   additional_analysis_2_metabolism_figure, 
+   additional_analysis_2_metabolism_results, 
    jackknife_metabolism_results, 
    
-   additional_analysis_3_neuro_figure, 
-   additional_analysis_3_neuro_results, 
+   additional_analysis_2_neuro_figure, 
+   additional_analysis_2_neuro_results, 
    jackknife_neuro_results, 
    
-   additional_analysis_4_figure_unadjusted_pattern,
-   additional_analysis_4_figure_unadjusted_color, 
+   # additionnal analysis 3 : check specfic SL code 
    
-   NfL_sd_ALS_table_sensi_1, 
+   main_results_cox,                                 # additionnal analysis 4
+   cox_gam_results_base, 
+   cox_gam_results_adjusted, 
+   proteomic_sd_ALS_table_cox,                
+   proteomic_quart_ALS_table_cox, 
+   proteomic_sd_ALS_base_figure_cox, 
+   proteomic_sd_ALS_adjusted_figure_cox, 
+   plot_base_cox_gam_danish, 
+   plot_adjusted_cox_gam_danish, 
+   
+   NfL_sd_ALS_table_sensi_1,                      # NfL main results
    NfL_quart_ALS_table_sensi_1, 
    NfL_sd_ALS_figure_sensi_1, 
    NfL_sd_ALS_table_sensi_follow_up_base_adj, 
@@ -8737,6 +8742,13 @@ rm(covar,
    NfL_sd_ALS_figure_sensi_follow_up_base_adj, 
    NfL_sd_ALS_figure_sensi_follow_up_sex_adj, 
    NfL_sd_ALS_table_sensi_sex_adj,
+   
+   figure_NfL_over_time,                      # NfL results over time
+   figure_NfL_over_time_sensi_1, 
+   
+   AUC_figure_unadjusted_pattern,          # NfL AUC
+   AUC_figure_unadjusted_color, 
+   AUC_figure_adjusted_pattern, 
    
    make_gam_plot_base, 
    make_gam_plot_adjusted)

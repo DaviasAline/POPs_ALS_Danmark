@@ -93,6 +93,9 @@ bdd_danish_POPs_loq <-
       "OCP_β_HCH" = "β_HCH",
       "OCP_γ_HCH" = "γ_HCH"))  
 
+bdd_danish_icd_long <- 
+  read_dta("/Volumes/shared/EOME/Weisskopf/POPs-ALS/Data/Danish EPIC data/lpr_DKEPIC_ALS_sum_3k(johnni@cancer.dk).dta")
+
 ## finnish data ----
 bdd_finnish <- 
   read.delim("/Volumes/shared/EOME/Weisskopf/POPs-ALS/Data/Finnish data/THLBB2022_24/THLBB2020_21_H2011_phenotypes_14092022.txt") |>
@@ -132,6 +135,7 @@ rm(bdd_finnish_POPs_raw, bdd_finnish_lipids, bdd_finnish_fattyacids)
 
 # data cleaning ----
 ## danish data ----
+### main data ----
 bdd_danish <- bdd_danish |>
   rename_with(~ gsub("PCB-", "PCB_", .x), .cols = contains("PCB-")) |>
   rename_with(~ gsub("BDE-", "PBDE_", .x), .cols = contains("BDE-")) |>
@@ -225,6 +229,24 @@ bdd_danish <- bdd_danish |>
   mutate(across(c( "fS_Trigly", "fS_Kol"),                                      # adjusting the class of some variables
                 ~as.numeric(gsub(",", ".", ., fixed = TRUE)))) |>
   mutate(across(c(contains("PCB_"), contains("OCP_"), contains("PBDE_")), as.numeric)) 
+
+### icd numbers ----
+bdd_danish_icd <- 
+  bdd_danish_icd_long |> 
+  rename(sample = code, serial_no = loebenr, match = saet) |>
+  group_by(sample, serial_no, match) |>
+  mutate(id_temp = row_number()) |>
+  ungroup() |>
+  pivot_wider(
+    names_from = id_temp, 
+    values_from = -c(sample, serial_no, match, id_temp),
+    names_sep = "_",
+    names_vary = "slowest")
+
+bdd_danish_icd_long <-   
+  bdd_danish_icd_long |> 
+  rename(sample = code, serial_no = loebenr, match = saet)  |> 
+  mutate(c_diag = as.factor(c_diag))
 
 
 ## finnish data ----
@@ -539,8 +561,15 @@ bdd_danish <- bdd_danish |>
     .names = "{.col}_quart_med")) |>
   mutate(lipid_tot_phillips_g_L = 2.27*0.3866*fS_Kol + 0.885*fS_Trigly + 0.623, # conversion avec la masse molaire (estimation trouvé sur google car les valeurs initiales sont en mmol/L)
          diabetes_rec = ifelse(diabetes == 8, NA, diabetes), 
-         diabetes_rec = as.factor(as.character(diabetes_rec)))
-
+         diabetes_rec = as.factor(as.character(diabetes_rec))) |>
+  mutate(
+    end_of_study_date = as.Date("2017-09-19"),
+    end_observation_date = case_when(
+      als == 1             ~ als_date,            # Cas : date de diagnostic
+      !is.na(death_date)   ~ death_date,          # Contrôle décédé : date de décès
+      TRUE                 ~ end_of_study_date),  # Contrôle vivant : fin d'étude
+    follow_up_bis = as.numeric(end_observation_date - baseline_date) / 365.25) |> 
+  select(-end_of_study_date, -end_observation_date)
 
 bdd_danish <- bdd_danish|>
   replace_with_median(OCP_HCB, OCP_HCB_quart)|>
@@ -553,6 +582,57 @@ bdd_danish <- bdd_danish|>
   replace_with_median(Σchlordane, Σchlordane_quart)|>
   replace_with_median(OCP_PeCB, OCP_PeCB_quart)|>
   replace_with_median(OCP_β_HCH, OCP_β_HCH_quart)
+
+### icd numbers ----
+als_data <- 
+  bdd_danish |> 
+  select(sample, serial_no, match, als, als_date, baseline_date, proteomic_neuro_explo_NEFL) |>
+  mutate(sample = as.numeric(sample))
+
+bdd_danish_icd_long <- 
+  bdd_danish_icd_long |> 
+  left_join(als_data, by = c("sample", "serial_no", "match")) 
+rm(als_data)
+
+bdd_danish_icd_long <- 
+  bdd_danish_icd_long |>
+  mutate(
+    c_diag_name = 
+      case_when(
+        str_detect(c_diag, "G35|34009") ~ "multiple sclerosis (MS)", 
+        str_detect(c_diag, "G30|29010") ~ "Alzheimer's disease", 
+        str_detect(c_diag, "G20|33200") ~ "Parkinson's disease", 
+        str_detect(c_diag, "G310|F020|29011") ~ "frontotemporal dementia (FTD)", 
+        str_detect(c_diag, "G318|F028|29019") ~ "dementia with Lewy bodies (DLB)", 
+        str_detect(c_diag, "E752|27280") ~ "Niemann-Pick disease type C1 (NPC1)",
+        str_detect(c_diag, "G10|33100") ~ "Huntington disease (HD)", 
+        str_detect(c_diag, "G231|33310") ~ "progressive supranuclear palsy (PSP)", 
+        str_detect(c_diag, "G3185|33199") ~ "corticobasal degeneration (CBD)", 
+        str_detect(c_diag, "G232|33311") ~ "multiple system atrophy (MSA)", 
+        str_detect(c_diag, "A810|06500") ~ "prion diseases (CJD)",
+        TRUE ~ NA_character_)) |>
+  select(sample, serial_no, als, als_date, match, c_diag, c_diag_name, everything()) |>
+  arrange(sample, match, serial_no, als)
+
+other_diag <- 
+  bdd_danish_icd_long |> 
+  select(sample, c_diag_name) |>
+  distinct(sample, c_diag_name, .keep_all = TRUE) |>
+  group_by(sample) |>
+  summarise(
+    c_diag_name = if (all(is.na(c_diag_name))) {
+      NA_character_
+    } else {
+      paste(unique(na.omit(c_diag_name)), collapse = ", ")
+    },
+    .groups = "drop") |>
+  filter(!sample %in% c("208", "209", "210")) |>   # we decided to remove match 72 because the controls doesn't match in term of sex and age with the case
+  mutate(sample = as.character(sample))
+
+bdd_danish <- left_join(bdd_danish, other_diag, by = "sample") |>
+  mutate(c_diag_name = ifelse(is.na(c_diag_name), "None", c_diag_name))
+rm(other_diag)
+
 
 
 ## finnish data ----
@@ -783,6 +863,7 @@ var_label(bdd_danish) <- list(
   time_diagnosis_death = "Duration between diagnosis and death (years)",
   follow_up	= "Length of follow-up from baseline to ALS diagnosis (months)", 
   follow_up_death	= "Length of follow-up from ALS diagnosis (months)", 
+  follow_up_bis = "Follow-up from baseline to diagnosis (cases) or death or end of study (controls)", 
   status_death = "Status at end of the follow-up",
   birth_year = "Birth year", 
   OCP_PeCB = "Pentachlorobenzene",            

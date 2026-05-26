@@ -12,6 +12,7 @@ covar_danish <- bdd_danish |>
     als = fct_relevel(als, "Cases", "Controls"))|>
   select(
     als, baseline_age, diagnosis_age, death_age, birth_year, 
+    follow_up,  follow_up_bis, follow_up_death,
     sex, marital_status, education, alcohol, smoking, bmi, cholesterol)|>
   tbl_summary(by = als)|>
   bold_labels()|>
@@ -559,6 +560,122 @@ figure_NEFL_2 <- bdd_danish |>                                                  
   
   plot_layout(heights = c(5, 1), ncol = 1)
 
+## Other neurological diagnosis ----
+### Table 1 (frequency)
+table_other_diag_1 <- bdd_danish |>
+  filter(match != 159) |>
+  select(als, c_diag_name) |>
+  tbl_summary(
+    by = als,
+    sort = all_categorical() ~ "frequency",
+    label = list(c_diag_name ~ "Other neurological diagnosis"),
+    digits = everything() ~ c(0, 1)) |>
+  modify_header(
+    update = list(
+      stat_1 ~ "**Controls**  \n(N = {n})",
+      stat_2 ~ "**Cases**  \n(N = {n})")) |>
+  modify_spanning_header(all_stat_cols() ~ "**ALS**") |>
+  bold_labels() |>
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")
+
+### Figure 1 (NfL distribution depending on other neurological diseases)
+n_diseases <- length(unique(bdd_danish$c_diag_name)) - 1 
+figure_other_diag <- bdd_danish |>
+  filter(match != 159) |>
+  mutate(als_label = factor(als, levels = c(0, 1), labels = c("Controls", "Cases"))) |>
+  ggplot(aes(x = als_label, y = proteomic_neuro_explo_NEFL)) +
+  geom_violin(fill = "grey95", color = "grey50", alpha = 0.5) +
+  geom_boxplot(width = 0.1, color = "grey30", outlier.shape = NA, alpha = 0.5) +
+  geom_jitter(aes(color = c_diag_name, alpha = c_diag_name), width = 0.15, size = 2) +
+  coord_cartesian(ylim = c(1, 5.1)) + 
+  scale_color_manual(values = c("None" = "grey30", 
+                                setNames(brewer.pal(min(n_diseases, 9), "Set1"), 
+                                         setdiff(unique(bdd_danish$c_diag_name), "None")))) +
+  scale_alpha_manual(
+    values = c("None" = 0.2, setNames(rep(1, n_diseases), setdiff(unique(bdd_danish$c_diag_name), "None"))), 
+    guide = "none") +
+  theme_minimal() +
+  labs(
+    x = "ALS",
+    y = "Neurofilament light polypeptide (NPX)",
+    color = "Other neurologic diagnoses")
+rm(n_diseases)
+
+### Table 2 (Dates)
+patients_cibles <- bdd_danish_icd_long |>
+  filter(als == 1 & !is.na(c_diag_name)) |>
+  pull(sample) |>
+  unique()
+
+table_other_diag_2 <- bdd_danish_icd_long |>
+  filter(sample %in% patients_cibles) |>
+  mutate(d_inddto = as.Date(d_inddto)) |>
+  filter(!is.na(c_diag_name)) |>
+  group_by(sample, c_diag_name, als_date) |>
+  summarise(
+    other_diag_date = min(d_inddto, na.rm = TRUE),
+    .groups = "drop") |>
+  mutate(
+    first_diagnostic = case_when(
+      other_diag_date < als_date  ~ "Other neurological disease first",
+      other_diag_date > als_date  ~ "ALS first",
+      other_diag_date == als_date ~ "Same day"),
+    delay_between_diag_y = round(as.numeric(als_date - other_diag_date) / 365.25, 1)) |>
+  select(
+    sample, 
+    c_diag_name, 
+    other_diag_date, 
+    als_date, 
+    first_diagnostic, 
+    delay_between_diag_y) |>
+  arrange(first_diagnostic, sample) |>
+  select("ALS diagnosis date" = als_date, 
+         "Other diagnosis date" = other_diag_date, 
+         "Other diagnosis name" = c_diag_name, 
+         "First diagnostic" = first_diagnostic, 
+         "Delay between diagnostics (years)" = delay_between_diag_y) |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  align(align = "center", part = "all") |>          # centrer/justifier les cellules
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")              # centrer/justifier sur la page
+rm(patients_cibles)
+
+### did the sample collection occur before or after the other neurological diag 
+individuals_cibles <- bdd_danish_icd_long |>
+  filter(!is.na(c_diag_name)) |>
+  pull(sample) |>
+  unique()
+
+table_other_diag_3 <- bdd_danish_icd_long |>
+  filter(sample %in% individuals_cibles) |>
+  mutate(d_inddto = as.Date(d_inddto)) |>
+  filter(!is.na(c_diag_name)) |>
+  group_by(sample, c_diag_name, baseline_date, d_inddto) |>
+  summarise(
+    other_diag_date = min(d_inddto, na.rm = TRUE),
+    .groups = "drop") |>
+  select(sample, c_diag_name, baseline_date, d_inddto) |>
+  mutate(
+    baseline_or_diag = case_when(
+      baseline_date < d_inddto  ~ "Plasma sample collection first",
+      baseline_date > d_inddto  ~ "Other neurological disease first"),
+    delay_between_baseline_diag_y = round(as.numeric(d_inddto - baseline_date) / 365.25, 1)) |> 
+  arrange(d_inddto, baseline_date) |> 
+  select(-sample) |>
+  flextable() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  align(align = "center", part = "all") |>          # centrer/justifier les cellules
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left")              # centrer/justifier sur la page
+rm(individuals_cibles)
+
 ## EVs ----
 EVs_table_danish <- descrip_num(data = bdd_danish, vars = EVs)
 
@@ -1101,6 +1218,11 @@ results_descriptive <- list(
     figure_NEFL_1 = figure_NEFL_1, 
     figure_NEFL_2 = figure_NEFL_2, 
     
+    table_other_diag_1 = table_other_diag_1, 
+    figure_other_diag = figure_other_diag, 
+    table_other_diag_2 = table_other_diag_2, 
+    table_other_diag_3 = table_other_diag_3, 
+    
     EVs_table_danish = EVs_table_danish, 
     EVs_table_danish_by_als = EVs_table_danish_by_als, 
     EVs_boxplot_danish = EVs_boxplot_danish, 
@@ -1174,6 +1296,10 @@ rm(
   proteomic_boxplot_danish_by_death, 
   figure_NEFL_1, 
   figure_NEFL_2, 
+  table_other_diag_1, 
+  figure_other_diag, 
+  table_other_diag_2, 
+  table_other_diag_3, 
   EVs_table_danish, 
   EVs_table_danish_by_als, 
   EVs_boxplot_danish, 
