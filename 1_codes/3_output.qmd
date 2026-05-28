@@ -23,13 +23,14 @@ execute:
 source("~/Documents/POP_ALS_2025_02_03/1_codes/2.7_analyses_proteomic_ALS_survival.R") |>
   suppressMessages() |> 
   suppressWarnings()
+
 results_descriptive <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_descriptive.rds")
 results_POPs_ALS_occurrence <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_POPs_ALS_occurrence.rds")
 results_POPs_ALS_survival <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_POPs_ALS_survival.rds")
 results_fattyacids_ALS_occurrence <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_fattyacids_ALS_occurrence.rds")
 results_fattyacids_ALS_survival <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_fattyacids_ALS_survival.rds")
 results_proteomic_ALS_occurrence_SL <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_occurrence_SL.rds")
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2.6_analyses_proteomic_ALS_occurrence_y_to_als.R") 
+results_proteomic_ALS_occurrence_y_to_als <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_occurrence_y_to_als.rds") 
 # results_proteomic_ALS_occurrence <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_occurrence.rds")
 # results_proteomic_ALS_survival <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_survival.rds")
 ```
@@ -1732,6 +1733,12 @@ results_proteomic_ALS_occurrence$NfL_results$AUC_NfL$AUC_figure_unadjusted_patte
   theme(legend.direction = "vertical", legend.position = "right")
 ```
 
+## Additional analyses: removing individuals with other neurological conditions 
+```{r}
+results_proteomic_ALS_occurrence$NfL_results$other_disease$table_without_other_diseases
+```
+
+
 # NfL and ALS survival
 
 ## Main analyses
@@ -2952,9 +2959,9 @@ plot(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_2_c_opt_10) +
 
 # Proteomic and years to ALS
 
-## Cox models on all data
+## Cox models among cases 
 
-Event = ALS, time to event = from baseline to ALS diagnostic (cases) or death or end of study (controls)
+Event = ALS, time to event = from baseline to ALS diagnostic (cases)
 
 ### continuous standardized
 
@@ -2981,7 +2988,9 @@ results_proteomic_ALS_occurrence_y_to_als$main_results_cox$proteomic_quart_ALS_t
 
 ### GAMs
 
-```{r fig.height=100, fig.width=9}
+```{r fig.height=20, fig.width=9}
+#| eval: false
+#| include: false
 plots_lists <- list(
   base  = results_proteomic_ALS_occurrence_y_to_als$main_results_cox$plot_base_cox_gam_danish$signif, 
   adj  = results_proteomic_ALS_occurrence_y_to_als$main_results_cox$plot_adjusted_cox_gam_danish$signif)
@@ -3013,6 +3022,7 @@ rm(plots_lists, all_proteins, plot_grid)
 #### Continuous coding (standardized)
 
 ```{r}
+#| column: screen-inset-right
 results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$proteome_wide$proteomic_sd_ALS_table_y_10_20
 ```
 
@@ -3051,7 +3061,13 @@ Importance top 20 variables (10 years horizon)
 
 ```{r}
 cat("\nTop 20 predictors - 10 years horizon :\n")
-print(head(results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$importance_10, 20))
+head(results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$importance_10, 20) |>
+    flextable() |>
+  merge_h(part = "header") |>
+  theme_vanilla() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
 ```
 
 ```{r}
@@ -3078,7 +3094,13 @@ Importance top 20 variables (20 year horizon)
 
 ```{r}
 cat("\nTop 20 predictors - 20 years horizon :\n")
-print(head(results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$importance_20, 20))
+head(results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$importance_20, 20) |>
+    flextable() |>
+  merge_h(part = "header") |>
+  theme_vanilla() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
 ```
 
 ```{r}
@@ -3086,6 +3108,19 @@ xgb.plot.importance(
   importance_matrix = results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$importance_20[1:20, ], 
   main = "Importance of the top 20 predictors (20 years horizon)")
 ```
+
+## Logistic models including time
+### Proteome wide associations 
+```{r}
+results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$proteome_wide$proteomic_interaction_table
+```
+
+### Machine learning (XGboost)
+```{r}
+summary(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost$cv_sl_fit)
+plot(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost$cv_sl_fit)
+```
+
 
 # Proteomic and ALS survival
 

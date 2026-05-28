@@ -11,13 +11,14 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 listWrappers()     # Check available algorithms
 
 data_prep <- bdd_danish |>
-  select(als, bmi, smoking_2cat_i, match, all_of(proteomic)) |>
-  mutate(smoking_2cat_i = as.numeric(smoking_2cat_i) - 1) |>
-  mutate(across(-c(als, match), ~ as.numeric(scale(.x))))
+  select(als, birth_year, sex, bmi, smoking_2cat_i, match, all_of(proteomic)) |>
+  mutate(smoking_2cat_i = as.numeric(smoking_2cat_i), 
+         sex = as.numeric(sex))
 
 Y_sl <- data_prep$als
-X_sl <- data_prep |> select(-als, -match) 
 match_ids <- data_prep$match
+X_sl <- data_prep |> select(-als, -match) 
+
 
 screen.top20 <- function(..., ntokeep = 20) {      
   screen.ttest(..., pvp = 1, minstep = ntokeep)
@@ -507,59 +508,56 @@ rm(data_prep, X_sl, Y_sl, match_ids,
 listWrappers()     # Check available algorithms
 
 data_prep <- bdd_danish |>
-  select(als, bmi, smoking_2cat_i, follow_up, match, all_of(proteomic)) |>
-  mutate(smoking_2cat_i = as.numeric(smoking_2cat_i) - 1) |>
-  group_by(match) |>
-  mutate(follow_up = max(follow_up, na.rm = TRUE)) |>
-  ungroup() |>
-  mutate(across(-c(als, match), ~ as.numeric(scale(.x))))
+  select(als, follow_up_no_na_y, birth_year, sex, bmi, smoking_2cat_i, match, all_of(proteomic)) |>
+  mutate(smoking_2cat_i = as.numeric(smoking_2cat_i), 
+         sex = as.numeric(sex))
 
 Y_sl <- data_prep$als
-X_sl <- data_prep |> select(-als, -match) 
 match_ids <- data_prep$match
+X_sl <- data_prep |> select(-als, -match) 
 
 
 ## Test 2 a : method AUC, many algorithms, no screening, default hyperparameters ----
-# 
-# list_lib_2_a <- c(
-#   # 1. Linear & Penalized Models
-#   "SL.leekasso",     # Performs internal screening; expected to be robust
-#   "SL.glmnet",      # Uses L1/L2 regularization to handle high-dimensional data
-#   "SL.bayesglm",    # Bayesian approach; may struggle or fail if p > n
-#   "SL.stepAIC",     # Likelihood-based selection; likely to fail without screening (p > n)
-#   
-#   # 2. Tree-Based Models
-#   "SL.ranger",      # Random Forest; handles many predictors via random feature subsets
-#   "SL.xgboost",     # Gradient Boosting; capable of handling high dimensionality
-#   
-#   # 3. Non-Linear Models
-#   "SL.ksvm",        # Support Vector Machines; high risk of overfitting without screening
-#   "SL.gam",         # Spline-based; expected to fail or become unstable with 276 predictors
-#   
-#   # 4. Adaptive Splines & Thresholds
-#   "SL.polymars",     # Logic-based splines; may crash if dimensionality is too high
-#   "SL.earth",       # MARS algorithm; built-in selection but prone to noise when p is large
-#   
-#   # 5. Baseline
-#   "SL.mean")         # Baseline model; predicts the prevalence (AUC should be 0.50)
-# 
-# 
-# set.seed(1996)
-# sl_fit_CV_2_a <- CV.SuperLearner(
-#   Y = Y_sl,                                                                     # outcome
-#   X = X_sl,                                                                     # predictors (proteins + covariates)
-#   family = binomial(),                                                          # binary outcome (0/1)
-#   SL.library = list_lib_2_a,                                                    # list of algorithms to try
-#   id = match_ids,                                                               # matching
-#   method = "method.AUC",                                                        # performance method (AUC), default would be Non-Negative Least Squares
-#   cvControl = list(V = 10),                                                     # external CV: 10 folds to evaluate the overall performance (generalizability)
-#   innerCvControl = list(list(V = 10)),                                          # internal CV: 10 folds to estimate the optimal weights for each algorithm
-#   control = list(
-#     saveFitLibrary = TRUE,                                                      # keeps individual model fits in memory (required for variable importance later)
-#     trimLogit = 0.001))                                                         # Prevents numerical instability for probabilities near 0 or 1
-# 
-# summary(sl_fit_CV_2_a)
-# plot(sl_fit_CV_2_a) + theme_minimal() 
+
+list_lib_2_a <- c(
+  # 1. Linear & Penalized Models
+  "SL.leekasso",     # Performs internal screening; expected to be robust
+  "SL.glmnet",      # Uses L1/L2 regularization to handle high-dimensional data
+  "SL.bayesglm",    # Bayesian approach; may struggle or fail if p > n
+  "SL.stepAIC",     # Likelihood-based selection; likely to fail without screening (p > n)
+
+  # 2. Tree-Based Models
+  "SL.ranger",      # Random Forest; handles many predictors via random feature subsets
+  "SL.xgboost",     # Gradient Boosting; capable of handling high dimensionality
+
+  # 3. Non-Linear Models
+  "SL.ksvm",        # Support Vector Machines; high risk of overfitting without screening
+  "SL.gam",         # Spline-based; expected to fail or become unstable with 276 predictors
+
+  # 4. Adaptive Splines & Thresholds
+  "SL.polymars",     # Logic-based splines; may crash if dimensionality is too high
+  "SL.earth",       # MARS algorithm; built-in selection but prone to noise when p is large
+
+  # 5. Baseline
+  "SL.mean")         # Baseline model; predicts the prevalence (AUC should be 0.50)
+
+
+set.seed(1996)
+sl_fit_CV_2_a <- CV.SuperLearner(
+  Y = Y_sl,                                                                     # outcome
+  X = X_sl,                                                                     # predictors (proteins + covariates)
+  family = binomial(),                                                          # binary outcome (0/1)
+  SL.library = list_lib_2_a,                                                    # list of algorithms to try
+  id = match_ids,                                                               # matching
+  method = "method.AUC",                                                        # performance method (AUC), default would be Non-Negative Least Squares
+  cvControl = list(V = 10),                                                     # external CV: 10 folds to evaluate the overall performance (generalizability)
+  innerCvControl = list(list(V = 10)),                                          # internal CV: 10 folds to estimate the optimal weights for each algorithm
+  control = list(
+    saveFitLibrary = TRUE,                                                      # keeps individual model fits in memory (required for variable importance later)
+    trimLogit = 0.001))                                                         # Prevents numerical instability for probabilities near 0 or 1
+
+summary(sl_fit_CV_2_a)
+plot(sl_fit_CV_2_a) + theme_minimal()
 
 
 ## Test des hyper parameters specifique pour chaque algorythm----
@@ -1027,7 +1025,7 @@ results_proteomic_ALS_occurrence_SL <-
       sl_fit_CV_1_c_opt_20 = sl_fit_CV_1_c_opt_20, 
       sl_fit_CV_1_c_opt_10 = sl_fit_CV_1_c_opt_10), 
     test_2 = list(
-      #sl_fit_CV_2_a = sl_fit_CV_2_a, 
+      sl_fit_CV_2_a = sl_fit_CV_2_a, 
       sl_fit_CV_ranger_2 = sl_fit_CV_ranger_2, 
       sl_fit_CV_xgboost_2 = sl_fit_CV_xgboost_2, 
       sl_fit_CV_glmnet_2 = sl_fit_CV_glmnet_2, 
@@ -1052,7 +1050,7 @@ rm(sl_fit_CV_1_a,
     sl_fit_CV_1_b_opt_10, 
     sl_fit_CV_1_c_opt_20, 
     sl_fit_CV_1_c_opt_10,
-    #sl_fit_CV_2_a, 
+    sl_fit_CV_2_a, 
     sl_fit_CV_ranger_2, 
     sl_fit_CV_xgboost_2, 
     sl_fit_CV_glmnet_2, 

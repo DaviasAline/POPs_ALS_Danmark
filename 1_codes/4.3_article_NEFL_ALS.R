@@ -89,6 +89,9 @@ table_S2 <-
 table_S3 <- 
   results_descriptive$danish$table_other_diag_1
 
+# Table S4 ----
+table_S4 <- results_proteomic_ALS_occurrence$NfL_results$other_disease$table_without_other_diseases
+
 # Figure S1 ----
 figure_S1 <- 
   results_descriptive$danish$figure_other_diag
@@ -105,8 +108,11 @@ print(table_S1, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_
 table_S2 <- read_docx() |> body_add_flextable(table_S2)                         # Conditional logistic regressions (als risk)
 print(table_S2, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_ALS/table_S2.docx")
 
-table_S3 <- read_docx() |> body_add_flextable(table_S3)                         # Conditional logistic regressions (als risk)
+table_S3 <- read_docx() |> body_add_flextable(table_S3)                         # Other neurological diseases investigation 
 print(table_S3, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_ALS/table_S3.docx")
+
+table_S4 <- read_docx() |> body_add_flextable(table_S4)                         # Other neurological diseases investigation 
+print(table_S4, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_ALS/table_S4.docx")
 
 
 ## figures ----

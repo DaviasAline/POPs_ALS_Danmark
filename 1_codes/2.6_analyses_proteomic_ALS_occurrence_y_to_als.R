@@ -2,7 +2,7 @@
 # Aline Davias 
 # 20/05/2026
 source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
-library(xgboost)
+
 
 # 1. Cox analyses among cases ----
 ## 1.1 Proteome wide associations ----
@@ -104,8 +104,8 @@ bdd_danish_cases <- bdd_danish |> filter(als == 1)
 
 surv_obj <- Surv(time = bdd_danish_cases$follow_up, event = bdd_danish_cases$als)
 
-## Cox model (sd) ----
-### Base ----
+### Cox model (sd) ----
+#### Base ----
 model1_cox_sd <- map_dfr(proteomic_sd, function(expl) {
   
   formula_danish <- as.formula(paste("surv_obj ~", expl, "+ sex + baseline_age"))  # set the formulas                
@@ -123,7 +123,7 @@ model1_cox_sd <- map_dfr(proteomic_sd, function(expl) {
     filter(str_starts(term, explanatory))                                       # remove the covariates results 
 })
 
-### Adjusted ----
+#### Adjusted ----
 model2_cox_sd <- map_dfr(proteomic_sd, function(expl) {
   
   formula_danish <- as.formula(paste("surv_obj ~", expl, "+ sex + baseline_age + smoking_2cat_i + bmi"))  # set the formulas     
@@ -141,8 +141,8 @@ model2_cox_sd <- map_dfr(proteomic_sd, function(expl) {
     filter(str_starts(term, explanatory))                                       # remove the covariates results 
 })
 
-## Cox model (quart) ----
-### Base ----
+### Cox model (quart) ----
+#### Base ----
 model1_cox_quart <- map_dfr(proteomic_quart, function(expl) {
   
   formula_danish <- as.formula(paste("surv_obj ~", expl, "+ sex + baseline_age"))  # set the formulas   
@@ -161,7 +161,7 @@ model1_cox_quart <- map_dfr(proteomic_quart, function(expl) {
     filter(str_starts(term, explanatory))                                       # remove the covariates results
 })
 
-### Adjusted ----
+#### Adjusted ----
 model2_cox_quart <- map_dfr(proteomic_quart, function(expl) {
   
   formula_danish <- as.formula(paste("surv_obj ~", expl, "+ sex + baseline_age + smoking_2cat_i + bmi"))  # set the formulas    
@@ -179,8 +179,8 @@ model2_cox_quart <- map_dfr(proteomic_quart, function(expl) {
     filter(str_starts(term, explanatory))                                       # remove the covariates results
 })
 
-### Heterogeneity tests ----
-#### base 
+#### Heterogeneity tests ----
+##### base 
 
 heterogeneity_base <- map_dfr(
   proteomic_quart,
@@ -204,7 +204,7 @@ heterogeneity_base <- map_dfr(
       p_value_heterogeneity = p_lr)
   })
 
-#### adjusted 
+##### adjusted 
 heterogeneity_adjusted <- map_dfr(
   proteomic_quart,
   function(var) {
@@ -233,8 +233,8 @@ heterogeneity_tests <-
             heterogeneity_adjusted) |>
   mutate(explanatory = gsub("_quart", "", explanatory))
 
-### Trend tests ----
-#### base 
+#### Trend tests ----
+##### base 
 trend_base <- data.frame(explanatory = character(),
                          model = factor(), 
                          p_value_trend = numeric(), 
@@ -254,7 +254,7 @@ for (expl in proteomic_quart_med) {
 }
 rm(expl, model, formula, p_value_trend)
 
-#### adjusted 
+##### adjusted 
 trend_adjusted <- data.frame(explanatory = character(),
                              model = factor(), 
                              p_value_trend = numeric(), 
@@ -282,7 +282,7 @@ rm(heterogeneity_base, heterogeneity_adjusted,
    trend_base, trend_adjusted)
 
 
-## Cox model (GAMs) ----
+### Cox model (GAMs) ----
 vars_labels <- 
   set_names(str_replace(proteomic, 
                         "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
@@ -290,14 +290,14 @@ vars_labels <-
             proteomic)
 
 
-### Base ----
+#### Base ----
 cox_gam_results_base <- 
   fit_and_plot_cox_gam(data = bdd_danish_cases, 
                        vars_labels = vars_labels, 
                        covariates = c("sex", "baseline_age"), 
                        title = "Base model")
 
-### Adjusted ----
+#### Adjusted ----
 cox_gam_results_adjusted <- 
   fit_and_plot_cox_gam(data = bdd_danish_cases, 
                        vars_labels = vars_labels, 
@@ -306,7 +306,7 @@ cox_gam_results_adjusted <-
 rm(vars_labels, surv_obj)
 
 
-## Assemblage ----
+### Assemblage ----
 main_results <-        
   bind_rows(
     model1_cox_sd, model2_cox_sd,
@@ -359,12 +359,13 @@ rm(model1_cox_sd, model2_cox_sd,
    model1_cox_quart, model2_cox_quart, 
    heterogeneity_tests, trend_tests, 
    cox_gam_results_base, cox_gam_results_adjusted, 
-   main_results)
+   main_results, 
+   bdd_danish_cases, surv_obj)
 
 
-## Tables and figures ----
+### Tables and figures ----
 
-### Table proteomic (sd) - als survival (main) ----
+#### Table proteomic (sd) - als survival (main) ----
 results_proteomic_ALS_occurrence_y_to_als$main_results_cox$proteomic_sd_ALS_table_cox <- 
   results_proteomic_ALS_occurrence_y_to_als$main_results_cox$main_results |>
   filter(model %in% c("base", "adjusted") & term == "Continuous" & analysis == "main") |>            # select continuous results
@@ -403,7 +404,7 @@ results_proteomic_ALS_occurrence_y_to_als$main_results_cox$proteomic_sd_ALS_tabl
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 
-### Table proteomic (quart) - als survival (main) ----
+#### Table proteomic (quart) - als survival (main) ----
 extra_rows <- 
   results_proteomic_ALS_occurrence_y_to_als$main_results_cox$main_results |>
   filter(model %in% c("base", "adjusted") & term != "Continuous" & analysis == "main") |>            # select quartile results
@@ -471,7 +472,7 @@ results_proteomic_ALS_occurrence_y_to_als$main_results_cox$proteomic_quart_ALS_t
 rm(extra_rows)
 
 
-### Figure proteomic - als survival - base sd (main) ----
+#### Figure proteomic - als survival - base sd (main) ----
 results_proteomic_ALS_occurrence_y_to_als$main_results_cox$proteomic_sd_ALS_base_figure_cox <- 
   results_proteomic_ALS_occurrence_y_to_als$main_results_cox$main_results |>
   filter(model == "base" & term == "Continuous" & analysis == "main") |>
@@ -506,7 +507,7 @@ results_proteomic_ALS_occurrence_y_to_als$main_results_cox$proteomic_sd_ALS_base
     y = "-log10(p-value)", 
     color = "")
 
-### Figure proteomic - als survival - adjusted sd (main) ----
+#### Figure proteomic - als survival - adjusted sd (main) ----
 results_proteomic_ALS_occurrence_y_to_als$main_results_cox$proteomic_sd_ALS_adjusted_figure_cox <- 
   results_proteomic_ALS_occurrence_y_to_als$main_results_cox$main_results |>
   filter(model == "adjusted" & term == "Continuous" & analysis == "main") |>
@@ -541,30 +542,21 @@ results_proteomic_ALS_occurrence_y_to_als$main_results_cox$proteomic_sd_ALS_adju
 
 
 
-### Figure proteomic - als survival - base gam (main) ----
+#### Figure proteomic - als survival - base gam (main) ----
 results_proteomic_ALS_occurrence_y_to_als$main_results_cox$plot_base_cox_gam_danish <- list(
   signif = map(keep(results_proteomic_ALS_occurrence_y_to_als$main_results_cox$cox_gam_results_base, ~ .x$pval_raw <= 0.05), "plot"),
   not_signif = map(keep(results_proteomic_ALS_occurrence_y_to_als$main_results_cox$cox_gam_results_base, ~ .x$pval_raw > 0.05), "plot"))
 
 
-### Figure proteomic - als survival - adjusted gam (main) ----
+#### Figure proteomic - als survival - adjusted gam (main) ----
 results_proteomic_ALS_occurrence_y_to_als$main_results_cox$plot_adjusted_cox_gam_danish <- list(
   signif = map(keep(results_proteomic_ALS_occurrence_y_to_als$main_results_cox$cox_gam_results_adjusted, ~ .x$pval_raw <= 0.05), "plot"),
   not_signif = map(keep(results_proteomic_ALS_occurrence_y_to_als$main_results_cox$cox_gam_results_adjusted, ~ .x$pval_raw > 0.05), "plot"))
 
-## 1.2 XGBoost -----
+### 1.2 XGBoost -----
 
 # 2. Analyse logistique à horizon fixe ----
-bdd_danish <- bdd_danish |> 
-  group_by(match) |>
-  mutate(follow_up_no_na = follow_up) |>          # attention follow_up est en mois 
-  fill(follow_up_no_na, .direction = "downup") |> 
-  ungroup() |>
-  mutate(
-    y_10ans = ifelse(als == 1 & follow_up_no_na <= 120, 1, 0),      # attention follow_up_no_na est en mois 
-    y_20ans = ifelse(als == 1 & follow_up_no_na <= 240, 1, 0))       # attention follow_up_no_na est en mois 
-
-bdd_danish |> select(als, follow_up, follow_up_bis, follow_up_no_na, y_10ans, y_20ans) |> 
+bdd_danish |> select(als, follow_up, follow_up_bis, follow_up_death,  y_10ans, y_20ans) |> 
   tbl_summary(by = als)
 
 ## 2.1 Proteome wide associations (logistic regressions) ----
@@ -580,9 +572,9 @@ model1_sd_y_10ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_sd) {
   
-  formula <- as.formula(paste("y_10ans ~", var, "+ birth_year + sex"))
+  formula <- as.formula(paste("y_10ans ~", var, "+ strata(match)"))
   
-  model <- glm(formula, family = binomial, data = bdd_danish)
+  model <- clogit(formula, data = bdd_danish)
   
   model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
   
@@ -622,9 +614,9 @@ model1_quart_y_10ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_quart) {
   
-  formula <- as.formula(paste("y_10ans ~", var, "+ birth_year + sex"))
+  formula <- as.formula(paste("y_10ans ~", var, "+ strata(match)"))
   
-  model <- glm(formula, family = binomial, data = bdd_danish)
+  model <- clogit(formula, data = bdd_danish)
   
   model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
   
@@ -663,10 +655,10 @@ heterogeneity_base_y_10ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_quart) {
   
-  test_1 <- glm(y_10ans ~ birth_year + sex, family = binomial, data = bdd_danish)
+  test_1 <- clogit(y_10ans ~ strata(match), data = bdd_danish)
   
-  formula <- as.formula(paste("y_10ans ~", var, "+ birth_year + sex"))
-  test_2 <- glm(formula, family = binomial, data = bdd_danish)
+  formula <- as.formula(paste("y_10ans ~", var, "+ strata(match)"))
+  test_2 <- clogit(formula, data = bdd_danish)
   
   anova <- broom::tidy(anova(test_1, test_2, test = "LR"))
   p_value_heterogeneity <- anova$p.value[2]
@@ -688,9 +680,9 @@ trend_base_y_10ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_quart_med) {
   
-  formula <- as.formula(paste("y_10ans ~", var, "+ birth_year + sex"))
+  formula <- as.formula(paste("y_10ans ~", var, "+ strata(match)"))
   test <- 
-    glm(formula, family = binomial, data = bdd_danish) |>
+    clogit(formula, data = bdd_danish) |>
     summary() 
   p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
   
@@ -713,8 +705,8 @@ model2_sd_y_10ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_sd) {
   
-  formula <- as.formula(paste("y_10ans ~", var, "+ sex + birth_year + smoking_2cat_i + bmi"))
-  model <- glm(formula, family = binomial, data = bdd_danish)
+  formula <- as.formula(paste("y_10ans ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  model <- clogit(formula, data = bdd_danish)
   model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
   OR <- exp(model_summary$estimate)
   lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
@@ -750,8 +742,8 @@ model2_quart_y_10ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_quart) {
   
-  formula <- as.formula(paste("y_10ans ~", var, "+ sex + birth_year + smoking_2cat_i + bmi"))
-  model <- glm(formula, family = binomial, data = bdd_danish)
+  formula <- as.formula(paste("y_10ans ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  model <- clogit(formula, data = bdd_danish)
   model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
   OR <- exp(model_summary$estimate)
   lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
@@ -779,7 +771,6 @@ model2_quart_y_10ans <- model2_quart_y_10ans |>
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 ### heterogeneity tests
-
 heterogeneity_adjusted_y_10ans <- data.frame(explanatory = character(),
                                      model = factor(), 
                                      p_value_heterogeneity = numeric(), 
@@ -787,10 +778,10 @@ heterogeneity_adjusted_y_10ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_quart) {
   
-  test_1 <- glm(y_10ans ~ sex + birth_year + smoking_2cat_i + bmi, family = binomial, data = bdd_danish)
+  test_1 <- clogit(y_10ans ~ strata(match) + smoking_2cat_i + bmi, data = bdd_danish)
   
-  formula <- as.formula(paste("y_10ans ~", var, "+ sex + birth_year + smoking_2cat_i + bmi"))
-  test_2 <- glm(formula, family = binomial, data = bdd_danish)
+  formula <- as.formula(paste("y_10ans ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  test_2 <- clogit(formula, data = bdd_danish)
   
   anova <- broom::tidy(anova(test_1, test_2, test = "LR"))
   p_value_heterogeneity <- anova$p.value[2]
@@ -814,8 +805,8 @@ trend_adjusted_y_10ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_quart_med) {
   
-  formula <- as.formula(paste("y_10ans ~", var, "+ sex + birth_year + smoking_2cat_i + bmi"))
-  test <- glm(formula, family = binomial, data = bdd_danish) |> summary()
+  formula <- as.formula(paste("y_10ans ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  test <- clogit(formula, data = bdd_danish) |> summary()
   p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
   
   trend_adjusted_y_10ans <- rbind(trend_adjusted_y_10ans, 
@@ -839,9 +830,9 @@ model1_sd_y_20ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_sd) {
   
-  formula <- as.formula(paste("y_20ans ~", var, "+ birth_year + sex"))
+  formula <- as.formula(paste("y_20ans ~", var, "+ strata(match)"))
   
-  model <- glm(formula, family = binomial, data = bdd_danish)
+  model <- clogit(formula, data = bdd_danish)
   
   model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
   
@@ -881,9 +872,9 @@ model1_quart_y_20ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_quart) {
   
-  formula <- as.formula(paste("y_20ans ~", var, "+ birth_year + sex"))
+  formula <- as.formula(paste("y_20ans ~", var, "+ strata(match)"))
   
-  model <- glm(formula, family = binomial, data = bdd_danish)
+  model <- clogit(formula, data = bdd_danish)
   
   model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
   
@@ -922,10 +913,10 @@ heterogeneity_base_y_20ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_quart) {
   
-  test_1 <- glm(y_20ans ~ birth_year + sex, family = binomial, data = bdd_danish)
+  test_1 <- clogit(y_20ans ~ strata(match), data = bdd_danish)
   
-  formula <- as.formula(paste("y_20ans ~", var, "+ birth_year + sex"))
-  test_2 <- glm(formula, family = binomial, data = bdd_danish)
+  formula <- as.formula(paste("y_20ans ~", var, "+ strata(match)"))
+  test_2 <- clogit(formula, data = bdd_danish)
   
   anova <- broom::tidy(anova(test_1, test_2, test = "LR"))
   p_value_heterogeneity <- anova$p.value[2]
@@ -947,9 +938,9 @@ trend_base_y_20ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_quart_med) {
   
-  formula <- as.formula(paste("y_20ans ~", var, "+ birth_year + sex"))
+  formula <- as.formula(paste("y_20ans ~", var, "+ strata(match)"))
   test <- 
-    glm(formula, family = binomial, data = bdd_danish) |>
+    clogit(formula, data = bdd_danish) |>
     summary() 
   p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
   
@@ -972,8 +963,8 @@ model2_sd_y_20ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_sd) {
   
-  formula <- as.formula(paste("y_20ans ~", var, "+ sex + birth_year + smoking_2cat_i + bmi"))
-  model <- glm(formula, family = binomial, data = bdd_danish)
+  formula <- as.formula(paste("y_20ans ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  model <- clogit(formula, data = bdd_danish)
   model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
   OR <- exp(model_summary$estimate)
   lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
@@ -1009,8 +1000,8 @@ model2_quart_y_20ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_quart) {
   
-  formula <- as.formula(paste("y_20ans ~", var, "+ sex + birth_year + smoking_2cat_i + bmi"))
-  model <- glm(formula, family = binomial, data = bdd_danish)
+  formula <- as.formula(paste("y_20ans ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  model <- clogit(formula, data = bdd_danish)
   model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
   OR <- exp(model_summary$estimate)
   lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
@@ -1046,10 +1037,10 @@ heterogeneity_adjusted_y_20ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_quart) {
   
-  test_1 <- glm(y_20ans ~ sex + birth_year + smoking_2cat_i + bmi, family = binomial, data = bdd_danish)
+  test_1 <- clogit(y_20ans ~ strata(match) + smoking_2cat_i + bmi, data = bdd_danish)
   
-  formula <- as.formula(paste("y_20ans ~", var, "+ sex + birth_year + smoking_2cat_i + bmi"))
-  test_2 <- glm(formula, family = binomial, data = bdd_danish)
+  formula <- as.formula(paste("y_20ans ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  test_2 <- clogit(formula, data = bdd_danish)
   
   anova <- broom::tidy(anova(test_1, test_2, test = "LR"))
   p_value_heterogeneity <- anova$p.value[2]
@@ -1073,8 +1064,8 @@ trend_adjusted_y_20ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_quart_med) {
   
-  formula <- as.formula(paste("y_20ans ~", var, "+ sex + birth_year + smoking_2cat_i + bmi"))
-  test <- glm(formula, family = binomial, data = bdd_danish) |> summary()
+  formula <- as.formula(paste("y_20ans ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  test <- clogit(formula, data = bdd_danish) |> summary()
   p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
   
   trend_adjusted_y_20ans <- rbind(trend_adjusted_y_20ans, 
@@ -1618,10 +1609,201 @@ rm(cv_10ans, final_xgb_10, importance_10, best_nrounds_10,
   cv_20ans, final_xgb_20,  importance_20,  best_nrounds_20)
 
 
-# 3. Stratified logistic models?----
-# 4. Logistic models including time as a predictor?----
+
+
+# 3. Logistic models including time as a predictor----
+## Proteome wide associations ----
+### Logistic models (sd) ----
+main_results_interaction_sd    <- data.frame()
+
+for (var in proteomic_sd) {
+  form1 <- as.formula(glue::glue("als ~ {var} * follow_up_no_na_y + strata(match)"))
+  form2 <- as.formula(glue::glue("als ~ {var} * follow_up_no_na_y + strata(match) + smoking_2cat_i + bmi"))
+  
+  m1   <- clogit(form1, data = bdd_danish)
+  sum1 <- tidy(m1) |> filter(grepl(paste0("^", var), term)) |> mutate(model = "base")
+  
+  m2   <- clogit(form2, data = bdd_danish)
+  sum2 <- tidy(m2) |> filter(grepl(paste0("^", var), term)) |> mutate(model = "adjusted")
+  
+  combined <- bind_rows(sum1, sum2) |> 
+    mutate(
+      explanatory = var,
+      analysis    = "interaction",
+      OR          = exp(estimate),
+      lower_CI    = exp(estimate - 1.96 * std.error),
+      upper_CI    = exp(estimate + 1.96 * std.error),
+      p_value     = p.value)
+  main_results_interaction_sd <- bind_rows(main_results_interaction_sd, combined)
+}
+
+
+main_results_interaction_sd <- main_results_interaction_sd |> 
+  mutate(
+    term = case_when(
+      !grepl(":", term) ~ "Protein",
+      grepl(":", term)  ~ "Protein x Follow-up",
+      TRUE ~ NA_character_), 
+    term = fct_relevel(term, "Protein x Follow-up", "Protein"), 
+    explanatory = gsub("_sd", "", explanatory), 
+    OR_raw = OR, 
+    OR = as.numeric(sprintf("%.2f", OR)), 
+    lower_CI = as.numeric(sprintf("%.2f", lower_CI)),
+    upper_CI = as.numeric(sprintf("%.2f", upper_CI)),
+    p_value_raw = p_value, 
+    p_value = ifelse(p_value < 0.01, "<0.01", number(p_value, accuracy = 0.01, decimal.mark = ".")), 
+    "95% CI" = paste(lower_CI, ", ", upper_CI, sep = ''), 
+    protein_group = case_when(str_detect(explanatory, 'proteomic_immun_res') ~ "Immune response", 
+                              str_detect(explanatory, 'proteomic_metabolism') ~ "Metabolism", 
+                              str_detect(explanatory, 'proteomic_neuro_explo') ~ "Neuro-exploratory"), 
+    explanatory = str_replace(explanatory, 'proteomic_immun_res_|proteomic_metabolism_|proteomic_neuro_explo_', "")) |>
+  select(protein_group, explanatory, analysis, term, model, OR,   "95% CI", p_value, OR_raw, lower_CI, upper_CI, p_value_raw)
+
+
+### Table ----
+proteomic_interaction_table <- main_results_interaction_sd |>
+  group_by(explanatory) |>
+  filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>
+  ungroup() |>
+  select(protein_group, explanatory, term, model, OR, "95% CI", p_value) |>
+  pivot_wider(names_from = "model", values_from = c("OR", "95% CI", "p_value")) |>
+  select(protein_group, explanatory, term, contains("base"), contains("adjusted")) |>
+  rename("OR" = "OR_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base", 
+         "OR " = "OR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p_value_adjusted") |>
+  arrange(protein_group, explanatory, desc(term)) |> 
+  flextable() |>
+  add_footer_lines(
+    "1Protein represents the baseline risk of ALS (at blood collection) per one standard deviation increase in pre-diagnostic plasma concentration. Protein x Follow-up represents the multiplicative interaction coefficient showing the change in the OR per additional year of pre-diagnostic follow-up.
+     2All models are matched for sex and birth year. Adjusted models further account for smoking and body mass index. 
+    3CI: Confidence interval.") |>
+  add_header("explanatory" = "Pre-disease plasma proteins", "protein_group" = "Protein group", "term" = "Term", 
+             "OR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", 
+             "OR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model") |>
+  theme_vanilla() |> merge_h(part = "header") |> align(align = "center", part = "all") |>
+  merge_v(j = "explanatory") |> 
+  bold(j = "explanatory", part = "body") |> 
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |> 
+  merge_v(j = "protein_group") |> 
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  merge_v(j = "term") |> 
+  bold(j = "term", part = "body") |>
+  align(j = "term", align = "left", part = "all") |> 
+  merge_at(j = "term", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> fontsize(size = 10, part = "all") |> padding(padding.top = 0, padding.bottom = 0, part = "all")
+
+results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$proteome_wide <- 
+  list(main_results_interaction_sd = main_results_interaction_sd, 
+       proteomic_interaction_table = proteomic_interaction_table)
+
+rm(m1, m2, sum1, sum2, combined, form1, form2, var, main_results_interaction_sd, proteomic_interaction_table)
+
+## Machine learning (XGboost) ----
+### preparation des données
+covar_xgboost <- c(proteomic, "birth_year", "sex", "follow_up_no_na_y", "smoking_2cat_i", "bmi")    # pas besoin de standardisation avec xgboost
+X_data <- bdd_danish |> 
+  select(all_of(covar_xgboost), match, als) |>
+  mutate(sex = as.numeric(sex), 
+         smoking_2cat_i = as.numeric(smoking_2cat_i)) 
+id_match <- X_data$match
+Y_data <- X_data$als
+X_data <- X_data |> select(-match, - als)
+
+### preparation des combinaisons d'hyperparameters
+tune_grid <- expand.grid(
+  max_depth = c(3, 4, 6),
+  shrinkage = c(0.01, 0.05, 0.1), # = eta 
+  ntrees = c(500, 1000),   # choose later, 
+  colsample_bytree = c(0.6, 0.8))
+
+tuning_library <- c()
+
+for (i in 1:nrow(tune_grid)) {
+  name <- paste0("SL.xgb.d", tune_grid$max_depth[i], 
+                 ".s", tune_grid$shrinkage[i], 
+                 ".t", tune_grid$ntrees[i], 
+                 ".c", tune_grid$colsample_bytree[i])
+  
+  eval(parse(text = paste0(
+    name, " <- function(...) { ",
+    "SL.xgboost(..., ",
+    "max_depth = ", tune_grid$max_depth[i], ", ",
+    "shrink = ", tune_grid$shrinkage[i], ", ",
+    "ntrees = ", tune_grid$ntrees[i], ", ",
+    "colsample_bytree = ", tune_grid$colsample_bytree[i], ") }"
+  )))
+  
+  tuning_library <- c(tuning_library, name)
+}
+
+### Model 
+set.seed(1996)
+cv_sl_fit <- CV.SuperLearner(
+  Y = Y_data,                                       # Outcome
+  X = X_data,                                       # Predictors (proteins + covariates)
+  family = binomial(),                              # Binary outcome (0/1)
+  SL.library = tuning_library,                      # Full list of 36 XGBoost combinations
+  id = id_match,                                    # Matching structure (propagated to inner/outer)
+  method = "method.AUC",                            # Optimisation basée sur l'AUC
+  cvControl = list(V = 10),                         # External CV: 10 folds pour l'évaluation globale
+  innerCvControl = list(list(V = 10)),              # Internal CV: 10 folds pour estimer les poids optimaux
+  control = list(
+    saveFitLibrary = TRUE,                          # Conserve les modèles pour l'importance des variables
+    trimLogit = 0.001))
+
+# Visualisation
+summary(cv_sl_fit)
+plot(cv_sl_fit)
+
+results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost <- 
+  list(cv_sl_fit = cv_sl_fit)
+
+# 1. Définition de l'algorithme
+SL.xgb.champion <- function(...) {
+  SL.xgboost(..., 
+             max_depth = 3, 
+             shrink = 0.01, 
+             ntrees = 500, 
+             colsample_bytree = 0.6)
+}
+
+# 2. Entraînement du modèle unique sur 100% des données
+set.seed(1996)
+final_model_fit <- SuperLearner(
+  Y = Y_data,
+  X = X_data,
+  family = binomial(),
+  SL.library = "SL.xgb.champion",
+  id = id_match
+)
+
+# 3. Extraction de l'objet XGBoost natif
+native_xgb <- final_model_fit$fitLibrary$SL.xgb.champion_All$object
+
+# 4. Calcul et affichage de la matrice d'importance
+importance_matrix <- xgb.importance(model = native_xgb)
+
+# Afficher le Top 20 des variables (Protéines + Covariables)
+cat("--- TOP 20 DES PRÉDICTEURS LES PLUS IMPORTANTS ---\n")
+print(head(importance_matrix, 20))
+
+# 5. Graphique simple 
+xgb.plot.importance(importance_matrix[1:276, ])
+
+
+rm(covar_xgboost, X_data, id_match, Y_data, X_data, cv_sl_fit)
+
+# 4. Stratified logistic models?----
 # 5. Analyse Cox tronqué (Landmark)?----
-
 # 6. Cox + AUC dépendante du temps?----
-
 # 7. Modèle AFT (survreg)? ----
+
+
+results_proteomic_ALS_occurrence_y_to_als$main_results_cox$plot_base_cox_gam_danish <- NULL # trop gros 
+results_proteomic_ALS_occurrence_y_to_als$main_results_cox$plot_adjusted_cox_gam_danish <- NULL # trop gros 
+saveRDS(results_proteomic_ALS_occurrence_y_to_als, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_occurrence_y_to_als.rds")
+
+#results_proteomic_ALS_occurrence_y_to_als <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_occurrence_y_to_als.rds") 
+

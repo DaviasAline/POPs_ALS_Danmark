@@ -57,6 +57,7 @@ library(pROC)
 library(randomForest)
 library(SuperLearner)
 library(sva)
+library(xgboost)
 
 
 ## Tableau descriptif variables numériques

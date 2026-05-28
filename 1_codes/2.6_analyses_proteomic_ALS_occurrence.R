@@ -8427,7 +8427,166 @@ rm(roc_NfL_all, youden_NfL_all, youden_best_NfL_all,
    label_main_analysis, label_sensi_2, label_sensi_1_3_4, label_sensi_1_3_5)
 
 
+### Removing cases and controls with other neurological diseases ----
+bdd_danish_sensi_1 <- 
+  bdd_danish  |> 
+  filter(!match == 159) |>
+  mutate(
+    proteomic_neuro_explo_NEFL_sd = scale(proteomic_neuro_explo_NEFL)) 
 
+bdd_danish_sensi_2 <- 
+  bdd_danish |>
+  group_by(match) |>                                                             
+  filter(any(als == 1 & follow_up < 60)) |>                                     # sensi 2 : we remove cases (and their controls) with follow-up > 60 months 
+  ungroup()|>
+  mutate(proteomic_neuro_explo_NEFL_sd = scale(proteomic_neuro_explo_NEFL)) 
+
+bdd_danish_sensi_1_3_4 <- 
+  bdd_danish |>
+  filter(!match == 159) |>
+  group_by(match) |>                                                              
+  filter(any(als == 1 & follow_up > 60)) |>                                     # sensi 3 : we remove cases (and their controls) with follow-up < 60 months
+  ungroup() |>
+  mutate(seuil = quantile(follow_up, 0.5, na.rm = TRUE)) |>                     # sensi 4 : we remove 50% of the highest values of follow-up (after removing the follow-up<5years)
+  group_by(match) |>
+  filter(any(als == 1 & follow_up <= seuil)) |>
+  ungroup() |>
+  select(-seuil) |>
+  mutate(proteomic_neuro_explo_NEFL_sd = scale(proteomic_neuro_explo_NEFL))
+
+bdd_danish_sensi_1_3_5 <- 
+  bdd_danish |>
+  filter(!match == 159) |>
+  group_by(match) |>                                                            # sensi 3 : we remove cases (and their controls) with follow-up < 60 months  
+  filter(any(als == 1 & follow_up > 60)) |>
+  ungroup()|>
+  mutate(seuil = quantile(follow_up, 0.5, na.rm = TRUE)) |>                     # sensi 5 : we remove 50% of the lowest values of follow-up (after removing the follow-up<5years)
+  group_by(match) |>
+  filter(any(als == 1 & follow_up > seuil)) |>
+  ungroup() |>
+  select(-seuil) |>
+  mutate(proteomic_neuro_explo_NEFL_sd = scale(proteomic_neuro_explo_NEFL))
+
+model_list <- list(
+  # --- Sensi 1 ---
+  "Conditional and adjusted_sensi1" = 
+    clogit(als ~ proteomic_neuro_explo_NEFL_sd + strata(match) + bmi + smoking_2cat_i, data = bdd_danish_sensi_1),
+  "Adjusted_sensi1" = 
+    glm(als ~ proteomic_neuro_explo_NEFL_sd + birth_year + sex + bmi + smoking_2cat_i, family = binomial, data = bdd_danish_sensi_1),
+  "Adjusted removed individuals with other neuro conditions_sensi1neuro" = 
+    glm(als ~ proteomic_neuro_explo_NEFL_sd + birth_year + sex + bmi + smoking_2cat_i, family = binomial, data = filter(bdd_danish_sensi_1, c_diag_name == "None")),
+  
+  # --- Sensi 2 ---
+  "Conditional and adjusted_sensi2" = 
+    clogit(als ~ proteomic_neuro_explo_NEFL_sd + strata(match) + bmi + smoking_2cat_i, data = bdd_danish_sensi_2),
+  "Adjusted_sensi2" = 
+    glm(als ~ proteomic_neuro_explo_NEFL_sd + birth_year + sex + bmi + smoking_2cat_i, family = binomial, data = bdd_danish_sensi_2),
+  "Adjusted removed individuals with other neuro conditions_sensi2neuro" = 
+    glm(als ~ proteomic_neuro_explo_NEFL_sd + birth_year + sex + bmi + smoking_2cat_i, family = binomial, data = filter(bdd_danish_sensi_2, c_diag_name == "None")),
+  
+  # --- Sensi 1_3_4 ---
+  "Conditional and adjusted_sensi134" = 
+    clogit(als ~ proteomic_neuro_explo_NEFL_sd + strata(match) + bmi + smoking_2cat_i, data = bdd_danish_sensi_1_3_4),
+  "Adjusted_sensi134" = 
+    glm(als ~ proteomic_neuro_explo_NEFL_sd + birth_year + sex + bmi + smoking_2cat_i, family = binomial, data = bdd_danish_sensi_1_3_4),
+  "Adjusted removed individuals with other neuro conditions_sensi134neuro" = 
+    glm(als ~ proteomic_neuro_explo_NEFL_sd + birth_year + sex + bmi + smoking_2cat_i, family = binomial, data = filter(bdd_danish_sensi_1_3_4, c_diag_name == "None")),
+  
+  # --- Sensi 1_3_5 ---
+  "Conditional and adjusted_sensi135" = 
+    clogit(als ~ proteomic_neuro_explo_NEFL_sd + strata(match) + bmi + smoking_2cat_i, data = bdd_danish_sensi_1_3_5),
+  "Adjusted_sensi135" = 
+    glm(als ~ proteomic_neuro_explo_NEFL_sd + birth_year + sex + bmi + smoking_2cat_i, family = binomial, data = bdd_danish_sensi_1_3_5),
+  "Adjusted removed individuals with other neuro conditions_sensi135neuro" = 
+    glm(als ~ proteomic_neuro_explo_NEFL_sd + birth_year + sex + bmi + smoking_2cat_i, family = binomial, data = filter(bdd_danish_sensi_1_3_5, c_diag_name == "None")))
+
+format_model <- function(mod, id) {
+  tidy(mod) |> 
+    filter(str_detect(term, "_sd")) |>
+    mutate(
+      analysis    = str_split_i(id, "_", 2), 
+      model       = str_split_i(id, "_", 1), 
+      explanatory = "proteomic_neuro_explo_NEFL",
+      term        = "Continuous",
+      N           = nobs(mod),
+      OR_raw      = exp(estimate),
+      lower_raw   = exp(estimate - 1.96 * std.error),
+      upper_raw   = exp(estimate + 1.96 * std.error),
+      OR          = as.numeric(sprintf("%.1f", OR_raw)),
+      lower_CI    = as.numeric(sprintf("%.1f", lower_raw)),
+      upper_CI    = as.numeric(sprintf("%.1f", upper_raw)),
+      `95% CI`    = paste0(sprintf("%.1f", lower_raw), ", ", sprintf("%.1f", upper_raw)),
+      p_value_raw = p.value,
+      p_value     = if_else(p.value < 0.01, "<0.01", scales::number(p.value, accuracy = 0.01)))
+}
+
+all_models_formatted <- imap_dfr(model_list, format_model) |> 
+  select(analysis, model, N, explanatory, term, starts_with("OR"), starts_with("95%"), starts_with("p_value"))
+
+table_without_other_diseases <- all_models_formatted |>
+  mutate(
+    sensi_type = case_when(
+      str_detect(analysis, "sensi1$|sensi1neuro") ~ "All timing period",
+      str_detect(analysis, "sensi2") ~ "Years to ALS < 5 years",
+      str_detect(analysis, "sensi134") ~ "Years to ALS between 5 and 14.6 years",
+      str_detect(analysis, "sensi135") ~ "Years to ALS > 14.6 years"),
+    sensi_type = fct_relevel(sensi_type, 
+                             "All timing period", "Years to ALS < 5 years", "Years to ALS between 5 and 14.6 years",
+                             "Years to ALS > 14.6 years"), 
+    model_type = fct_recode(model, 
+                            "Conditional" = "Conditional and adjusted",
+                            "Adjusted_All" = "Adjusted",
+                            "Adjusted_NoNeuro" = "Adjusted removed individuals with other neuro conditions")) |>
+  complete(sensi_type, model_type) |>
+  select(sensi_type, model_type, N, OR, `95% CI`, p_value) |>
+  pivot_wider(
+    id_cols = sensi_type,
+    names_from = model_type,
+    values_from = c(N, OR, `95% CI`, p_value),
+    names_glue = "{model_type}_{.value}") |>
+  mutate(Conditional_N = as.character(Conditional_N), 
+         Conditional_N = fct_recode(Conditional_N, "51" = "17", "222" = "74", "495" = "165")) |>
+  select(
+    Analysis = sensi_type,
+    Conditional_N, Conditional_OR, `Conditional_95% CI`, Conditional_p_value,
+    Adjusted_All_N, Adjusted_All_OR, `Adjusted_All_95% CI`, Adjusted_All_p_value,
+    Adjusted_NoNeuro_N, Adjusted_NoNeuro_OR, `Adjusted_NoNeuro_95% CI`, Adjusted_NoNeuro_p_value)
+
+header_df <- data.frame(
+  col_keys = colnames(table_without_other_diseases),
+  top_header = c(
+    "Analysis",
+    rep("Conditional and adjusted logistic regressions (main analyses)", 4),
+    rep("Adjusted logistic regressions", 4),
+    rep("Adjusted logistic regressions (after removing individuals with neurological condition diagnoses other than ALS", 4)),
+  bottom_header = c(
+    "Analysis",
+    "N", "OR", "95% CI", "p-value",
+    "N", "OR", "95% CI", "p-value",
+    "N", "OR", "95% CI", "p-value"),
+  stringsAsFactors = FALSE)
+
+table_without_other_diseases <- table_without_other_diseases |>
+  flextable() |>
+  set_header_df(mapping = header_df, key = "col_keys") |>
+  merge_h(part = "header") |>
+  merge_v(part = "header", j = "Analysis") |> 
+  theme_vanilla() |>
+  add_footer_lines(
+    "Model 1: Conditional logistic regression matched on birth year and sex, adjusted on BMI and smoking status.
+     Model 2: Logistic regression adjusted on birth year, sex, BMI and smoking status.
+     Model 3: Logistic regression adjusted on birth year, sex, BMI and smoking status (among individuals with no record of neurological condition diagnosis other than ALS).
+     CI: Confidence interval. OR estimated for a one standard deviation increase of pre-disease plasma NfL level.") |>
+  bold(j = "Analysis", part = "body") |>
+  bold(part = "header") |>
+  align(align = "center", part = "all") |>
+  align(j = "Analysis", align = "left", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 9.5, part = "all") |>
+  padding(padding.top = 5, padding.bottom = 5, part = "all") |>
+  autofit()
+
+rm(bdd_danish_sensi_1, bdd_danish_sensi_2, bdd_danish_sensi_1_3_4, bdd_danish_sensi_1_3_5, model_list, all_models_formatted, header_df)
 
 # Assemblage ----
 results_proteomic_ALS_occurrence <- 
@@ -8578,17 +8737,6 @@ results_proteomic_ALS_occurrence <-
     
     #additional_analysis_3 = SL (check specific code)
     
-    additional_analysis_4 = list(
-      main_results_cox = main_results_cox,                                 # additionnal analysis 4
-      cox_gam_results_base = cox_gam_results_base, 
-      cox_gam_results_adjusted = cox_gam_results_adjusted, 
-      proteomic_sd_ALS_table_cox = proteomic_sd_ALS_table_cox, 
-      proteomic_quart_ALS_table_cox = proteomic_quart_ALS_table_cox, 
-      proteomic_sd_ALS_base_figure_cox = proteomic_sd_ALS_base_figure_cox, 
-      proteomic_sd_ALS_adjusted_figure_cox = proteomic_sd_ALS_adjusted_figure_cox, 
-      plot_base_cox_gam_danish = plot_base_cox_gam_danish, 
-      plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish), 
-    
     NfL_results = list(NfL_sd_ALS_table_sensi_1 = NfL_sd_ALS_table_sensi_1, 
                        NfL_quart_ALS_table_sensi_1 = NfL_quart_ALS_table_sensi_1, 
                        NfL_sd_ALS_figure_sensi_1 = NfL_sd_ALS_figure_sensi_1, 
@@ -8603,7 +8751,9 @@ results_proteomic_ALS_occurrence <-
                        AUC_NfL = list(
                          AUC_figure_adjusted_pattern = AUC_figure_adjusted_pattern, 
                          AUC_figure_unadjusted_pattern = AUC_figure_unadjusted_pattern, 
-                         AUC_figure_unadjusted_color = AUC_figure_unadjusted_color)))
+                         AUC_figure_unadjusted_color = AUC_figure_unadjusted_color), 
+                       other_disease = list(
+                         table_without_other_diseases = table_without_other_diseases)))
 
 
 #saveRDS(results_proteomic_ALS_occurrence, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_occurrence.rds")
@@ -8724,16 +8874,6 @@ rm(covar,                                   # main results
    
    # additionnal analysis 3 : check specfic SL code 
    
-   main_results_cox,                                 # additionnal analysis 4
-   cox_gam_results_base, 
-   cox_gam_results_adjusted, 
-   proteomic_sd_ALS_table_cox,                
-   proteomic_quart_ALS_table_cox, 
-   proteomic_sd_ALS_base_figure_cox, 
-   proteomic_sd_ALS_adjusted_figure_cox, 
-   plot_base_cox_gam_danish, 
-   plot_adjusted_cox_gam_danish, 
-   
    NfL_sd_ALS_table_sensi_1,                      # NfL main results
    NfL_quart_ALS_table_sensi_1, 
    NfL_sd_ALS_figure_sensi_1, 
@@ -8749,6 +8889,8 @@ rm(covar,                                   # main results
    AUC_figure_unadjusted_pattern,          # NfL AUC
    AUC_figure_unadjusted_color, 
    AUC_figure_adjusted_pattern, 
+   
+   table_without_other_diseases,          # NfL other diseases
    
    make_gam_plot_base, 
    make_gam_plot_adjusted)

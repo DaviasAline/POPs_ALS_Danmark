@@ -569,7 +569,15 @@ bdd_danish <- bdd_danish |>
       !is.na(death_date)   ~ death_date,          # Contrôle décédé : date de décès
       TRUE                 ~ end_of_study_date),  # Contrôle vivant : fin d'étude
     follow_up_bis = as.numeric(end_observation_date - baseline_date) / 365.25) |> 
-  select(-end_of_study_date, -end_observation_date)
+  select(-end_of_study_date, -end_observation_date) |> 
+  group_by(match) |>
+  mutate(follow_up_no_na = follow_up) |>          # attention follow_up est en mois 
+  fill(follow_up_no_na, .direction = "downup") |> 
+  ungroup() |>
+  mutate(
+    follow_up_no_na_y = follow_up_no_na / 12, 
+    y_10ans = ifelse(als == 1 & follow_up_no_na <= 120, 1, 0),      # attention follow_up_no_na est en mois 
+    y_20ans = ifelse(als == 1 & follow_up_no_na <= 240, 1, 0))       # attention follow_up_no_na est en mois 
 
 bdd_danish <- bdd_danish|>
   replace_with_median(OCP_HCB, OCP_HCB_quart)|>
@@ -836,6 +844,23 @@ var_label(bdd_danish) <- list(
   sample = "Identifcation", 
   match = "match", 
   sex = "Sex", 
+  status_death = "Status at end of the follow-up",
+  birth_year = "Birth year", 
+  baseline_age = "Age at baseline (years)",
+  diagnosis_age = "Age at ALS diagnosis (years)", 
+  death_age = "Age at death (years)",
+  
+  time_baseline_diagnosis = "Duration between baseline and ALS diagnosis (years)", 
+  time_baseline_death = "Duration between baseline and death (years)", 
+  time_diagnosis_death = "Duration between diagnosis and death (years)",
+  follow_up	= "Length of follow-up from baseline to ALS diagnosis (months)", 
+  follow_up_death	= "Length of follow-up from ALS diagnosis (months)", 
+  follow_up_bis = "Follow-up from baseline to diagnosis (cases) or death or end of study (controls) (years)", 
+  follow_up_no_na = "Length of follow-up from baseline to ALS diagnosis (months)", 
+  follow_up_no_na_y = "Length of follow-up from baseline to ALS diagnosis (years)", 
+  y_10ans = "ALS diagnosed within 10 years of follow-up", 
+  y_20ans = "ALS diagnosed within 20 years of follow-up", 
+  
   marital_status = "Marital status",
   marital_status_2cat = "Marital status", 
   marital_status_2cat_i = "Marital status", 
@@ -853,19 +878,8 @@ var_label(bdd_danish) <- list(
   cholesterol = "Serum cholesterol (mmol/L)",
   cholesterol_i = "Serum cholesterol (mmol/L)",
   blod_sys = "Systolic blood presure (mmHg)",
-  blod_dias = "Diastolic blood presure (mmHg)",
-  baseline_age = "Age at baseline (years)",
-  diagnosis_age = "Age at ALS diagnosis (years)", 
-  death_age = "Age at death (years)",
-  status_death = "Status at the end of follow-up",
-  time_baseline_diagnosis = "Duration between baseline and ALS diagnosis (years)", 
-  time_baseline_death = "Duration between baseline and death (years)", 
-  time_diagnosis_death = "Duration between diagnosis and death (years)",
-  follow_up	= "Length of follow-up from baseline to ALS diagnosis (months)", 
-  follow_up_death	= "Length of follow-up from ALS diagnosis (months)", 
-  follow_up_bis = "Follow-up from baseline to diagnosis (cases) or death or end of study (controls)", 
-  status_death = "Status at end of the follow-up",
-  birth_year = "Birth year", 
+  blod_dias = "Diastolic blood presure (mmHg)", 
+  
   OCP_PeCB = "Pentachlorobenzene",            
   OCP_HCB = "HCB",            
   OCP_α_HCH = "α-HCH",
@@ -894,6 +908,7 @@ var_label(bdd_danish) <- list(
   PCB_DL =  "Dioxin-like PCBs", 
   PCB_NDL = "Non dioxin-like PCBs", 
   PCB_4 = "Most prevalent PCBs",
+  
   "myristic_acid_sat" =  "Myristic acid (%)", 
   "pentadecylic_acid_sat" = "Pentadecylic acid (%)", 
   "palmitic_acid_sat" =  "Palmitic acid (%)", 
@@ -927,7 +942,6 @@ var_label(bdd_danish) <- list(
   "pufas_ω3" = "ω3 unsaturated acids (%)", 
   "pufas" = "Unsaturated acids (%)", 
   "ratio_ω6_ω3" = "ω6/ω3 ratio (%)", 
-  
   "rumenic_acid_ω6_sd" = "Rumenic acid ω6 (%)", 
   "linoleic_acid_ω6_sd" = "Linoleic acid ω6 (%)",          
   "dihomo_γ_linolenic_acid_ω6_sd" = "Dihomo-γ-linolenic acid ω6 (%)", 
@@ -941,8 +955,7 @@ var_label(bdd_danish) <- list(
   "pufas_ω7_sd" = "ω7 unsaturated acids (%)", 
   "pufas_ω6_sd" = "ω6 unsaturated acids (%)", 
   "pufas_ω3_sd" = "ω3 unsaturated acids (%)", 
-  "pufas_sd" = "Unsaturated acids (%)"
-  )
+  "pufas_sd" = "Unsaturated acids (%)")
 
 for (var in proteomic) {
   var_lab(bdd_danish[[var]]) <- gsub("^proteomic_(immun_res|neuro_explo|metabolism)_", "", var)
