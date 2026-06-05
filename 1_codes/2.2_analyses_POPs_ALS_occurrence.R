@@ -2013,8 +2013,8 @@ plot_base_gam <- map(POPs_group, function(var) {
   x_label <- pollutant_labels[var] 
   
   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
+    geom_line(color = "black", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "darkgrey", alpha = 0.2) +
     labs(x = var, y = "Predicted probability of ALS") +
     annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
              hjust = 0, vjust = 1.2, size = 4, color = "black") +
@@ -2028,7 +2028,7 @@ plot_base_gam <- map(POPs_group, function(var) {
   
   p2 <- ggplot(bdd_pred) +
     aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
+    geom_boxplot(fill = "white") +
     coord_flip() +
     ylab(x_label) + 
     xlab("") + 
@@ -2085,9 +2085,9 @@ plot_base_gam_not_summed <- map(POPs_included, function(var) {
   x_label <- pollutant_labels[var]
   
   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
+    geom_line(color = "black", size = 1) +
     geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper),
-                fill = "blue",
+                fill = "darkgrey",
                 alpha = 0.2) +
     labs(x = var, y = "Predicted probability of ALS") +
     annotate(
@@ -2112,7 +2112,7 @@ plot_base_gam_not_summed <- map(POPs_included, function(var) {
   
   p2 <- ggplot(bdd_pred) +
     aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
+    geom_boxplot(fill = "white") +
     coord_flip() +
     ylab(x_label) +
     xlab("") +
@@ -2228,8 +2228,8 @@ plot_adjusted_gam_not_summed <- map(POPs_included, function(var) {
   x_label <- pollutant_labels[var] 
   
   p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "blue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "blue", alpha = 0.2) +
+    geom_line(color = "black", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper), fill = "darkgrey", alpha = 0.2) +
     labs(x = var, y = "Predicted probability of ALS") +
     annotate("text", x = x_min, y = Inf, label = paste("EDF: ", edf, "\np-value: ", p_value_text, sep = ""),
              hjust = 0, vjust = 1.2, size = 4, color = "black") +
@@ -2243,7 +2243,7 @@ plot_adjusted_gam_not_summed <- map(POPs_included, function(var) {
   
   p2 <- ggplot(bdd_pred) +
     aes(x = "", y = .data[[var]]) +
-    geom_boxplot(fill = "blue") +
+    geom_boxplot(fill = "white") +
     coord_flip() +
     ylab(x_label) + 
     xlab("") + 
@@ -2479,7 +2479,6 @@ table_quart_sensi_lipid <-
   padding(padding.top = 0, padding.bottom = 0, part = "all")|>
   set_table_properties(align = "left")
 
-table_quart_sensi_lipid
 rm(extra_rows)
 
 
@@ -2571,7 +2570,6 @@ table_quart_sensi_diabetes <-
   padding(padding.top = 0, padding.bottom = 0, part = "all")|>
   set_table_properties(align = "left")
 
-table_quart_sensi_diabetes
 rm(extra_rows)
 
 # Assemblage -----
@@ -2605,7 +2603,7 @@ results_POPs_ALS_occurrence <-
        metanalysis = list(metanalysis_quart = metanalysis_quart, 
                           plot_metanalysis_quart = plot_metanalysis_quart))
 
-saveRDS(results_POPs_ALS_occurrence, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_POPs_ALS_occurrence.rds")
+saveRDS(results_POPs_ALS_occurrence, file = "~/Documents/POP_ALS_2025_02_03/2_output/2.2_results_POPs_ALS_occurrence.rds")
 
 rm(main_results, covar, results_quart, model1_gam, model2_gam, 
    sensitivity_results_not_summed_quart, model1_gam_not_summed, model2_gam_not_summed, model1_quart_not_summed, model2_quart_not_summed, 

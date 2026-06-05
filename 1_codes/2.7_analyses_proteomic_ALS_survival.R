@@ -3,220 +3,7 @@
 # Analysis of als survival depending on proteomic profile
 
 # Data loading - package loading ----
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2.6_analyses_proteomic_ALS_occurrence.R") |>
-  suppressMessages() |> 
-  suppressWarnings()
-
-fit_and_plot_cox_gam <- function(
-    data,
-    vars = proteomic,
-    time = "follow_up_death",
-    status = "status_death", 
-    covariates = c("sex", "diagnosis_age"),
-    vars_labels = NULL,
-    y_limits = c(-12, 12),
-    #x_limits = c(1, 5),
-    title = "Base model"
-) {
-  
-  if (is.null(vars_labels)) {                                                   # Labels par défaut
-    vars_labels <- set_names(vars, vars)
-  }
-  
-  fit_one <- function(var) {
-    
-    outcome <- cbind(data[[time]], data[[status]])
-    
-    formula_str <- paste0(
-      "outcome ~ s(", var, ") + ",
-      paste(covariates, collapse = " + "))
-    
-    model <- mgcv::gam(as.formula(formula_str),
-                 data = data,
-                 family = cox.ph())
-    
-    smry <- summary(model)
-    
-    edf <- format(smry$s.table[1, "edf"], nsmall = 1, digits = 1)
-    pval_raw <- smry$s.table[1, "p-value"]
-    
-    pval <- case_when(
-      pval_raw < 0.01 ~ "< 0.01",
-      pval_raw > 0.99 ~ "> 0.99",
-      TRUE ~ format(pval_raw, nsmall = 2, digits = 2))
-    
-    plot_data <- plot(model,
-                      select = 1,
-                      seWithMean = TRUE,
-                      rug = FALSE,
-                      pages = 0)[[1]]
-    
-    smooth_df <- data.frame(
-      x = plot_data$x,
-      fit = plot_data$fit,
-      se = plot_data$se)
-    
-    p1 <- ggplot(smooth_df, aes(x = x, y = fit)) +
-      geom_line(size = 1.2, color = "steelblue") +
-      geom_ribbon(aes(ymin = fit - 2 * se,
-                      ymax = fit + 2 * se),
-                  alpha = 0.2,
-                  fill = "steelblue") +
-      labs(
-        title = title,
-        y = "LogHR (smooth estimate)",
-        x = NULL) +
-      annotate(
-        "text",
-        x = -Inf, y = Inf,
-        hjust = -0.1, vjust = 1.5,
-        label = paste0("EDF: ", edf, "\np-value: ", pval),
-        size = 4.2) +
-      scale_y_continuous(limits = y_limits) +
-      #scale_x_continuous(limits = x_limits) +
-      theme_minimal() +
-      theme(
-        axis.text.x = element_blank(),
-        axis.title.x = element_blank(),
-        axis.line.x = element_blank(),
-        axis.ticks.x = element_blank())
-    
-    p2 <- p2 <- ggplot(data, aes(x = .data[[var]], y = 1)) +
-      geom_boxplot(width = 0.3,
-                   fill = "steelblue",
-                   color = "black") +
-      labs(x = vars_labels[[var]]) +
-      #scale_x_continuous(limits = x_limits) +
-      theme_minimal() +
-      theme(
-        axis.text.y = element_blank(),
-        axis.title.y = element_blank(),
-        axis.ticks.y = element_blank())
-    
-    list(
-      model = model,
-      plot_data = smooth_df,
-      edf = edf,
-      pval_raw = pval_raw,
-      pval = pval,
-      plot = p1 / p2 + plot_layout(heights = c(10, 1)))
-  }
-  
-  results <- map(vars, fit_one)
-  names(results) <- vars_labels[vars]
-  
-  results
-}
-
-fit_and_plot_cox_gam <- function(
-    data,
-    vars = proteomic,
-    time = "follow_up_death",
-    status = "status_death", 
-    covariates = c("sex", "diagnosis_age"),
-    vars_labels = NULL,
-    y_limits = c(-12, 12),
-    title = "Base model"
-) {
-  
-  # 1. Gestion des labels
-  if (is.null(vars_labels)) {
-    vars_labels <- set_names(vars, vars)
-  }
-  
-  # Sous-fonction pour traiter une protéine
-  fit_one <- function(var) {
-    
-    # 2. Construction du modèle Cox-GAM
-    outcome <- cbind(data[[time]], data[[status]])
-    formula_str <- paste0(
-      "outcome ~ s(", var, ") + ",
-      paste(covariates, collapse = " + ")
-    )
-    
-    model <- mgcv::gam(as.formula(formula_str),
-                       data = data,
-                       family = cox.ph())
-    
-    # 3. Extraction des statistiques (EDF et P-value)
-    smry <- summary(model)
-    edf_val <- smry$s.table[1, "edf"]
-    pval_raw <- smry$s.table[1, "p-value"]
-    
-    edf_label <- format(edf_val, nsmall = 1, digits = 1)
-    pval_label <- case_when(
-      pval_raw < 0.01 ~ "< 0.01",
-      pval_raw > 0.99 ~ "> 0.99",
-      TRUE ~ format(pval_raw, nsmall = 2, digits = 2)
-    )
-    
-    # 4. Extraction SILENCIEUSE des données du spline
-    # On utilise pdf(NULL) pour empêcher l'affichage des plots de mgcv
-    pdf(NULL)
-    plot_data_raw <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE)
-    dev.off()
-    
-    if (length(plot_data_raw) == 0) return(NULL)
-    
-    plot_data <- plot_data_raw[[1]]
-    smooth_df <- data.frame(
-      x = plot_data$x,
-      fit = plot_data$fit,
-      se = plot_data$se
-    )
-    
-    # 5. Création du graphique principal (Spline) avec ggplot2
-    p1 <- ggplot(smooth_df, aes(x = x, y = fit)) +
-      geom_line(linewidth = 1.2, color = "steelblue") +
-      geom_ribbon(aes(ymin = fit - 2 * se, 
-                      ymax = fit + 2 * se),
-                  alpha = 0.2, fill = "steelblue") +
-      labs(
-        title = title,
-        y = "LogHR (smooth estimate)",
-        x = NULL
-      ) +
-      annotate(
-        "text",
-        x = -Inf, y = Inf,
-        hjust = -0.1, vjust = 1.5,
-        label = paste0("EDF: ", edf_label, "\np-value: ", pval_label),
-        size = 4.2
-      ) +
-      scale_y_continuous(limits = y_limits) +
-      theme_minimal() +
-      theme(
-        axis.text.x = element_blank(),
-        axis.title.x = element_blank(),
-        axis.line.x = element_blank(),
-        axis.ticks.x = element_blank()
-      )
-    
-    # 6. Création du boxplot de distribution en dessous
-    p2 <- ggplot(data, aes(x = .data[[var]], y = 1)) +
-      geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
-      labs(x = vars_labels[[var]]) +
-      theme_minimal() +
-      theme(
-        axis.text.y = element_blank(),
-        axis.title.y = element_blank(),
-        axis.ticks.y = element_blank()
-      )
-    
-    # 7. Assemblage avec patchwork et retour des objets
-    list(
-      model = model,
-      pval_raw = pval_raw,
-      plot = p1 / p2 + plot_layout(heights = c(10, 1))
-    )
-  }
-  
-  # Exécution sur toutes les variables
-  results <- map(vars, fit_one)
-  names(results) <- vars_labels[vars]
-  
-  return(results)
-}
+source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 
 # Creation of cases specific datasets ----
 bdd_cases_danish <- 
@@ -494,25 +281,7 @@ rm(heterogeneity_base, heterogeneity_adjusted,
 
 
 ## Cox model (GAMs) ----
-vars_labels <- 
-  set_names(str_replace(proteomic, 
-                        "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                        ""), 
-            proteomic)
-
-
-### Base ----
-cox_gam_results_base <- 
-  fit_and_plot_cox_gam(data = bdd_cases_danish, 
-                       vars_labels = vars_labels)
-
-### Adjusted ----
-cox_gam_results_adjusted <- 
-  fit_and_plot_cox_gam(data = bdd_cases_danish, 
-                       vars_labels = vars_labels, 
-                       covariates = c("sex", "diagnosis_age", "smoking_2cat_i", "bmi"), 
-                       title = "Adjusted model")
-rm(vars_labels)
+# direct dans output 
 
 
 # Sensi 1 + sensi 3 - Removing the oulier for NEFL + filtering cases with follow_up > 5 years ----
@@ -767,27 +536,7 @@ rm(heterogeneity_base_sensi_1_3, heterogeneity_adjusted_sensi_1_3,
 
 
 ## Cox model (GAMs) ----
-vars_labels <- set_names(str_replace(proteomic, 
-                                     "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                     ""), 
-                         proteomic)
-
-
-### Base  ----
-cox_gam_results_base_sensi_1_3 <- 
-  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_3, 
-                       vars_labels = vars_labels)
-
-
-### Adjusted  ----
-cox_gam_results_adjusted_sensi_1_3 <- 
-    fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_3, 
-                         vars_labels = vars_labels, 
-                         covariates = c("sex", "diagnosis_age", "smoking_2cat_i", "bmi"), 
-                         title = "Adjusted model")
-
-rm(vars_labels)
-
+# direct dans output 
 
 
 # Sensi 1 + sensi 3 + sensi 4 - Removing NEFL outlier + filtering cases with follow- up < 5 years + filtering follow-up <= 50%----
@@ -1042,26 +791,7 @@ rm(heterogeneity_base_sensi_1_3_4, heterogeneity_adjusted_sensi_1_3_4,
 
 
 ## Cox model (GAMs) ----
-vars_labels <- set_names(str_replace(proteomic, 
-                                     "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                     ""), 
-                         proteomic)
-
-
-### Base  ----
-cox_gam_results_base_sensi_1_3_4 <- 
-  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_3_4, 
-                       vars_labels = vars_labels)
-
-
-### Adjusted  ----
-cox_gam_results_adjusted_sensi_1_3_4 <- 
-  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_3_4, 
-                       vars_labels = vars_labels, 
-                       covariates = c("sex", "diagnosis_age", "smoking_2cat_i", "bmi"), 
-                       title = "Adjusted model")
-
-rm(vars_labels)
+# direct dans output 
 
 
 # Sensi 1 + sensi 3 + sensi 5 - Removing NEFL outlier + filtering cases with follow-up < 5 years + filtering follow-up > 50%----
@@ -1316,25 +1046,7 @@ rm(heterogeneity_base_sensi_1_3_5, heterogeneity_adjusted_sensi_1_3_5,
 
 
 ## Cox model (GAMs) ----
-vars_labels <- set_names(str_replace(proteomic, 
-                                     "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                                     ""), 
-                         proteomic)
-
-
-### Base  ----
-cox_gam_results_base_sensi_1_3_5 <- 
-  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_3_5, 
-                       vars_labels = vars_labels)
-
-
-### Adjusted  ----
-cox_gam_results_adjusted_sensi_1_3_5 <- 
-  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_3_5, 
-                       vars_labels = vars_labels, 
-                       covariates = c("sex", "diagnosis_age", "smoking_2cat_i", "bmi"), 
-                       title = "Adjusted model")
-rm(vars_labels)
+# direct dans output
 
 
 # Sensi 1 + sensi 7 - Removing the oulier for NEFL + filtering to females ----
@@ -1592,27 +1304,7 @@ rm(heterogeneity_base_sensi_1_7_female, heterogeneity_adjusted_sensi_1_7_female,
 
 
 ## Cox model (GAMs) ----
-vars_labels <- set_names(str_replace(proteomic,
-                                     "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
-                                     ""),
-                         proteomic)
-
-
-### Base  ----
-cox_gam_results_base_sensi_1_7_female <- 
-  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_7_female, 
-                       vars_labels = vars_labels, 
-                       covariates = "diagnosis_age")
-
-
-### Adjusted  ----
-cox_gam_results_adjusted_sensi_1_7_female <- 
-  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_7_female, 
-                       vars_labels = vars_labels, 
-                       covariates = c("diagnosis_age", "smoking_2cat_i", "bmi"), 
-                       title = "Adjusted model")
-rm(vars_labels)
-
+# direct output 
 
 # Sensi 1 + sensi 7 - Removing the oulier for NEFL + filtering to male ----
 bdd_cases_danish_sensi_1_7_male <- bdd_danish |>
@@ -1867,26 +1559,7 @@ rm(heterogeneity_base_sensi_1_7_male, heterogeneity_adjusted_sensi_1_7_male,
 
 
 ## Cox model (GAMs) ----
-vars_labels <- set_names(str_replace(proteomic,
-                                     "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
-                                     ""),
-                         proteomic)
-
-
-### Base  ----
-cox_gam_results_base_sensi_1_7_male <- 
-  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_7_male, 
-                       vars_labels = vars_labels, 
-                       covariates = "diagnosis_age")
-
-
-### Adjusted  ----
-cox_gam_results_adjusted_sensi_1_7_male <- 
-  fit_and_plot_cox_gam(data = bdd_cases_danish_sensi_1_7_male, 
-                       vars_labels = vars_labels, 
-                       covariates = c("diagnosis_age", "smoking_2cat_i", "bmi"), 
-                       title = "Adjusted model")
-rm(vars_labels, covariates_sensi_7)
+# direct output
 
 
 # Assemblage main analyses ----
@@ -2160,17 +1833,6 @@ proteomic_sd_ALS_adjusted_figure <-
 
 
 
-## Figure proteomic - als survival - base gam (main) ----
-plot_base_cox_gam_danish <- list(
-  signif = map(keep(cox_gam_results_base, ~ .x$pval_raw <= 0.05), "plot"),
-  not_signif = map(keep(cox_gam_results_base, ~ .x$pval_raw > 0.05), "plot"))
-
-
-## Figure proteomic - als survival - adjusted gam (main) ----
-plot_adjusted_cox_gam_danish <- list(
-  signif = map(keep(cox_gam_results_adjusted, ~ .x$pval_raw <= 0.05), "plot"),
-  not_signif = map(keep(cox_gam_results_adjusted, ~ .x$pval_raw > 0.05), "plot"))
-
 
 ## Table proteomic (sd) - als survival (sensi_1_3) ----
 proteomic_sd_ALS_table_sensi_1_3 <- 
@@ -2347,18 +2009,6 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3 <-
     y = "-log10(p-value)", 
     color = "")
 
-
-
-## Figure proteomic - als survival - base gam (sensi_1_3) ----
-plot_base_cox_gam_danish_sensi_1_3 <- list(
-  signif = map(keep(cox_gam_results_base_sensi_1_3, ~ .x$pval_raw <= 0.05), "plot"),
-  not_signif = map(keep(cox_gam_results_base_sensi_1_3, ~ .x$pval_raw > 0.05), "plot"))
-
-
-## Figure proteomic - als survival - adjusted gam (sensi_1_3) ----
-plot_adjusted_cox_gam_danish_sensi_1_3 <- list(
-  signif = map(keep(cox_gam_results_adjusted_sensi_1_3, ~ .x$pval_raw <= 0.05), "plot"),
-  not_signif = map(keep(cox_gam_results_adjusted_sensi_1_3, ~ .x$pval_raw > 0.05), "plot"))
 
 
 ## Table proteomic (sd) - als survival (sensi_1_3_4) ----
@@ -2538,16 +2188,6 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3_4 <-
 
 
 
-## Figure proteomic - als survival - base gam (sensi_1_3_4) ----
-plot_base_cox_gam_danish_sensi_1_3_4 <- list(
-  signif = map(keep(cox_gam_results_base_sensi_1_3_4, ~ .x$pval_raw <= 0.05), "plot"),
-  not_signif = map(keep(cox_gam_results_base_sensi_1_3_4, ~ .x$pval_raw > 0.05), "plot"))
-
-## Figure proteomic - als survival - adjusted gam (sensi_1_3_4) ----
-plot_adjusted_cox_gam_danish_sensi_1_3_4 <- list(
-  signif = map(keep(cox_gam_results_adjusted_sensi_1_3_4, ~ .x$pval_raw <= 0.05), "plot"),
-  not_signif = map(keep(cox_gam_results_adjusted_sensi_1_3_4, ~ .x$pval_raw > 0.05), "plot"))
-
 
 ## Table proteomic (sd) - als survival (sensi_1_3_5) ----
 proteomic_sd_ALS_table_sensi_1_3_5 <- 
@@ -2723,20 +2363,6 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3_5 <-
     x = "log2HR",
     y = "-log10(p-value)", 
     color = "")
-
-
-
-## Figure proteomic - als survival - base gam (sensi_1_3_5) ----
-plot_base_cox_gam_danish_sensi_1_3_5 <- list(
-  signif = map(keep(cox_gam_results_base_sensi_1_3_5, ~ .x$pval_raw <= 0.05), "plot"),
-  not_signif = map(keep(cox_gam_results_base_sensi_1_3_5, ~ .x$pval_raw > 0.05), "plot"))
-
-
-
-## Figure proteomic - als survival - adjusted gam (sensi_1_3_5) ----
-plot_adjusted_cox_gam_danish_sensi_1_3_5 <- list(
-  signif = map(keep(cox_gam_results_adjusted_sensi_1_3_5, ~ .x$pval_raw <= 0.05), "plot"),
-  not_signif = map(keep(cox_gam_results_adjusted_sensi_1_3_5, ~ .x$pval_raw > 0.05), "plot"))
 
 
 ## Table proteomic (sd) - als survival (sensi_1_7_female) ----
@@ -2916,16 +2542,6 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_7_female <-
 
 
 
-## Figure proteomic - als survival - base gam (sensi_1_7_female) ----
-plot_base_cox_gam_danish_sensi_1_7_female <- list(
-  signif = map(keep(cox_gam_results_base_sensi_1_7_female, ~ .x$pval_raw <= 0.05), "plot"),
-  not_signif = map(keep(cox_gam_results_base_sensi_1_7_female, ~ .x$pval_raw > 0.05), "plot"))
-
-
-## Figure proteomic - als survival - adjusted gam (sensi_1_7_female) ----
-plot_adjusted_cox_gam_danish_sensi_1_7_female <- list(
-  signif = map(keep(cox_gam_results_adjusted_sensi_1_7_female, ~ .x$pval_raw <= 0.05), "plot"),
-  not_signif = map(keep(cox_gam_results_adjusted_sensi_1_7_female, ~ .x$pval_raw > 0.05), "plot"))
 
 
 ## Table proteomic (sd) - als survival (sensi_1_7_male) ----
@@ -3105,17 +2721,6 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_7_male <-
     color = "")
 
 
-
-## Figure proteomic - als survival - base gam (sensi_1_7_male) ----
-plot_base_cox_gam_danish_sensi_1_7_male <- list(
-  signif = map(keep(cox_gam_results_base_sensi_1_7_male, ~ .x$pval_raw <= 0.05), "plot"),
-  not_signif = map(keep(cox_gam_results_base_sensi_1_7_male, ~ .x$pval_raw > 0.05), "plot"))
-
-
-## Figure proteomic - als survival - adjusted gam (sensi_1_7_male) ----
-plot_adjusted_cox_gam_danish_sensi_1_7_male <- list(
-  signif = map(keep(cox_gam_results_adjusted_sensi_1_7_male, ~ .x$pval_raw <= 0.05), "plot"),
-  not_signif = map(keep(cox_gam_results_adjusted_sensi_1_7_male, ~ .x$pval_raw > 0.05), "plot"))
 
 ## NfL only results ----
 ### Table NfL - als occurrence - base and adjusted sd ----
@@ -3351,67 +2956,38 @@ results_proteomic_ALS_survival <-
                 proteomic_quart_ALS_table = proteomic_quart_ALS_table,
                 
                 proteomic_sd_ALS_base_figure = proteomic_sd_ALS_base_figure, 
-                proteomic_sd_ALS_adjusted_figure = proteomic_sd_ALS_adjusted_figure, 
-                
-                cox_gam_results_base = cox_gam_results_base, 
-                cox_gam_results_adjusted = cox_gam_results_adjusted, 
-                plot_base_cox_gam_danish = plot_base_cox_gam_danish, 
-                plot_adjusted_cox_gam_danish = plot_adjusted_cox_gam_danish), 
+                proteomic_sd_ALS_adjusted_figure = proteomic_sd_ALS_adjusted_figure), 
     
     sensi_1_3 = list(proteomic_sd_ALS_table_sensi_1_3 = proteomic_sd_ALS_table_sensi_1_3,
                      proteomic_quart_ALS_table_sensi_1_3 = proteomic_quart_ALS_table_sensi_1_3,
                      
                      proteomic_sd_ALS_base_figure_sensi_1_3 = proteomic_sd_ALS_base_figure_sensi_1_3, 
-                     proteomic_sd_ALS_adjusted_figure_sensi_1_3 = proteomic_sd_ALS_adjusted_figure_sensi_1_3,
-                     
-                     cox_gam_results_base_sensi_1_3 = cox_gam_results_base_sensi_1_3, 
-                     cox_gam_results_adjusted_sensi_1_3 = cox_gam_results_adjusted_sensi_1_3, 
-                     plot_base_cox_gam_danish_sensi_1_3 = plot_base_cox_gam_danish_sensi_1_3, 
-                     plot_adjusted_cox_gam_danish_sensi_1_3 = plot_adjusted_cox_gam_danish_sensi_1_3), 
+                     proteomic_sd_ALS_adjusted_figure_sensi_1_3 = proteomic_sd_ALS_adjusted_figure_sensi_1_3), 
     
     sensi_1_3_4 = list(proteomic_sd_ALS_table_sensi_1_3_4 = proteomic_sd_ALS_table_sensi_1_3_4,
                      proteomic_quart_ALS_table_sensi_1_3_4 = proteomic_quart_ALS_table_sensi_1_3_4,
                      
                      proteomic_sd_ALS_base_figure_sensi_1_3_4 = proteomic_sd_ALS_base_figure_sensi_1_3_4, 
-                     proteomic_sd_ALS_adjusted_figure_sensi_1_3_4 = proteomic_sd_ALS_adjusted_figure_sensi_1_3_4,
-                     
-                     cox_gam_results_base_sensi_1_3_4 = cox_gam_results_base_sensi_1_3_4, 
-                     cox_gam_results_adjusted_sensi_1_3_4 = cox_gam_results_adjusted_sensi_1_3_4, 
-                     plot_base_cox_gam_danish_sensi_1_3_4 = plot_base_cox_gam_danish_sensi_1_3_4, 
-                     plot_adjusted_cox_gam_danish_sensi_1_3_4 = plot_adjusted_cox_gam_danish_sensi_1_3_4), 
+                     proteomic_sd_ALS_adjusted_figure_sensi_1_3_4 = proteomic_sd_ALS_adjusted_figure_sensi_1_3_4), 
     
     sensi_1_3_5 = list(proteomic_sd_ALS_table_sensi_1_3_5 = proteomic_sd_ALS_table_sensi_1_3_5,
                        proteomic_quart_ALS_table_sensi_1_3_5 = proteomic_quart_ALS_table_sensi_1_3_5,
                        
                        proteomic_sd_ALS_base_figure_sensi_1_3_5 = proteomic_sd_ALS_base_figure_sensi_1_3_5, 
-                       proteomic_sd_ALS_adjusted_figure_sensi_1_3_5 = proteomic_sd_ALS_adjusted_figure_sensi_1_3_5,
-                       
-                       cox_gam_results_base_sensi_1_3_5 = cox_gam_results_base_sensi_1_3_5, 
-                       cox_gam_results_adjusted_sensi_1_3_5 = cox_gam_results_adjusted_sensi_1_3_5, 
-                       plot_base_cox_gam_danish_sensi_1_3_5 = plot_base_cox_gam_danish_sensi_1_3_5, 
-                       plot_adjusted_cox_gam_danish_sensi_1_3_5 = plot_adjusted_cox_gam_danish_sensi_1_3_5), 
+                       proteomic_sd_ALS_adjusted_figure_sensi_1_3_5 = proteomic_sd_ALS_adjusted_figure_sensi_1_3_5), 
     
     sensi_1_7_female = list(proteomic_sd_ALS_table_sensi_1_7_female = proteomic_sd_ALS_table_sensi_1_7_female,
                             proteomic_quart_ALS_table_sensi_1_7_female = proteomic_quart_ALS_table_sensi_1_7_female,
                             
                             proteomic_sd_ALS_base_figure_sensi_1_7_female = proteomic_sd_ALS_base_figure_sensi_1_7_female, 
-                            proteomic_sd_ALS_adjusted_figure_sensi_1_7_female = proteomic_sd_ALS_adjusted_figure_sensi_1_7_female,
-                            
-                            cox_gam_results_base_sensi_1_7_female = cox_gam_results_base_sensi_1_7_female, 
-                            cox_gam_results_adjusted_sensi_1_7_female = cox_gam_results_adjusted_sensi_1_7_female, 
-                            plot_base_cox_gam_danish_sensi_1_7_female = plot_base_cox_gam_danish_sensi_1_7_female, 
-                            plot_adjusted_cox_gam_danish_sensi_1_7_female = plot_adjusted_cox_gam_danish_sensi_1_7_female), 
+                            proteomic_sd_ALS_adjusted_figure_sensi_1_7_female = proteomic_sd_ALS_adjusted_figure_sensi_1_7_female), 
     
     sensi_1_7_male = list(proteomic_sd_ALS_table_sensi_1_7_male = proteomic_sd_ALS_table_sensi_1_7_male,
                           proteomic_quart_ALS_table_sensi_1_7_male = proteomic_quart_ALS_table_sensi_1_7_male,
                           
                           proteomic_sd_ALS_base_figure_sensi_1_7_male = proteomic_sd_ALS_base_figure_sensi_1_7_male, 
-                          proteomic_sd_ALS_adjusted_figure_sensi_1_7_male = proteomic_sd_ALS_adjusted_figure_sensi_1_7_male,
-                          
-                          cox_gam_results_base_sensi_1_7_male = cox_gam_results_base_sensi_1_7_male, 
-                          cox_gam_results_adjusted_sensi_1_7_male = cox_gam_results_adjusted_sensi_1_7_male, 
-                          plot_base_cox_gam_danish_sensi_1_7_male = plot_base_cox_gam_danish_sensi_1_7_male, 
-                          plot_adjusted_cox_gam_danish_sensi_1_7_male = plot_adjusted_cox_gam_danish_sensi_1_7_male), 
+                          proteomic_sd_ALS_adjusted_figure_sensi_1_7_male = proteomic_sd_ALS_adjusted_figure_sensi_1_7_male), 
+    
     NfL_results = list(NfL_sd_ALS_table = NfL_sd_ALS_table, 
                        NfL_quart_ALS_table = NfL_quart_ALS_table, 
                        NfL_sd_ALS_table_sensi_follow_up = NfL_sd_ALS_table_sensi_follow_up, 
@@ -3419,7 +2995,7 @@ results_proteomic_ALS_survival <-
                        NfL_sd_ALS_table_sensi_sex = NfL_sd_ALS_table_sensi_sex))
 
 
-#saveRDS(results_proteomic_ALS_survival, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_survival.rds")
+saveRDS(results_proteomic_ALS_survival, file = "~/Documents/POP_ALS_2025_02_03/2_output/2.7_results_proteomic_ALS_survival.rds")
 
 
 rm(bdd_cases_danish, 
@@ -3431,11 +3007,6 @@ rm(bdd_cases_danish,
    proteomic_quart_ALS_table, 
    proteomic_sd_ALS_base_figure, 
    proteomic_sd_ALS_adjusted_figure, 
-   cox_gam_results_base, 
-   cox_gam_results_adjusted, 
-   plot_base_cox_gam_danish, 
-   plot_adjusted_cox_gam_danish,
-   fit_and_plot_cox_gam, 
    NfL_sd_ALS_table,
    NfL_quart_ALS_table,
    NfL_sd_ALS_table_sensi_follow_up,

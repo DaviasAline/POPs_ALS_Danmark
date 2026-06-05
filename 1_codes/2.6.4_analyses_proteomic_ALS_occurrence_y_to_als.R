@@ -6,100 +6,6 @@ source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 
 # 1. Cox analyses among cases ----
 ## 1.1 Proteome wide associations ----
-fit_and_plot_cox_gam <- function(
-    data,
-    vars = proteomic,
-    time = "follow_up",
-    status = "als", 
-    covariates = c("sex", "baseline_age"),  # default
-    vars_labels = NULL,
-    y_limits = c(-12, 12),
-    title = "Base model"                     # default
-) {
-  
-  # 1. Gestion des labels
-  if (is.null(vars_labels)) {
-    vars_labels <- set_names(vars, vars)
-  }
-  
-  # Sous-fonction pour traiter une protéine
-  fit_one <- function(var) {
-    
-    outcome <- cbind(data[[time]], data[[status]])
-    formula_str <- paste0(
-      "outcome ~ s(", var, ") + ",
-      paste(covariates, collapse = " + "))
-    
-    model <- mgcv::gam(as.formula(formula_str),
-                       data = data,
-                       family = cox.ph())
-    
-    smry <- summary(model)
-    edf_val <- smry$s.table[1, "edf"]
-    pval_raw <- smry$s.table[1, "p-value"]
-    
-    edf_label <- format(edf_val, nsmall = 1, digits = 1)
-    pval_label <- case_when(
-      pval_raw < 0.01 ~ "< 0.01",
-      pval_raw > 0.99 ~ "> 0.99",
-      TRUE ~ format(pval_raw, nsmall = 2, digits = 2))
-    
-    pdf(NULL)
-    plot_data_raw <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE)
-    dev.off()
-    
-    if (length(plot_data_raw) == 0) return(NULL)
-    
-    plot_data <- plot_data_raw[[1]]
-    smooth_df <- data.frame(
-      x = plot_data$x,
-      fit = plot_data$fit,
-      se = plot_data$se)
-    
-    p1 <- ggplot(smooth_df, aes(x = x, y = fit)) +
-      geom_line(linewidth = 1.2, color = "steelblue") +
-      geom_ribbon(aes(ymin = fit - 2 * se, 
-                      ymax = fit + 2 * se),
-                  alpha = 0.2, fill = "steelblue") +
-      labs(
-        title = title,
-        y = "LogHR (smooth estimate)",
-        x = NULL) +
-      annotate(
-        "text",
-        x = -Inf, y = Inf,
-        hjust = -0.1, vjust = 1.5,
-        label = paste0("EDF: ", edf_label, "\np-value: ", pval_label),
-        size = 4.2) +
-      scale_y_continuous(limits = y_limits) +
-      theme_minimal() +
-      theme(
-        axis.text.x = element_blank(),
-        axis.title.x = element_blank(),
-        axis.line.x = element_blank(),
-        axis.ticks.x = element_blank())
-    
-    p2 <- ggplot(data, aes(x = .data[[var]], y = 1)) +
-      geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
-      labs(x = vars_labels[[var]]) +
-      theme_minimal() +
-      theme(
-        axis.text.y = element_blank(),
-        axis.title.y = element_blank(),
-        axis.ticks.y = element_blank())
-    
-    list(
-      model = model,
-      pval_raw = pval_raw,
-      plot = p1 / p2 + plot_layout(heights = c(10, 1)))
-  }
-  
-  results <- map(vars, fit_one)
-  names(results) <- vars_labels[vars]
-  
-  return(results)
-}
-
 bdd_danish_cases <- bdd_danish |> filter(als == 1)
 
 surv_obj <- Surv(time = bdd_danish_cases$follow_up, event = bdd_danish_cases$als)
@@ -283,27 +189,7 @@ rm(heterogeneity_base, heterogeneity_adjusted,
 
 
 ### Cox model (GAMs) ----
-vars_labels <- 
-  set_names(str_replace(proteomic, 
-                        "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_", 
-                        ""), 
-            proteomic)
-
-
-#### Base ----
-cox_gam_results_base <- 
-  fit_and_plot_cox_gam(data = bdd_danish_cases, 
-                       vars_labels = vars_labels, 
-                       covariates = c("sex", "baseline_age"), 
-                       title = "Base model")
-
-#### Adjusted ----
-cox_gam_results_adjusted <- 
-  fit_and_plot_cox_gam(data = bdd_danish_cases, 
-                       vars_labels = vars_labels, 
-                       covariates = c("sex", "baseline_age", "smoking_2cat_i", "bmi"), 
-                       title = "Adjusted model")
-rm(vars_labels, surv_obj)
+# direct dans 3 output 
 
 
 ### Assemblage ----
@@ -351,14 +237,11 @@ main_results <- main_results |>
 
 results_proteomic_ALS_occurrence_y_to_als <- list()
 results_proteomic_ALS_occurrence_y_to_als$main_results_cox <- 
-  list(main_results = main_results, 
-       cox_gam_results_base = cox_gam_results_base, 
-       cox_gam_results_adjusted = cox_gam_results_adjusted)
+  list(main_results = main_results)
 
 rm(model1_cox_sd, model2_cox_sd, 
    model1_cox_quart, model2_cox_quart, 
    heterogeneity_tests, trend_tests, 
-   cox_gam_results_base, cox_gam_results_adjusted, 
    main_results, 
    bdd_danish_cases, surv_obj)
 
@@ -543,15 +426,12 @@ results_proteomic_ALS_occurrence_y_to_als$main_results_cox$proteomic_sd_ALS_adju
 
 
 #### Figure proteomic - als survival - base gam (main) ----
-results_proteomic_ALS_occurrence_y_to_als$main_results_cox$plot_base_cox_gam_danish <- list(
-  signif = map(keep(results_proteomic_ALS_occurrence_y_to_als$main_results_cox$cox_gam_results_base, ~ .x$pval_raw <= 0.05), "plot"),
-  not_signif = map(keep(results_proteomic_ALS_occurrence_y_to_als$main_results_cox$cox_gam_results_base, ~ .x$pval_raw > 0.05), "plot"))
+# direct dans 3 output
 
 
 #### Figure proteomic - als survival - adjusted gam (main) ----
-results_proteomic_ALS_occurrence_y_to_als$main_results_cox$plot_adjusted_cox_gam_danish <- list(
-  signif = map(keep(results_proteomic_ALS_occurrence_y_to_als$main_results_cox$cox_gam_results_adjusted, ~ .x$pval_raw <= 0.05), "plot"),
-  not_signif = map(keep(results_proteomic_ALS_occurrence_y_to_als$main_results_cox$cox_gam_results_adjusted, ~ .x$pval_raw > 0.05), "plot"))
+# direct dans 3 output
+
 
 ### 1.2 XGBoost -----
 
@@ -1609,8 +1489,6 @@ rm(cv_10ans, final_xgb_10, importance_10, best_nrounds_10,
   cv_20ans, final_xgb_20,  importance_20,  best_nrounds_20)
 
 
-
-
 # 3. Logistic models including time as a predictor----
 ## Proteome wide associations ----
 ### Logistic models (sd) ----
@@ -1701,7 +1579,7 @@ results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$proteom
 rm(m1, m2, sum1, sum2, combined, form1, form2, var, main_results_interaction_sd, proteomic_interaction_table)
 
 ## Machine learning (XGboost) ----
-### preparation des données
+### preparation des données ----
 covar_xgboost <- c(proteomic, "birth_year", "sex", "follow_up_no_na_y", "smoking_2cat_i", "bmi")    # pas besoin de standardisation avec xgboost
 X_data <- bdd_danish |> 
   select(all_of(covar_xgboost), match, als) |>
@@ -1711,11 +1589,11 @@ id_match <- X_data$match
 Y_data <- X_data$als
 X_data <- X_data |> select(-match, - als)
 
-### preparation des combinaisons d'hyperparameters
+### Etape 1 : choisir les meilleurs hyperparameters avec super learner (excepté nb de trees) ----
 tune_grid <- expand.grid(
-  max_depth = c(3, 4, 6),
+  max_depth = c(2, 3, 4),
   shrinkage = c(0.01, 0.05, 0.1), # = eta 
-  ntrees = c(500, 1000),   # choose later, 
+  ntrees = 1500,   # choose a big number and then define later when knowing the best hyperparameters with the "early_stopping_rounds" argument
   colsample_bytree = c(0.6, 0.8))
 
 tuning_library <- c()
@@ -1738,62 +1616,194 @@ for (i in 1:nrow(tune_grid)) {
   tuning_library <- c(tuning_library, name)
 }
 
-### Model 
 set.seed(1996)
-cv_sl_fit <- CV.SuperLearner(
+cv_sl_1_NNLS <- CV.SuperLearner(
   Y = Y_data,                                       # Outcome
   X = X_data,                                       # Predictors (proteins + covariates)
   family = binomial(),                              # Binary outcome (0/1)
   SL.library = tuning_library,                      # Full list of 36 XGBoost combinations
   id = id_match,                                    # Matching structure (propagated to inner/outer)
-  method = "method.AUC",                            # Optimisation basée sur l'AUC
+  #method = "method.AUC",                            # Optimisation basée sur l'AUC
+  method = "method.NNLS",                            # Optimisation basée sur l'AUC
   cvControl = list(V = 10),                         # External CV: 10 folds pour l'évaluation globale
   innerCvControl = list(list(V = 10)),              # Internal CV: 10 folds pour estimer les poids optimaux
   control = list(
     saveFitLibrary = TRUE,                          # Conserve les modèles pour l'importance des variables
     trimLogit = 0.001))
 
+set.seed(1996)
+cv_sl_1_AUC <- CV.SuperLearner(
+  Y = Y_data,                                       # Outcome
+  X = X_data,                                       # Predictors (proteins + covariates)
+  family = binomial(),                              # Binary outcome (0/1)
+  SL.library = tuning_library,                      # Full list of 36 XGBoost combinations
+  id = id_match,                                    # Matching structure (propagated to inner/outer)
+  method = "method.AUC",                            # Optimisation basée sur l'AUC
+  #method = "method.NNLS",                            # Optimisation basée sur l'AUC
+  cvControl = list(V = 10),                         # External CV: 10 folds pour l'évaluation globale
+  innerCvControl = list(list(V = 10)),              # Internal CV: 10 folds pour estimer les poids optimaux
+  control = list(
+    saveFitLibrary = TRUE,                          # Conserve les modèles pour l'importance des variables
+    trimLogit = 0.001))
+
+rm(tune_grid, tuning_library, i)
+
 # Visualisation
-summary(cv_sl_fit)
-plot(cv_sl_fit)
+summary(cv_sl_1_NNLS)
+plot(cv_sl_1_NNLS)
 
-results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost <- 
-  list(cv_sl_fit = cv_sl_fit)
+summary(cv_sl_1_AUC)
+plot(cv_sl_1_AUC)
 
-# 1. Définition de l'algorithme
-SL.xgb.champion <- function(...) {
-  SL.xgboost(..., 
-             max_depth = 3, 
-             shrink = 0.01, 
-             ntrees = 500, 
-             colsample_bytree = 0.6)
+
+### Etape 2 : choisir le nb de trees avec SL (grace a l'argument early_stopping_rounds ) et les meilleurs hyperparameters choisis en 1 ----
+# 1. On retire ntrees de la grille car on va le fixer à une valeur max élevée
+tune_grid <- expand.grid(
+  max_depth = 2,
+  shrinkage = 0.01, # eta 
+  colsample_bytree = 0.8)
+
+tuning_library_2 <- c()
+
+for (i in 1:nrow(tune_grid)) {
+  name <- paste0("SL.xgb.d", tune_grid$max_depth[i], 
+                 ".s", tune_grid$shrinkage[i], 
+                 ".c", tune_grid$colsample_bytree[i],
+                 ".es")
+  
+  eval(parse(text = paste0(
+    name, " <- function(...) { ",
+    "SL.xgboost(..., ",
+    "max_depth = ", tune_grid$max_depth[i], ", ",
+    "shrink = ", tune_grid$shrinkage[i], ", ",
+    "colsample_bytree = ", tune_grid$colsample_bytree[i], ", ",
+    "ntrees = 5000, ", 
+    # AJOUT CRUCIAL : Passage via xtune pour que l'early stopping fonctionne
+    "xtune = list(early_stopping_rounds = 20, maximize = FALSE)) }" 
+  )))
+  tuning_library_2 <- c(tuning_library_2, name)
 }
 
-# 2. Entraînement du modèle unique sur 100% des données
 set.seed(1996)
-final_model_fit <- SuperLearner(
-  Y = Y_data,
-  X = X_data,
-  family = binomial(),
-  SL.library = "SL.xgb.champion",
-  id = id_match
-)
+cv_sl_2_NNLS <- CV.SuperLearner(
+  Y = Y_data,                                       # Outcome
+  X = X_data,                                       # Predictors (proteins + covariates)
+  family = binomial(),                              # Binary outcome (0/1)
+  SL.library = tuning_library_2,                    # Full list of 36 XGBoost combinations
+  id = id_match,                                    # Matching structure (propagated to inner/outer)
+  #method = "method.AUC",                           # Optimisation basée sur l'AUC
+  method = "method.NNLS",                           # Optimisation basée sur l'AUC
+  cvControl = list(V = 10),                         # External CV: 10 folds pour l'évaluation globale
+  innerCvControl = list(list(V = 10)),              # Internal CV: 10 folds pour estimer les poids optimaux
+  control = list(
+    saveFitLibrary = TRUE,                          # Conserve les modèles pour l'importance des variables
+    trimLogit = 0.001))
 
-# 3. Extraction de l'objet XGBoost natif
-native_xgb <- final_model_fit$fitLibrary$SL.xgb.champion_All$object
+set.seed(1996)
+cv_sl_2_AUC <- CV.SuperLearner(
+  Y = Y_data,                                       # Outcome
+  X = X_data,                                       # Predictors (proteins + covariates)
+  family = binomial(),                              # Binary outcome (0/1)
+  SL.library = tuning_library_2,                    # Full list of 36 XGBoost combinations
+  id = id_match,                                    # Matching structure (propagated to inner/outer)
+  method = "method.AUC",                            # Optimisation basée sur l'AUC
+  #method = "method.NNLS",                          # Optimisation basée sur l'AUC
+  cvControl = list(V = 10),                         # External CV: 10 folds pour l'évaluation globale
+  innerCvControl = list(list(V = 10)),              # Internal CV: 10 folds pour estimer les poids optimaux
+  control = list(
+    saveFitLibrary = TRUE,                          # Conserve les modèles pour l'importance des variables
+    trimLogit = 0.001))
 
-# 4. Calcul et affichage de la matrice d'importance
-importance_matrix <- xgb.importance(model = native_xgb)
+rm(tune_grid, tuning_library_2, i)
 
-# Afficher le Top 20 des variables (Protéines + Covariables)
-cat("--- TOP 20 DES PRÉDICTEURS LES PLUS IMPORTANTS ---\n")
-print(head(importance_matrix, 20))
+# Visualisation
+summary(cv_sl_2_NNLS)
+plot(cv_sl_2_NNLS)
 
-# 5. Graphique simple 
-xgb.plot.importance(importance_matrix[1:276, ])
+summary(cv_sl_2_AUC)
+plot(cv_sl_2_AUC)
 
 
-rm(covar_xgboost, X_data, id_match, Y_data, X_data, cv_sl_fit)
+### Etape 1 et 2 mixées ensemble ----
+tune_grid <- expand.grid(
+  max_depth = c(2, 3, 4),
+  shrinkage = c(0.01, 0.05, 0.1), # = eta
+  colsample_bytree = c(0.6, 0.8))
+
+tuning_library_1_2 <- c()
+
+for (i in 1:nrow(tune_grid)) {
+  name <- paste0("SL.xgb.d", tune_grid$max_depth[i], 
+                 ".s", tune_grid$shrinkage[i], 
+                 ".c", tune_grid$colsample_bytree[i],
+                 ".es") # .es pour Early Stopping
+  
+  eval(parse(text = paste0(
+    name, " <- function(...) { ",
+    "SL.xgboost(..., ",
+    "max_depth = ", tune_grid$max_depth[i], ", ",
+    "shrink = ", tune_grid$shrinkage[i], ", ",
+    "colsample_bytree = ", tune_grid$colsample_bytree[i], ", ",
+    "ntrees = 5000, ",              # Maximum élevé sécurisé
+    "xtune = list(early_stopping_rounds = 20, maximize = FALSE)) }" 
+  )))
+  
+  tuning_library_1_2 <- c(tuning_library_1_2, name)
+}
+
+set.seed(1996)
+cv_sl_1_2_NNLS <- CV.SuperLearner(
+  Y = Y_data,                                        # Votre Outcome binaire (0/1)
+  X = X_data,                                        # Vos 281 prédicteurs (protéines + covariables)
+  family = binomial(),                               # Modèle de classification binaire
+  SL.library = tuning_library_1_2,                   # Les 18 combinaisons XGBoost créées au-dessus
+  id = id_match,                                     # Structure d'appariement pour éviter les fuites de données
+  #method = "method.AUC",                            # Optimisation basée sur l'AUC
+  method = "method.NNLS",                            # Combinaison optimale des modèles par NNLS
+  cvControl = list(V = 10),                          # CV Externe : 10 folds pour l'évaluation globale
+  innerCvControl = list(list(V = 10)),               # CV Interne : 10 folds pour l'estimation des poids
+  control = list(
+    saveFitLibrary = TRUE,                           # Garde les modèles en mémoire pour l'importance des variables
+    trimLogit = 0.001))
+
+set.seed(1996)
+cv_sl_1_2_AUC <- CV.SuperLearner(
+  Y = Y_data,                                       # Outcome
+  X = X_data,                                       # Predictors (proteins + covariates)
+  family = binomial(),                              # Binary outcome (0/1)
+  SL.library = tuning_library_1_2,                    # Full list of 36 XGBoost combinations
+  id = id_match,                                    # Matching structure (propagated to inner/outer)
+  method = "method.AUC",                            # Optimisation basée sur l'AUC
+  #method = "method.NNLS",                          # Optimisation basée sur NNLS
+  cvControl = list(V = 10),                         # External CV: 10 folds pour l'évaluation globale
+  innerCvControl = list(list(V = 10)),              # Internal CV: 10 folds pour estimer les poids optimaux
+  control = list(
+    saveFitLibrary = TRUE,                          # Conserve les modèles pour l'importance des variables
+    trimLogit = 0.001))
+
+rm(tune_grid, tuning_library_1_2, i)
+
+# Visualisation
+summary(cv_sl_1_2_NNLS)
+plot(cv_sl_1_2_NNLS)
+
+summary(cv_sl_1_2_AUC)
+plot(cv_sl_1_2_AUC)
+
+results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost <- 
+  list(cv_sl_1_AUC = cv_sl_1_AUC, 
+       cv_sl_1_NNLS = cv_sl_1_NNLS, 
+       cv_sl_2_AUC = cv_sl_2_AUC, 
+       cv_sl_2_NNLS = cv_sl_2_NNLS, 
+       cv_sl_1_2_AUC = cv_sl_1_2_AUC, 
+       cv_sl_1_2_NNLS = cv_sl_1_2_NNLS)
+
+
+
+rm(covar_xgboost, X_data, id_match, Y_data,
+   cv_sl_1_AUC, cv_sl_1_NNLS, 
+   cv_sl_1_2_AUC, cv_sl_1_2_NNLS, 
+   cv_sl_2_AUC, cv_sl_2_NNLS)
 
 # 4. Stratified logistic models?----
 # 5. Analyse Cox tronqué (Landmark)?----
@@ -1801,9 +1811,5 @@ rm(covar_xgboost, X_data, id_match, Y_data, X_data, cv_sl_fit)
 # 7. Modèle AFT (survreg)? ----
 
 
-results_proteomic_ALS_occurrence_y_to_als$main_results_cox$plot_base_cox_gam_danish <- NULL # trop gros 
-results_proteomic_ALS_occurrence_y_to_als$main_results_cox$plot_adjusted_cox_gam_danish <- NULL # trop gros 
-saveRDS(results_proteomic_ALS_occurrence_y_to_als, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_occurrence_y_to_als.rds")
-
-#results_proteomic_ALS_occurrence_y_to_als <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_occurrence_y_to_als.rds") 
+saveRDS(results_proteomic_ALS_occurrence_y_to_als, file = "~/Documents/POP_ALS_2025_02_03/2_output/2.6.4_results_proteomic_ALS_occurrence_y_to_als.rds")
 

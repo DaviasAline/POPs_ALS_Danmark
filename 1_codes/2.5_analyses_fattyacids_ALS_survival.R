@@ -358,7 +358,7 @@ results_fattyacids_ALS_survival <-
          survival_plots_danish = survival_plots_danish))
 
 
-saveRDS(results_fattyacids_ALS_survival, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_fattyacids_ALS_survival.rds")
+saveRDS(results_fattyacids_ALS_survival, file = "~/Documents/POP_ALS_2025_02_03/2_output/2.5_results_fattyacids_ALS_survival.rds")
 
 
 rm(main_results_fattyacids_ALS_survival, 

@@ -5,6 +5,339 @@
 # Data loading - package loading ----
 source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 
+# Data preparation ----
+## Sensi_1 ----
+proteomic_sensi_1 <-
+  proteomic |> 
+  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1")
+proteomic_sd_sensi_1 <-
+  proteomic_sd |> 
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_sd")
+proteomic_quart_sensi_1 <-
+  proteomic_quart |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_quart")
+proteomic_quart_med_sensi_1 <-
+  proteomic_quart_med |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_quart_med")
+
+bdd_danish_sensi_1 <- 
+  bdd_danish  |> 
+  mutate(
+    proteomic_neuro_explo_NEFL_sensi_1 = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
+  mutate(across(all_of(proteomic_sensi_1),
+                ~as.numeric(scale(.x)),
+                .names = "{.col}_sd")) |>
+  mutate(across(
+    all_of(proteomic_sensi_1),
+    ~ {
+      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
+      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
+      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
+      quart_meds[quartiles]                                                     
+    },
+    .names = "{.col}_quart_med")) |>
+  mutate(across(all_of(proteomic_sensi_1), ~ factor(ntile(.x, 4),                           
+                                                    labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) 
+
+## Sensi_2 ----
+bdd_danish_sensi_2 <- 
+  bdd_danish |>
+  group_by(match) |>                                                             
+  filter(any(als == 1 & follow_up < 60)) |>                                     # sensi 2 : we remove cases (and their controls) with follow-up > 60 months 
+  ungroup()|>
+  mutate(across(all_of(proteomic),
+                ~as.numeric(scale(.x)),
+                .names = "{.col}_sd")) |>
+  mutate(across(all_of(proteomic), ~ factor(ntile(.x, 4),                           
+                                            labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) |>
+  mutate(across(
+    all_of(proteomic),
+    ~ {
+      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
+      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
+      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
+      quart_meds[quartiles]                                                     
+    },
+    .names = "{.col}_quart_med"
+  ))
+
+## Sensi_3 ----
+bdd_danish_sensi_3 <- 
+  bdd_danish |>
+  group_by(match) |>
+  filter(any(als == 1 & follow_up > 60)) |>                                     # had to remove 17 cases with follow-up<60 months (and their controls) -> 51 people
+  ungroup() |>
+  mutate(across(all_of(proteomic),
+                ~as.numeric(scale(.x)),
+                .names = "{.col}_sd")) |>
+  mutate(across(all_of(proteomic), ~ factor(ntile(.x, 4),                           
+                                            labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) |>
+  mutate(across(
+    all_of(proteomic),
+    ~ {
+      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
+      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
+      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
+      quart_meds[quartiles]                                                     
+    },
+    .names = "{.col}_quart_med"
+  ))
+
+## Sensi_1_3 ----
+
+proteomic_sensi_1_3 <-
+  proteomic |> 
+  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3")
+proteomic_sd_sensi_1_3 <-
+  proteomic_sd |> 
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_3_sd")
+proteomic_quart_sensi_1_3 <-
+  proteomic_quart |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_3_quart")
+proteomic_quart_med_sensi_1_3 <-
+  proteomic_quart_med |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_3_quart_med")
+
+
+bdd_danish_sensi_1_3 <- 
+  bdd_danish |>
+  group_by(match) |>                                                            # sensi 3 : we remove cases (and their controls) with follow-up <60 months to see if the association with NfL really happens a long time before ALS diagnosis 
+  filter(any(als == 1 & follow_up > 60)) |>
+  ungroup()|>
+  mutate(                                                                       # sensi 1 : we remove NfL in match 159 because it's an outlier
+    proteomic_neuro_explo_NEFL_sensi_1_3 =
+      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
+  mutate(across(all_of(proteomic_sensi_1_3),
+                ~as.numeric(scale(.x)),
+                .names = "{.col}_sd")) |>
+  mutate(across(all_of(proteomic_sensi_1_3), ~ factor(ntile(.x, 4),                           
+                                                      labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) |>
+  mutate(across(
+    all_of(proteomic_sensi_1_3),
+    ~ {
+      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
+      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
+      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
+      quart_meds[quartiles]                                                     
+    },
+    .names = "{.col}_quart_med"
+  ))
+
+## Sensi 1_3_4 ----
+proteomic_sensi_1_3_4 <-
+  proteomic |> 
+  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3_4")
+proteomic_sd_sensi_1_3_4 <-
+  proteomic_sd |> 
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_3_4_sd")
+proteomic_quart_sensi_1_3_4 <-
+  proteomic_quart |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_3_4_quart")
+proteomic_quart_med_sensi_1_3_4 <-
+  proteomic_quart_med |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_3_4_quart_med")
+
+bdd_danish_sensi_1_3_4 <- 
+  bdd_danish |>
+  group_by(match) |>                                                              
+  filter(any(als == 1 & follow_up > 60)) |>                                     # sensi 3 : we remove cases (and their controls) with follow-up < 60 months
+  ungroup() |>
+  mutate(                                                                       # sensi 1 : we remove NfL in match 159 because it's an outlier
+    proteomic_neuro_explo_NEFL_sensi_1_3_4 = 
+      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
+  mutate(seuil = quantile(follow_up, 0.5, na.rm = TRUE)) |>                     # sensi 4 : we remove 50% of the highest values of follow-up (after removing the follow-up<5years)
+  group_by(match) |>
+  filter(any(als == 1 & follow_up <= seuil)) |>
+  ungroup() |>
+  select(-seuil) |>
+  mutate(across(all_of(proteomic_sensi_1_3_4),
+                ~as.numeric(scale(.x)),
+                .names = "{.col}_sd")) |>
+  mutate(across(all_of(proteomic_sensi_1_3_4), ~ factor(ntile(.x, 4),                           
+                                                        labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) |>
+  mutate(across(
+    all_of(proteomic_sensi_1_3_4),
+    ~ {
+      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
+      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
+      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
+      quart_meds[quartiles]                                                     
+    },
+    .names = "{.col}_quart_med"
+  ))
+
+## Sensi_1_3_5 ----
+proteomic_sensi_1_3_5 <-
+  proteomic |> 
+  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3_5")
+proteomic_sd_sensi_1_3_5 <-
+  proteomic_sd |> 
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_3_5_sd")
+proteomic_quart_sensi_1_3_5 <-
+  proteomic_quart |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_3_5_quart")
+proteomic_quart_med_sensi_1_3_5 <-
+  proteomic_quart_med |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_3_5_quart_med")
+
+
+bdd_danish_sensi_1_3_5 <- 
+  bdd_danish |>
+  group_by(match) |>                                                            # sensi 3 : we remove cases (and their controls) with follow-up < 60 months  
+  filter(any(als == 1 & follow_up > 60)) |>
+  ungroup()|>
+  mutate(                                                                       # sensi 1 : we remove NfL in match 159 because it's an outlier
+    proteomic_neuro_explo_NEFL_sensi_1_3_5 = 
+      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
+  mutate(seuil = quantile(follow_up, 0.5, na.rm = TRUE)) |>                     # sensi 5 : we remove 50% of the lowest values of follow-up (after removing the follow-up<5years)
+  group_by(match) |>
+  filter(any(als == 1 & follow_up > seuil)) |>
+  ungroup() |>
+  select(-seuil) |>
+  mutate(across(all_of(proteomic_sensi_1_3_5),
+                ~as.numeric(scale(.x)),
+                .names = "{.col}_sd")) |>
+  mutate(across(all_of(proteomic_sensi_1_3_5), ~ factor(ntile(.x, 4),                           
+                                                        labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) |>
+  mutate(across(
+    all_of(proteomic_sensi_1_3_5),
+    ~ {
+      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
+      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
+      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
+      quart_meds[quartiles]                                                     
+    },
+    .names = "{.col}_quart_med"
+  ))
+
+## Sensi_6 ----
+bdd_danish_sensi_6 <- bdd_danish |>                                             # just for visualisation of follow up distribution 
+  group_by(match) |>
+  mutate(follow_up_years = follow_up/12, 
+         follow_up_ter = follow_up_years[als == 1]) |>
+  ungroup() |>
+  mutate(
+    follow_up_ter = cut(
+      follow_up_ter,
+      breaks = quantile(follow_up_ter, probs = c(0, 1/3, 2/3, 1), na.rm = TRUE),
+      include.lowest = TRUE))
+
+## Sensi_1_6 ----
+
+bdd_danish_sensi_1_6 <- 
+  bdd_danish  |>
+  mutate(
+    proteomic_neuro_explo_NEFL_sd_sensi_1_6 = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd)) |>
+  group_by(match) |>
+  mutate(follow_up_ter = follow_up[als == 1]) |>
+  ungroup() |>
+  mutate(
+    follow_up_ter = cut(
+      follow_up_ter,
+      breaks = quantile(follow_up_ter, probs = c(0, 1/3, 2/3, 1), na.rm = TRUE),
+      include.lowest = TRUE, 
+      labels = c("Tertile 1", "Tertile 2", "Tertile 3")))
+bdd_danish_sensi_1_6_T1 <- 
+  bdd_danish_sensi_1_6 |>
+  filter(follow_up_ter == "Tertile 1")
+bdd_danish_sensi_1_6_T2 <- 
+  bdd_danish_sensi_1_6 |>
+  filter(follow_up_ter == "Tertile 2")
+bdd_danish_sensi_1_6_T3 <- 
+  bdd_danish_sensi_1_6 |>
+  filter(follow_up_ter == "Tertile 3")
+
+proteomic_sd_sensi_1_6 <-
+  proteomic_sd |> 
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sd_sensi_1_6")
+
+## Sensi_1_7_female ----
+proteomic_sensi_1_7_female <-
+  proteomic |> 
+  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_7_female")
+proteomic_sd_sensi_1_7_female <-
+  proteomic_sd |> 
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_7_female_sd")
+proteomic_quart_sensi_1_7_female <-
+  proteomic_quart |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_7_female_quart")
+proteomic_quart_med_sensi_1_7_female <-
+  proteomic_quart_med |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_7_female_quart_med")
+
+
+bdd_danish_sensi_1_7_female <- 
+  bdd_danish |>
+  group_by(match) |>                                                            # sensi 7 : we keep cases (and their controls) that are females 
+  filter(any(als == 1 & sex == "Female")) |>
+  ungroup()|>
+  mutate(                                                                       # sensi 1 : we remove NfL in match 159 because it's an outlier
+    proteomic_neuro_explo_NEFL_sensi_1_7_female =
+      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
+  mutate(across(all_of(proteomic_sensi_1_7_female),
+                ~as.numeric(scale(.x)),
+                .names = "{.col}_sd")) |>
+  mutate(across(all_of(proteomic_sensi_1_7_female), ~ factor(ntile(.x, 4),                           
+                                                             labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) |>
+  mutate(across(
+    all_of(proteomic_sensi_1_7_female),
+    ~ {
+      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
+      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
+      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
+      quart_meds[quartiles]                                                     
+    },
+    .names = "{.col}_quart_med"))
+
+## Sensi_1_7_male ----
+proteomic_sensi_1_7_male <-
+  proteomic |> 
+  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_7_male")
+proteomic_sd_sensi_1_7_male <-
+  proteomic_sd |> 
+  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_7_male_sd")
+proteomic_quart_sensi_1_7_male <-
+  proteomic_quart |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_7_male_quart")
+proteomic_quart_med_sensi_1_7_male <-
+  proteomic_quart_med |> 
+  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_7_male_quart_med")
+
+
+bdd_danish_sensi_1_7_male <- 
+  bdd_danish |>
+  group_by(match) |>                                                            # sensi 7 : we keep cases (and their controls) that are male 
+  filter(any(als == 1 & sex == "Male")) |>
+  ungroup()|>
+  mutate(                                                                       # sensi 1 : we remove NfL in match 159 because it's an outlier
+    proteomic_neuro_explo_NEFL_sensi_1_7_male =
+      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
+  mutate(across(all_of(proteomic_sensi_1_7_male),
+                ~as.numeric(scale(.x)),
+                .names = "{.col}_sd")) |>
+  mutate(across(all_of(proteomic_sensi_1_7_male), ~ factor(ntile(.x, 4),                           
+                                                           labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) |>
+  mutate(across(
+    all_of(proteomic_sensi_1_7_male),
+    ~ {
+      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
+      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
+      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
+      quart_meds[quartiles]                                                     
+    },
+    .names = "{.col}_quart_med")) 
+
+
+
+
 # Effects of the covariates on ALS ----
 covar <- tbl_merge(
   tbls = list(
@@ -315,44 +648,7 @@ rm(var, formula, model, model_summary)
 
 
 # Sensi 1 - Removing NfL outlier ----
-proteomic_sensi_1 <-
-  proteomic |> 
-  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1")
-proteomic_sd_sensi_1 <-
-  proteomic_sd |> 
-  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_sd")
-proteomic_quart_sensi_1 <-
-  proteomic_quart |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_quart")
-proteomic_quart_med_sensi_1 <-
-  proteomic_quart_med |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_quart_med")
-
-bdd_danish_sensi_1 <- 
-  bdd_danish  |> 
-  mutate(
-    proteomic_neuro_explo_NEFL_sensi_1 = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
-  mutate(across(all_of(proteomic_sensi_1),
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd")) |>
-  mutate(across(
-    all_of(proteomic_sensi_1),
-    ~ {
-      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
-      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
-      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
-      quart_meds[quartiles]                                                     
-    },
-    .names = "{.col}_quart_med")) |>
-  mutate(across(all_of(proteomic_sensi_1), ~ factor(ntile(.x, 4),                           
-                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) 
-
-
-
-
 ### model 1 sd ----
-
 model1_sd_sensi_1 <- data.frame(explanatory = character(),
                         term = integer(),
                         OR = numeric(),
@@ -398,7 +694,6 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 ## model 1 quartiles ----
-
 model1_quart_sensi_1 <- data.frame(explanatory = character(),
                                    term = integer(),
                                    OR = numeric(),
@@ -446,7 +741,6 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 #### heterogeneity test 
-
 heterogeneity_base_sensi_1 <- map_dfr(
   proteomic_quart_sensi_1,
   function(var) {
@@ -702,33 +996,7 @@ rm(var, formula, model, model_summary)
 
 
 # Sensi 2 - Filtering to cases and their controls with follow-up < 5 years ----
-
-bdd_danish_sensi_2 <- 
-  bdd_danish |>
-  group_by(match) |>                                                             
-  filter(any(als == 1 & follow_up < 60)) |>                                     # sensi 2 : we remove cases (and their controls) with follow-up > 60 months 
-  ungroup()|>
-  mutate(across(all_of(proteomic),
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd")) |>
-  mutate(across(all_of(proteomic), ~ factor(ntile(.x, 4),                           
-                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(
-    all_of(proteomic),
-    ~ {
-      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
-      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
-      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
-      quart_meds[quartiles]                                                     
-    },
-    .names = "{.col}_quart_med"
-  ))
-
-
-
 ### model 1 sd ----
-
 model1_sd_sensi_2 <- data.frame(explanatory = character(),
                                   term = integer(),
                                   OR = numeric(),
@@ -771,7 +1039,6 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 ## model 1 quartiles ----
-
 model1_quart_sensi_2 <- data.frame(explanatory = character(),
                                      term = integer(),
                                      OR = numeric(),
@@ -1041,31 +1308,6 @@ rm(var, formula, model, model_summary)
 
 
 # Sensi 3 - Filtering to cases and their controls with follow_up > 5 years ----
-
-bdd_danish_sensi_3 <- 
-  bdd_danish |>
-  group_by(match) |>
-  filter(any(als == 1 & follow_up > 60)) |>                                     # had to remove 17 cases with follow-up<60 months (and their controls) -> 51 people
-  ungroup() |>
-  mutate(across(all_of(proteomic),
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd")) |>
-  mutate(across(all_of(proteomic), ~ factor(ntile(.x, 4),                           
-                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(
-    all_of(proteomic),
-    ~ {
-      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
-      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
-      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
-      quart_meds[quartiles]                                                     
-    },
-    .names = "{.col}_quart_med"
-  ))
-
-
-
 ### model 1 sd ----
 
 model1_sd_sensi_3 <- data.frame(explanatory = character(),
@@ -1369,49 +1611,6 @@ rm(var, formula, model, model_summary)
 
 
 # Sensi 1 + sensi 3 - Removing the oulier for NfL + filtering cases and their controls with follow_up > 5 years ----
-
-proteomic_sensi_1_3 <-
-  proteomic |> 
-  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3")
-proteomic_sd_sensi_1_3 <-
-  proteomic_sd |> 
-  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_3_sd")
-proteomic_quart_sensi_1_3 <-
-  proteomic_quart |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_3_quart")
-proteomic_quart_med_sensi_1_3 <-
-  proteomic_quart_med |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_3_quart_med")
-
-
-bdd_danish_sensi_1_3 <- 
-  bdd_danish |>
-  group_by(match) |>                                                            # sensi 3 : we remove cases (and their controls) with follow-up <60 months to see if the association with NfL really happens a long time before ALS diagnosis 
-  filter(any(als == 1 & follow_up > 60)) |>
-  ungroup()|>
-  mutate(                                                                       # sensi 1 : we remove NfL in match 159 because it's an outlier
-    proteomic_neuro_explo_NEFL_sensi_1_3 =
-      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
-  mutate(across(all_of(proteomic_sensi_1_3),
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd")) |>
-  mutate(across(all_of(proteomic_sensi_1_3), ~ factor(ntile(.x, 4),                           
-                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(
-    all_of(proteomic_sensi_1_3),
-    ~ {
-      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
-      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
-      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
-      quart_meds[quartiles]                                                     
-    },
-    .names = "{.col}_quart_med"
-  ))
-
-
-
-
 ### model 1 sd ----
 
 model1_sd_sensi_1_3 <- data.frame(explanatory = character(),
@@ -1763,52 +1962,6 @@ rm(var, formula, model, model_summary)
 
 
 # Sensi 1 + sensi 3 + sensi 4 - Removing NfL outlier + filtering cases and their controls with follow- up < 5 years + filtering follow-up <= 50%----
-proteomic_sensi_1_3_4 <-
-  proteomic |> 
-  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3_4")
-proteomic_sd_sensi_1_3_4 <-
-  proteomic_sd |> 
-  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_3_4_sd")
-proteomic_quart_sensi_1_3_4 <-
-  proteomic_quart |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_3_4_quart")
-proteomic_quart_med_sensi_1_3_4 <-
-  proteomic_quart_med |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_3_4_quart_med")
-
-bdd_danish_sensi_1_3_4 <- 
-  bdd_danish |>
-  group_by(match) |>                                                              
-  filter(any(als == 1 & follow_up > 60)) |>                                     # sensi 3 : we remove cases (and their controls) with follow-up < 60 months
-  ungroup() |>
-  mutate(                                                                       # sensi 1 : we remove NfL in match 159 because it's an outlier
-    proteomic_neuro_explo_NEFL_sensi_1_3_4 = 
-      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
-  mutate(seuil = quantile(follow_up, 0.5, na.rm = TRUE)) |>                     # sensi 4 : we remove 50% of the highest values of follow-up (after removing the follow-up<5years)
-  group_by(match) |>
-  filter(any(als == 1 & follow_up <= seuil)) |>
-  ungroup() |>
-  select(-seuil) |>
-  mutate(across(all_of(proteomic_sensi_1_3_4),
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd")) |>
-  mutate(across(all_of(proteomic_sensi_1_3_4), ~ factor(ntile(.x, 4),                           
-                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(
-    all_of(proteomic_sensi_1_3_4),
-    ~ {
-      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
-      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
-      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
-      quart_meds[quartiles]                                                     
-    },
-    .names = "{.col}_quart_med"
-  ))
-
-
-
-
 ### model 1 sd ----
 
 model1_sd_sensi_1_3_4 <- data.frame(explanatory = character(),
@@ -2160,52 +2313,6 @@ rm(var, formula, model, model_summary)
 
 
 # Sensi 1 + sensi 3 + sensi 5 - Removing NfL outlier + filtering cases and their controls with follow-up < 5 years + filtering follow-up > 50%----
-proteomic_sensi_1_3_5 <-
-  proteomic |> 
-  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3_5")
-proteomic_sd_sensi_1_3_5 <-
-  proteomic_sd |> 
-  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_3_5_sd")
-proteomic_quart_sensi_1_3_5 <-
-  proteomic_quart |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_3_5_quart")
-proteomic_quart_med_sensi_1_3_5 <-
-  proteomic_quart_med |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_3_5_quart_med")
-
-
-bdd_danish_sensi_1_3_5 <- 
-  bdd_danish |>
-  group_by(match) |>                                                            # sensi 3 : we remove cases (and their controls) with follow-up < 60 months  
-  filter(any(als == 1 & follow_up > 60)) |>
-  ungroup()|>
-  mutate(                                                                       # sensi 1 : we remove NfL in match 159 because it's an outlier
-    proteomic_neuro_explo_NEFL_sensi_1_3_5 = 
-      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
-  mutate(seuil = quantile(follow_up, 0.5, na.rm = TRUE)) |>                     # sensi 5 : we remove 50% of the lowest values of follow-up (after removing the follow-up<5years)
-  group_by(match) |>
-  filter(any(als == 1 & follow_up > seuil)) |>
-  ungroup() |>
-  select(-seuil) |>
-  mutate(across(all_of(proteomic_sensi_1_3_5),
-              ~as.numeric(scale(.x)),
-              .names = "{.col}_sd")) |>
-  mutate(across(all_of(proteomic_sensi_1_3_5), ~ factor(ntile(.x, 4),                           
-                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(
-    all_of(proteomic_sensi_1_3_5),
-    ~ {
-      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
-      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
-      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
-      quart_meds[quartiles]                                                     
-    },
-    .names = "{.col}_quart_med"
-  ))
-
-
-
 ### model 1 sd ----
 
 model1_sd_sensi_1_3_5 <- data.frame(explanatory = character(),
@@ -2558,17 +2665,6 @@ rm(var, formula, model, model_summary)
 
 # Sensi 6 - stratifiyng the analysis in tertiles of follow-up duration  ----
 ### Visualization ----
-bdd_danish_sensi_6 <- bdd_danish |>                                             # just for visualisation of follow up distribution 
-  group_by(match) |>
-  mutate(follow_up_years = follow_up/12, 
-         follow_up_ter = follow_up_years[als == 1]) |>
-  ungroup() |>
-  mutate(
-    follow_up_ter = cut(
-      follow_up_ter,
-      breaks = quantile(follow_up_ter, probs = c(0, 1/3, 2/3, 1), na.rm = TRUE),
-      include.lowest = TRUE))
-
 sensi_6_table_follow_up <- bdd_danish_sensi_6 |>                                # for visualisation of follow up distribution 
   select(follow_up_years, follow_up_ter) |>
   tbl_summary(by = follow_up_ter)
@@ -2866,34 +2962,6 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var,
 
 
 # Sensi 1 + sensi 6 - Removing the oulier for NfL + stratifiyng the analysis in tertiles of follow-up duration  ----
-
-bdd_danish_sensi_1_6 <- 
-  bdd_danish  |>
-  mutate(
-    proteomic_neuro_explo_NEFL_sd_sensi_1_6 = ifelse(match == 159, NA, proteomic_neuro_explo_NEFL_sd)) |>
-  group_by(match) |>
-  mutate(follow_up_ter = follow_up[als == 1]) |>
-  ungroup() |>
-  mutate(
-    follow_up_ter = cut(
-      follow_up_ter,
-      breaks = quantile(follow_up_ter, probs = c(0, 1/3, 2/3, 1), na.rm = TRUE),
-      include.lowest = TRUE, 
-      labels = c("Tertile 1", "Tertile 2", "Tertile 3")))
-bdd_danish_sensi_1_6_T1 <- 
-  bdd_danish_sensi_1_6 |>
-  filter(follow_up_ter == "Tertile 1")
-bdd_danish_sensi_1_6_T2 <- 
-  bdd_danish_sensi_1_6 |>
-  filter(follow_up_ter == "Tertile 2")
-bdd_danish_sensi_1_6_T3 <- 
-  bdd_danish_sensi_1_6 |>
-  filter(follow_up_ter == "Tertile 3")
-
-proteomic_sd_sensi_1_6 <-
-  proteomic_sd |> 
-  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sd_sensi_1_6")
-
 ### model 1 T1 ----
 model1_sd_sensi_1_6_T1 <- data.frame(explanatory = character(),
                                      term = integer(),
@@ -3152,46 +3220,6 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var,
 
 
 # Sensi 1 + sensi 7 - Removing the oulier for NfL + filtering to females ----
-proteomic_sensi_1_7_female <-
-  proteomic |> 
-  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_7_female")
-proteomic_sd_sensi_1_7_female <-
-  proteomic_sd |> 
-  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_7_female_sd")
-proteomic_quart_sensi_1_7_female <-
-  proteomic_quart |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_7_female_quart")
-proteomic_quart_med_sensi_1_7_female <-
-  proteomic_quart_med |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_7_female_quart_med")
-
-
-bdd_danish_sensi_1_7_female <- 
-  bdd_danish |>
-  group_by(match) |>                                                            # sensi 7 : we keep cases (and their controls) that are females 
-  filter(any(als == 1 & sex == "Female")) |>
-  ungroup()|>
-  mutate(                                                                       # sensi 1 : we remove NfL in match 159 because it's an outlier
-    proteomic_neuro_explo_NEFL_sensi_1_7_female =
-      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
-  mutate(across(all_of(proteomic_sensi_1_7_female),
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd")) |>
-  mutate(across(all_of(proteomic_sensi_1_7_female), ~ factor(ntile(.x, 4),                           
-                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(
-    all_of(proteomic_sensi_1_7_female),
-    ~ {
-      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
-      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
-      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
-      quart_meds[quartiles]                                                     
-    },
-    .names = "{.col}_quart_med"))
-
-
-
 ### model 1 sd ----
 
 model1_sd_sensi_1_7_female <- data.frame(explanatory = character(),
@@ -3540,46 +3568,6 @@ rm(var, formula, model, model_summary)
 
 
 # Sensi 1 + sensi 7 - Removing the oulier for NfL + filtering to male ----
-proteomic_sensi_1_7_male <-
-  proteomic |> 
-  str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_7_male")
-proteomic_sd_sensi_1_7_male <-
-  proteomic_sd |> 
-  str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sensi_1_7_male_sd")
-proteomic_quart_sensi_1_7_male <-
-  proteomic_quart |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart", "proteomic_neuro_explo_NEFL_sensi_1_7_male_quart")
-proteomic_quart_med_sensi_1_7_male <-
-  proteomic_quart_med |> 
-  str_replace("proteomic_neuro_explo_NEFL_quart_med", "proteomic_neuro_explo_NEFL_sensi_1_7_male_quart_med")
-
-
-bdd_danish_sensi_1_7_male <- 
-  bdd_danish |>
-  group_by(match) |>                                                            # sensi 7 : we keep cases (and their controls) that are male 
-  filter(any(als == 1 & sex == "Male")) |>
-  ungroup()|>
-  mutate(                                                                       # sensi 1 : we remove NfL in match 159 because it's an outlier
-    proteomic_neuro_explo_NEFL_sensi_1_7_male =
-      ifelse(match == 159, NA, proteomic_neuro_explo_NEFL)) |>
-  mutate(across(all_of(proteomic_sensi_1_7_male),
-                ~as.numeric(scale(.x)),
-                .names = "{.col}_sd")) |>
-  mutate(across(all_of(proteomic_sensi_1_7_male), ~ factor(ntile(.x, 4),                           
-                                            labels = c("Q1", "Q2", "Q3", "Q4")),
-                .names = "{.col}_quart")) |>
-  mutate(across(
-    all_of(proteomic_sensi_1_7_male),
-    ~ {
-      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
-      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
-      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
-      quart_meds[quartiles]                                                     
-    },
-    .names = "{.col}_quart_med")) 
-
-
-
 ### model 1 sd ----
 
 model1_sd_sensi_1_7_male <- data.frame(explanatory = character(),
@@ -5114,137 +5102,6 @@ youden_NfL_sensi_1_3_5_adjusted
 
 # Figures and Tables ----
 
-make_gam_plot_base <- function(var, data) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
-  
-  model <- mgcv::gam(formula, family = binomial, method = "REML", data = data)
-  
-  bdd_pred <- data |>
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x))
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(
-      prob = plogis(pred$fit),
-      prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-      prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1)
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01",
-                         format(p_value, nsmall = 2, digits = 2))
-  
-  x_min <- min(data[[var]], na.rm = TRUE)
-  x_label <- all_vars_labels[var]
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "steelblue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper),
-                fill = "steelblue", alpha = 0.2) +
-    labs(y = "Predicted probability of ALS") +
-    annotate(
-      "text", x = x_min, y = Inf,
-      label = paste("EDF:", edf, "\np-value:", p_value_text),
-      hjust = 0, vjust = 1.2, size = 4) +
-    scale_y_continuous(limits = c(0, 1)) +
-    theme_minimal() +
-    theme(
-      axis.text.x = element_blank(),
-      axis.title.x = element_blank(),
-      axis.line.x = element_blank(),
-      axis.ticks.x = element_blank()) +
-    ggtitle("Base model")
-  
-  p2 <- ggplot(bdd_pred, aes(x = "", y = .data[[var]])) +
-    geom_boxplot(fill = "steelblue") +
-    coord_flip() +
-    ylab(x_label) +
-    xlab("") +
-    theme_minimal()
-  
-  p <- p1 / p2 +
-    plot_layout(heights = c(10, 1), guides = "collect")
-  
-  list(
-    plot = p,
-    p_value = p_value)
-}
-
-
-make_gam_plot_adjusted <- function(var, data) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age  + smoking_2cat_i + bmi"))
-  
-  model <- mgcv::gam(formula, family = binomial, method = "REML", data = data)
-  
-  bdd_pred <- data |>
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_sex = names(which.max(table(sex))), 
-      adj_bmi = mean(bmi, na.rm = TRUE),
-      adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x))
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(
-      prob = plogis(pred$fit),
-      prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-      prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1)
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01",
-                         format(p_value, nsmall = 2, digits = 2))
-  
-  x_min <- min(data[[var]], na.rm = TRUE)
-  x_label <- all_vars_labels[var]
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "steelblue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper),
-                fill = "steelblue", alpha = 0.2) +
-    labs(y = "Predicted probability of ALS") +
-    annotate(
-      "text", x = x_min, y = Inf,
-      label = paste("EDF:", edf, "\np-value:", p_value_text),
-      hjust = 0, vjust = 1.2, size = 4) +
-    scale_y_continuous(limits = c(0, 1)) +
-    theme_minimal() +
-    theme(
-      axis.text.x = element_blank(),
-      axis.title.x = element_blank(),
-      axis.line.x = element_blank(),
-      axis.ticks.x = element_blank()) +
-    ggtitle("Adjusted model")
-  
-  p2 <- ggplot(bdd_pred, aes(x = "", y = .data[[var]])) +
-    geom_boxplot(fill = "steelblue") +
-    coord_flip() +
-    ylab(x_label) +
-    xlab("") +
-    theme_minimal()
-  
-  p <- p1 / p2 +
-    plot_layout(heights = c(10, 1), guides = "collect")
-  
-  list(
-    plot = p,
-    p_value = p_value)
-}
-
-
-
 
 ## Main ----
 ### Table covariates - als survival ----
@@ -5547,28 +5404,6 @@ proteomic_sd_ALS_adjusted_figure <-
 
 
 
-### Figure proteomic - als occurrence - base gam ----
-all_vars_labels <- set_names(
-  str_replace(proteomic,
-              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
-              ""),
-  proteomic)
-
-plot_base_gam <- map(proteomic, make_gam_plot_base, data = bdd_danish)
-names(plot_base_gam) <- proteomic
-plot_base_gam <- list(
-  signif = keep(plot_base_gam, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_base_gam, ~ .x$p_value > 0.05) |> map("plot"))
-
-### Figure proteomic - als occurrence - adjusted gam ----
-plot_adjusted_gam <- map(proteomic, make_gam_plot_adjusted, data = bdd_danish)
-names(plot_adjusted_gam) <- proteomic
-plot_adjusted_gam <- list(
-  signif = keep(plot_adjusted_gam, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_adjusted_gam, ~ .x$p_value > 0.05) |> map("plot"))
-
-rm(all_vars_labels)
-
 
 ## Sensi_1 ----
 ### Table proteomic - als occurence - base and adjusted sd (sensi_1) ----
@@ -5771,28 +5606,6 @@ proteomic_sd_ALS_adjusted_figure_sensi_1 <-
   scale_y_continuous(limits = c(0, 4.5))
 
 
-
-
-### Figure proteomic - als occurrence - base gam (sensi_1) ----
-all_vars_labels <- set_names(
-  str_replace(proteomic_sensi_1,
-              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
-              ""),
-  proteomic_sensi_1)
-
-plot_base_gam_sensi_1 <- map(proteomic_sensi_1, make_gam_plot_base, data = bdd_danish_sensi_1)
-names(plot_base_gam_sensi_1) <- proteomic_sensi_1
-plot_base_gam_sensi_1 <- list(
-  signif = keep(plot_base_gam_sensi_1, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_base_gam_sensi_1, ~ .x$p_value > 0.05) |> map("plot"))
-
-
-### Figure proteomic - als occurrence - adjusted gam (sensi_1) ----
-plot_adjusted_gam_sensi_1 <- map(proteomic_sensi_1, make_gam_plot_adjusted, data = bdd_danish_sensi_1)
-names(plot_adjusted_gam_sensi_1) <- proteomic_sensi_1
-plot_adjusted_gam_sensi_1 <- list(
-  signif = keep(plot_adjusted_gam_sensi_1, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_adjusted_gam_sensi_1, ~ .x$p_value > 0.05) |> map("plot"))
 
 rm(all_vars_labels, 
    bdd_danish_sensi_1, 
@@ -6001,32 +5814,7 @@ proteomic_sd_ALS_adjusted_figure_sensi_2 <-
   scale_y_continuous(limits = c(0, 4.5))
 
 
-
-
-### Figure proteomic - als occurrence - base gam (sensi_2) ----
-all_vars_labels <- set_names(
-  str_replace(proteomic,
-              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
-              ""),
-  proteomic)
-
-plot_base_gam_sensi_2 <- map(proteomic, make_gam_plot_base, data = bdd_danish_sensi_2)
-names(plot_base_gam_sensi_2) <- proteomic
-plot_base_gam_sensi_2 <- list(
-  signif = keep(plot_base_gam_sensi_2, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_base_gam_sensi_2, ~ .x$p_value > 0.05) |> map("plot"))
-
-
-
-### Figure proteomic - als occurrence - adjusted gam (sensi_2) ----
-plot_adjusted_gam_sensi_2 <- map(proteomic, make_gam_plot_adjusted, data = bdd_danish_sensi_2)
-names(plot_adjusted_gam_sensi_2) <- proteomic
-plot_adjusted_gam_sensi_2 <- list(
-  signif = keep(plot_adjusted_gam_sensi_2, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_adjusted_gam_sensi_2, ~ .x$p_value > 0.05) |> map("plot"))
-
 rm(bdd_danish_sensi_2, all_vars_labels)
-
 
 
 ## Sensi_3 ----
@@ -6227,31 +6015,7 @@ proteomic_sd_ALS_adjusted_figure_sensi_3 <-
   scale_x_continuous(limits = c(0, 2.5)) +
   scale_y_continuous(limits = c(0, 4.5))
 
-
-
-
-### Figure proteomic - als occurrence - base gam (sensi_3) ----
-all_vars_labels <- set_names(
-  str_replace(proteomic,
-              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
-              ""),
-  proteomic)
-
-plot_base_gam_sensi_3 <- map(proteomic, make_gam_plot_base, data = bdd_danish_sensi_3)
-names(plot_base_gam_sensi_3) <- proteomic
-plot_base_gam_sensi_3 <- list(
-  signif = keep(plot_base_gam_sensi_3, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_base_gam_sensi_3, ~ .x$p_value > 0.05) |> map("plot"))
-
-
-### Figure proteomic - als occurrence - adjusted gam (sensi_3) ----
-plot_adjusted_gam_sensi_3 <- map(proteomic, make_gam_plot_adjusted, data = bdd_danish_sensi_3)
-names(plot_adjusted_gam_sensi_3) <- proteomic
-plot_adjusted_gam_sensi_3 <- list(
-  signif = keep(plot_adjusted_gam_sensi_3, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_adjusted_gam_sensi_3, ~ .x$p_value > 0.05) |> map("plot"))
-
-rm(bdd_danish_sensi_3, all_vars_labels)
+rm(bdd_danish_sensi_3)
 
 
 
@@ -6457,31 +6221,7 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3 <-
   scale_y_continuous(limits = c(0, 4.5))
 
 
-
-
-### Figure proteomic - als occurrence - base gam (sensi_1_3) ----
-all_vars_labels <- set_names(
-  str_replace(proteomic_sensi_1_3,
-              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
-              ""),
-  proteomic_sensi_1_3)
-
-plot_base_gam_sensi_1_3 <- map(proteomic_sensi_1_3, make_gam_plot_base, data = bdd_danish_sensi_1_3)
-names(plot_base_gam_sensi_1_3) <- proteomic_sensi_1_3
-plot_base_gam_sensi_1_3 <- list(
-  signif = keep(plot_base_gam_sensi_1_3, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_base_gam_sensi_1_3, ~ .x$p_value > 0.05) |> map("plot"))
-
-
-### Figure proteomic - als occurrence - adjusted gam (sensi_1_3) ----
-plot_adjusted_gam_sensi_1_3 <- map(proteomic_sensi_1_3, make_gam_plot_adjusted, data = bdd_danish_sensi_1_3)
-names(plot_adjusted_gam_sensi_1_3) <- proteomic_sensi_1_3
-plot_adjusted_gam_sensi_1_3 <- list(
-  signif = keep(plot_adjusted_gam_sensi_1_3, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_adjusted_gam_sensi_1_3, ~ .x$p_value > 0.05) |> map("plot"))
-
 rm(bdd_danish_sensi_1_3, 
-   all_vars_labels, 
    proteomic_sensi_1_3,
    proteomic_sd_sensi_1_3,
    proteomic_quart_sensi_1_3, 
@@ -6687,32 +6427,7 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3_4 <-
   scale_x_continuous(limits = c(0, 2.5)) +
   scale_y_continuous(limits = c(0, 4.5))
 
-
-
-
-### Figure proteomic - als occurrence - base gam (sensi_1_3_4) ----
-all_vars_labels <- set_names(
-  str_replace(proteomic_sensi_1_3_4,
-              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
-              ""),
-  proteomic_sensi_1_3_4)
-
-plot_base_gam_sensi_1_3_4 <- map(proteomic_sensi_1_3_4, make_gam_plot_base, data = bdd_danish_sensi_1_3_4)
-names(plot_base_gam_sensi_1_3_4) <- proteomic_sensi_1_3_4
-plot_base_gam_sensi_1_3_4 <- list(
-  signif = keep(plot_base_gam_sensi_1_3_4, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_base_gam_sensi_1_3_4, ~ .x$p_value > 0.05) |> map("plot"))
-
-
-### Figure proteomic - als occurrence - adjusted gam (sensi_1_3_4) ----
-plot_adjusted_gam_sensi_1_3_4 <- map(proteomic_sensi_1_3_4, make_gam_plot_adjusted, data = bdd_danish_sensi_1_3_4)
-names(plot_adjusted_gam_sensi_1_3_4) <- proteomic_sensi_1_3_4
-plot_adjusted_gam_sensi_1_3_4 <- list(
-  signif = keep(plot_adjusted_gam_sensi_1_3_4, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_adjusted_gam_sensi_1_3_4, ~ .x$p_value > 0.05) |> map("plot"))
-
-rm(all_vars_labels, 
-   proteomic_sensi_1_3_4,
+rm(proteomic_sensi_1_3_4,
    proteomic_sd_sensi_1_3_4,
    proteomic_quart_sensi_1_3_4, 
    proteomic_quart_med_sensi_1_3_4, 
@@ -6918,30 +6633,7 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3_5 <-
   scale_y_continuous(limits = c(0, 4.5))
 
 
-
-
-### Figure proteomic - als occurrence - base gam (sensi_1_3_5) ----
-all_vars_labels <- set_names(
-  str_replace(proteomic_sensi_1_3_5,
-              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
-              ""),
-  proteomic_sensi_1_3_5)
-
-plot_base_gam_sensi_1_3_5 <- map(proteomic_sensi_1_3_5, make_gam_plot_base, data = bdd_danish_sensi_1_3_5)
-names(plot_base_gam_sensi_1_3_5) <- proteomic_sensi_1_3_5
-plot_base_gam_sensi_1_3_5 <- list(
-  signif = keep(plot_base_gam_sensi_1_3_5, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_base_gam_sensi_1_3_5, ~ .x$p_value > 0.05) |> map("plot"))
-
-### Figure proteomic - als occurrence - adjusted gam (sensi_1_3_5) ----
-plot_adjusted_gam_sensi_1_3_5 <- map(proteomic_sensi_1_3_5, make_gam_plot_adjusted, data = bdd_danish_sensi_1_3_5)
-names(plot_adjusted_gam_sensi_1_3_5) <- proteomic_sensi_1_3_5
-plot_adjusted_gam_sensi_1_3_5 <- list(
-  signif = keep(plot_adjusted_gam_sensi_1_3_5, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_adjusted_gam_sensi_1_3_5, ~ .x$p_value > 0.05) |> map("plot"))
-
-rm(all_vars_labels, 
-   proteomic_sensi_1_3_5,
+rm(proteomic_sensi_1_3_5,
    proteomic_sd_sensi_1_3_5,
    proteomic_quart_sensi_1_3_5, 
    proteomic_quart_med_sensi_1_3_5, 
@@ -7654,193 +7346,7 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_7 <-
   facet_grid(cols = vars(analysis))
 
 
-
-
-### Figure proteomic - als occurrence - base gam (sensi_1_7) ----
-make_gam_plot_base_sex <- function(var, data) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + baseline_age"))
-  
-  model <- mgcv::gam(formula, family = binomial, method = "REML", data = data)
-  
-  bdd_pred <- data |>
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE)) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x))
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(
-      prob = plogis(pred$fit),
-      prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-      prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1)
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01",
-                         format(p_value, nsmall = 2, digits = 2))
-  
-  x_min <- min(data[[var]], na.rm = TRUE)
-  x_label <- all_vars_labels[var]
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "steelblue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper),
-                fill = "steelblue", alpha = 0.2) +
-    labs(y = "Predicted probability of ALS") +
-    annotate(
-      "text", x = x_min, y = Inf,
-      label = paste("EDF:", edf, "\np-value:", p_value_text),
-      hjust = 0, vjust = 1.2, size = 4) +
-    scale_y_continuous(limits = c(0, 1)) +
-    theme_minimal() +
-    theme(
-      axis.text.x = element_blank(),
-      axis.title.x = element_blank(),
-      axis.line.x = element_blank(),
-      axis.ticks.x = element_blank()) +
-    ggtitle("Base model")
-  
-  p2 <- ggplot(bdd_pred, aes(x = "", y = .data[[var]])) +
-    geom_boxplot(fill = "steelblue") +
-    coord_flip() +
-    ylab(x_label) +
-    xlab("") +
-    theme_minimal()
-  
-  p <- p1 / p2 +
-    plot_layout(heights = c(10, 1), guides = "collect")
-  
-  list(
-    plot = p,
-    p_value = p_value)
-}
-
-
-all_vars_labels <- set_names(
-  str_replace(proteomic_sensi_1_7_female,
-              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
-              ""),
-  proteomic_sensi_1_7_female)
-
-plot_base_gam_sensi_1_7_female <- map(proteomic_sensi_1_7_female, make_gam_plot_base_sex, data = bdd_danish_sensi_1_7_female)
-names(plot_base_gam_sensi_1_7_female) <- proteomic_sensi_1_7_female
-plot_base_gam_sensi_1_7_female <- list(
-  signif = keep(plot_base_gam_sensi_1_7_female, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_base_gam_sensi_1_7_female, ~ .x$p_value > 0.05) |> map("plot"))
-
-
-all_vars_labels <- set_names(
-  str_replace(proteomic_sensi_1_7_male,
-              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
-              ""),
-  proteomic_sensi_1_7_male)
-
-plot_base_gam_sensi_1_7_male <- map(proteomic_sensi_1_7_male, make_gam_plot_base_sex, data = bdd_danish_sensi_1_7_male)
-names(plot_base_gam_sensi_1_7_male) <- proteomic_sensi_1_7_male
-plot_base_gam_sensi_1_7_male <- list(
-  signif = keep(plot_base_gam_sensi_1_7_male, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_base_gam_sensi_1_7_male, ~ .x$p_value > 0.05) |> map("plot"))
-
-
-### Figure proteomic - als occurrence - adjusted gam (sensi_1_7) ----
-
-make_gam_plot_adjusted_sex <- function(var, data) {
-  
-  formula <- as.formula(glue::glue("als ~ s({var}) + baseline_age  + smoking_2cat_i + bmi"))
-  
-  model <- mgcv::gam(formula, family = binomial, method = "REML", data = data)
-  
-  bdd_pred <- data |>
-    mutate(
-      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
-      adj_bmi = mean(bmi, na.rm = TRUE),
-      adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i)))) |>
-    select(all_of(var), starts_with("adj_")) |>
-    rename_with(~ gsub("adj_", "", .x))
-  
-  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
-  
-  bdd_pred <- bdd_pred |>
-    mutate(
-      prob = plogis(pred$fit),
-      prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
-      prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
-  
-  model_summary <- summary(model)
-  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1)
-  p_value <- model_summary$s.table[1, "p-value"]
-  p_value_text <- ifelse(p_value < 0.01, "< 0.01",
-                         format(p_value, nsmall = 2, digits = 2))
-  
-  x_min <- min(data[[var]], na.rm = TRUE)
-  x_label <- all_vars_labels[var]
-  
-  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
-    geom_line(color = "steelblue", size = 1) +
-    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper),
-                fill = "steelblue", alpha = 0.2) +
-    labs(y = "Predicted probability of ALS") +
-    annotate(
-      "text", x = x_min, y = Inf,
-      label = paste("EDF:", edf, "\np-value:", p_value_text),
-      hjust = 0, vjust = 1.2, size = 4) +
-    scale_y_continuous(limits = c(0, 1)) +
-    theme_minimal() +
-    theme(
-      axis.text.x = element_blank(),
-      axis.title.x = element_blank(),
-      axis.line.x = element_blank(),
-      axis.ticks.x = element_blank()) +
-    ggtitle("Adjusted model")
-  
-  p2 <- ggplot(bdd_pred, aes(x = "", y = .data[[var]])) +
-    geom_boxplot(fill = "steelblue") +
-    coord_flip() +
-    ylab(x_label) +
-    xlab("") +
-    theme_minimal()
-  
-  p <- p1 / p2 +
-    plot_layout(heights = c(10, 1), guides = "collect")
-  
-  list(
-    plot = p,
-    p_value = p_value)
-}
-
-
-
-all_vars_labels <- set_names(
-  str_replace(proteomic_sensi_1_7_female,
-              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
-              ""),
-  proteomic_sensi_1_7_female)
-
-plot_adjusted_gam_sensi_1_7_female <- map(proteomic_sensi_1_7_female, make_gam_plot_adjusted_sex, data = bdd_danish_sensi_1_7_female)
-names(plot_adjusted_gam_sensi_1_7_female) <- proteomic_sensi_1_7_female
-plot_adjusted_gam_sensi_1_7_female <- list(
-  signif = keep(plot_adjusted_gam_sensi_1_7_female, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_adjusted_gam_sensi_1_7_female, ~ .x$p_value > 0.05) |> map("plot"))
-
-
-all_vars_labels <- set_names(
-  str_replace(proteomic_sensi_1_7_male,
-              "proteomic_immun_res_|proteomic_neuro_explo_|proteomic_metabolism_",
-              ""),
-  proteomic_sensi_1_7_male)
-
-plot_adjusted_gam_sensi_1_7_male <- map(proteomic_sensi_1_7_male, make_gam_plot_adjusted_sex, data = bdd_danish_sensi_1_7_male)
-names(plot_adjusted_gam_sensi_1_7_male) <- proteomic_sensi_1_7_male
-plot_adjusted_gam_sensi_1_7_male <- list(
-  signif = keep(plot_adjusted_gam_sensi_1_7_male, ~ .x$p_value <= 0.05) |> map("plot"),
-  not_signif = keep(plot_adjusted_gam_sensi_1_7_male, ~ .x$p_value > 0.05) |> map("plot"))
-
-rm(all_vars_labels, 
-   proteomic_sensi_1_7_female,
+rm(proteomic_sensi_1_7_female,
    proteomic_sd_sensi_1_7_female,
    proteomic_quart_sensi_1_7_female, 
    proteomic_quart_med_sensi_1_7_female, 
@@ -7851,9 +7357,7 @@ rm(all_vars_labels,
    proteomic_quart_med_sensi_1_7_male, 
    
    bdd_danish_sensi_1_7_female,
-   bdd_danish_sensi_1_7_male,
-   make_gam_plot_base_sex, 
-   make_gam_plot_adjusted_sex)
+   bdd_danish_sensi_1_7_male)
 
 ## NfL only results ----
 ### Main analysis ----
@@ -8602,9 +8106,7 @@ results_proteomic_ALS_occurrence <-
       proteomic_sd_ALS_adjusted_figure = proteomic_sd_ALS_adjusted_figure, 
     
       model1_gam = model1_gam, 
-      model2_gam = model2_gam,
-      plot_base_gam = plot_base_gam, 
-      plot_adjusted_gam = plot_adjusted_gam),
+      model2_gam = model2_gam),
     
     sensi_1 = list(
       proteomic_sd_ALS_table_sensi_1 = proteomic_sd_ALS_table_sensi_1, 
@@ -8612,11 +8114,9 @@ results_proteomic_ALS_occurrence <-
       
       proteomic_sd_ALS_base_figure_sensi_1 = proteomic_sd_ALS_base_figure_sensi_1, 
       model1_gam_sensi_1 = model1_gam_sensi_1, 
-      plot_base_gam_sensi_1 = plot_base_gam_sensi_1, 
       
       proteomic_sd_ALS_adjusted_figure_sensi_1 = proteomic_sd_ALS_adjusted_figure_sensi_1, 
-      model2_gam_sensi_1 = model2_gam_sensi_1, 
-      plot_adjusted_gam_sensi_1 = plot_adjusted_gam_sensi_1), 
+      model2_gam_sensi_1 = model2_gam_sensi_1), 
     
     sensi_2 = list(
       proteomic_sd_ALS_table_sensi_2 = proteomic_sd_ALS_table_sensi_2, 
@@ -8624,11 +8124,9 @@ results_proteomic_ALS_occurrence <-
       
       proteomic_sd_ALS_base_figure_sensi_2 = proteomic_sd_ALS_base_figure_sensi_2, 
       model1_gam_sensi_2 = model1_gam_sensi_2, 
-      plot_base_gam_sensi_2 = plot_base_gam_sensi_2, 
       
       proteomic_sd_ALS_adjusted_figure_sensi_2 = proteomic_sd_ALS_adjusted_figure_sensi_2, 
-      model2_gam_sensi_2 = model2_gam_sensi_2, 
-      plot_adjusted_gam_sensi_2 = plot_adjusted_gam_sensi_2), 
+      model2_gam_sensi_2 = model2_gam_sensi_2), 
     
     sensi_3 = list(
       proteomic_sd_ALS_table_sensi_3 = proteomic_sd_ALS_table_sensi_3, 
@@ -8636,11 +8134,9 @@ results_proteomic_ALS_occurrence <-
       
       proteomic_sd_ALS_base_figure_sensi_3 = proteomic_sd_ALS_base_figure_sensi_3, 
       model1_gam_sensi_3 = model1_gam_sensi_3, 
-      plot_base_gam_sensi_3 = plot_base_gam_sensi_3, 
       
       proteomic_sd_ALS_adjusted_figure_sensi_3 = proteomic_sd_ALS_adjusted_figure_sensi_3, 
-      model2_gam_sensi_3 = model2_gam_sensi_3, 
-      plot_adjusted_gam_sensi_3 = plot_adjusted_gam_sensi_3), 
+      model2_gam_sensi_3 = model2_gam_sensi_3), 
     
     sensi_1_3 = list(
       proteomic_sd_ALS_table_sensi_1_3 = proteomic_sd_ALS_table_sensi_1_3, 
@@ -8648,24 +8144,20 @@ results_proteomic_ALS_occurrence <-
       
       proteomic_sd_ALS_base_figure_sensi_1_3 = proteomic_sd_ALS_base_figure_sensi_1_3, 
       model1_gam_sensi_1_3 = model1_gam_sensi_1_3, 
-      plot_base_gam_sensi_1_3 = plot_base_gam_sensi_1_3, 
       
       proteomic_sd_ALS_adjusted_figure_sensi_1_3 = proteomic_sd_ALS_adjusted_figure_sensi_1_3, 
-      model2_gam_sensi_1_3 = model2_gam_sensi_1_3, 
-      plot_adjusted_gam_sensi_1_3 = plot_adjusted_gam_sensi_1_3), 
+      model2_gam_sensi_1_3 = model2_gam_sensi_1_3), 
     
     sensi_1_3_4 = list(
       proteomic_sd_ALS_table_sensi_1_3_4 = proteomic_sd_ALS_table_sensi_1_3_4, 
       proteomic_quart_ALS_table_sensi_1_3_4 = proteomic_quart_ALS_table_sensi_1_3_4, 
       
       proteomic_sd_ALS_base_figure_sensi_1_3_4 = proteomic_sd_ALS_base_figure_sensi_1_3_4, 
-      model1_gam_sensi_1_3_4 = model1_gam_sensi_1_3_4, 
-      plot_base_gam_sensi_1_3_4 = plot_base_gam_sensi_1_3_4, 
+      model1_gam_sensi_1_3_4 = model1_gam_sensi_1_3_4,
       
       
       proteomic_sd_ALS_adjusted_figure_sensi_1_3_4 = proteomic_sd_ALS_adjusted_figure_sensi_1_3_4, 
-      model2_gam_sensi_1_3_4 = model2_gam_sensi_1_3_4, 
-      plot_adjusted_gam_sensi_1_3_4 = plot_adjusted_gam_sensi_1_3_4), 
+      model2_gam_sensi_1_3_4 = model2_gam_sensi_1_3_4), 
     
     sensi_1_3_5 = list(
       proteomic_sd_ALS_table_sensi_1_3_5 = proteomic_sd_ALS_table_sensi_1_3_5, 
@@ -8673,12 +8165,10 @@ results_proteomic_ALS_occurrence <-
       
       proteomic_sd_ALS_base_figure_sensi_1_3_5 = proteomic_sd_ALS_base_figure_sensi_1_3_5, 
       model1_gam_sensi_1_3_5 = model1_gam_sensi_1_3_5, 
-      plot_base_gam_sensi_1_3_5 = plot_base_gam_sensi_1_3_5, 
       
       
       proteomic_sd_ALS_adjusted_figure_sensi_1_3_5 = proteomic_sd_ALS_adjusted_figure_sensi_1_3_5, 
-      model2_gam_sensi_1_3_5 = model2_gam_sensi_1_3_5, 
-      plot_adjusted_gam_sensi_1_3_5 = plot_adjusted_gam_sensi_1_3_5), 
+      model2_gam_sensi_1_3_5 = model2_gam_sensi_1_3_5), 
   
     
     sensi_6 = list(
@@ -8707,11 +8197,7 @@ results_proteomic_ALS_occurrence <-
       proteomic_sd_ALS_table_sensi_1_7 = proteomic_sd_ALS_table_sensi_1_7, 
       proteomic_quart_ALS_table_sensi_1_7 = proteomic_quart_ALS_table_sensi_1_7, 
       proteomic_sd_ALS_base_figure_sensi_1_7 = proteomic_sd_ALS_base_figure_sensi_1_7, 
-      proteomic_sd_ALS_adjusted_figure_sensi_1_7 = proteomic_sd_ALS_adjusted_figure_sensi_1_7, 
-      plot_base_gam_sensi_1_7_female = plot_base_gam_sensi_1_7_female, 
-      plot_base_gam_sensi_1_7_male = plot_base_gam_sensi_1_7_male, 
-      plot_adjusted_gam_sensi_1_7_female = plot_adjusted_gam_sensi_1_7_female, 
-      plot_adjusted_gam_sensi_1_7_male = plot_adjusted_gam_sensi_1_7_male), 
+      proteomic_sd_ALS_adjusted_figure_sensi_1_7 = proteomic_sd_ALS_adjusted_figure_sensi_1_7), 
     
     additional_analysis_1 = list(
       OR_distribution = OR_distribution, 
@@ -8756,7 +8242,7 @@ results_proteomic_ALS_occurrence <-
                          table_without_other_diseases = table_without_other_diseases)))
 
 
-#saveRDS(results_proteomic_ALS_occurrence, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_proteomic_ALS_occurrence.rds")
+saveRDS(results_proteomic_ALS_occurrence, file = "~/Documents/POP_ALS_2025_02_03/2_output/2.6.1_results_proteomic_ALS_occurrence.rds")
 
 rm(covar,                                   # main results 
    main_results, 
@@ -8766,62 +8252,48 @@ rm(covar,                                   # main results
    proteomic_sd_ALS_adjusted_figure, 
    model1_gam, 
    model2_gam,
-   plot_base_gam, 
-   plot_adjusted_gam, 
    
    proteomic_sd_ALS_table_sensi_1,         # sensi_1
    proteomic_quart_ALS_table_sensi_1, 
    proteomic_sd_ALS_base_figure_sensi_1, 
    model1_gam_sensi_1, 
-   plot_base_gam_sensi_1, 
    proteomic_sd_ALS_adjusted_figure_sensi_1, 
    model2_gam_sensi_1, 
-   plot_adjusted_gam_sensi_1, 
    
    proteomic_quart_ALS_table_sensi_2,       # sensi_2
    proteomic_sd_ALS_table_sensi_2, 
    proteomic_sd_ALS_base_figure_sensi_2, 
    model1_gam_sensi_2, 
-   plot_base_gam_sensi_2, 
    proteomic_sd_ALS_adjusted_figure_sensi_2, 
    model2_gam_sensi_2, 
-   plot_adjusted_gam_sensi_2, 
    
    proteomic_sd_ALS_table_sensi_3,         # sensi_3
    proteomic_quart_ALS_table_sensi_3, 
    proteomic_sd_ALS_base_figure_sensi_3,
    model1_gam_sensi_3, 
-   plot_base_gam_sensi_3, 
    proteomic_sd_ALS_adjusted_figure_sensi_3,
    model2_gam_sensi_3, 
-   plot_adjusted_gam_sensi_3, 
    
    proteomic_sd_ALS_table_sensi_1_3,          # sensi_1_3
    proteomic_quart_ALS_table_sensi_1_3, 
    proteomic_sd_ALS_base_figure_sensi_1_3,
    model1_gam_sensi_1_3, 
-   plot_base_gam_sensi_1_3, 
    proteomic_sd_ALS_adjusted_figure_sensi_1_3,
    model2_gam_sensi_1_3, 
-   plot_adjusted_gam_sensi_1_3, 
    
    proteomic_sd_ALS_table_sensi_1_3_4,       # sensi_1_3_4
    proteomic_quart_ALS_table_sensi_1_3_4, 
    proteomic_sd_ALS_base_figure_sensi_1_3_4,
    model1_gam_sensi_1_3_4, 
-   plot_base_gam_sensi_1_3_4, 
    proteomic_sd_ALS_adjusted_figure_sensi_1_3_4,
    model2_gam_sensi_1_3_4, 
-   plot_adjusted_gam_sensi_1_3_4, 
    
    proteomic_sd_ALS_table_sensi_1_3_5,        # sensi_1_3_5
    proteomic_quart_ALS_table_sensi_1_3_5, 
    proteomic_sd_ALS_base_figure_sensi_1_3_5,
    model1_gam_sensi_1_3_5, 
-   plot_base_gam_sensi_1_3_5, 
    proteomic_sd_ALS_adjusted_figure_sensi_1_3_5,
    model2_gam_sensi_1_3_5, 
-   plot_adjusted_gam_sensi_1_3_5, 
    
    sensi_6_table_follow_up,                       # sensi_6  
    sensi_6_densityplot_follow_up, 
@@ -8843,10 +8315,6 @@ rm(covar,                                   # main results
    proteomic_quart_ALS_table_sensi_1_7, 
    proteomic_sd_ALS_base_figure_sensi_1_7, 
    proteomic_sd_ALS_adjusted_figure_sensi_1_7, 
-   plot_base_gam_sensi_1_7_female, 
-   plot_base_gam_sensi_1_7_male, 
-   plot_adjusted_gam_sensi_1_7_female, 
-   plot_adjusted_gam_sensi_1_7_male, 
    model1_gam_sensi_1_7_female, 
    model1_gam_sensi_1_7_male, 
    model2_gam_sensi_1_7_female, 
@@ -8890,8 +8358,7 @@ rm(covar,                                   # main results
    AUC_figure_unadjusted_color, 
    AUC_figure_adjusted_pattern, 
    
-   table_without_other_diseases,          # NfL other diseases
+   table_without_other_diseases          # NfL other diseases
    
-   make_gam_plot_base, 
-   make_gam_plot_adjusted)
+)
   

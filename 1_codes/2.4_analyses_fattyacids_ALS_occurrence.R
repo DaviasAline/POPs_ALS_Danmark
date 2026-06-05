@@ -1024,7 +1024,7 @@ results_fattyacids_ALS_occurrence <-
                        fattyacids_quart_als_figure_sensi_ca_finnish = fattyacids_quart_als_figure_sensi_ca_finnish))
 
 
-saveRDS(results_fattyacids_ALS_occurrence, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_fattyacids_ALS_occurrence.rds")
+saveRDS(results_fattyacids_ALS_occurrence, file = "~/Documents/POP_ALS_2025_02_03/2_output/2.4_results_fattyacids_ALS_occurrence.rds")
 
 rm(main_results_fattyacids_ALS_danish, 
    descriptive_table_by_als_danish, 

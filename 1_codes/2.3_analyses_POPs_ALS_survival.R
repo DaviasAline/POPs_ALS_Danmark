@@ -4068,7 +4068,7 @@ results_POPs_ALS_survival <-
       plot_base_cox_gam_danish_sensi_4 = plot_base_cox_gam_danish_sensi_4, 
       plot_adjusted_cox_gam_danish_sensi_4 = plot_adjusted_cox_gam_danish_sensi_4))
 
-saveRDS(results_POPs_ALS_survival, file = "~/Documents/POP_ALS_2025_02_03/2_output/results_POPs_ALS_survival.rds")
+saveRDS(results_POPs_ALS_survival, file = "~/Documents/POP_ALS_2025_02_03/2_output/2.3_results_POPs_ALS_survival.rds")
 
 rm(bdd_cases_danish, 
    main_results_POPs_ALS_survival, 
