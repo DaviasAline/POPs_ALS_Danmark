@@ -408,3 +408,354 @@ replace_with_median <- function(data, var, quartile_var) {
     mutate(!!new_var_name := median({{var}}, na.rm = TRUE)) %>%
     ungroup()
 }
+
+
+make_gam_plot_base <- function(var, data) {
+  
+  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age"))
+  
+  model <- mgcv::gam(formula, family = binomial, method = "REML", data = data)
+  
+  bdd_pred <- data |>
+    mutate(
+      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
+      adj_sex = names(which.max(table(sex)))) |>
+    select(all_of(var), starts_with("adj_")) |>
+    rename_with(~ gsub("adj_", "", .x))
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred |>
+    mutate(
+      prob = plogis(pred$fit),
+      prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+      prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1)
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01",
+                         format(p_value, nsmall = 2, digits = 2))
+  
+  x_min <- min(data[[var]], na.rm = TRUE)
+  x_label <- all_vars_labels[var]
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "steelblue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper),
+                fill = "steelblue", alpha = 0.2) +
+    labs(y = "Predicted probability of ALS") +
+    annotate(
+      "text", x = x_min, y = Inf,
+      label = paste("EDF:", edf, "\np-value:", p_value_text),
+      hjust = 0, vjust = 1.2, size = 4) +
+    scale_y_continuous(limits = c(0, 1)) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_blank(),
+      axis.title.x = element_blank(),
+      axis.line.x = element_blank(),
+      axis.ticks.x = element_blank()) +
+    ggtitle("Base model")
+  
+  p2 <- ggplot(bdd_pred, aes(x = "", y = .data[[var]])) +
+    geom_boxplot(fill = "steelblue") +
+    coord_flip() +
+    ylab(x_label) +
+    xlab("") +
+    theme_minimal()
+  
+  p <- p1 / p2 +
+    plot_layout(heights = c(10, 1), guides = "collect")
+  
+  list(
+    plot = p,
+    p_value = p_value)
+}
+
+
+make_gam_plot_adjusted <- function(var, data) {
+  
+  formula <- as.formula(glue::glue("als ~ s({var}) + sex + baseline_age  + smoking_2cat_i + bmi"))
+  
+  model <- mgcv::gam(formula, family = binomial, method = "REML", data = data)
+  
+  bdd_pred <- data |>
+    mutate(
+      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
+      adj_sex = names(which.max(table(sex))), 
+      adj_bmi = mean(bmi, na.rm = TRUE),
+      adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i)))) |>
+    select(all_of(var), starts_with("adj_")) |>
+    rename_with(~ gsub("adj_", "", .x))
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred |>
+    mutate(
+      prob = plogis(pred$fit),
+      prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+      prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1)
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01",
+                         format(p_value, nsmall = 2, digits = 2))
+  
+  x_min <- min(data[[var]], na.rm = TRUE)
+  x_label <- all_vars_labels[var]
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "steelblue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper),
+                fill = "steelblue", alpha = 0.2) +
+    labs(y = "Predicted probability of ALS") +
+    annotate(
+      "text", x = x_min, y = Inf,
+      label = paste("EDF:", edf, "\np-value:", p_value_text),
+      hjust = 0, vjust = 1.2, size = 4) +
+    scale_y_continuous(limits = c(0, 1)) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_blank(),
+      axis.title.x = element_blank(),
+      axis.line.x = element_blank(),
+      axis.ticks.x = element_blank()) +
+    ggtitle("Adjusted model")
+  
+  p2 <- ggplot(bdd_pred, aes(x = "", y = .data[[var]])) +
+    geom_boxplot(fill = "steelblue") +
+    coord_flip() +
+    ylab(x_label) +
+    xlab("") +
+    theme_minimal()
+  
+  p <- p1 / p2 +
+    plot_layout(heights = c(10, 1), guides = "collect")
+  
+  list(
+    plot = p,
+    p_value = p_value)
+}
+
+make_gam_plot_base_sex <- function(var, data) {
+  
+  formula <- as.formula(glue::glue("als ~ s({var}) + baseline_age"))
+  
+  model <- mgcv::gam(formula, family = binomial, method = "REML", data = data)
+  
+  bdd_pred <- data |>
+    mutate(
+      adj_baseline_age = mean(baseline_age, na.rm = TRUE)) |>
+    select(all_of(var), starts_with("adj_")) |>
+    rename_with(~ gsub("adj_", "", .x))
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred |>
+    mutate(
+      prob = plogis(pred$fit),
+      prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+      prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1)
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01",
+                         format(p_value, nsmall = 2, digits = 2))
+  
+  x_min <- min(data[[var]], na.rm = TRUE)
+  x_label <- all_vars_labels[var]
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "steelblue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper),
+                fill = "steelblue", alpha = 0.2) +
+    labs(y = "Predicted probability of ALS") +
+    annotate(
+      "text", x = x_min, y = Inf,
+      label = paste("EDF:", edf, "\np-value:", p_value_text),
+      hjust = 0, vjust = 1.2, size = 4) +
+    scale_y_continuous(limits = c(0, 1)) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_blank(),
+      axis.title.x = element_blank(),
+      axis.line.x = element_blank(),
+      axis.ticks.x = element_blank()) +
+    ggtitle("Base model")
+  
+  p2 <- ggplot(bdd_pred, aes(x = "", y = .data[[var]])) +
+    geom_boxplot(fill = "steelblue") +
+    coord_flip() +
+    ylab(x_label) +
+    xlab("") +
+    theme_minimal()
+  
+  p <- p1 / p2 +
+    plot_layout(heights = c(10, 1), guides = "collect")
+  
+  list(
+    plot = p,
+    p_value = p_value)
+}
+
+make_gam_plot_adjusted_sex <- function(var, data) {
+  
+  formula <- as.formula(glue::glue("als ~ s({var}) + baseline_age  + smoking_2cat_i + bmi"))
+  
+  model <- mgcv::gam(formula, family = binomial, method = "REML", data = data)
+  
+  bdd_pred <- data |>
+    mutate(
+      adj_baseline_age = mean(baseline_age, na.rm = TRUE),
+      adj_bmi = mean(bmi, na.rm = TRUE),
+      adj_smoking_2cat_i = names(which.max(table(smoking_2cat_i)))) |>
+    select(all_of(var), starts_with("adj_")) |>
+    rename_with(~ gsub("adj_", "", .x))
+  
+  pred <- predict(model, newdata = bdd_pred, type = "link", se.fit = TRUE)
+  
+  bdd_pred <- bdd_pred |>
+    mutate(
+      prob = plogis(pred$fit),
+      prob_lower = plogis(pred$fit - 1.96 * pred$se.fit),
+      prob_upper = plogis(pred$fit + 1.96 * pred$se.fit))
+  
+  model_summary <- summary(model)
+  edf <- format(model_summary$s.table[1, "edf"], nsmall = 1, digits = 1)
+  p_value <- model_summary$s.table[1, "p-value"]
+  p_value_text <- ifelse(p_value < 0.01, "< 0.01",
+                         format(p_value, nsmall = 2, digits = 2))
+  
+  x_min <- min(data[[var]], na.rm = TRUE)
+  x_label <- all_vars_labels[var]
+  
+  p1 <- ggplot(bdd_pred, aes(x = .data[[var]], y = prob)) +
+    geom_line(color = "steelblue", size = 1) +
+    geom_ribbon(aes(ymin = prob_lower, ymax = prob_upper),
+                fill = "steelblue", alpha = 0.2) +
+    labs(y = "Predicted probability of ALS") +
+    annotate(
+      "text", x = x_min, y = Inf,
+      label = paste("EDF:", edf, "\np-value:", p_value_text),
+      hjust = 0, vjust = 1.2, size = 4) +
+    scale_y_continuous(limits = c(0, 1)) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_blank(),
+      axis.title.x = element_blank(),
+      axis.line.x = element_blank(),
+      axis.ticks.x = element_blank()) +
+    ggtitle("Adjusted model")
+  
+  p2 <- ggplot(bdd_pred, aes(x = "", y = .data[[var]])) +
+    geom_boxplot(fill = "steelblue") +
+    coord_flip() +
+    ylab(x_label) +
+    xlab("") +
+    theme_minimal()
+  
+  p <- p1 / p2 +
+    plot_layout(heights = c(10, 1), guides = "collect")
+  
+  list(
+    plot = p,
+    p_value = p_value)
+}
+
+
+fit_and_plot_cox_gam <- function(
+    data,
+    vars = proteomic,
+    time = "follow_up",
+    status = "als", 
+    covariates = c("sex", "baseline_age"),  # default
+    vars_labels = NULL,
+    y_limits = c(-12, 12),
+    title = "Base model"                     # default
+) {
+  
+  # 1. Gestion des labels
+  if (is.null(vars_labels)) {
+    vars_labels <- set_names(vars, vars)
+  }
+  
+  # Sous-fonction pour traiter une protéine
+  fit_one <- function(var) {
+    
+    outcome <- cbind(data[[time]], data[[status]])
+    formula_str <- paste0(
+      "outcome ~ s(", var, ") + ",
+      paste(covariates, collapse = " + "))
+    
+    model <- mgcv::gam(as.formula(formula_str),
+                       data = data,
+                       family = cox.ph())
+    
+    smry <- summary(model)
+    edf_val <- smry$s.table[1, "edf"]
+    pval_raw <- smry$s.table[1, "p-value"]
+    
+    edf_label <- format(edf_val, nsmall = 1, digits = 1)
+    pval_label <- case_when(
+      pval_raw < 0.01 ~ "< 0.01",
+      pval_raw > 0.99 ~ "> 0.99",
+      TRUE ~ format(pval_raw, nsmall = 2, digits = 2))
+    
+    pdf(NULL)
+    plot_data_raw <- plot(model, select = 1, seWithMean = TRUE, rug = FALSE)
+    dev.off()
+    
+    if (length(plot_data_raw) == 0) return(NULL)
+    
+    plot_data <- plot_data_raw[[1]]
+    smooth_df <- data.frame(
+      x = plot_data$x,
+      fit = plot_data$fit,
+      se = plot_data$se)
+    
+    p1 <- ggplot(smooth_df, aes(x = x, y = fit)) +
+      geom_line(linewidth = 1.2, color = "steelblue") +
+      geom_ribbon(aes(ymin = fit - 2 * se, 
+                      ymax = fit + 2 * se),
+                  alpha = 0.2, fill = "steelblue") +
+      labs(
+        title = title,
+        y = "LogHR (smooth estimate)",
+        x = NULL) +
+      annotate(
+        "text",
+        x = -Inf, y = Inf,
+        hjust = -0.1, vjust = 1.5,
+        label = paste0("EDF: ", edf_label, "\np-value: ", pval_label),
+        size = 4.2) +
+      scale_y_continuous(limits = y_limits) +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.line.x = element_blank(),
+        axis.ticks.x = element_blank())
+    
+    p2 <- ggplot(data, aes(x = .data[[var]], y = 1)) +
+      geom_boxplot(width = 0.3, fill = "steelblue", color = "black") +
+      labs(x = vars_labels[[var]]) +
+      theme_minimal() +
+      theme(
+        axis.text.y = element_blank(),
+        axis.title.y = element_blank(),
+        axis.ticks.y = element_blank())
+    
+    list(
+      model = model,
+      pval_raw = pval_raw,
+      plot = p1 / p2 + plot_layout(heights = c(10, 1)))
+  }
+  
+  results <- map(vars, fit_one)
+  names(results) <- vars_labels[vars]
+  
+  return(results)
+}

@@ -87,15 +87,15 @@ xgb_wf <- workflow() |>
   add_model(xgb_spec)
 
 ## 6. Tuning ----
-set.seed(1996)
-xgb_tuned <- tune_grid(
-  xgb_wf,
-  resamples = folds_tidy,
-  grid      = tune_grid_tidy,
-  metrics   = metric_set(roc_auc),
-  control   = control_grid(
-    save_pred    = TRUE,
-    verbose      = TRUE))    # pour suivre la progression
+# set.seed(1996)
+# xgb_tuned <- tune_grid(
+#   xgb_wf,
+#   resamples = folds_tidy,
+#   grid      = tune_grid_tidy,
+#   metrics   = metric_set(roc_auc),
+#   control   = control_grid(
+#     save_pred    = TRUE,
+#     verbose      = TRUE))    # pour suivre la progression
   
 
 #saveRDS(xgb_tuned, file = "~/Documents/POP_ALS_2025_02_03/2_output/xgb_tuned.rds")
