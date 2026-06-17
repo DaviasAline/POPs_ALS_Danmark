@@ -61,11 +61,11 @@ step_select_auc_top <- function(
 
 
 bake.step_select_auc_top <- function(object, new_data, ...) {
-
+  
   non_selected_preds <- setdiff(
     names(new_data)[sapply(new_data, is.numeric)],
     object$selected_vars)
-
+  
   cols_to_keep <- setdiff(names(new_data), object$rejected_vars)
   new_data |> dplyr::select(dplyr::all_of(cols_to_keep))
 }
@@ -190,6 +190,51 @@ extract_glmnet_coefs <- function(best_fit) {
   })
 }
 
+extract_glmnet_coefs <- function(best_fit) {
+  tryCatch({
+    glmnet_fit <- best_fit |> extract_fit_engine()
+    lambda_opt <- best_fit |>
+      extract_fit_parsnip() |>
+      pluck("spec", "args", "penalty") |>
+      as.numeric()
+    
+    # Extraire les coefficients de manière plus robuste
+    coef_matrix <- coef(glmnet_fit, s = lambda_opt)
+    
+    # Convertir en tibble correctement
+    coefs <- as_tibble(
+      data.frame(
+        Feature = rownames(coef_matrix),
+        coefficient_raw = as.numeric(coef_matrix[, 1]), # On stocke la valeur brute
+        stringsAsFactors = FALSE),
+      rownames = NA) |>
+      filter(Feature != "(Intercept)" & coefficient_raw != 0)
+    
+    coefs_annotated <- coefs |>
+      mutate(
+        # CLÉ DU ROBUST-REPAIR : Comme glmnet modélise l'alternative à la référence,
+        # on inverse le signe pour obtenir l'effet direct sur le groupe "case" (SLA).
+        coefficient = -coefficient_raw, 
+        direction  = case_when(
+          coefficient > 0 ~ "↑ ALS risk",  # Un coeff positif augmente désormais le risque
+          coefficient < 0 ~ "↓ ALS risk",  # Un coeff négatif diminue le risque
+          TRUE ~ "neutral"
+        ),
+        abs_coef = abs(coefficient)) |>
+      arrange(desc(abs_coef)) # Tri par importance absolue globale
+    
+    return(list(
+      success = TRUE, 
+      coefs_all = coefs_annotated, 
+      coefs_protein = coefs_annotated, 
+      lambda_opt = lambda_opt, 
+      n_selected = nrow(coefs_annotated)))
+    
+  }, error = function(e) {
+    return(list(success = FALSE, error = as.character(e)))
+  })
+}
+
 # Fonction pour extraire XGBoost et calculer SHAP
 extract_xgb_and_shap <- function(fit_obj, data, test_label) {
   
@@ -267,8 +312,9 @@ make_recipe_top <- function(data, outcome_var = "als", n_top = 20) {
 # TEST 1 : Protéines + covariables (sans follow_up) ----
 
 data_t1 <- bdd_danish |>
-  select(als, birth_year, sex, bmi, smoking_2cat_i, match, all_of(proteomic)) |>
-  mutate(als = factor(als, levels = c(0, 1), labels = c("control", "case")))
+  select(als,  match, 
+         birth_year, sex, bmi, smoking_2cat_i, all_of(proteomic)) |>
+  mutate(als = factor(als, levels = c(1, 0), labels = c("case", "control")))
 
 cat("Dimensions :", nrow(data_t1), "×", ncol(data_t1) - 2, "prédicteurs\n")
 cat("Outcome :", table(data_t1$als), "\n")
@@ -348,33 +394,33 @@ best_rf_t1     <- tune_rf_t1[[best_rf_idx_t1]]
 rm(rf_spec_tune, best_rf_auc_t1, best_rf_idx_t1)
 
 
-### A3. XGBoost : grid_space_filling + early stopping ----
-# Phase 1 : tune_grid sur hyperparamètres structurels (depth, eta, mtry, min_n, gamma)
-#           subsample fixé à 0.8 
-# Phase 2 : early stopping via xgb.cv pour trouver le nombre optimal d'arbres
+### A3. XGBoost : Tuning complet via tidymodels (sans étape xgb.cv externe) ----
+
 xgb_spec_tune <- boost_tree(
-  trees          = 1000,
+  trees          = tune(),          # Mis en tune() pour remplacer l'early stopping
   tree_depth     = tune(),
   learn_rate     = tune(),
   mtry           = tune(),
-  min_n          = tune(),
+  min_n          = tune(),          # Traduction native de min_child_weight
   loss_reduction = tune(),
   sample_size    = 0.8) |>
   set_engine("xgboost", nthread = parallel::detectCores() - 1) |>
   set_mode("classification")
 
-# grid_space_filling() = nouveau nom de grid_latin_hypercube() depuis dials 1.3.0
-# 50 points LHS couvrent mieux l'espace 5D qu'une grille régulière 3^5 = 243 pts
+# Définition de la grille de recherche (on y intègre les arbres)
 xgb_grid_t1 <- grid_space_filling(
+  trees(range          = c(100, 2000)), # Espace de recherche sur le volume d'arbres
   tree_depth(range     = c(1, 4)),
-  learn_rate(range     = c(-3, -1)),  # 0.001 à 0.1 en log10
-  mtry(range           = c(floor(ncol_preds_t1 * 0.1),
+  learn_rate(range     = c(-3, -1)),    # 0.001 à 0.1 en log10
+  mtry(range           = c(floor(ncol_preds_t1 * 0.1), 
                            floor(ncol_preds_t1 * 0.6))),
   min_n(range          = c(1, 20)),
-  loss_reduction(range = c(-5, 0)),   # loss_reduction (gamma) en log10
+  loss_reduction(range = c(-5, 0)),     # gamma en log10
   size = 50)
 
-wf_xgb_t1 <- workflow() |> add_recipe(rec_full_t1) |> add_model(xgb_spec_tune)
+wf_xgb_t1 <- workflow() |> 
+  add_recipe(rec_full_t1) |> 
+  add_model(xgb_spec_tune)
 
 set.seed(1996)
 tune_xgb_t1 <- tune_grid(
@@ -383,48 +429,10 @@ tune_xgb_t1 <- tune_grid(
   grid      = xgb_grid_t1,
   metrics   = metric,
   control   = control_grid(save_pred = TRUE, verbose = TRUE))
+
+# Extraction directe des meilleurs paramètres globaux
 best_xgb_params_t1 <- select_best(tune_xgb_t1, metric = "roc_auc")
 
-
-# Early stopping XGBoost 
-# On reprend les meilleurs hyperparamètres structurels et on laisse xgb.cv trouver le nb optimal d'arbres via early stopping
-
-rec_prepped_t1 <- rec_full_t1 |> prep(training = data_t1)
-X_mat_t1 <- bake(rec_prepped_t1, new_data = data_t1) |>
-  select(-als, -match) |>
-  as.matrix()
-Y_num_t1 <- as.numeric(data_t1$als == "case")
-dtrain_t1 <- xgb.DMatrix(data = X_mat_t1, label = Y_num_t1)
-
-# Folds xgb.cv (indices 1-based → correspondance avec folds_t1)
-xgb_folds_t1 <- lapply(seq_len(nrow(folds_t1)), function(i) {
-  # Récupérer les match_ids du fold test
-  test_match_ids <- testing(folds_t1$splits[[i]])$match
-  which(data_t1$match %in% test_match_ids)
-})
-
-set.seed(1996)
-xgb_cv_es_t1 <- xgb.cv(
-  params = list(
-    objective        = "binary:logistic",
-    eval_metric      = "auc",
-    max_depth        = best_xgb_params_t1$tree_depth,
-    eta              = best_xgb_params_t1$learn_rate,
-    colsample_bytree = best_xgb_params_t1$mtry / ncol_preds_t1,
-    min_child_weight = 1,  # a revoir, equivalent a min_n de tidyverse mais pas vraiment
-    gamma            = best_xgb_params_t1$loss_reduction,
-    subsample        = 0.8,
-    nthread          = parallel::detectCores() - 1),
-  data                  = dtrain_t1,
-  nrounds               = 5000,
-  folds                 = xgb_folds_t1,
-  early_stopping_rounds = 50,    # plus conservateur que 30 (données petites)
-  maximize              = TRUE,
-  verbose               = 1,
-  print_every_n         = 100)
-
-best_xgb_trees_t1 <- which.max(xgb_cv_es_t1$evaluation_log$test_auc_mean)
-rm(xgb_spec_tune, xgb_grid_t1, wf_xgb_t1, rec_prepped_t1, X_mat_t1, Y_num_t1, dtrain_t1, xgb_folds_t1)
 
 
 ### A4. SVM linéaire + top20 ----
@@ -484,16 +492,27 @@ rf_final_t1 <- rand_forest(
              num.threads = parallel::detectCores() - 1) |>
   set_mode("classification")
 
+# xgb_final_t1 <- boost_tree(
+#   trees        = best_xgb_trees_t1,
+#   tree_depth   = best_xgb_params_t1$tree_depth,
+#   learn_rate   = best_xgb_params_t1$learn_rate,
+#   mtry         = best_xgb_params_t1$mtry,
+#   min_n        = best_xgb_params_t1$min_n,
+#   loss_reduction = best_xgb_params_t1$loss_reduction,
+#   sample_size  = 0.8) |>
+#   set_engine("xgboost", 
+#              nthread = parallel::detectCores() - 1) |>
+#   set_mode("classification")
+
 xgb_final_t1 <- boost_tree(
-  trees        = best_xgb_trees_t1,
-  tree_depth   = best_xgb_params_t1$tree_depth,
-  learn_rate   = best_xgb_params_t1$learn_rate,
-  mtry         = best_xgb_params_t1$mtry,
-  min_n        = best_xgb_params_t1$min_n,
+  trees          = best_xgb_params_t1$trees,
+  tree_depth     = best_xgb_params_t1$tree_depth,
+  learn_rate     = best_xgb_params_t1$learn_rate,
+  mtry           = best_xgb_params_t1$mtry,
+  min_n          = best_xgb_params_t1$min_n,
   loss_reduction = best_xgb_params_t1$loss_reduction,
-  sample_size  = 0.8) |>
-  set_engine("xgboost", 
-             nthread = parallel::detectCores() - 1) |>
+  sample_size    = 0.8) |>
+  set_engine("xgboost", nthread = parallel::detectCores() - 1) |>
   set_mode("classification")
 
 svm_final_t1 <- svm_linear(cost = best_svm_t1$cost) |>
@@ -530,7 +549,7 @@ summary_t1 <- summarise_wf_results(results_t1)
 best_wf_id_t1 <- summary_t1$wflow_id[1]      # full_glmnet
 best_fit_t1 <- fit_best_workflow(results_t1, best_wf_id_t1, data_t1)
 
-xgb_id_t1 <- summary_t1$wflow_id[5]        # full_xgboost
+xgb_id_t1 <- summary_t1$wflow_id[4]        # full_xgboost
 xgb_fit_t1 <- fit_best_workflow(results_t1, xgb_id_t1, data_t1)
 
 rm(wf_set_t1)
@@ -539,12 +558,16 @@ rm(wf_set_t1)
 # TEST 2 : Protéines + covariables + follow_up_no_na_y ----
 
 data_t2 <- bdd_danish |>
-  select(als, follow_up_no_na_y, birth_year, sex, bmi, smoking_2cat_i,
-         match, all_of(proteomic)) |>
-  mutate(als = factor(als, levels = c(0, 1), labels = c("control", "case")))
+  select(als, match,
+         follow_up_no_na_y, birth_year, sex, bmi, smoking_2cat_i,
+          all_of(proteomic)) |>
+ mutate(als = factor(als, levels = c(1, 0), labels = c("case", "control")))
+
+cat("Dimensions :", nrow(data_t2), "×", ncol(data_t2) - 2, "prédicteurs\n")
+cat("Outcome :", table(data_t2$als), "\n")
 
 folds_t2     <- make_folds_checked(data_t2)
-ncol_preds_t2 <- ncol(data_t2) - 3
+ncol_preds_t2 <- ncol(data_t2) - 2  # -als -match 
 
 rec_full_t2  <- make_recipe_full(data_t2)
 rec_top20_t2 <- make_recipe_top(data_t2, n_top = 20)
@@ -592,64 +615,45 @@ best_rf_t2     <- tune_rf_t2[[which.max(best_rf_auc_t2)]]
 rm(best_rf_auc_t2)
 
 
-### A3. XGBoost : grid_space_filling + early stopping ----
+### A3. XGBoost : Tuning complet via tidymodels (sans étape xgb.cv externe) ----
+
 xgb_spec_tune <- boost_tree(
-  trees          = 1000,
+  trees          = tune(),          # Mis en tune() pour remplacer l'early stopping
   tree_depth     = tune(),
   learn_rate     = tune(),
   mtry           = tune(),
-  min_n          = tune(),
+  min_n          = tune(),          # Traduction native de min_child_weight
   loss_reduction = tune(),
   sample_size    = 0.8) |>
   set_engine("xgboost", nthread = parallel::detectCores() - 1) |>
   set_mode("classification")
 
+# Définition de la grille de recherche (on y intègre les arbres)
 xgb_grid_t2 <- grid_space_filling(
-  tree_depth(range     = c(1, 4)), learn_rate(range = c(-3, -1)),
-  mtry(range           = c(floor(ncol_preds_t2 * 0.1), floor(ncol_preds_t2 * 0.6))),
-  min_n(range          = c(1, 20)), loss_reduction(range = c(-5, 0)), size = 50)
+  trees(range          = c(100, 2000)), # Espace de recherche sur le volume d'arbres
+  tree_depth(range     = c(1, 4)),
+  learn_rate(range     = c(-3, -1)),    # 0.001 à 0.1 en log10
+  mtry(range           = c(floor(ncol_preds_t1 * 0.1), 
+                           floor(ncol_preds_t1 * 0.6))),
+  min_n(range          = c(1, 20)),
+  loss_reduction(range = c(-5, 0)),     # gamma en log10
+  size = 50)
 
-wf_xgb_t2 <- workflow() |> add_recipe(rec_full_t2) |> add_model(xgb_spec_tune)
+wf_xgb_t2 <- workflow() |> 
+  add_recipe(rec_full_t2) |> 
+  add_model(xgb_spec_tune)
+
 set.seed(1996)
-tune_xgb_t2 <- tune_grid(wf_xgb_t2, 
-                         resamples = folds_t2, 
-                         grid = xgb_grid_t2,
-                         metrics = metric, 
-                         control = control_grid(save_pred = TRUE, verbose = TRUE))
+tune_xgb_t2 <- tune_grid(
+  wf_xgb_t2,
+  resamples = folds_t2,
+  grid      = xgb_grid_t2,
+  metrics   = metric,
+  control   = control_grid(save_pred = TRUE, verbose = TRUE))
+
+# Extraction directe des meilleurs paramètres globaux
 best_xgb_params_t2 <- select_best(tune_xgb_t2, metric = "roc_auc")
-rm(xgb_spec_tune, xgb_grid_t2, wf_xgb_t2)
 
-# Early stopping T2
-data_t2_model <- data_t2 |>
-  mutate(als_num = as.numeric(als == "case"),
-         smoking_2cat_i = as.numeric(smoking_2cat_i), sex = as.numeric(sex)) |>
-  select(-als, -match)
-
-X_mat_t2  <- data_t2_model |> select(-als_num) |> as.matrix()
-Y_num_t2  <- as.numeric(data_t2$als == "case")
-dtrain_t2 <- xgb.DMatrix(data = X_mat_t2, label = Y_num_t2)
-
-xgb_folds_t2 <- lapply(seq_len(nrow(folds_t2)), function(i) {
-  test_match_ids <- testing(folds_t2$splits[[i]])$match
-  which(data_t2$match %in% test_match_ids)
-})
-
-
-set.seed(1996)
-xgb_cv_es_t2 <- xgb.cv(
-  params = list(objective = "binary:logistic", eval_metric = "auc",
-                max_depth = best_xgb_params_t2$tree_depth, eta = best_xgb_params_t2$learn_rate,
-                colsample_bytree = best_xgb_params_t2$mtry / ncol_preds_t2,
-                min_child_weight = 1,  # A revoir 
-                gamma = best_xgb_params_t2$loss_reduction, subsample = 0.8,
-                nthread = parallel::detectCores() - 1),
-  data = dtrain_t2, nrounds = 5000, folds = xgb_folds_t2,
-  early_stopping_rounds = 50, maximize = TRUE, verbose = 1, print_every_n = 100)
-
-best_xgb_trees_t2 <- which.max(xgb_cv_es_t2$evaluation_log$test_auc_mean)
-cat("Early stopping T2 — meilleur nrounds:", best_xgb_trees_t2, "\n")
-
-rm(data_t2_model, X_mat_t2, Y_num_t2, dtrain_t2, xgb_folds_t2)
 
 
 ### A4. SVM linéaire + top20 ----
@@ -704,28 +708,27 @@ rf_final_t2 <- rand_forest(
              num.threads = parallel::detectCores() - 1) |>
   set_mode("classification")
 
-xgb_final_t2 <- boost_tree(
-  trees = best_xgb_trees_t2, 
-  tree_depth = best_xgb_params_t2$tree_depth,
-  learn_rate = best_xgb_params_t2$learn_rate, 
-  mtry = best_xgb_params_t2$mtry,
-  min_n = best_xgb_params_t2$min_n, 
-  loss_reduction = best_xgb_params_t2$loss_reduction, 
-  sample_size = 0.8) |>
-  set_engine("xgboost", 
-             nthread = parallel::detectCores() - 1) |>
-  set_mode("classification")
+# xgb_final_t2 <- boost_tree(
+#   trees = best_xgb_trees_t2, 
+#   tree_depth = best_xgb_params_t2$tree_depth,
+#   learn_rate = best_xgb_params_t2$learn_rate, 
+#   mtry = best_xgb_params_t2$mtry,
+#   min_n = best_xgb_params_t2$min_n, 
+#   loss_reduction = best_xgb_params_t2$loss_reduction, 
+#   sample_size = 0.8) |>
+#   set_engine("xgboost", 
+#              nthread = parallel::detectCores() - 1) |>
+#   set_mode("classification")
 
-xgb_tree_depth_2_t2 <- boost_tree(
-  trees = best_xgb_trees_t2, 
-  tree_depth = 2,
-  learn_rate = best_xgb_params_t2$learn_rate, 
-  mtry = best_xgb_params_t2$mtry,
-  min_n = best_xgb_params_t2$min_n, 
-  loss_reduction = best_xgb_params_t2$loss_reduction, 
-  sample_size = 0.8) |>
-  set_engine("xgboost", 
-             nthread = parallel::detectCores() - 1) |>
+xgb_final_t2 <- boost_tree(
+  trees          = best_xgb_params_t2$trees,
+  tree_depth     = best_xgb_params_t2$tree_depth,
+  learn_rate     = best_xgb_params_t2$learn_rate,
+  mtry           = best_xgb_params_t2$mtry,
+  min_n          = best_xgb_params_t2$min_n,
+  loss_reduction = best_xgb_params_t2$loss_reduction,
+  sample_size    = 0.8) |>
+  set_engine("xgboost", nthread = parallel::detectCores() - 1) |>
   set_mode("classification")
 
 svm_final_t2  <- svm_linear(cost = best_svm_t2$cost) |>
@@ -741,8 +744,7 @@ wf_set_t2 <- bind_rows(
   workflow_set(preproc = list(full = rec_full_t2),
                models = list(glmnet = glmnet_final_t2, 
                              rf = rf_final_t2,
-                             xgboost = xgb_final_t2, 
-                             xgboost_tree_depth_2 = xgb_tree_depth_2_t2)),
+                             xgboost = xgb_final_t2)),
   workflow_set(preproc = list(top20 = rec_top20_t2),
                models = list(svm = svm_final_t2, 
                              mars = mars_final_t2)))
@@ -763,9 +765,6 @@ best_fit_t2 <- fit_best_workflow(results_t2, best_wf_id_t2, data_t2)
 xgb_id_t2 <- summary_t2$wflow_id[4] # full_xgboost
 xgb_fit_t2 <- fit_best_workflow(results_t2, xgb_id_t2, data_t2)
 
-xgb_tree2_id_t2 <- summary_t2$wflow_id[5]   # full_xgboost_tree_depth_2
-xgb_tree2_fit_t2 <- fit_best_workflow(results_t2, xgb_tree2_id_t2, data_t2)
-
 rm(wf_set_t2)
 
 
@@ -780,14 +779,14 @@ results_proteomic_ALS_occurrence_tidymodels <- list(
     tune_glmnet_t1 = tune_glmnet_t1,
     tune_rf_t1 = tune_rf_t1,
     tune_xgb_t1 = tune_xgb_t1,
-    xgb_cv_es_t1 = xgb_cv_es_t1,
+    #xgb_cv_es_t1 = xgb_cv_es_t1,
     tune_svm_t1 = tune_svm_t1,
     tune_mars_t1 = tune_mars_t1,
     # Hyperparamètres optimaux test 1
     best_glmnet_t1 = best_glmnet_t1,
     best_rf_t1 = best_rf_t1,
     best_xgb_params_t1 = best_xgb_params_t1,
-    best_xgb_trees_t1 = best_xgb_trees_t1,
+    #best_xgb_trees_t1 = best_xgb_trees_t1,
     best_svm_t1 = best_svm_t1,
     best_mars_t1  = best_mars_t1,
     # comparaison finale test 1 
@@ -810,14 +809,14 @@ results_proteomic_ALS_occurrence_tidymodels <- list(
     tune_glmnet_t2 = tune_glmnet_t2,
     tune_rf_t2 = tune_rf_t2,
     tune_xgb_t2 = tune_xgb_t2,
-    xgb_cv_es_t2 = xgb_cv_es_t2,
+    #xgb_cv_es_t2 = xgb_cv_es_t2,
     tune_svm_t2  = tune_svm_t2,
     tune_mars_t2  = tune_mars_t2,
     # Hyperparamètres optimaux
     best_glmnet_t2  = best_glmnet_t2,
     best_rf_t2  = best_rf_t2,
     best_xgb_params_t2  = best_xgb_params_t2,
-    best_xgb_trees_t2  = best_xgb_trees_t2,
+    #best_xgb_trees_t2  = best_xgb_trees_t2,
     best_svm_t2  = best_svm_t2,
     best_mars_t2  = best_mars_t2,
     # comparaison finale test 2
@@ -826,9 +825,7 @@ results_proteomic_ALS_occurrence_tidymodels <- list(
     best_wf_id_t2 = best_wf_id_t2,
     best_fit_t2  = best_fit_t2, 
     xgb_id_t2 = xgb_id_t2, 
-    xgb_fit_t2 = xgb_fit_t2, 
-    xgb_tree2_id_t2 = xgb_tree2_id_t2, 
-    xgb_tree2_fit_t2 = xgb_tree2_fit_t2, 
+    xgb_fit_t2 = xgb_fit_t2,  
     glmnet_final_t2 = glmnet_final_t2, 
     rf_final_t2 = rf_final_t2, 
     xgb_final_t2 = xgb_final_t2, 
@@ -886,7 +883,7 @@ rm(tune_glmnet_t1,
    xgb_fit_t2, 
    xgb_tree2_id_t2, 
    xgb_tree2_fit_t2)
-   
+
 
 # Analyses poussées : glmnet + XGBoost pour Test 1 et Test 2 ----
 # + investigation tree_depth=2 pour Test 2
@@ -904,34 +901,34 @@ glmnet_t1_result <- extract_glmnet_coefs(
 cat("  Lambda optimal:", round(glmnet_t1_result$lambda_opt, 6), "\n")
 cat("  Selected variables:", glmnet_t1_result$n_selected, "\n")
 cat("  Selected proteins:", nrow(glmnet_t1_result$coefs_protein), "\n\n")
-  
+
 # Table Top 89 predictors (by |coefficient|)
 results_proteomic_ALS_occurrence_tidymodels$test_1$t_glmnet_t1 <- 
   glmnet_t1_result$coefs_protein |> 
-    slice_head(n = 89) |>
-    as.data.frame() |>
-    mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_")) |>
+  slice_head(n = 89) |>
+  as.data.frame() |>
+  mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_")) |>
   select(-abs_coef, -direction) |>
-    flextable() |> 
-    colformat_double(digits = 3) |>
-    flextable::font(fontname = "Calibri", part = "all") |> 
-    flextable::fontsize(size = 10, part = "all") |>
-    padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-    set_table_properties(align = "left") |>
-    autofit()
-  
+  flextable() |> 
+  colformat_double(digits = 3) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  flextable::fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
 # Plot des 89 predicteurs selectionnés
 results_proteomic_ALS_occurrence_tidymodels$test_1$f_glmnet_t1 <- glmnet_t1_result$coefs_protein |>
-    slice_head(n = 89) |>
-    mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_metabolism_|proteomic_immun_res_"), 
-           Feature = fct_reorder(Feature, abs_coef)) |>
-    ggplot(aes(x = coefficient, y = Feature, fill = direction)) +
-    geom_col() +
-    scale_fill_manual(values = c("↑ ALS risk" = "firebrick", "↓ ALS risk" = "steelblue")) +
-    geom_vline(xintercept = 0, linetype = "dashed") +
-    labs(title = "Test 1 — glmnet coefficients (top 89 predictors)",
-         x = "Coefficient (standardized)", y = NULL) +
-    theme_minimal() + 
+  slice_head(n = 89) |>
+  mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_metabolism_|proteomic_immun_res_"), 
+         Feature = fct_reorder(Feature, abs_coef)) |>
+  ggplot(aes(x = coefficient, y = Feature, fill = direction)) +
+  geom_col() +
+  scale_fill_manual(values = c("↑ ALS risk" = "firebrick", "↓ ALS risk" = "steelblue")) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(title = "Test 1 — glmnet coefficients (top 89 predictors)",
+       x = "Coefficient (standardized)", y = NULL) +
+  theme_minimal() + 
   theme(legend.position = "bottom")
 
 
@@ -947,21 +944,26 @@ results_proteomic_ALS_occurrence_tidymodels$test_1$t_xgboost_t1 <- xgb_t1_shap$s
   as.data.frame() |>
   mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_")) |>
   flextable() |> 
-  #colformat_double(digits = 5) |>
+  colformat_double(digits = 5) |>
   flextable::font(fontname = "Calibri", part = "all") |> 
   flextable::fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
   autofit()
-  
 
 # SHAP beeswarm plot
-results_proteomic_ALS_occurrence_tidymodels$test_1$f_xgb_beeswarm_t1 <- sv_importance(xgb_t1_shap$shap, kind = "beeswarm", max_display = 20) +
-        labs(title = "Test 1 XGBoost — SHAP beeswarm (top 20)")
+results_proteomic_ALS_occurrence_tidymodels$test_1$f_xgb_beeswarm_t1 <- 
+  sv_importance(xgb_t1_shap$shap, 
+                kind = "beeswarm", 
+                max_display = 20) +
+  labs(title = "Test 1 XGBoost — SHAP beeswarm (top 20)")
 
 # SHAP bar plot
-results_proteomic_ALS_occurrence_tidymodels$test_1$f_xgb_barplot_t1 <- sv_importance(xgb_t1_shap$shap, kind = "bar", max_display = 20) +
-        labs(title = "Test 1 XGBoost — SHAP importance (top 20)")
+results_proteomic_ALS_occurrence_tidymodels$test_1$f_xgb_barplot_t1 <- 
+  sv_importance(xgb_t1_shap$shap, 
+                kind = "bar", 
+                max_display = 20) +
+  labs(title = "Test 1 XGBoost — SHAP importance (top 20)")
 
 # Dependence plots (top 6)
 top6_t1 <- xgb_t1_shap$shap_summary |> slice_head(n = 6) |> pull(Feature)
@@ -970,8 +972,10 @@ results_proteomic_ALS_occurrence_tidymodels$test_1$f_xgb_dependanceplot_t1 <- la
     labs(title = paste("Test 1 —", prot)) +
     theme_minimal()
 })
+
 names(results_proteomic_ALS_occurrence_tidymodels$test_1$f_xgb_dependanceplot_t1) <- top6_t1
 rm(top6_t1)
+results_proteomic_ALS_occurrence_tidymodels$test_1$f_xgb_dependanceplot_t1$proteomic_neuro_explo_NEFL
 
 
 ## Test 2 interpreation : glmnet (winner) + XGBoost (comparison) ----
@@ -986,31 +990,31 @@ cat("  Selected proteins:", nrow(glmnet_t2_result$coefs_protein), "\n\n")
 
 # Top 110 predictors (by |coefficient|)
 results_proteomic_ALS_occurrence_tidymodels$test_2$t_glmnet_t2 <- glmnet_t2_result$coefs_protein |> 
-    slice_head(n = 110) |>
-    as.data.frame() |>
+  slice_head(n = 110) |>
+  as.data.frame() |>
   mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_")) |>
   select(-abs_coef, -direction) |>
-    flextable() |> 
-    colformat_double(digits = 2) |>
-    flextable::font(fontname = "Calibri", part = "all") |> 
-    flextable::fontsize(size = 10, part = "all") |>
-    padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-    set_table_properties(align = "left") |>
-    autofit()
-  
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  flextable::fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
 # Plot
 results_proteomic_ALS_occurrence_tidymodels$test_2$p_glmnet_t2 <- 
   glmnet_t2_result$coefs_protein |>
-    slice_head(n = 110) |>
-    mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_metabolism_|proteomic_immun_res_"), 
-           Feature = fct_reorder(Feature, abs_coef)) |>
-    ggplot(aes(x = coefficient, y = Feature, fill = direction)) +
-    geom_col() +
-    scale_fill_manual(values = c("↑ ALS risk" = "firebrick", "↓ ALS risk" = "steelblue")) +
-    geom_vline(xintercept = 0, linetype = "dashed") +
-    labs(title = "Test 2 — glmnet coefficients (top 110 predictors)",
-         x = "Coefficient (standardized)", y = NULL) +
-    theme_minimal() + 
+  slice_head(n = 110) |>
+  mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_metabolism_|proteomic_immun_res_"), 
+         Feature = fct_reorder(Feature, abs_coef)) |>
+  ggplot(aes(x = coefficient, y = Feature, fill = direction)) +
+  geom_col() +
+  scale_fill_manual(values = c("↑ ALS risk" = "firebrick", "↓ ALS risk" = "steelblue")) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(title = "Test 2 — glmnet coefficients (top 110 predictors)",
+       x = "Coefficient (standardized)", y = NULL) +
+  theme_minimal() + 
   theme(legend.position = "bottom")
 
 
@@ -1026,7 +1030,7 @@ results_proteomic_ALS_occurrence_tidymodels$test_2$t_xgboost_t2 <- xgb_t2_shap$s
   as.data.frame() |>
   mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_")) |>
   flextable() |> 
-  colformat_double(digits = 2) |>
+  colformat_double(digits = 5) |>
   flextable::font(fontname = "Calibri", part = "all") |> 
   flextable::fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
@@ -1035,11 +1039,11 @@ results_proteomic_ALS_occurrence_tidymodels$test_2$t_xgboost_t2 <- xgb_t2_shap$s
 
 # SHAP beeswarm plot
 results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_beeswarm_t2 <- sv_importance(xgb_t2_shap$shap, kind = "beeswarm", max_display = 20) +
-        labs(title = "Test 2 XGBoost — SHAP beeswarm (top 20)")
+  labs(title = "Test 2 XGBoost — SHAP beeswarm (top 20)")
 
 # SHAP bar plot
 results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_barplot_t2 <- sv_importance(xgb_t2_shap$shap, kind = "bar", max_display = 20) +
-        labs(title = "Test 2 XGBoost — SHAP importance (top 20)")
+  labs(title = "Test 2 XGBoost — SHAP importance (top 20)")
 
 # Dependence plots (top 6)
 top6_t2 <- xgb_t2_shap$shap_summary |> 
@@ -1159,114 +1163,114 @@ rm(glmnet_t1_result, glmnet_t1_top, xgb_t1_shap, xgb_t1_top,
    glmnet_t2_result, glmnet_t2_top, xgb_t2_shap, xgb_t2_top)
 
 
-
-## Additional investigation: xgboost tree_depth = 2 for Test 2 ----
-xgb_tree2_t2_shap <- extract_xgb_and_shap(
-  results_proteomic_ALS_occurrence_tidymodels$test_2$xgb_tree2_fit_t2,
-  data = data_t2,
-  test_label  = "Test 2 XGBoost - tree depth = 2")
-
-# Top 20 variables by SHAP importance
-results_proteomic_ALS_occurrence_tidymodels$test_2$t_xgb_tree2_t2 <- xgb_tree2_t2_shap$shap_summary |> 
-  slice_head(n = 20) |> 
-  as.data.frame() |>
-  mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_")) |>
-  flextable() |> 
-  colformat_double(digits = 2) |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  flextable::fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
-
-# SHAP beeswarm plot
-results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_beeswarm_t2 <- 
-  sv_importance(xgb_tree2_t2_shap$shap, kind = "beeswarm", max_display = 20) +
-  labs(title = "Test 2 XGBoost - tree depth = 2 — SHAP beeswarm (top 20)")
-
-# SHAP bar plot
-results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_barplot_t2 <- 
-  sv_importance(xgb_tree2_t2_shap$shap, kind = "bar", max_display = 20) +
-  labs(title = "Test 2 XGBoost - tree depth = 2 — SHAP importance (top 20)")
-
-# Dependence plots (top 6)
-top6_t2_tree2 <- xgb_tree2_t2_shap$shap_summary |> 
-  slice_head(n = 6) |> 
-  pull(Feature)
-
-results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_dependanceplot_t2 <- 
-  lapply(top6_t2_tree2, function(prot) {
-  sv_dependence(xgb_tree2_t2_shap$shap, v = prot) +
-    labs(title = paste("Test 2 XGBoost - tree depth = 2 —", prot)) +
-    theme_minimal()
-})
-names(results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_dependanceplot_t2) <- top6_t2_tree2
-
-# Dependence plots by follow-up duration (top 6)
-results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_dependanceplot_by_followup_t2 <- 
-  lapply(top6_t2_tree2, function(prot) {
-  sv_dependence(xgb_tree2_t2_shap$shap, 
-                v = prot, 
-                color_var = "follow_up_no_na_y") +
-    scale_color_viridis_c(name = "Follow-up\n(years)") +
-    labs(title = paste("Test 2 - tree depth = 2 - ", prot, "× follow_up")) +
-    theme_minimal()
-})
-names(results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_dependanceplot_by_followup_t2) <- top6_t2_tree2
-rm(top6_t2_tree2)
-
-# Interaction follow_up × protéines
-fu_breaks_tree2 <- quantile(data_t2$follow_up_no_na_y, probs = c(0, 1/3, 2/3, 1), na.rm = TRUE)
-fu_group_t2_tree2 <- cut(data_t2$follow_up_no_na_y,
-                         breaks = fu_breaks_tree2,
-                         labels = c("Early (≤1/3)", "Intermediate", "Late (≥2/3)"),
-                         include.lowest = TRUE)
-
-top15_prot_t2_tree2 <- xgb_tree2_t2_shap$shap_summary |> slice_head(n = 15) |> pull(Feature)
-
-shap_by_fu_tree2 <- as_tibble(xgb_tree2_t2_shap$shap_matrix[, top15_prot_t2_tree2]) |>
-  mutate(fu_group = fu_group_t2_tree2) |>
-  pivot_longer(-fu_group, names_to = "Feature", values_to = "shap") |>
-  group_by(fu_group, Feature) |>
-  summarise(
-    mean_abs_shap = mean(abs(shap)),
-    mean_shap     = mean(shap),
-    .groups = "drop") |>
-  mutate(direction = if_else(mean_shap > 0, "↑ risk", "↓ risk"))
-
-cat("\nSHAP |value| by follow-up tertile:\n")
-results_proteomic_ALS_occurrence_tidymodels$test_2$f_fu_shap_tree2 <- 
-  ggplot(shap_by_fu_tree2, aes(x = fu_group, y = mean_abs_shap, fill = direction)) +
-  geom_col(position = "dodge") +
-  facet_wrap(~ reorder(Feature, -mean_abs_shap), scales = "free_y", ncol = 3) +
-  scale_fill_manual(values = c("↑ risk" = "firebrick", "↓ risk" = "steelblue")) +
-  labs(title = "Test 2 — tree depth = 2 - SHAP |value| by follow-up tertile (top 15 proteins)",
-       x = "Follow-up tertile", y = "Mean |SHAP|", fill = "") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1))
-
-
-# Trajectory analysis
-cat("\nProtein signal trajectory:\n")
-results_proteomic_ALS_occurrence_tidymodels$test_2$shap_fu_trend_tree2 <- shap_by_fu_tree2 |>
-  select(fu_group, Feature, mean_abs_shap) |>
-  pivot_wider(names_from = fu_group, values_from = mean_abs_shap) |>
-  rename(early = `Early (≤1/3)`, intermediate = Intermediate, late = `Late (≥2/3)`) |>
-  mutate(
-    trend = case_when(
-      late > early * 1.3  ~ "Late marker (↑ closer to diagnosis)",
-      early > late * 1.3  ~ "Early marker (↑ years before)",
-      TRUE                ~ "Stable across time"),
-    ratio_late_early = round(late / (early + 1e-6), 2)) |>
-  arrange(desc(ratio_late_early)) |> 
-  as.data.frame() |>
-  mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_")) |>
-  flextable() |> 
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  flextable::fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
+# 
+# ## Additional investigation: xgboost tree_depth = 2 for Test 2 ----
+# xgb_tree2_t2_shap <- extract_xgb_and_shap(
+#   results_proteomic_ALS_occurrence_tidymodels$test_2$xgb_tree2_fit_t2,
+#   data = data_t2,
+#   test_label  = "Test 2 XGBoost - tree depth = 2")
+# 
+# # Top 20 variables by SHAP importance
+# results_proteomic_ALS_occurrence_tidymodels$test_2$t_xgb_tree2_t2 <- xgb_tree2_t2_shap$shap_summary |> 
+#   slice_head(n = 20) |> 
+#   as.data.frame() |>
+#   mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_")) |>
+#   flextable() |> 
+#   colformat_double(digits = 2) |>
+#   flextable::font(fontname = "Calibri", part = "all") |> 
+#   flextable::fontsize(size = 10, part = "all") |>
+#   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+#   set_table_properties(align = "left") |>
+#   autofit()
+# 
+# # SHAP beeswarm plot
+# results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_beeswarm_t2 <- 
+#   sv_importance(xgb_tree2_t2_shap$shap, kind = "beeswarm", max_display = 20) +
+#   labs(title = "Test 2 XGBoost - tree depth = 2 — SHAP beeswarm (top 20)")
+# 
+# # SHAP bar plot
+# results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_barplot_t2 <- 
+#   sv_importance(xgb_tree2_t2_shap$shap, kind = "bar", max_display = 20) +
+#   labs(title = "Test 2 XGBoost - tree depth = 2 — SHAP importance (top 20)")
+# 
+# # Dependence plots (top 6)
+# top6_t2_tree2 <- xgb_tree2_t2_shap$shap_summary |> 
+#   slice_head(n = 6) |> 
+#   pull(Feature)
+# 
+# results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_dependanceplot_t2 <- 
+#   lapply(top6_t2_tree2, function(prot) {
+#     sv_dependence(xgb_tree2_t2_shap$shap, v = prot) +
+#       labs(title = paste("Test 2 XGBoost - tree depth = 2 —", prot)) +
+#       theme_minimal()
+#   })
+# names(results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_dependanceplot_t2) <- top6_t2_tree2
+# 
+# # Dependence plots by follow-up duration (top 6)
+# results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_dependanceplot_by_followup_t2 <- 
+#   lapply(top6_t2_tree2, function(prot) {
+#     sv_dependence(xgb_tree2_t2_shap$shap, 
+#                   v = prot, 
+#                   color_var = "follow_up_no_na_y") +
+#       scale_color_viridis_c(name = "Follow-up\n(years)") +
+#       labs(title = paste("Test 2 - tree depth = 2 - ", prot, "× follow_up")) +
+#       theme_minimal()
+#   })
+# names(results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_dependanceplot_by_followup_t2) <- top6_t2_tree2
+# rm(top6_t2_tree2)
+# 
+# # Interaction follow_up × protéines
+# fu_breaks_tree2 <- quantile(data_t2$follow_up_no_na_y, probs = c(0, 1/3, 2/3, 1), na.rm = TRUE)
+# fu_group_t2_tree2 <- cut(data_t2$follow_up_no_na_y,
+#                          breaks = fu_breaks_tree2,
+#                          labels = c("Early (≤1/3)", "Intermediate", "Late (≥2/3)"),
+#                          include.lowest = TRUE)
+# 
+# top15_prot_t2_tree2 <- xgb_tree2_t2_shap$shap_summary |> slice_head(n = 15) |> pull(Feature)
+# 
+# shap_by_fu_tree2 <- as_tibble(xgb_tree2_t2_shap$shap_matrix[, top15_prot_t2_tree2]) |>
+#   mutate(fu_group = fu_group_t2_tree2) |>
+#   pivot_longer(-fu_group, names_to = "Feature", values_to = "shap") |>
+#   group_by(fu_group, Feature) |>
+#   summarise(
+#     mean_abs_shap = mean(abs(shap)),
+#     mean_shap     = mean(shap),
+#     .groups = "drop") |>
+#   mutate(direction = if_else(mean_shap > 0, "↑ risk", "↓ risk"))
+# 
+# cat("\nSHAP |value| by follow-up tertile:\n")
+# results_proteomic_ALS_occurrence_tidymodels$test_2$f_fu_shap_tree2 <- 
+#   ggplot(shap_by_fu_tree2, aes(x = fu_group, y = mean_abs_shap, fill = direction)) +
+#   geom_col(position = "dodge") +
+#   facet_wrap(~ reorder(Feature, -mean_abs_shap), scales = "free_y", ncol = 3) +
+#   scale_fill_manual(values = c("↑ risk" = "firebrick", "↓ risk" = "steelblue")) +
+#   labs(title = "Test 2 — tree depth = 2 - SHAP |value| by follow-up tertile (top 15 proteins)",
+#        x = "Follow-up tertile", y = "Mean |SHAP|", fill = "") +
+#   theme_minimal() +
+#   theme(axis.text.x = element_text(angle = 30, hjust = 1))
+# 
+# 
+# # Trajectory analysis
+# cat("\nProtein signal trajectory:\n")
+# results_proteomic_ALS_occurrence_tidymodels$test_2$shap_fu_trend_tree2 <- shap_by_fu_tree2 |>
+#   select(fu_group, Feature, mean_abs_shap) |>
+#   pivot_wider(names_from = fu_group, values_from = mean_abs_shap) |>
+#   rename(early = `Early (≤1/3)`, intermediate = Intermediate, late = `Late (≥2/3)`) |>
+#   mutate(
+#     trend = case_when(
+#       late > early * 1.3  ~ "Late marker (↑ closer to diagnosis)",
+#       early > late * 1.3  ~ "Early marker (↑ years before)",
+#       TRUE                ~ "Stable across time"),
+#     ratio_late_early = round(late / (early + 1e-6), 2)) |>
+#   arrange(desc(ratio_late_early)) |> 
+#   as.data.frame() |>
+#   mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_")) |>
+#   flextable() |> 
+#   flextable::font(fontname = "Calibri", part = "all") |> 
+#   flextable::fontsize(size = 10, part = "all") |>
+#   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+#   set_table_properties(align = "left") |>
+#   autofit()
 
 
 rm(fu_breaks_tree2, fu_group_t2_tree2, top15_prot_t2_tree2, shap_by_fu_tree2, xgb_tree2_t2_shap)

@@ -32,7 +32,6 @@ results_fattyacids_ALS_occurrence <- readRDS("~/Documents/POP_ALS_2025_02_03/2_o
 results_fattyacids_ALS_survival <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.5_results_fattyacids_ALS_survival.rds")
 results_proteomic_ALS_occurrence <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.6.1_results_proteomic_ALS_occurrence.rds")
 results_proteomic_ALS_occurrence_SL <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.6.2_results_proteomic_ALS_occurrence_SL.rds")
-#results_proteomic_ALS_occurrence_caret <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.6.3_results_proteomic_ALS_occurrence_caret.rds")
 results_proteomic_ALS_occurrence_y_to_als <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.6.4_results_proteomic_ALS_occurrence_y_to_als.rds") 
 results_proteomic_ALS_survival <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.7_results_proteomic_ALS_survival.rds")
 ```
