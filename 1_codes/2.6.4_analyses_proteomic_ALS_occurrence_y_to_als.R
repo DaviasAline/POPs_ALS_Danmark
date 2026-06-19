@@ -1805,10 +1805,621 @@ rm(covar_xgboost, X_data, id_match, Y_data,
    cv_sl_1_2_AUC, cv_sl_1_2_NNLS, 
    cv_sl_2_AUC, cv_sl_2_NNLS)
 
-# 4. Stratified logistic models?----
-# 5. Analyse Cox tronqué (Landmark)?----
-# 6. Cox + AUC dépendante du temps?----
-# 7. Modèle AFT (survreg)? ----
+# 4. Linear models ----
+library(fixest) # Pour les modèles à effets fixes 
+
+## Proteome wide associations (Conditional linear model sd) ----
+### Base ----
+model1_linear_sd <- map_dfr(proteomic_sd, function(expl) {
+  formula_danish <- as.formula(paste("follow_up_bis ~", expl, "| match")) 
+  model <- feols(formula_danish, data = bdd_danish)
+  coef_mat <- summary(model)$coeftable
+  tibble(
+    model       = "base", 
+    analysis    = "main", 
+    term        = rownames(coef_mat),
+    explanatory = expl, 
+    coef        = coef_mat[, "Estimate"],
+    se          = coef_mat[, "Std. Error"], 
+    p_value     = coef_mat[, "Pr(>|t|)"]) |>
+    filter(str_starts(term, explanatory)) 
+})
+
+### Adjusted ----
+model2_linear_sd <- map_dfr(proteomic_sd, function(expl) {
+  formula_danish <- as.formula(paste("follow_up_bis ~", expl, "+ smoking_2cat_i + bmi | match")) 
+  model <- feols(formula_danish, data = bdd_danish)
+  coef_mat <- summary(model)$coeftable
+  tibble(
+    model       = "adjusted", 
+    analysis    = "main", 
+    term        = rownames(coef_mat),
+    explanatory = expl, 
+    coef        = coef_mat[, "Estimate"],
+    se          = coef_mat[, "Std. Error"], 
+    p_value     = coef_mat[, "Pr(>|t|)"]) |>
+    filter(str_starts(term, explanatory))
+})
+
+## Assemblage ----
+main_results <-        
+  bind_rows(
+    model1_linear_sd, model2_linear_sd) |>
+  mutate(
+    Beta = coef,
+    lower_CI = coef - 1.96 * se,
+    upper_CI = coef + 1.96 * se, 
+    term = case_when(
+      str_detect(term, "_sd") ~ "Continuous", 
+      str_detect(term, "Q2") ~ "Quartile 2",
+      str_detect(term, "Q3") ~ "Quartile 3",
+      str_detect(term, "Q4") ~ "Quartile 4"), 
+    protein_group = case_when(str_detect(explanatory, 'proteomic_immun_res') ~ "Immune response", 
+                              str_detect(explanatory, 'proteomic_metabolism') ~ "Metabolism", 
+                              str_detect(explanatory, 'proteomic_neuro_explo') ~ "Neuro-exploratory"), 
+    explanatory = gsub("_sd", "", explanatory), 
+    explanatory = str_replace(explanatory, "proteomic_immun_res_|proteomic_metabolism_|proteomic_neuro_explo_", ""), 
+    Beta_raw = Beta, 
+    Beta = as.numeric(sprintf("%.1f", Beta)),
+    lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
+    upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
+    `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
+    p_value_raw = p_value, 
+    p_value_shape = ifelse(p_value_raw<0.05, "p_value<0.05", "p_value≥0.05"), 
+    p_value = ifelse(p_value < 0.01, "<0.01", number(p_value, accuracy = 0.01, decimal.mark = ".")), 
+    p_value = ifelse(p_value == "1.00", ">0.99", p_value)) |>
+  select(model, protein_group, explanatory, analysis, term,  Beta, Beta_raw, `95% CI`, p_value, p_value_raw, p_value_shape, lower_CI, upper_CI)
+
+results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide <- 
+  list(main_results = main_results)
+
+rm(model1_linear_sd, model2_linear_sd, main_results)
+
+
+## Tables and figures ----
+
+### Table proteomic (sd) - als survival (main) ----
+results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$proteomic_sd_ALS_table_linear <- 
+  results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$main_results |>
+  filter(model %in% c("base", "adjusted") & term == "Continuous" & analysis == "main") |>     
+  group_by(explanatory) |>                                                      
+  filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
+  ungroup() |>
+  select(model, explanatory, protein_group, term, Beta, "95% CI", "p_value") |>
+  arrange(protein_group, explanatory) |>
+  pivot_wider(names_from = "model", values_from = c("Beta", "95% CI", "p_value")) |>
+  select(protein_group, explanatory, contains("base"), contains("adjusted")) |>
+  rename("Beta" = "Beta_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base", 
+         "Beta " = "Beta_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p_value_adjusted") |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are matched for birth year and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated change of follow-up duration (years) from baseline to ALS diagnosis (for cases) or to end of study or death (for controls) associated with a one standard deviation increase in pre-disease plasma concentration of proteins. 
+    3CI: Confidence interval.") |>
+  add_header(
+    "explanatory" = "Pre-disease plasma proteins", 
+    "protein_group" = "Protein group", 
+    "Beta" = "Base models", "95% CI" = "Base models", "p-value" = "Base models", 
+    "Beta " = "Adjusted models", "95% CI " = "Adjusted models", "p-value " = "Adjusted models") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  merge_v(j = "protein_group") |>
+  merge_v(j = "explanatory") |>
+  bold(j = "explanatory", part = "body") |>
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
+### Figure proteomic - als survival - base sd (main) ----
+results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$proteomic_sd_ALS_base_figure_linear <- 
+  results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$main_results |>
+  filter(model == "base" & term == "Continuous" & analysis == "main") |>
+  mutate(
+    #log2Beta = log2(Beta_raw),
+    neg_log10_p = -log10(p_value_raw),
+    significance = case_when(
+      p_value_raw < 0.05 & Beta_raw > 0 ~ "Beta>0 & p-value<0.05",
+      p_value_raw < 0.05 & Beta_raw < 0 ~ "Beta<0 & p-value<0.05",
+      TRUE ~ "p-value>0.05")) |>
+  ggplot(aes(x = Beta_raw, y = neg_log10_p, color = significance)) +
+  geom_point(alpha = 0.8, size = 2) +
+  geom_text_repel(
+    data = ~filter(.x, p_value_raw < 0.05),       
+    aes(label = explanatory), 
+    size = 3.5,
+    max.overlaps = 20,
+    box.padding = 0.4,
+    point.padding = 0.2,
+    segment.color = "grey20", 
+    color = "black") +
+  scale_color_manual(
+    values = c("Beta<0 & p-value<0.05" = "blue", 
+               "p-value>0.05" = "grey70", 
+               "Beta>0 & p-value<0.05" = "red")) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Base linear models",
+    x = "Beta",
+    y = "-log10(p-value)", 
+    color = "")
+
+### Figure proteomic - als survival - adjusted sd (main) ----
+results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$proteomic_sd_ALS_adjusted_figure_linear <- 
+  results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$main_results |>
+  filter(model == "adjusted" & term == "Continuous" & analysis == "main") |>
+  mutate(
+    #log2Beta = log2(Beta_raw),
+    neg_log10_p = -log10(p_value_raw),
+    significance = case_when(
+      p_value_raw < 0.05 & Beta_raw > 0 ~ "Beta>0 & p-value<0.05",
+      p_value_raw < 0.05 & Beta_raw < 0 ~ "Beta<0 & p-value<0.05",
+      TRUE ~ "p-value>0.05")) |>
+  ggplot(aes(x = Beta_raw, y = neg_log10_p, color = significance)) +
+  geom_point(alpha = 0.8, size = 2) +
+  geom_text_repel(
+    data = ~filter(.x, p_value_raw < 0.05),   
+    aes(label = explanatory), 
+    size = 3.5,
+    max.overlaps = 20,
+    box.padding = 0.4,
+    point.padding = 0.2,
+    segment.color = "grey20", 
+    color = "black") +
+  scale_color_manual(
+    values = c("Beta<0 & p-value<0.05" = "blue", "p-value>0.05" = "grey70", "Beta>0 & p-value<0.05" = "red")) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Adjusted linear models",
+    x = "Beta",
+    y = "-log10(p-value)", 
+    color = "")
+
+## Machine learning with tidymodels ----
+
+### Préparation des fonctions ----
+# Nouvelle fonction de sélection top N dédiée à la REGRESSION (basée sur la corrélation)
+step_select_corr_top <- function(
+    recipe, ..., outcome, top_n = 20, role = NA,
+    trained = FALSE, selected_vars = NULL, rejected_vars = NULL, skip = FALSE,
+    id = recipes::rand_id("select_corr_top")) {
+  
+  recipes::add_step(
+    recipe,
+    structure(
+      list(
+        terms         = rlang::enquos(...),
+        outcome       = outcome,
+        top_n         = top_n,
+        role          = role,
+        trained       = trained,
+        selected_vars = selected_vars,
+        rejected_vars = rejected_vars,
+        skip          = skip,
+        id            = id),
+      class = c("step_select_corr_top", "step")))
+}
+
+prep.step_select_corr_top <- function(x, training, info = NULL, ...) {
+  col_names <- recipes::recipes_eval_select(x$terms, training, info)
+  y_vec <- as.numeric(training[[x$outcome]])
+  
+  # Calcul de la corrélation absolue avec le follow-up
+  corr_scores <- vapply(col_names, function(v) {
+    tryCatch(
+      abs(cor(y_vec, as.numeric(training[[v]]), use = "complete.obs", method = "pearson")),
+      error = function(e) 0)
+  }, numeric(1))
+  
+  n_keep        <- min(x$top_n, length(corr_scores))
+  top_idx       <- order(corr_scores, decreasing = TRUE)[seq_len(n_keep)]
+  selected_vars <- col_names[top_idx]
+  
+  x$selected_vars <- selected_vars
+  x$rejected_vars <- setdiff(col_names, selected_vars)
+  x$trained        <- TRUE
+  x
+}
+
+bake.step_select_corr_top <- function(object, new_data, ...) {
+  cols_to_keep <- setdiff(names(new_data), object$rejected_vars)
+  new_data |> select(all_of(cols_to_keep))
+}
+
+# Fonction résumé mise à jour pour le R2 (R-squared)
+summarise_wf_results <- function(wf_results) {
+  collect_metrics(wf_results) |>
+    filter(.metric == "rsq") |>
+    arrange(desc(mean)) |>
+    select(wflow_id, mean, std_err, n)
+}
+
+# Métriques de Régression
+metrics_reg <- metric_set(yardstick::rsq, yardstick::rmse, yardstick::mae)
+
+extract_glmnet_reg_coefs <- function(best_fit) {
+  tryCatch({
+    glmnet_fit <- best_fit |> extract_fit_engine()
+    lambda_opt <- best_fit |>
+      extract_fit_parsnip() |>
+      pluck("spec", "args", "penalty") |>
+      as.numeric()
+    
+    # Extraction des coefficients au lambda optimal
+    coef_matrix <- coef(glmnet_fit, s = lambda_opt)
+    
+    coefs <- as_tibble(
+      data.frame(
+        Feature = rownames(coef_matrix),
+        coefficient = as.numeric(coef_matrix[, 1]),
+        stringsAsFactors = FALSE),
+      rownames = NA) |>
+      filter(Feature != "(Intercept)" & coefficient != 0)
+    
+    coefs_annotated <- coefs |>
+      mutate(
+        direction = case_when(
+          coefficient > 0 ~ "↑ Follow-up duration",  # Plus de protéine = diagnostic plus tardif
+          coefficient < 0 ~ "↓ Follow-up duration",  # Plus de protéine = diagnostic plus précoce
+          TRUE ~ "neutral"),
+        abs_coef = abs(coefficient)) |>
+      arrange(desc(abs_coef)) # Tri par importance absolue
+    
+    return(list(
+      success = TRUE, 
+      coefs_protein = coefs_annotated, 
+      lambda_opt = lambda_opt, 
+      n_selected = nrow(coefs_annotated)))
+    
+  }, error = function(e) {
+    return(list(success = FALSE, error = as.character(e)))
+  })
+}
+
+
+# Folds groupés sur `match` + vérification anti-leakage
+make_folds_checked <- function(data, v = 10, seed = 1996) {
+  data_with_match <- data  # match est déjà dans data
+  
+  set.seed(seed)
+  folds <- group_vfold_cv(data_with_match, group = match, v = v)    # garantit qu'un même triplet se retrouve toujours dans le meme fold et qu'un cas n'est pas separé de ses témoins
+  
+  # Vérification leakage
+  has_leakage <- FALSE
+  for (i in seq_len(nrow(folds))) {
+    tr_ids   <- training(folds$splits[[i]])$match
+    te_ids   <- testing(folds$splits[[i]])$match
+    leakage  <- intersect(tr_ids, te_ids)
+    if (length(leakage) > 0) {
+      cat("⚠️  Fold", i, ": LEAKAGE détecté ! Triplets:", leakage, "\n")
+      has_leakage <- TRUE
+    }
+  }
+  if (!has_leakage) cat("Vérification leakage OK — aucun triplet splitté\n")
+  
+  cat("Nb folds:", nrow(folds), "\n")
+  cat("Taille fold 1 — train:", nrow(training(folds$splits[[1]])),
+      "| test:", nrow(testing(folds$splits[[1]])), "\n")
+  folds
+}
+
+# C-helper : entraîner le workflow gagnant sur toutes les données 
+
+fit_best_workflow <- function(wf_set_results, wf_id, data, seed = 1996) {
+  best_wf <- extract_workflow(wf_set_results, id = wf_id)
+  set.seed(seed)
+  fit(best_wf, data = data)
+}
+
+
+
+### Préparation des Données & Folds ----
+# On garde les cas et les témoins pour prédire le follow-up global
+data_reg <- bdd_danish |>
+  select(follow_up_bis, match, birth_year, sex, bmi, smoking_2cat_i, all_of(proteomic)) |>
+  mutate(
+    sex = as.numeric(sex),
+    smoking_2cat_i = as.numeric(smoking_2cat_i))
+folds_reg <- make_folds_checked(data_reg, v = 10, seed = 1996)
+
+# Recettes de régression
+rec_full_reg <- recipe(follow_up_bis ~ ., data = data_reg) |>
+  update_role(match, new_role = "id") |>
+  step_zv(all_numeric_predictors()) |>
+  step_normalize(all_numeric_predictors())
+
+rec_top20_reg <- rec_full_reg |>
+  step_select_corr_top(all_numeric_predictors(), outcome = "follow_up_bis", top_n = 20)
+
+ncol_preds_reg <- ncol(data_reg) - 2 # Exclut follow_up_bis et match
+
+### PHASE A : Tuning des Hyperparamètres (Mode Régression) ----
+#### A1. Glmnet (Régression Linéaire Pénalisée Ridge/Lasso) ----
+glmnet_spec_tune <- linear_reg(penalty = tune(), mixture = tune()) |>
+  set_engine("glmnet") |>
+  set_mode("regression")
+
+wf_glmnet_reg <- workflow() |> add_recipe(rec_full_reg) |> add_model(glmnet_spec_tune)
+
+set.seed(1996)
+tune_glmnet_reg <- 
+  tune_bayes(
+    wf_glmnet_reg, 
+    resamples = folds_reg,
+    param_info = parameters(dials::penalty(range = c(-5, 0)), 
+                            mixture(range = c(0, 1))),
+    iter = 30, 
+    initial = 10, 
+    metrics = metrics_reg,
+    control = control_bayes(save_pred = TRUE, verbose = TRUE))
+best_glmnet_reg <- select_best(tune_glmnet_reg, metric = "rsq")
+
+#### A2. Random Forest ----
+tune_rf_reg <- map(c("variance", "extratrees"), function(sr) {
+  rf_spec_sr <- rand_forest(mtry = tune(), min_n = tune(), trees = 1000) |>
+    set_engine("ranger", splitrule = sr, num.threads = parallel::detectCores() - 1, importance = "permutation") |>
+    set_mode("regression") 
+  
+  wf_rf_sr <- workflow() |> add_recipe(rec_full_reg) |> add_model(rf_spec_sr)
+  
+  set.seed(1996)
+  res <- tune_bayes(
+    wf_rf_sr, resamples = folds_reg,
+    param_info = parameters(mtry(range = c(5, min(30, ncol_preds_reg))), min_n(range = c(1, 20))),
+    iter = 20, initial = 8, metrics = metrics_reg,
+    control = control_bayes(save_pred = TRUE, verbose = TRUE))
+  
+  list(splitrule = sr, tuned = res, best = select_best(res, metric = "rsq"))
+})
+
+best_rf_rsq <- map_dbl(tune_rf_reg, ~ show_best(.x$tuned, metric = "rsq", n=1)$mean)
+best_rf_reg <- tune_rf_reg[[which.max(best_rf_rsq)]]
+
+#### A3. XGBoost ----
+xgb_spec_tune <- 
+  boost_tree(
+    trees = tune(), 
+    tree_depth = tune(), 
+    learn_rate = tune(),
+    mtry = tune(), 
+    min_n = tune(), 
+    loss_reduction = tune(), 
+    sample_size = 0.8) |>
+  set_engine("xgboost", 
+             nthread = parallel::detectCores() - 1) |>
+  set_mode("regression")
+
+xgb_grid_reg <- 
+  grid_space_filling(
+    trees(range = c(100, 1500)),
+    tree_depth(range = c(1, 4)),
+    learn_rate(range = c(-3, -1)),
+    mtry(range = c(floor(ncol_preds_reg * 0.1), 
+                   floor(ncol_preds_reg * 0.6))),
+    min_n(range = c(1, 20)),
+    loss_reduction(range = c(-5, 0)),
+    size = 40)
+
+wf_xgb_reg <- workflow() |> add_recipe(rec_full_reg) |> add_model(xgb_spec_tune)
+
+set.seed(1996)
+tune_xgb_reg <- 
+  tune_grid(
+    wf_xgb_reg, 
+    resamples = folds_reg, 
+    grid = xgb_grid_reg,
+    metrics = metrics_reg, 
+    control = control_grid(save_pred = TRUE, verbose = TRUE))
+best_xgb_params_reg <- select_best(tune_xgb_reg, metric = "rsq")
+
+
+#### A4. SVM (Régression) ----
+svm_reg_spec <- 
+  svm_poly(cost = tune(), degree = 1) |>   # svm_linear n'existe que pour la classification dans certaines versions, on utilise svm_rbf ou svm_poly, ou svm_linear configuré pour la régression)
+  set_engine("kernlab") |> 
+  set_mode("regression")
+
+wf_svm_reg <- workflow() |> add_recipe(rec_top20_reg) |> add_model(svm_reg_spec)
+
+set.seed(1996)
+tune_svm_reg <- 
+  tune_grid(
+    wf_svm_reg, 
+    resamples = folds_reg,
+    grid = grid_regular(cost(range = c(-2, 2)), levels = 5),
+    metrics = metrics_reg, 
+    control = control_grid(save_pred = TRUE))
+best_svm_reg <- select_best(tune_svm_reg, metric = "rsq")
+
+#### A5. MARS ----
+mars_spec_tune <- 
+  mars(num_terms = tune(), prod_degree = tune()) |>
+  set_engine("earth") |>
+  set_mode("regression")
+
+wf_mars_reg <- workflow() |> add_recipe(rec_top20_reg) |> add_model(mars_spec_tune)
+
+set.seed(1996)
+tune_mars_reg <- 
+  tune_grid(
+    wf_mars_reg, 
+    resamples = folds_reg,
+    grid = expand_grid(num_terms = c(5, 10, 20), 
+                       prod_degree = c(1L, 2L)),
+    metrics = metrics_reg, control = control_grid(save_pred = TRUE))
+best_mars_reg <- select_best(tune_mars_reg, metric = "rsq")
+
+### PHASE B : Comparaison des meilleurs modèles via workflow_set ----
+# Définition des modèles finaux avec paramètres tunés
+glmnet_final <- 
+  linear_reg(penalty = best_glmnet_reg$penalty, 
+             mixture = best_glmnet_reg$mixture) |>
+  set_engine("glmnet") |> 
+  set_mode("regression")
+
+rf_final <- 
+  rand_forest(mtry = best_rf_reg$best$mtry, 
+              min_n = best_rf_reg$best$min_n, 
+              trees = 1000) |>
+  set_engine("ranger", 
+             splitrule = best_rf_reg$splitrule, 
+             importance = "permutation", 
+             num.threads = parallel::detectCores() - 1) |>
+  set_mode("regression")
+
+xgb_final <- 
+  boost_tree(
+    trees = best_xgb_params_reg$trees, 
+    tree_depth = best_xgb_params_reg$tree_depth,
+    learn_rate = best_xgb_params_reg$learn_rate, 
+    mtry = best_xgb_params_reg$mtry,
+    min_n = best_xgb_params_reg$min_n, 
+    loss_reduction = best_xgb_params_reg$loss_reduction, 
+    sample_size = 0.8) |>
+  set_engine("xgboost", 
+             nthread = parallel::detectCores() - 1) |> 
+  set_mode("regression")
+
+svm_final <- 
+  svm_poly(cost = best_svm_reg$cost, 
+           degree = 1) |>
+  set_engine("kernlab") |> 
+  set_mode("regression")
+
+mars_final <- 
+  mars(num_terms = best_mars_reg$num_terms, 
+       prod_degree = best_mars_reg$prod_degree) |>
+  set_engine("earth") |> 
+  set_mode("regression")
+
+# Assemblage du workflow_set
+wf_set_reg <- 
+  bind_rows(
+    workflow_set(preproc = list(full = rec_full_reg), 
+                 models = list(glmnet = glmnet_final, 
+                               rf = rf_final, 
+                               xgboost = xgb_final)),
+    workflow_set(preproc = list(top20 = rec_top20_reg), 
+                 models = list(svm = svm_final, 
+                               mars = mars_final)))
+
+# Cartographie finale sur les folds communs
+set.seed(1996)
+results_reg <- workflow_map(
+  wf_set_reg,
+  fn        = "fit_resamples",
+  resamples = folds_reg,
+  metrics   = metrics_reg,
+  control   = control_resamples(save_pred = TRUE),
+  verbose   = TRUE)
+
+# Tableau final comparatif basé sur le R² 
+summary_regression_models <- summarise_wf_results(results_reg)
+print(summary_regression_models)
+
+# Récupération et réentraînement du meilleur modèle 
+best_wf_id_reg <- summary_regression_models$wflow_id[1] # "full_glmnet"     
+best_fit_reg   <- fit_best_workflow(results_reg, best_wf_id_reg, data_reg)
+
+# Structure de sauvegarde de tes résultats
+results_proteomic_ALS_occurrence_y_to_als$main_results_linear$machine_learning <- list(
+    # Tuning des modèles
+    tune_glmnet_reg    = tune_glmnet_reg,
+    tune_rf_reg        = tune_rf_reg,
+    tune_xgb_reg       = tune_xgb_reg,
+    tune_svm_reg       = tune_svm_reg,
+    tune_mars_reg      = tune_mars_reg,
+    # Paramètres optimaux
+    best_glmnet_reg    = best_glmnet_reg,
+    best_rf_reg        = best_rf_reg,
+    best_xgb_params_reg= best_xgb_params_reg,
+    best_svm_reg       = best_svm_reg,
+    best_mars_reg      = best_mars_reg,
+    # Comparaisons finales
+    results_reg        = results_reg,
+    summary_regression_models = summary_regression_models,
+    best_wf_id_reg     = best_wf_id_reg,
+    best_fit_reg       = best_fit_reg,
+    glmnet_final       = glmnet_final, 
+    rf_final           = rf_final, 
+    xgb_final          = xgb_final, 
+    svm_final          = svm_final, 
+    mars_final         = mars_final)
+
+# Nettoyage de la mémoire R
+rm(tune_glmnet_reg, tune_rf_reg, tune_xgb_reg, tune_svm_reg, tune_mars_reg,
+   best_glmnet_reg, best_rf_reg, best_xgb_params_reg, best_svm_reg, best_mars_reg,
+   glmnet_final, rf_final, xgb_final, svm_final, mars_final, 
+   results_reg, summary_regression_models, best_wf_id_reg, best_fit_reg)
+
+rm(data_reg, folds_reg, rec_full_reg, rec_top20_reg, 
+   glmnet_spec_tune, mars_spec_tune, svm_reg_spec, 
+   xgb_grid_reg, xgb_spec_tune, 
+   wf_glmnet_reg, wf_mars_reg, wf_set_reg, wf_svm_reg, wf_xgb_reg, 
+   n_top_display, ncol_preds_reg)
+
+# Extraction des coefficients via notre nouvelle fonction
+glmnet_reg_results <- extract_glmnet_reg_coefs(
+  results_proteomic_ALS_occurrence_y_to_als$main_results_linear$machine_learning$best_fit_reg)
+
+cat("  Lambda optimal:", round(glmnet_reg_results$lambda_opt, 6), "\n")
+cat("  Selected variables:", glmnet_reg_results$n_selected, "\n\n")
+
+# Définir le nombre de protéines à afficher dans la table et le plot
+n_top_display <- min(50, glmnet_reg_results$n_selected)
+
+# tables and figures pour glmnet 
+results_proteomic_ALS_occurrence_y_to_als$main_results_linear$machine_learning$t_glmnet_reg <- 
+  glmnet_reg_results$coefs_protein |> 
+  slice_head(n = n_top_display) |>
+  as.data.frame() |>
+  mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_")) |>
+  select(-abs_coef, -direction) |>
+  flextable() |> 
+  colformat_double(digits = 3) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  flextable::fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+
+results_proteomic_ALS_occurrence_y_to_als$main_results_linear$machine_learning$f_glmnet_reg <- 
+  glmnet_reg_results$coefs_protein |>
+  slice_head(n = n_top_display) |>
+  mutate(
+    Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_metabolism_|proteomic_immun_res_"), 
+    Feature = fct_reorder(Feature, abs_coef)) |>
+  ggplot(aes(x = coefficient, y = Feature, fill = direction)) +
+  geom_col() +
+  scale_fill_manual(values = c("↑ Follow-up duration" = "darkolivegreen4", "↓ Follow-up duration" = "coral3")) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(
+    title = paste("Follow-up Prediction — Glmnet Coefficients (Top", n_top_display, "Predictors)"),
+    subtitle = "Coefficients represent the change in follow-up duration (years) per 1 SD increase in protein level",
+    x = "Coefficient (years per SD)", 
+    y = NULL,
+    fill = "Direction of effect") +
+  theme_minimal() + 
+  theme(
+    legend.position = "bottom",
+    axis.text.y = element_text(size = 9))
+
+rm(glmnet_reg_results)
+
+# 5. Stratified logistic models?----
+# 6. Analyse Cox tronqué (Landmark)?----
+# 7. Cox + AUC dépendante du temps?----
+# 8. Modèle AFT (survreg)? ----
 
 
 saveRDS(results_proteomic_ALS_occurrence_y_to_als, file = "~/Documents/POP_ALS_2025_02_03/2_output/2.6.4_results_proteomic_ALS_occurrence_y_to_als.rds")
