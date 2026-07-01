@@ -57,7 +57,7 @@ table_S1 <- results_descriptive$danish$POPs_table_danish_by_death |>
 
 # Table S2a - POPs - ALS survival among the Danish cohort ----
 # Association between pre-diagnostic POP concentrations and survival among ALS cases from the Danish Diet, Cancer and Health cohort (cox models by exposure quartiles; n = 166).
-table_S2a <- 
+table_S2 <- 
   results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_survival |>
   filter(term == "Continuous") |>
   filter(model %in% c("base", "adjusted")) |> 
@@ -95,37 +95,6 @@ table_S2a <-
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
-# Table S2b - Sensitivity analysis - POPs - ALS survival among the Danish cohort ----
-# Association between pre-diagnostic POP groups and survival among ALS cases from the Danish Diet, Cancer and Health cohort (Cox regression models; n = 166).
-table_S2b <- results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_survival |>
-  filter(term == "Continuous") |>
-  filter(model == "adjusted") |>
-  filter(analysis == "sensi_4") |>
-  filter(!explanatory %in% c("ERS_score_from_elastic_net_sensi_1", "ERS_score_from_elastic_net_sensi_2")) |> View()
-  mutate(fdr_correction = p.adjust(`p-value_raw`, method = "fdr"), 
-         fdr_correction = ifelse(fdr_correction < 0.01, "<0.01", number(fdr_correction, accuracy = 0.01, decimal.mark = ".")), 
-         fdr_correction = ifelse(fdr_correction == "1.00", ">0.99", fdr_correction), 
-         explanatory = fct_recode(explanatory, !!!POPs_group_labels)) |>
-  select(explanatory, HR, "95% CI", "p-value", "FDR-adjusted p-value" = fdr_correction) |> 
-  flextable() |>
-  add_footer_lines(
-    "1POPs were summed as follows: most prevalent PCBs corresponds to PCBs 118, 138, 153, 180; Dioxin-like PCBs corresponds to PCBs 118 and 156; non-dioxin-like PCBs corresponds to PCBs 28, 52, 74, 99, 101, 138, 153, 170, 180, 183, 187; ΣDDT corresponds to p,p’-DDT and p,p’-DDE, Σchlordane corresponds to trans-nonanchlor and oxychlordane and finally ΣPBDE corresponds to PBDEs 47, 99, 153.
-    2All models are adjusted for age at diagnosis,  sex,or smoking, BMI and marital status. 
-    3Estimated risk of death after ALS diagnosis associated with a one standard deviation increase in pre-disease serum concentration of POPs.
-    4CI: Confidence interval.") |>
-  add_header(
-    "explanatory" = "Exposures", 
-    "HR" = "Sensitivity analysis", "95% CI" = "Sensitivity analysis", "p-value" = "Sensitivity analysis", "FDR-adjusted p-value" = "Sensitivity analysis") |>
-  merge_h(part = "header") |>
-  merge_v(j = "explanatory") |>
-  theme_vanilla() |>
-  bold(j = "explanatory", part = "body") |>
-  align(align = "center", part = "all") |>
-  align(j = "explanatory", align = "left", part = "all") |> 
-  merge_at(j = "explanatory", part = "header") |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 # Table S3 - POPs - ALS survival among the Danish cohort (mixture model) ----
 # Association between pre-diagnostic POP mixture and survival among ALS cases from the Danish Diet, Cancer and Health cohort (elastic net model; n = 166).
@@ -166,6 +135,14 @@ dev.off()
 # Association between pre-diagnostic POP groups and survival among ALS cases from the Danish Diet, Cancer and Health cohort (Cox regression modelsl; n = 166).
 figure_S2 <- results_POPs_ALS_survival$sensi4$POPs_sd_ALS_figure_danish_sensi_4
 
+# Figure S3 - Sensitivity analysis - POPs - ALS survival among the Danish cohort ----
+# Association between pre-diagnostic POP groups and survival among ALS cases from the Danish Diet, Cancer and Health cohort (Cox regression modelsl; n = 166).
+figure_S3 <- results_POPs_ALS_survival$sensi5$POPs_sd_ALS_figure_danish_sensi_5
+
+# Figure S4 - Sensitivity analysis - POPs - ALS survival among the Danish cohort ----
+# Association between pre-diagnostic POP groups and survival among ALS cases from the Danish Diet, Cancer and Health cohort (Cox regression modelsl; n = 166).
+figure_S4 <- results_POPs_ALS_survival$sensi6$POPs_sd_ALS_figure_danish_sensi_6
+
 
 # Export ----
 table_1 <- read_docx() |> body_add_flextable(table_1) 
@@ -174,11 +151,9 @@ print(table_1, target = "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_
 table_S1 <- read_docx() |> body_add_flextable(table_S1)
 print(table_S1, target = "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/table_S1.docx")
 
-table_S2a <- read_docx() |> body_add_flextable(table_S2a)
-print(table_S2a, target = "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/table_S2a.docx")
+table_S2 <- read_docx() |> body_add_flextable(table_S2a)
+print(table_S2, target = "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/table_S2a.docx")
 
-table_S2b <- read_docx() |> body_add_flextable(table_S2b)
-print(table_S2b, target = "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/table_S2b.docx")
 
 table_S3 <- read_docx() |> body_add_flextable(table_S3)
 print(table_S3, target = "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/table_S3.docx")
@@ -212,8 +187,22 @@ ggsave(
   width = 8,
   units = "in")
 
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/figure_S3.tiff",
+  figure_S3,
+  height = 5,
+  width = 10,
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/figure_S4.tiff",
+  figure_S4,
+  height = 5,
+  width = 10,
+  units = "in")
+
 
 rm(figure_1, figure_2, figure_3,  
-   figure_S2, 
+   figure_S2, figure_S3, figure_S4, 
    table_1, 
    table_S1, table_S2a, table_S2b, table_S3)

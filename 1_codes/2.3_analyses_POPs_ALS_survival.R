@@ -42,6 +42,8 @@ surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,                
 
 covariates_danish <- c("sex", "diagnosis_age", "smoking_2cat_i", "bmi", "marital_status_2cat_i")
 
+median_follow_up <- median(bdd_cases_danish$follow_up, na.rm = TRUE)
+
 # Danish cohort ----
 ## Covar model ----
 covar_danish <- tbl_merge(tbls = list(
@@ -1380,8 +1382,6 @@ sensi1_cox_model1_ERS_from_elastic_net_quart <- tibble(
   filter(str_detect(term, "_quart"))
 
 rm(cox_model, coefs, model_summary, weight_HCB, weight_Σchlordane)
-
-
 
 
 ##### heterogeneity tests ----
@@ -2894,9 +2894,167 @@ rm(POPs_group_labels_cox_gam, fit_cox_gam_adjusted_sensi_4,
    all_fits_adjusted_sensi_4, y_range_adjusted_sensi_4, 
    cox_gam_results_adjusted, bdd_cases_danish_sensi_4)
 
-## assemblage ----
-sensi_4 <-       
-  bind_rows(model1_cox_sd_danish_sensi_4, model2_cox_sd_danish_sensi_4) |> 
+
+
+
+# Sensitivity analysis 5 - time trend effect? ----
+# Cox model (sd) - Stratification par médiane de survie (Long vs Short) 
+
+## Long survival (> médiane) - Base ----
+model1_cox_sd_danish_sensi_long_follow_up <- map_dfr(POPs_group_sd, function(expl) {
+  formula_danish <- as.formula(paste("surv_obj_danish ~", expl, "+ diagnosis_age + sex"))
+  model_summary <- coxph(formula_danish, 
+                         data = bdd_cases_danish, 
+                         subset = (follow_up > median_follow_up)) |> 
+    summary()
+  coefs <- model_summary$coefficients
+  tibble(model = "base", 
+         analysis = "sensi_long_follow_up", 
+         term = rownames(coefs), 
+         explanatory = expl, 
+         coef = coefs[, "coef"], 
+         se = coefs[, "se(coef)"], 
+         `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))
+})
+
+## Long survival (> médiane) - Adjusted ----
+model2_cox_sd_danish_sensi_long_follow_up <- map_dfr(POPs_group_sd, function(expl) {
+  formula_danish <- as.formula(paste("surv_obj_danish ~", expl, "+", paste(covariates_danish, collapse = " + ")))
+  model_summary <- coxph(formula_danish, 
+                         data = bdd_cases_danish, 
+                         subset = (follow_up > median_follow_up)) |> 
+    summary()
+  coefs <- model_summary$coefficients
+  tibble(model = "adjusted", 
+         analysis = "sensi_long_follow_up", 
+         term = rownames(coefs), 
+         explanatory = expl, 
+         coef = coefs[, "coef"], 
+         se = coefs[, "se(coef)"], 
+         `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))
+})
+
+## Short survival (<= médiane) - Base ----
+model1_cox_sd_danish_sensi_short_follow_up <- map_dfr(POPs_group_sd, function(expl) {
+  formula_danish <- as.formula(paste("surv_obj_danish ~", expl, "+ diagnosis_age + sex"))
+  model_summary <- coxph(formula_danish, 
+                         data = bdd_cases_danish, 
+                         subset = (follow_up <= median_follow_up)) |> 
+    summary()
+  coefs <- model_summary$coefficients
+  tibble(model = "base", 
+         analysis = "sensi_short_follow_up", 
+         term = rownames(coefs), 
+         explanatory = expl, 
+         coef = coefs[, "coef"], 
+         se = coefs[, "se(coef)"], 
+         `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))
+})
+
+## Short survival (<= médiane) - Adjusted ----
+model2_cox_sd_danish_sensi_short_follow_up <- map_dfr(POPs_group_sd, function(expl) {
+  formula_danish <- as.formula(paste("surv_obj_danish ~", expl, "+", paste(covariates_danish, collapse = " + ")))
+  model_summary <- coxph(formula_danish, 
+                         data = bdd_cases_danish, 
+                         subset = (follow_up <= median_follow_up)) |> 
+    summary()
+  coefs <- model_summary$coefficients
+  tibble(model = "adjusted", 
+         analysis = "sensi_short_follow_up", 
+         term = rownames(coefs), 
+         explanatory = expl, 
+         coef = coefs[, "coef"], 
+         se = coefs[, "se(coef)"], 
+         `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))
+})
+
+# Sensitivity analysis 6 - sex effect? ----
+# Stratification par Sexe (Female vs Male) 
+## Female - Base ----
+model1_cox_sd_danish_sensi_female <- map_dfr(POPs_group_sd, function(expl) {
+  formula_danish <- as.formula(paste("surv_obj_danish ~", expl, "+ diagnosis_age"))
+  model_summary <- coxph(formula_danish, 
+                         data = bdd_cases_danish, 
+                         subset = (sex == "Female")) |> 
+    summary()
+  coefs <- model_summary$coefficients
+  tibble(model = "base", 
+         analysis = "sensi_female", 
+         term = rownames(coefs), 
+         explanatory = expl, 
+         coef = coefs[, "coef"], 
+         se = coefs[, "se(coef)"], 
+         `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))
+})
+
+## Female - Adjusted ----
+model2_cox_sd_danish_sensi_female <- map_dfr(POPs_group_sd, function(expl) {
+  covariates_no_sex <- setdiff(covariates_danish, "sex")
+  formula_danish <- as.formula(paste("surv_obj_danish ~", expl, "+", paste(covariates_no_sex, collapse = " + ")))
+  model_summary <- coxph(formula_danish, 
+                         data = bdd_cases_danish, 
+                         subset = (sex == "Female")) |> 
+    summary()
+  coefs <- model_summary$coefficients
+  tibble(model = "adjusted", 
+         analysis = "sensi_female", 
+         term = rownames(coefs), 
+         explanatory = expl, 
+         coef = coefs[, "coef"], 
+         se = coefs[, "se(coef)"], 
+         `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))
+})
+
+## Male - Base ----
+model1_cox_sd_danish_sensi_male <- map_dfr(POPs_group_sd, function(expl) {
+  formula_danish <- as.formula(paste("surv_obj_danish ~", expl, "+ diagnosis_age"))
+  model_summary <- coxph(formula_danish, 
+                         data = bdd_cases_danish, 
+                         subset = (sex == "Male")) |> 
+    summary()
+  coefs <- model_summary$coefficients
+  tibble(model = "base", 
+         analysis = "sensi_male", 
+         term = rownames(coefs), 
+         explanatory = expl, 
+         coef = coefs[, "coef"], 
+         se = coefs[, "se(coef)"], 
+         `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))
+})
+
+## Male - Adjusted ----
+model2_cox_sd_danish_sensi_male <- map_dfr(POPs_group_sd, function(expl) {
+  covariates_no_sex <- setdiff(covariates_danish, "sex")
+  formula_danish <- as.formula(paste("surv_obj_danish ~", expl, "+", paste(covariates_no_sex, collapse = " + ")))
+  model_summary <- coxph(formula_danish, 
+                         data = bdd_cases_danish, 
+                         subset = (sex == "Male")) |> 
+    summary()
+  coefs <- model_summary$coefficients
+  tibble(model = "adjusted", 
+         analysis = "sensi_male", 
+         term = rownames(coefs), 
+         explanatory = expl, 
+         coef = coefs[, "coef"], 
+         se = coefs[, "se(coef)"], 
+         `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))
+})
+
+# Assemblage sensi 4, 5 et 6----
+sensi_4_5_6 <-       
+  bind_rows(model1_cox_sd_danish_sensi_4, model2_cox_sd_danish_sensi_4, 
+            model1_cox_sd_danish_sensi_long_follow_up, model2_cox_sd_danish_sensi_long_follow_up,
+            model1_cox_sd_danish_sensi_short_follow_up, model2_cox_sd_danish_sensi_short_follow_up,
+            model1_cox_sd_danish_sensi_female, model2_cox_sd_danish_sensi_female,
+            model1_cox_sd_danish_sensi_male, model2_cox_sd_danish_sensi_male) |> 
   mutate(
     HR = exp(coef),
     lower_CI = exp(coef - 1.96 * se),
@@ -2921,9 +3079,13 @@ sensi_4 <-
   select(model, explanatory, term,  analysis, HR, HR_raw, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI)
 
 main_results_POPs_ALS_survival <- 
-  bind_rows(main_results_POPs_ALS_survival, sensi_4)
+  bind_rows(main_results_POPs_ALS_survival, sensi_4_5_6)
 
-rm(model1_cox_sd_danish_sensi_4, model2_cox_sd_danish_sensi_4, sensi_4)
+rm(model1_cox_sd_danish_sensi_4, model2_cox_sd_danish_sensi_4, sensi_4_5_6, 
+   model1_cox_sd_danish_sensi_long_follow_up, model2_cox_sd_danish_sensi_long_follow_up,
+   model1_cox_sd_danish_sensi_short_follow_up, model2_cox_sd_danish_sensi_short_follow_up,
+   model1_cox_sd_danish_sensi_female, model2_cox_sd_danish_sensi_female,
+   model1_cox_sd_danish_sensi_male, model2_cox_sd_danish_sensi_male)
 
 # Tables and figures ----
 
@@ -3957,6 +4119,7 @@ POPs_sd_ALS_table_danish_sensi_4 <-
   main_results_POPs_ALS_survival |>
   filter(term == "Continuous") |>
   filter(model == "adjusted") |>
+  filter(analysis %in% c("main", "sensi_4")) |>
   filter(!explanatory %in% c("ERS_score_from_elastic_net_sensi_1", "ERS_score_from_elastic_net_sensi_2")) |>
   select(analysis, explanatory, term, model, HR, "95% CI", "p-value") |>
   pivot_wider(names_from = "analysis", values_from = c("HR", "95% CI", "p-value")) |>
@@ -3991,6 +4154,7 @@ POPs_sd_ALS_figure_danish_sensi_4 <-
   main_results_POPs_ALS_survival |>
   filter(term == "Continuous") |>
   filter(model == "adjusted") |>
+  filter(analysis %in% c("main", "sensi_4")) |>
   filter(!explanatory %in% c("ERS_score_from_elastic_net_sensi_1", "ERS_score_from_elastic_net_sensi_2")) |>
   mutate(explanatory = factor(explanatory, levels = POPs_group_labels),
          explanatory = fct_rev(explanatory),
@@ -3998,6 +4162,56 @@ POPs_sd_ALS_figure_danish_sensi_4 <-
          analysis = fct_recode(analysis,
                            "Main analysis (N = 166)" = "main", 
                            "Sensitivity analysis (N = 162)" = "sensi_4")) |>
+  arrange(explanatory) |> 
+  ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(cols = dplyr::vars(analysis), switch = "y") +                         # , scales = "free_x"
+  labs(x = "POPs", y = "Hazard Ratio (HR)") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip()
+
+## figure POPs (sd) - als survival (sensi_5) time trend effect ---- 
+POPs_sd_ALS_figure_danish_sensi_5 <- 
+  main_results_POPs_ALS_survival |>
+  filter(term == "Continuous") |>
+  filter(model == "adjusted") |>
+  filter(analysis %in% c("main", "sensi_long_follow_up", "sensi_short_follow_up")) |>
+  mutate(explanatory = factor(explanatory, levels = POPs_group_labels),
+         explanatory = fct_rev(explanatory),
+         explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
+         analysis = fct_recode(analysis,
+                               "Main analysis (N = 166)" = "main", 
+                               "Sensitivity analysis\nFollow-up duration > median (N = 83)" = "sensi_long_follow_up", 
+                               "Sensitivity analysis\nFollow-up duration ≤ median (N = 83)" = "sensi_short_follow_up"))  |>
+  arrange(explanatory) |> 
+  ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(cols = dplyr::vars(analysis), switch = "y") +                         # , scales = "free_x"
+  labs(x = "POPs", y = "Hazard Ratio (HR)") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip()
+
+## figure POPs (sd) - als survival (sensi_6) sex ---- 
+POPs_sd_ALS_figure_danish_sensi_6 <- 
+  main_results_POPs_ALS_survival |>
+  filter(term == "Continuous") |>
+  filter(model == "adjusted") |>
+  filter(analysis %in% c("main", "sensi_female", "sensi_male")) |>
+  mutate(explanatory = factor(explanatory, levels = POPs_group_labels),
+         explanatory = fct_rev(explanatory),
+         explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
+         analysis = fct_recode(analysis,
+                               "Main analysis (N = 166)" = "main", 
+                               "Sensitivity analysis - Females (N = 65)" = "sensi_female", 
+                               "Sensitivity analysis - Males (N = 101)" = "sensi_male"))  |>
   arrange(explanatory) |> 
   ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI)) +
   geom_pointrange(size = 0.5) + 
@@ -4066,7 +4280,11 @@ results_POPs_ALS_survival <-
       POPs_sd_ALS_table_danish_sensi_4 = POPs_sd_ALS_table_danish_sensi_4, 
       POPs_sd_ALS_figure_danish_sensi_4 = POPs_sd_ALS_figure_danish_sensi_4, 
       plot_base_cox_gam_danish_sensi_4 = plot_base_cox_gam_danish_sensi_4, 
-      plot_adjusted_cox_gam_danish_sensi_4 = plot_adjusted_cox_gam_danish_sensi_4))
+      plot_adjusted_cox_gam_danish_sensi_4 = plot_adjusted_cox_gam_danish_sensi_4), 
+    sensi5 = list(
+      POPs_sd_ALS_figure_danish_sensi_5 = POPs_sd_ALS_figure_danish_sensi_5), 
+    sensi6 = list(
+      POPs_sd_ALS_figure_danish_sensi_6 = POPs_sd_ALS_figure_danish_sensi_6))
 
 saveRDS(results_POPs_ALS_survival, file = "~/Documents/POP_ALS_2025_02_03/2_output/2.3_results_POPs_ALS_survival.rds")
 
@@ -4123,5 +4341,9 @@ rm(bdd_cases_danish,
    POPs_sd_ALS_table_danish_sensi_4, 
    POPs_sd_ALS_figure_danish_sensi_4, 
    plot_base_cox_gam_danish_sensi_4, 
-   plot_adjusted_cox_gam_danish_sensi_4)
+   plot_adjusted_cox_gam_danish_sensi_4, 
+   
+   POPs_sd_ALS_figure_danish_sensi_5, 
+   POPs_sd_ALS_figure_danish_sensi_6, 
+   median_follow_up)
 
