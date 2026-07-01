@@ -1610,6 +1610,16 @@ wrap_plots(list(
 
 ```
 
+## Sensitivity analysis 5: time trend effect?
+```{r}
+results_POPs_ALS_survival$sensi5$POPs_sd_ALS_figure_danish_sensi_5
+```
+
+## Sensitivity analysis 6: sex effect?
+```{r}
+results_POPs_ALS_survival$sensi6$POPs_sd_ALS_figure_danish_sensi_6
+```
+
 # Fatty acids and ALS occurence
 
 ## Danish cohort
