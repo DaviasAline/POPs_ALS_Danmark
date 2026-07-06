@@ -1620,6 +1620,11 @@ results_POPs_ALS_survival$sensi5$POPs_sd_ALS_figure_danish_sensi_5
 results_POPs_ALS_survival$sensi6$POPs_sd_ALS_figure_danish_sensi_6
 ```
 
+## Sensitivity analysis 7: age at diagnosis effect effect?
+```{r}
+results_POPs_ALS_survival$sensi7$POPs_sd_ALS_figure_danish_sensi_7
+```
+
 # Fatty acids and ALS occurence
 
 ## Danish cohort

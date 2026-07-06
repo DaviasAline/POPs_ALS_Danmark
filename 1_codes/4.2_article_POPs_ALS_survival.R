@@ -131,17 +131,21 @@ corrplot(results_descriptive$danish$POPs_heatmap_danish_cases_group,
          col = rev(COL2(diverging = "RdYlBu")))
 dev.off()
 
-# Figure S2 - Sensitivity analysis - POPs - ALS survival among the Danish cohort ----
+# Figure S2 - Sensitivity analysis - POPs - ALS survival among the Danish cohort baseline - outlier effect ?----
 # Association between pre-diagnostic POP groups and survival among ALS cases from the Danish Diet, Cancer and Health cohort (Cox regression modelsl; n = 166).
 figure_S2 <- results_POPs_ALS_survival$sensi4$POPs_sd_ALS_figure_danish_sensi_4
 
-# Figure S3 - Sensitivity analysis - POPs - ALS survival among the Danish cohort ----
+# Figure S3 - Sensitivity analysis - POPs - ALS survival among the Danish cohort - time trend effect effect ? ----
 # Association between pre-diagnostic POP groups and survival among ALS cases from the Danish Diet, Cancer and Health cohort (Cox regression modelsl; n = 166).
 figure_S3 <- results_POPs_ALS_survival$sensi5$POPs_sd_ALS_figure_danish_sensi_5
 
-# Figure S4 - Sensitivity analysis - POPs - ALS survival among the Danish cohort ----
+# Figure S4 - Sensitivity analysis - POPs - ALS survival among the Danish cohort - diagnosis age effect ?----
 # Association between pre-diagnostic POP groups and survival among ALS cases from the Danish Diet, Cancer and Health cohort (Cox regression modelsl; n = 166).
-figure_S4 <- results_POPs_ALS_survival$sensi6$POPs_sd_ALS_figure_danish_sensi_6
+figure_S4 <- results_POPs_ALS_survival$sensi7$POPs_sd_ALS_figure_danish_sensi_7
+
+# Figure S5 - Sensitivity analysis - POPs - ALS survival among the Danish cohort - sex effect ?----
+# Association between pre-diagnostic POP groups and survival among ALS cases from the Danish Diet, Cancer and Health cohort (Cox regression modelsl; n = 166).
+figure_S5 <- results_POPs_ALS_survival$sensi6$POPs_sd_ALS_figure_danish_sensi_6
 
 
 # Export ----
@@ -190,14 +194,21 @@ ggsave(
 ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/figure_S3.tiff",
   figure_S3,
-  height = 5,
+  height = 6,
   width = 10,
   units = "in")
 
 ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/figure_S4.tiff",
   figure_S4,
-  height = 5,
+  height = 6,
+  width = 10,
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/2.Article_POPs_ALS_survival/figure_S5.tiff",
+  figure_S5,
+  height = 6,
   width = 10,
   units = "in")
 

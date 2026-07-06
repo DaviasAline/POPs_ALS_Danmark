@@ -43,6 +43,7 @@ surv_obj_danish <- Surv(time = bdd_cases_danish$follow_up_death,                
 covariates_danish <- c("sex", "diagnosis_age", "smoking_2cat_i", "bmi", "marital_status_2cat_i")
 
 median_follow_up <- median(bdd_cases_danish$follow_up, na.rm = TRUE)
+median_age_diag <- median(bdd_cases_danish$diagnosis_age, na.rm = TRUE)
 
 # Danish cohort ----
 ## Covar model ----
@@ -3048,13 +3049,93 @@ model2_cox_sd_danish_sensi_male <- map_dfr(POPs_group_sd, function(expl) {
     filter(str_starts(term, explanatory))
 })
 
-# Assemblage sensi 4, 5 et 6----
-sensi_4_5_6 <-       
+
+# Sensitivity analysis 7 - age at diagnosis effect? ----
+# Stratification par median age at diagnosis (>70 vs =<70) 
+## Older - Base ----
+model1_cox_sd_danish_sensi_older <- map_dfr(POPs_group_sd, function(expl) {
+  formula_danish <- as.formula(paste("surv_obj_danish ~", expl, "+ sex"))
+  model_summary <- coxph(formula_danish, 
+                         data = bdd_cases_danish, 
+                         subset = (diagnosis_age > median_age_diag)) |> 
+    summary()
+  coefs <- model_summary$coefficients
+  tibble(model = "base", 
+         analysis = "sensi_older", 
+         term = rownames(coefs), 
+         explanatory = expl, 
+         coef = coefs[, "coef"], 
+         se = coefs[, "se(coef)"], 
+         `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))
+})
+
+## Older - Adjusted ----
+model2_cox_sd_danish_sensi_older <- map_dfr(POPs_group_sd, function(expl) {
+  covariates_no_age_diag <- setdiff(covariates_danish, "diagnosis_age")
+  formula_danish <- as.formula(paste("surv_obj_danish ~", expl, "+", paste(covariates_no_age_diag, collapse = " + ")))
+  model_summary <- coxph(formula_danish, 
+                         data = bdd_cases_danish, 
+                         subset = (diagnosis_age > median_age_diag)) |> 
+    summary()
+  coefs <- model_summary$coefficients
+  tibble(model = "adjusted", 
+         analysis = "sensi_older", 
+         term = rownames(coefs), 
+         explanatory = expl, 
+         coef = coefs[, "coef"], 
+         se = coefs[, "se(coef)"], 
+         `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))
+})
+
+## Younger - Base ----
+model1_cox_sd_danish_sensi_younger <- map_dfr(POPs_group_sd, function(expl) {
+  formula_danish <- as.formula(paste("surv_obj_danish ~", expl, "+ sex"))
+  model_summary <- coxph(formula_danish, 
+                         data = bdd_cases_danish, 
+                         subset = (diagnosis_age <= median_age_diag)) |> 
+    summary()
+  coefs <- model_summary$coefficients
+  tibble(model = "base", 
+         analysis = "sensi_younger", 
+         term = rownames(coefs), 
+         explanatory = expl, 
+         coef = coefs[, "coef"], 
+         se = coefs[, "se(coef)"], 
+         `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))
+})
+
+## Younger - Adjusted ----
+model2_cox_sd_danish_sensi_younger <- map_dfr(POPs_group_sd, function(expl) {
+  covariates_no_age_diag <- setdiff(covariates_danish, "diagnosis_age")
+  formula_danish <- as.formula(paste("surv_obj_danish ~", expl, "+", paste(covariates_no_age_diag, collapse = " + ")))
+  model_summary <- coxph(formula_danish, 
+                         data = bdd_cases_danish, 
+                         subset = (diagnosis_age <= median_age_diag)) |> 
+    summary()
+  coefs <- model_summary$coefficients
+  tibble(model = "adjusted", 
+         analysis = "sensi_younger", 
+         term = rownames(coefs), 
+         explanatory = expl, 
+         coef = coefs[, "coef"], 
+         se = coefs[, "se(coef)"], 
+         `p-value` = coefs[, "Pr(>|z|)"]) |>
+    filter(str_starts(term, explanatory))
+})
+
+
+# Assemblage sensi 4, 5, 6 et 7----
+sensi_4_5_6_7 <-       
   bind_rows(model1_cox_sd_danish_sensi_4, model2_cox_sd_danish_sensi_4, 
             model1_cox_sd_danish_sensi_long_follow_up, model2_cox_sd_danish_sensi_long_follow_up,
             model1_cox_sd_danish_sensi_short_follow_up, model2_cox_sd_danish_sensi_short_follow_up,
             model1_cox_sd_danish_sensi_female, model2_cox_sd_danish_sensi_female,
-            model1_cox_sd_danish_sensi_male, model2_cox_sd_danish_sensi_male) |> 
+            model1_cox_sd_danish_sensi_male, model2_cox_sd_danish_sensi_male, 
+            model1_cox_sd_danish_sensi_older, model2_cox_sd_danish_sensi_older,
+            model1_cox_sd_danish_sensi_younger, model2_cox_sd_danish_sensi_younger) |> 
   mutate(
     HR = exp(coef),
     lower_CI = exp(coef - 1.96 * se),
@@ -3079,13 +3160,15 @@ sensi_4_5_6 <-
   select(model, explanatory, term,  analysis, HR, HR_raw, `95% CI`, `p-value`, `p-value_raw`, `p-value_shape`, lower_CI, upper_CI)
 
 main_results_POPs_ALS_survival <- 
-  bind_rows(main_results_POPs_ALS_survival, sensi_4_5_6)
+  bind_rows(main_results_POPs_ALS_survival, sensi_4_5_6_7)
 
-rm(model1_cox_sd_danish_sensi_4, model2_cox_sd_danish_sensi_4, sensi_4_5_6, 
+rm(model1_cox_sd_danish_sensi_4, model2_cox_sd_danish_sensi_4, sensi_4_5_6_7, 
    model1_cox_sd_danish_sensi_long_follow_up, model2_cox_sd_danish_sensi_long_follow_up,
    model1_cox_sd_danish_sensi_short_follow_up, model2_cox_sd_danish_sensi_short_follow_up,
    model1_cox_sd_danish_sensi_female, model2_cox_sd_danish_sensi_female,
-   model1_cox_sd_danish_sensi_male, model2_cox_sd_danish_sensi_male)
+   model1_cox_sd_danish_sensi_male, model2_cox_sd_danish_sensi_male, 
+   model1_cox_sd_danish_sensi_older, model2_cox_sd_danish_sensi_older,
+   model1_cox_sd_danish_sensi_younger, model2_cox_sd_danish_sensi_younger)
 
 # Tables and figures ----
 
@@ -4169,12 +4252,12 @@ POPs_sd_ALS_figure_danish_sensi_4 <-
   facet_grid(cols = dplyr::vars(analysis), switch = "y") +                         # , scales = "free_x"
   labs(x = "POPs", y = "Hazard Ratio (HR)") +
   theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
+  theme(strip.text = element_text(face = "bold", size = 13), 
         legend.position = "bottom", 
         strip.text.y = element_text(hjust = 0.5)) +
   coord_flip()
 
-## figure POPs (sd) - als survival (sensi_5) time trend effect ---- 
+## figure POPs (sd) - als survival (sensi_5) time trend effect? ---- 
 POPs_sd_ALS_figure_danish_sensi_5 <- 
   main_results_POPs_ALS_survival |>
   filter(term == "Continuous") |>
@@ -4185,8 +4268,8 @@ POPs_sd_ALS_figure_danish_sensi_5 <-
          explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
          analysis = fct_recode(analysis,
                                "Main analysis (N = 166)" = "main", 
-                               "Sensitivity analysis\nFollow-up duration > median (N = 83)" = "sensi_long_follow_up", 
-                               "Sensitivity analysis\nFollow-up duration ≤ median (N = 83)" = "sensi_short_follow_up"))  |>
+                               "Sensitivity analysis\nFollow-up duration > 14 years\n(N = 83)" = "sensi_long_follow_up", 
+                               "Sensitivity analysis\nFollow-up duration ≤ 14 years\n(N = 83)" = "sensi_short_follow_up"))  |>
   arrange(explanatory) |> 
   ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI)) +
   geom_pointrange(size = 0.5) + 
@@ -4194,12 +4277,12 @@ POPs_sd_ALS_figure_danish_sensi_5 <-
   facet_grid(cols = dplyr::vars(analysis), switch = "y") +                         # , scales = "free_x"
   labs(x = "POPs", y = "Hazard Ratio (HR)") +
   theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
+  theme(strip.text = element_text(face = "bold", size = 13), 
         legend.position = "bottom", 
         strip.text.y = element_text(hjust = 0.5)) +
   coord_flip()
 
-## figure POPs (sd) - als survival (sensi_6) sex ---- 
+## figure POPs (sd) - als survival (sensi_6) sex effect?---- 
 POPs_sd_ALS_figure_danish_sensi_6 <- 
   main_results_POPs_ALS_survival |>
   filter(term == "Continuous") |>
@@ -4210,8 +4293,8 @@ POPs_sd_ALS_figure_danish_sensi_6 <-
          explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
          analysis = fct_recode(analysis,
                                "Main analysis (N = 166)" = "main", 
-                               "Sensitivity analysis - Females (N = 65)" = "sensi_female", 
-                               "Sensitivity analysis - Males (N = 101)" = "sensi_male"))  |>
+                               "Sensitivity analysis\nFemales (N = 65)" = "sensi_female", 
+                               "Sensitivity analysis\nMales (N = 101)" = "sensi_male"))  |>
   arrange(explanatory) |> 
   ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI)) +
   geom_pointrange(size = 0.5) + 
@@ -4219,12 +4302,35 @@ POPs_sd_ALS_figure_danish_sensi_6 <-
   facet_grid(cols = dplyr::vars(analysis), switch = "y") +                         # , scales = "free_x"
   labs(x = "POPs", y = "Hazard Ratio (HR)") +
   theme_lucid() +
-  theme(strip.text = element_text(face = "bold"), 
+  theme(strip.text = element_text(face = "bold", size = 13), 
         legend.position = "bottom", 
         strip.text.y = element_text(hjust = 0.5)) +
   coord_flip()
 
-
+## figure POPs (sd) - als survival (sensi_7) diagnosis age effect? ---- 
+POPs_sd_ALS_figure_danish_sensi_7 <- 
+  main_results_POPs_ALS_survival |>
+  filter(term == "Continuous") |>
+  filter(model == "adjusted") |>
+  filter(analysis %in% c("main", "sensi_older", "sensi_younger")) |>
+  mutate(explanatory = factor(explanatory, levels = POPs_group_labels),
+         explanatory = fct_rev(explanatory),
+         explanatory = fct_recode(explanatory, !!!POPs_group_labels), 
+         analysis = fct_recode(analysis,
+                               "Main analysis (N = 166)" = "main", 
+                               "Sensitivity analysis\nAge at diagnosis > 70 years\n(N = 83)" = "sensi_older", 
+                               "Sensitivity analysis\nAge at diagnosis ≤ 70 years\n(N = 83)" = "sensi_younger"))  |>
+  arrange(explanatory) |> 
+  ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  facet_grid(cols = dplyr::vars(analysis), switch = "y") +                         # , scales = "free_x"
+  labs(x = "POPs", y = "Hazard Ratio (HR)") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold", size = 13), 
+        legend.position = "bottom", 
+        strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip()
 
 # Assemblage ----
 results_POPs_ALS_survival <- 
@@ -4284,7 +4390,9 @@ results_POPs_ALS_survival <-
     sensi5 = list(
       POPs_sd_ALS_figure_danish_sensi_5 = POPs_sd_ALS_figure_danish_sensi_5), 
     sensi6 = list(
-      POPs_sd_ALS_figure_danish_sensi_6 = POPs_sd_ALS_figure_danish_sensi_6))
+      POPs_sd_ALS_figure_danish_sensi_6 = POPs_sd_ALS_figure_danish_sensi_6), 
+    sensi7 = list(
+      POPs_sd_ALS_figure_danish_sensi_7 = POPs_sd_ALS_figure_danish_sensi_7))
 
 saveRDS(results_POPs_ALS_survival, file = "~/Documents/POP_ALS_2025_02_03/2_output/2.3_results_POPs_ALS_survival.rds")
 
@@ -4345,5 +4453,7 @@ rm(bdd_cases_danish,
    
    POPs_sd_ALS_figure_danish_sensi_5, 
    POPs_sd_ALS_figure_danish_sensi_6, 
-   median_follow_up)
+   POPs_sd_ALS_figure_danish_sensi_7,
+   median_follow_up, 
+   median_age_diag)
 
