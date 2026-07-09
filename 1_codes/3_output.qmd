@@ -32,8 +32,10 @@ results_fattyacids_ALS_occurrence <- readRDS("~/Documents/POP_ALS_2025_02_03/2_o
 results_fattyacids_ALS_survival <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.5_results_fattyacids_ALS_survival.rds")
 results_proteomic_ALS_occurrence <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.6.1_results_proteomic_ALS_occurrence.rds")
 results_proteomic_ALS_occurrence_SL <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.6.2_results_proteomic_ALS_occurrence_SL.rds")
+results_proteomic_ALS_occurrence_tidymodels <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.6.3_results_proteomic_ALS_occurrence_tidymodels.rds")
 results_proteomic_ALS_occurrence_y_to_als <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.6.4_results_proteomic_ALS_occurrence_y_to_als.rds") 
 results_proteomic_ALS_survival <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.7_results_proteomic_ALS_survival.rds")
+results_POPs_proteomic <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.8_results_POPs_proteomic.rds")
 ```
 
 # Danish data description
@@ -2933,7 +2935,7 @@ summary(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_1_a)$Table |>
   as.data.frame() |>
   flextable() |> 
   colformat_double(digits = 2) |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
@@ -2963,7 +2965,7 @@ summary(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_glmnet)$Table |>
   as.data.frame() |>
   flextable() |> 
   colformat_double(digits = 2) |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
@@ -2985,7 +2987,7 @@ summary(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_ranger)$Table |>
   as.data.frame() |>
   flextable() |> 
   colformat_double(digits = 2) |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
@@ -3007,7 +3009,7 @@ summary(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_xgboost)$Table |>
   as.data.frame() |>
   flextable() |> 
   colformat_double(digits = 2) |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
@@ -3029,7 +3031,7 @@ summary(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_ksvm)$Table |>
   as.data.frame() |>
   flextable() |> 
   colformat_double(digits = 2) |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
@@ -3051,7 +3053,7 @@ summary(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_earth)$Table |>
   as.data.frame() |>
   flextable() |> 
   colformat_double(digits = 2) |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
@@ -3073,7 +3075,7 @@ summary(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_1_b_opt_20)$Table |
   as.data.frame() |>
   flextable() |> 
   colformat_double(digits = 2) |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
@@ -3093,7 +3095,7 @@ summary(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_1_b_opt_10)$Table |
   as.data.frame() |>
   flextable() |> 
   colformat_double(digits = 2) |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
@@ -3115,7 +3117,7 @@ summary(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_1_c_opt_20)$Table |
   as.data.frame() |>
   flextable() |> 
   colformat_double(digits = 2) |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
@@ -3135,7 +3137,7 @@ summary(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_1_c_opt_10)$Table |
   as.data.frame() |>
   flextable() |> 
   colformat_double(digits = 2) |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
@@ -3584,6 +3586,675 @@ df_glm_final |>
 rm(glm_results_list, df_glm_final)
 ```
 
+## Additional analysis 4 - tidymodels 
+
+### Test 1: Can plasma proteins predict ALS? (proteins + covariates: birth year, sex, BMI, smoking)
+
+For each test, the pipeline follows two phases:
+
+-   Hyperparameter tuning: each algorithm is independently optimized via cross-validation.
+
+-   Model comparison: the best-tuned version of each algorithm is evaluated on the same folds and ranked by AUC.
+
+All models use a grouped 10-cross-validation respecting the matching structure: all 3 individuals from a same triplet (1 case + 2 controls) are always kept on the same side — either all in the training set or all in the test set. Without this grouping, the model could learn patterns tied to the matching variables (birth year and sex) rather than the true proteomic signal, artificially inflating AUC.
+
+#### Penalized Logistic Regression (glmnet) tuning
+Standard logistic regression would fail here because p \> n (\~280 predictors, 166 cases). glmnet solves this by adding a penalty term to the loss function that shrinks coefficients toward zero, effectively performing implicit variable selection.
+
+Two hyperparameters are tuned:
+
+-   penalty (lambda): Strength of regularization. Higher lambda = more coefficients forced to zero.
+
+-   mixture (alpha): Type of penalty.
+
+    -   alpha = 1 = Lasso (exact zeros, variable selection).
+
+    -   alpha = 0 = Ridge (all coefficients shrunk but non-zero).
+
+    -   Between 0 and 1 = Elastic Net.
+
+Tuning method: tune_bayes(). Instead of exhaustively testing all combinations on a fixed grid, Bayesian optimization builds a probabilistic model of the performance surface and intelligently focuses evaluations on promising regions. 40 iterations explore the penalty x mixture space far more efficiently than a 7 x 20 = 140-point regular grid.
+
+```{r}
+#| label: test1-glmnet
+autoplot(results_proteomic_ALS_occurrence_tidymodels$test_1$tune_glmnet, type = "performance") +
+  theme_minimal() + 
+  ggtitle("Test 1 – glmnet (tune_bayes)")
+
+show_best(results_proteomic_ALS_occurrence_tidymodels$test_1$tune_glmnet, 
+          metric = "roc_auc",
+          n = 5)|>
+  as.data.frame() |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+cat("Best glmnet T1 — mixture (alpha):", 
+    round(results_proteomic_ALS_occurrence_tidymodels$test_1$best_glmnet$mixture, 3),
+    "| penalty (lambda):", 
+    round(results_proteomic_ALS_occurrence_tidymodels$test_1$best_glmnet$penalty, 5), "\n")
+```
+
+#### Random forest tuning
+
+Random Forest trains 1,000 decision trees independently, each on a random bootstrap sample of the data and using only a random subset of predictors at each split. The final prediction is the average across all 1,000 trees.This double randomization makes Random Forest highly resistant to overfitting.
+
+Three hyperparameters are tuned:
+
+-   mtry: Number of predictors randomly considered at each split. Explored between 10% and 30% of total predictors.
+
+-   min_n: Minimum number of observations in a terminal node. It controls tree depth and complexity.
+
+-   splitrule: Criterion used to choose the best split. "gini" = standard Gini impurity. "extratrees" = thresholds are drawn randomly, adding more randomization, often better in high dimensions. Both are tested and the best is kept.
+
+Tuning method: tune_bayes() for mtry and min_n (continuous parameters). splitrule is discrete so the code loops over both values and selects the best.
+
+```{r}
+#| label: test1-rf
+cat("Best RF T1 — splitrule:", results_proteomic_ALS_occurrence_tidymodels$test_1$best_rf_t1$splitrule,
+    "| mtry:", results_proteomic_ALS_occurrence_tidymodels$test_1$best_rf_t1$best$mtry,
+    "| min_n:", results_proteomic_ALS_occurrence_tidymodels$test_1$best_rf_t1$best$min_n, "\n")
+```
+
+#### Gradient Boosting (XGBoost) tuning
+
+XGBoost builds trees sequentially: each tree corrects the residual errors of the previous one. This sequential method generally yields higher accuracy than random forest but makes XGBoost more prone to overfitting and sensitive to more hyperparameters.
+
+Tuning was done in two steps:
+
+-   Step 1 — Structural hyperparameters:
+
+    -   tree_depth: Maximum depth of each tree (1–4). Kept shallow to prevent overfitting with small data.
+
+    -   learn_rate (eta): Step size for each correction (0.001–0.1). Smaller = more conservative learning.
+
+    -   mtry (colsample_bytree): Fraction of predictors used per tree.
+
+    -   min_n (min_child_weight): Minimum complexity required to create a new node.
+
+    -   loss_reduction (gamma): Minimum gain required to make an additional split — acts as an extra regularizer.
+
+    -   sample_size (subsample): Fixed at 0.8: 80% of rows sampled per tree. Not tuned (standard value).
+
+-   Step 2 — Number of trees via early stopping (xgb.cv, not available with tidymodels):
+
+    -   Once the best structural hyperparameters are fixed, xgb.cv() runs up to 5,000 boosting rounds but stops automatically (early_stopping_rounds = 50) if the CV AUC has not improved for 50 consecutive rounds. This prevents both underfitting (too few trees) and overfitting (too many trees).
+
+    -   The same fold indices as tidymodels are passed to xgb.cv() to ensure the CV is strictly comparable.
+
+```{r}
+#| label: test1-xgboost
+autoplot(results_proteomic_ALS_occurrence_tidymodels$test_1$tune_xgb_t1) + 
+  theme_minimal() + 
+  ggtitle("Test 1 – XGBoost")
+
+show_best(results_proteomic_ALS_occurrence_tidymodels$test_1$tune_xgb_t1, 
+          metric = "roc_auc", 
+          n = 5) |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  flextable::fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+cat("Best XGB structural params T1:\n"); results_proteomic_ALS_occurrence_tidymodels$test_1$best_xgb_params_t1 |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  flextable::fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+# 
+# cat("AUC CV (mean ± SD):", 
+#     round(results_proteomic_ALS_occurrence_tidymodels$test_1$xgb_cv_es_t1$evaluation_log$test_auc_mean[results_proteomic_ALS_occurrence_tidymodels$test_1$best_xgb_trees_t1], 3),
+#     "±", 
+#     round(results_proteomic_ALS_occurrence_tidymodels$test_1$xgb_cv_es_t1$evaluation_log$test_auc_std[results_proteomic_ALS_occurrence_tidymodels$test_1$best_xgb_trees_t1], 3), "\n")
+```
+
+```{r fig.height=5}
+#| eval: false
+#| include: false
+# Courbe d'apprentissage
+results_proteomic_ALS_occurrence_tidymodels$test_1$xgb_cv_es_t1$evaluation_log |>
+  ggplot(aes(x = iter)) +
+  geom_line(aes(y = results_proteomic_ALS_occurrence_tidymodels$test_1$xgb_cv_es_t1$evaluation_log$train_auc_mean, color = "Train")) +
+  geom_line(aes(y = results_proteomic_ALS_occurrence_tidymodels$test_1$xgb_cv_es_t1$evaluation_log$test_auc_mean,  color = "CV Test")) +
+  geom_ribbon(aes(ymin = results_proteomic_ALS_occurrence_tidymodels$test_1$xgb_cv_es_t1$evaluation_log$test_auc_mean - results_proteomic_ALS_occurrence_tidymodels$test_1$xgb_cv_es_t1$evaluation_log$test_auc_std,
+                  ymax = results_proteomic_ALS_occurrence_tidymodels$test_1$xgb_cv_es_t1$evaluation_log$test_auc_mean + results_proteomic_ALS_occurrence_tidymodels$test_1$xgb_cv_es_t1$evaluation_log$test_auc_std), alpha = 0.15) +
+  geom_vline(xintercept = results_proteomic_ALS_occurrence_tidymodels$test_1$best_xgb_trees_t1, linetype = "dashed", color = "grey40") +
+  labs(title = "Learning curve XGBoost – Test 1",
+       x = "Nb of trees", y = "AUC", color = "") +
+  theme_minimal()
+```
+
+#### Linear Support Vector Machine (SMV) tuning
+
+The SVM finds the hyperplane that best separates cases from controls by maximizing the margin between the two groups.
+
+"Linear" means the decision boundary is a linear combination of predictors.
+
+One hyperparameter is tuned:
+
+-   cost: Trade-off between maximizing the margin and penalizing misclassified points.
+
+    -   Low cost = wide margin, more errors tolerated (strong regularization).
+
+    -   High cost = narrow margin, fewer errors tolerated.
+
+Applied on the top-20 filtered recipe because SVM is numerically unstable in p \> n settings.
+
+```{r}
+#| label: test1-smv
+show_best(results_proteomic_ALS_occurrence_tidymodels$test_1$tune_svm_t1, metric = "roc_auc", n = 5) |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+cat("Best SVM T1 — cost:", round(results_proteomic_ALS_occurrence_tidymodels$test_1$best_svm_t1$cost, 4), "\n")
+```
+
+#### Multivariate Adaptive Regression Splines (MARS) tuning
+
+MARS is a non-linear model that automatically discovers breakpoints in predictor-outcome relationships. For example, it can learn "if protein X \> threshold, the effect is strong; otherwise it is negligible". More flexible than linear models but more interpretable than tree ensembles.
+
+Two hyperparameters are tuned:
+
+-   num_terms: Number of terms in the model — controls complexity (5, 10, 20, 50 tested).
+
+-   prod_degree: Degree of interactions: 1 = additive model only, 2 = pairwise interactions allowed.
+
+Applied on the top-20 filtered recipe because MARS is numerically unstable in p \> n settings.
+
+```{r}
+#| label: test1-mars
+show_best(results_proteomic_ALS_occurrence_tidymodels$test_1$tune_mars_t1, metric = "roc_auc", n = 5) |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+```
+
+#### Comparaison of the best combinaisons Test 1
+
+Once the best hyperparameters are identified for each algorithm, all models are evaluated on the same 10 cross-validation folds. This ensures a fair comparison: same data splits, same metric (AUC).
+
+```{r}
+#| label: test1-comparison-best-combinaisons
+results_proteomic_ALS_occurrence_tidymodels$test_1$summary_t1 |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+autoplot(results_proteomic_ALS_occurrence_tidymodels$test_1$results_t1, metric = "roc_auc") +
+  theme_minimal() +
+  geom_text(aes(label = round(mean, 3)), hjust = -0.1, size = 3) +
+  labs(title = "Test 1 – Comparaison of the models (AUC, grouped 10-fold)",
+       x = "Mean AUC (CV)", y = "")
+```
+
+#### Best model Test 1
+
+```{r}
+#| label: test1-best-model
+cat("Best model Test 1:", results_proteomic_ALS_occurrence_tidymodels$test_1$best_wf_id_t1, "\n")
+cat("   Mean AUC:", round(results_proteomic_ALS_occurrence_tidymodels$test_1$summary_t1$mean[1], 3),
+    "± SE:", round(results_proteomic_ALS_occurrence_tidymodels$test_1$summary_t1$std_err[1], 3), "\n")
+```
+
+#### Interpretation : glmnet (winner) + XGBoost (comparison)
+
+##### Glmnet
+
+Top 89 predictors (by \|coefficient\|) selected by glmnet elasticnet
+
+```{r, fig.height=15}
+results_proteomic_ALS_occurrence_tidymodels$test_1$t_glmnet_t1
+results_proteomic_ALS_occurrence_tidymodels$test_1$f_glmnet_t1
+```
+
+##### XGboost
+
+Top 20 variables by SHAP importance
+
+```{r, fig.height=8, fig.width=8}
+results_proteomic_ALS_occurrence_tidymodels$test_1$t_xgboost_t1
+```
+
+SHAP beeswarm plot
+
+```{r, fig.height=12, fig.width=12}
+results_proteomic_ALS_occurrence_tidymodels$test_1$f_xgb_beeswarm_t1
+```
+
+SHAP bar plot
+
+```{r}
+results_proteomic_ALS_occurrence_tidymodels$test_1$f_xgb_barplot_t1
+```
+
+Dependence plots (top 6)
+
+```{r, fig.height=25, fig.width=8}
+results_proteomic_ALS_occurrence_tidymodels$test_1$f_xgb_dependanceplot_t1 |> 
+  wrap_plots(ncol = 1, nrow = 6)
+```
+
+#### Comparison: glmnet vs XGBoost across both tests
+
+```{r}
+cat("COMPARISON: glmnet vs XGBoost COEFFICIENTS/SHAP\n")
+cat("  Common top 20 proteins:", length(results_proteomic_ALS_occurrence_tidymodels$test_1$overlap_t1), "\n")
+if (length(results_proteomic_ALS_occurrence_tidymodels$test_1$overlap_t1) > 0) {
+  cat("  Proteins:", paste(results_proteomic_ALS_occurrence_tidymodels$test_1$overlap_t1, collapse = ", "), "\n")
+}
+```
+
+
+### Test 2: Can plasma proteins predict ALS? (proteins + follow-up + covariates: birth year, sex, BMI, smoking) 
+#### Penalized Logistic Regression (glmnet) tuning
+
+Standard logistic regression would fail here because p \> n (\~280 predictors, 166 cases). glmnet solves this by adding a penalty term to the loss function that shrinks coefficients toward zero, effectively performing implicit variable selection.
+
+Two hyperparameters are tuned:
+
+-   penalty (lambda): Strength of regularization. Higher lambda = more coefficients forced to zero.
+
+-   mixture (alpha): Type of penalty.
+
+    -   alpha = 1 = Lasso (exact zeros, variable selection).
+
+    -   alpha = 0 = Ridge (all coefficients shrunk but non-zero).
+
+    -   Between 0 and 1 = Elastic Net.
+
+Tuning method: tune_bayes(). Instead of exhaustively testing all combinations on a fixed grid, Bayesian optimization builds a probabilistic model of the performance surface and intelligently focuses evaluations on promising regions. 40 iterations explore the penalty x mixture space far more efficiently than a 7 x 20 = 140-point regular grid.
+
+```{r}
+#| label: test2-glmnet
+autoplot(results_proteomic_ALS_occurrence_tidymodels$test_2$tune_glmnet, type = "performance") +
+  theme_minimal() + 
+  ggtitle("Test 2 – glmnet (tune_bayes)")
+
+show_best(results_proteomic_ALS_occurrence_tidymodels$test_2$tune_glmnet, 
+          metric = "roc_auc",
+          n = 5) |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+cat("Best glmnet T2 — mixture (alpha):", 
+    round(results_proteomic_ALS_occurrence_tidymodels$test_2$best_glmnet$mixture, 3),
+    "| penalty (lambda):", 
+    round(results_proteomic_ALS_occurrence_tidymodels$test_2$best_glmnet$penalty, 5), "\n")
+```
+
+#### Random forest tuning
+
+```{r}
+#| label: test2-rf
+cat("Best RF T2 — splitrule:", results_proteomic_ALS_occurrence_tidymodels$test_2$best_rf_t2$splitrule,
+    "| mtry:", results_proteomic_ALS_occurrence_tidymodels$test_2$best_rf_t2$best$mtry,
+    "| min_n:", results_proteomic_ALS_occurrence_tidymodels$test_2$best_rf_t2$best$min_n, "\n")
+```
+
+#### Gradient Boosting (XGBoost) tuning
+
+XGBoost builds trees sequentially: each tree corrects the residual errors of the previous one. This sequential method generally yields higher accuracy than random forest but makes XGBoost more prone to overfitting and sensitive to more hyperparameters.
+
+Tuning was done in two steps:
+
+-   Step 1 — Structural hyperparameters:
+
+    -   tree_depth: Maximum depth of each tree (1–4). Kept shallow to prevent overfitting with small data.
+
+    -   learn_rate (eta): Step size for each correction (0.001–0.1). Smaller = more conservative learning.
+
+    -   mtry (colsample_bytree): Fraction of predictors used per tree.
+
+    -   min_n (min_child_weight): Minimum complexity required to create a new node.
+
+    -   loss_reduction (gamma): Minimum gain required to make an additional split — acts as an extra regularizer.
+
+    -   sample_size (subsample): Fixed at 0.8: 80% of rows sampled per tree. Not tuned (standard value).
+
+-   Step 2 — Number of trees via early stopping (xgb.cv, not available with tidymodels):
+
+    -   Once the best structural hyperparameters are fixed, xgb.cv() runs up to 5,000 boosting rounds but stops automatically (early_stopping_rounds = 50) if the CV AUC has not improved for 50 consecutive rounds. This prevents both underfitting (too few trees) and overfitting (too many trees).
+
+    -   The same fold indices as tidymodels are passed to xgb.cv() to ensure the CV is strictly comparable.
+
+```{r}
+#| label: test2-xgboost
+autoplot(results_proteomic_ALS_occurrence_tidymodels$test_2$tune_xgb_t2) + 
+  theme_minimal() + 
+  ggtitle("Test 2 – XGBoost")
+
+show_best(results_proteomic_ALS_occurrence_tidymodels$test_2$tune_xgb_t2, 
+          metric = "roc_auc", 
+          n = 5)|>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  flextable::fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+cat("Best XGB structural params T2:\n"); results_proteomic_ALS_occurrence_tidymodels$test_2$best_xgb_params_t2 |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  flextable::fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+# 
+# cat("CV AUC (mean ± SD):", 
+#     round(results_proteomic_ALS_occurrence_tidymodels$test_2$xgb_cv_es_t2$evaluation_log$test_auc_mean[results_proteomic_ALS_occurrence_tidymodels$test_2$best_xgb_trees_t2], 3),
+#     "±", 
+#     round(results_proteomic_ALS_occurrence_tidymodels$test_2$xgb_cv_es_t2$evaluation_log$test_auc_std[results_proteomic_ALS_occurrence_tidymodels$test_2$best_xgb_trees_t2], 3), "\n")
+```
+
+```{r fig.height=5}
+#| eval: false
+#| include: false
+# Courbe d'apprentissage
+results_proteomic_ALS_occurrence_tidymodels$test_2$xgb_cv_es_t2$evaluation_log |>
+  ggplot(aes(x = iter)) +
+  geom_line(aes(y = results_proteomic_ALS_occurrence_tidymodels$test_2$xgb_cv_es_t2$evaluation_log$train_auc_mean, color = "Train")) +
+  geom_line(aes(y = results_proteomic_ALS_occurrence_tidymodels$test_2$xgb_cv_es_t2$evaluation_log$test_auc_mean,  color = "CV Test")) +
+  geom_ribbon(aes(ymin = results_proteomic_ALS_occurrence_tidymodels$test_2$xgb_cv_es_t2$evaluation_log$test_auc_mean - results_proteomic_ALS_occurrence_tidymodels$test_2$xgb_cv_es_t2$evaluation_log$test_auc_std,
+                  ymax = results_proteomic_ALS_occurrence_tidymodels$test_2$xgb_cv_es_t2$evaluation_log$test_auc_mean + results_proteomic_ALS_occurrence_tidymodels$test_2$xgb_cv_es_t2$evaluation_log$test_auc_std), 
+              alpha = 0.15) +
+  geom_vline(xintercept = results_proteomic_ALS_occurrence_tidymodels$test_2$best_xgb_trees_t2, linetype = "dashed", color = "grey40") +
+  labs(title = "Learning curve XGBoost – Test 2",
+       x = "Nb of trees", y = "AUC", color = "") +
+  theme_minimal()
+```
+
+#### Linear Support Vector Machine (SMV) tuning
+
+The SVM finds the hyperplane that best separates cases from controls by maximizing the margin between the two groups.
+
+"Linear" means the decision boundary is a linear combination of predictors.
+
+One hyperparameter is tuned:
+
+-   cost: Trade-off between maximizing the margin and penalizing misclassified points.
+
+    -   Low cost = wide margin, more errors tolerated (strong regularization).
+
+    -   High cost = narrow margin, fewer errors tolerated.
+
+Applied on the top-20 filtered recipe because SVM is numerically unstable in p \> n settings.
+
+```{r}
+#| label: test2-smv
+show_best(results_proteomic_ALS_occurrence_tidymodels$test_2$tune_svm_t2, metric = "roc_auc", n = 5) |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+cat("Best SVM T2 — cost:", round(results_proteomic_ALS_occurrence_tidymodels$test_2$best_svm_t2$cost, 4), "\n")
+```
+
+#### Multivariate Adaptive Regression Splines (MARS) tuning
+
+MARS is a non-linear model that automatically discovers breakpoints in predictor-outcome relationships. For example, it can learn "if protein X \> threshold, the effect is strong; otherwise it is negligible". More flexible than linear models but more interpretable than tree ensembles.
+
+Two hyperparameters are tuned:
+
+-   num_terms: Number of terms in the model — controls complexity (5, 10, 20, 50 tested).
+
+-   prod_degree: Degree of interactions: 1 = additive model only, 2 = pairwise interactions allowed.
+
+Applied on the top-20 filtered recipe because MARS is numerically unstable in p \> n settings.
+
+```{r}
+#| label: test2-mars
+show_best(results_proteomic_ALS_occurrence_tidymodels$test_2$tune_mars_t2, metric = "roc_auc", n = 5) |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+```
+
+#### Comparaison of the best combinaisons Test 2
+
+Once the best hyperparameters are identified for each algorithm, all models are evaluated on the same 10 cross-validation folds. This ensures a fair comparison: same data splits, same metric (AUC).
+
+```{r}
+#| label: test2-comparison-best-combinaisons
+results_proteomic_ALS_occurrence_tidymodels$test_2$summary_t2 |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+autoplot(results_proteomic_ALS_occurrence_tidymodels$test_2$results_t2, metric = "roc_auc") +
+  theme_minimal() +
+  geom_text(aes(label = round(mean, 3)), hjust = -0.1, size = 3) +
+  labs(title = "Test 2 – Model comparaison (AUC, grouped 10-fold)", 
+       x = "Mean AUC", y = "")
+```
+
+#### Best model Test 2
+
+```{r}
+#| label: test2-best-model
+cat("Best model Test 2 :", results_proteomic_ALS_occurrence_tidymodels$test_2$best_wf_id_t2, "\n")
+cat("   Mean AUC:", round(results_proteomic_ALS_occurrence_tidymodels$test_2$summary_t2$mean[1], 3),
+    "± SE:", round(results_proteomic_ALS_occurrence_tidymodels$test_2$summary_t2$std_err[1], 3), "\n")
+```
+
+#### Interpreation : glmnet (winner) + XGBoost (comparison)
+
+##### Glmnet
+
+Top 110 predictors (by \|coefficient\|)
+
+```{r, fig.height=18}
+#| label: Interpreation:glmnet(winner)+XGBoost(comparison)-1
+results_proteomic_ALS_occurrence_tidymodels$test_2$t_glmnet_t2
+results_proteomic_ALS_occurrence_tidymodels$test_2$p_glmnet_t2
+```
+
+##### XGboost
+
+Top 20 variables by SHAP importance
+
+```{r, fig.height=8, fig.width=8}
+#| label: Interpreation:glmnet(winner)+XGBoost(comparison)-2
+results_proteomic_ALS_occurrence_tidymodels$test_2$t_xgboost_t2
+```
+
+SHAP beeswarm plot
+
+```{r, fig.height=12, fig.width=12}
+#| label: Interpreation:glmnet(winner)+XGBoost(comparison)-3
+results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_beeswarm_t2
+```
+
+SHAP bar plot
+
+```{r}
+#| label: Interpreation:glmnet(winner)+XGBoost(comparison)-4
+results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_barplot_t2
+```
+
+Dependence plots (top 6)
+
+```{r, fig.height=25, fig.width=8}
+#| label: Interpreation:glmnet(winner)+XGBoost(comparison)-5
+results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_dependanceplot_t2 |> 
+  wrap_plots(ncol = 1, nrow = 6)
+```
+
+Dependence plots by follow-up duration (top 6)
+
+```{r, fig.height=25, fig.width=8}
+#| label: Interpreation:glmnet(winner)+XGBoost(comparison)-6
+results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_dependanceplot_by_followup_t2 |> 
+  wrap_plots(ncol = 1, nrow = 6)
+```
+
+Interaction follow_up × protéines
+
+```{r, fig.height=9, fig.width=8}
+#| label: Interpreation:glmnet(winner)+XGBoost(comparison)-7
+#| column: screen-inset-right
+cat("\nSHAP |value| by follow-up tertile:\n")
+results_proteomic_ALS_occurrence_tidymodels$test_2$f_fu_shap
+```
+
+Trajectory analysis
+
+```{r}
+#| label: Interpreation:glmnet(winner)+XGBoost(comparison)-8
+cat("\nProtein signal trajectory:\n")
+results_proteomic_ALS_occurrence_tidymodels$test_2$shap_fu_trend 
+```
+
+#### Comparison: glmnet vs XGBoost across both tests
+
+```{r}
+#| label: Interpreation:glmnet(winner)+XGBoost(comparison)-9
+cat("COMPARISON: glmnet vs XGBoost COEFFICIENTS/SHAP\n")
+cat("  Common top 20 proteins:", length(results_proteomic_ALS_occurrence_tidymodels$test_2$overlap_t2), "\n")
+if (length(results_proteomic_ALS_occurrence_tidymodels$test_2$overlap_t2) > 0) {
+  cat("  Proteins:", paste(results_proteomic_ALS_occurrence_tidymodels$test_2$overlap_t2, collapse = ", "), "\n")
+}
+```
+
+
+### Test 3: interaction with follow-up duration?
+#### Comparison of glmnet models 
+```{r}
+#| label: tidymodel-test-3-1
+autoplot(results_proteomic_ALS_occurrence_tidymodels$test_3$tune_glmnet, type = "performance") +
+  theme_minimal() + 
+  ggtitle("Test 3 – glmnet (tune_bayes)")
+
+show_best(results_proteomic_ALS_occurrence_tidymodels$test_3$tune_glmnet, 
+          metric = "roc_auc",
+          n = 5) |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+cat("Best glmnet T3 — mixture (alpha):", 
+    round(results_proteomic_ALS_occurrence_tidymodels$test_3$best_glmnet$mixture, 3),
+    "| penalty (lambda):", 
+    round(results_proteomic_ALS_occurrence_tidymodels$test_3$best_glmnet$penalty, 5), "\n")
+```
+
+#### Interpretation of the best glmnet model
+```{r}
+#| label: tidymodel-test-3-2
+# Extraction de la valeur numérique moyenne du meilleur AUC
+best_auc_value <- show_best(
+  results_proteomic_ALS_occurrence_tidymodels$test_3$tune_glmnet_t3, 
+  metric = "roc_auc", 
+  n = 1)$mean
+
+# Récupération des prédictions hors-échantillon
+best_predictions_t3 <- 
+  results_proteomic_ALS_occurrence_tidymodels$test_3$tune_glmnet_t3 |> 
+  collect_predictions(
+    parameters = results_proteomic_ALS_occurrence_tidymodels$test_3$best_glmnet_t3)
+
+# Calcul des points de la courbe ROC
+roc_curve_data_t3 <- 
+  best_predictions_t3 |>
+  roc_curve(truth = als, .pred_case)
+
+# plot
+roc_curve_data_t3 |> 
+  autoplot() +
+  labs(
+    title = "AUC curve - Test 3 (Elastic Net with follow-up interactions)",
+    subtitle = paste0("CV 10-folds — Mean AUC: ", round(best_auc_value, 3))) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.subtitle = element_text(color = "gray40", size = 10))
+
+
+rm(best_auc_value, best_predictions_t3, roc_curve_data_t3)
+```
+
+#### Extraction of the terms selected by elastic net 
+```{r}
+#| label: tidymodel-test-3-3
+# if(results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$success) {
+#   cat("\n--- Test 3 results ---")
+#   cat("\nBest hyperparameters:")
+#   cat("\n  - Alpha (mixture):", round(results_proteomic_ALS_occurrence_tidymodels$test_3$best_glmnet_t3$mixture, 3))
+#   cat("\n  - Lambda (penalty):", round(results_proteomic_ALS_occurrence_tidymodels$test_3$best_glmnet_t3$penalty, 5))
+#   cat("\nNumber of selected terms by elastic net:", results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$n_selected, "\n")
+#   
+#   print(head(results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$coefs_all, 143))
+# } else {
+#   cat("Erreur lors de l'extraction des coefficients :", results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$error, "\n")
+# }
+
+
+# Top 143 predictors (by |coefficient|)
+results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$coefs_protein |> 
+  slice_head(n = 143) |>
+  as.data.frame() |>
+  mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_"), 
+         Feature = str_replace(Feature, "_x_follow_up_no_na_y", " x follow-up")) |>
+  select(-abs_coef, -direction, - coefficient_raw) |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  flextable::fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+```
+
+
 
 # Proteomic and years to ALS
 
@@ -3808,7 +4479,7 @@ summary(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time
   as.data.frame() |>
   flextable() |> 
   colformat_double(digits = 2) |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
@@ -3824,7 +4495,7 @@ summary(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time
   as.data.frame() |>
   flextable() |> 
   colformat_double(digits = 2) |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
@@ -3847,7 +4518,7 @@ summary(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time
   as.data.frame() |>
   flextable() |> 
   colformat_double(digits = 2) |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
@@ -3863,7 +4534,7 @@ summary(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time
   as.data.frame() |>
   flextable() |> 
   colformat_double(digits = 2) |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
@@ -3883,7 +4554,7 @@ summary(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time
   as.data.frame() |>
   flextable() |> 
   colformat_double(digits = 2) |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
@@ -3899,7 +4570,7 @@ summary(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time
   as.data.frame() |>
   flextable() |> 
   colformat_double(digits = 2) |>
-  font(fontname = "Calibri", part = "all") |> 
+  flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
   set_table_properties(align = "left") |>
@@ -4626,3 +5297,19 @@ rm(plot_base_cox_gam_danish, plot_adjusted_cox_gam_danish,
    plot_adjusted_cox_gam_danish)
 
 ```
+
+
+# POPs and proteomic 
+```{r, fig.height=6}
+#| label: danish-POPs-proteomic-1
+#| column: screen-inset-right
+results_POPs_proteomic$main$POPs_sd_proteomic_table
+results_POPs_proteomic$main$POPs_sd_proteomic_figure
+```
+
+
+```{r}
+#| label: danish-POPs-proteomic-2
+results_POPs_proteomic$main$POPs_sd_NfL_table
+```
+

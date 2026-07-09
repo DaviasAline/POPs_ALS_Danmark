@@ -21,19 +21,6 @@
 
 
 # Packages and data ----
-library(tidymodels)
-library(tidyverse)
-library(ranger)       # random forest
-library(xgboost)      # gradient boosting
-library(glmnet)       # lasso/ridge/elastic net
-library(kernlab)      # SVM
-library(earth)        # MARS
-library(mgcv)         # GAM
-library(pROC)         # AUC univariate (pour le step de filtrage custom)
-library(shapviz)      # SHAP values
-library(probably)     # calibration des probabilités
-library(vip)
-
 tidymodels_prefer()
 source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 
@@ -576,7 +563,9 @@ rec_top20_t2 <- make_recipe_top(data_t2, n_top = 20)
 ## TEST 2 – PHASE A : Tuning hyperparamètres ----
 
 ### A1. glmnet ----
-glmnet_spec_tune <- logistic_reg(penalty = tune(), mixture = tune()) |>
+glmnet_spec_tune <- 
+  logistic_reg(penalty = tune(), 
+               mixture = tune()) |>
   set_engine("glmnet") |>
   set_mode("classification")
 
@@ -585,11 +574,16 @@ wf_glmnet_t2 <- workflow() |>
   add_model(glmnet_spec_tune)
 
 set.seed(1996)
-tune_glmnet_t2 <- tune_bayes(wf_glmnet_t2, resamples = folds_t2,
-                             param_info = parameters(dials::penalty(range = c(-5, 0)), 
-                                                     mixture(range = c(0, 1))),
-                             iter = 40, initial = 10, metrics = metric,
-                             control = control_bayes(save_pred = TRUE, verbose = TRUE))
+tune_glmnet_t2 <- tune_bayes(
+  wf_glmnet_t2, 
+  resamples = folds_t2,
+  param_info = parameters(dials::penalty(range = c(-5, 0)), 
+                          mixture(range = c(0, 1))),
+  iter = 40, 
+  initial = 10, 
+  metrics = metric,
+  control = control_bayes(save_pred = TRUE, verbose = TRUE)) 
+
 best_glmnet_t2 <- select_best(tune_glmnet_t2, metric = "roc_auc")
 
 rm(glmnet_spec_tune, wf_glmnet_t2)
@@ -768,6 +762,67 @@ xgb_fit_t2 <- fit_best_workflow(results_t2, xgb_id_t2, data_t2)
 rm(wf_set_t2)
 
 
+## TEST 3 : Selected proteins, selected covariates with two-way interactions with follow_up_no_na_y ----
+
+### Extraction of the selected predictors in test 2
+glmnet_t2_result <- extract_glmnet_coefs(
+  results_proteomic_ALS_occurrence_tidymodels$test_2$best_fit_t2)
+
+selected_predictors <- glmnet_t2_result$coefs_protein |> 
+  slice_head(n = 110) |>
+  as.data.frame() |>
+  select(Feature)
+selected_predictors <- selected_predictors$Feature
+
+### Preparation of the recipe with interactions 
+rec_interact_t3 <- make_recipe_full(data_t2) |> 
+  step_interact(terms = ~ all_of(selected_predictors):follow_up_no_na_y)
+
+### TEST 3 - PHASE A : Tuning des hyperparamètres ----
+glmnet_spec_tune_t3 <- 
+  logistic_reg(penalty = tune(), 
+               mixture = tune()) |>
+  set_engine("glmnet") |>
+  set_mode("classification")
+
+wf_glmnet_t3 <- workflow() |> 
+  add_recipe(rec_interact_t3) |> 
+  add_model(glmnet_spec_tune_t3)
+
+# Lancement de l'optimisation bayésienne sur les mêmes folds que test 1 et test 2 pour meilleure comparaison
+set.seed(1996)
+tune_glmnet_t3 <- tune_bayes(
+  wf_glmnet_t3, 
+  resamples = folds_t2,                                                         # on garde toujours les memes folds
+  param_info = parameters(dials::penalty(range = c(-5, 0)), 
+                          mixture(range = c(0, 1))),
+  iter = 40, 
+  initial = 10, 
+  metrics = metric,
+  control = control_bayes(save_pred = TRUE, verbose = TRUE))
+
+best_glmnet_t3 <- select_best(tune_glmnet_t3, metric = "roc_auc")               # Extraction des meilleurs hyperparamètres 
+
+rm(glmnet_spec_tune_t3, wf_glmnet_t3)
+
+### TEST 3 - PHASE B : Entraînement du modèle final sur toutes les données ----
+# ici, par rapport à test 1 et 2, on n'utilise pas workflow_map() et fit_best_workflow mais directement fit() car on a qu'un seul model
+
+glmnet_final_t3 <- logistic_reg(
+  penalty = best_glmnet_t3$penalty, 
+  mixture = best_glmnet_t3$mixture) |>
+  set_engine("glmnet") |> 
+  set_mode("classification")
+
+wf_final_set_t3 <- workflow() |> 
+  add_recipe(rec_interact_t3) |> 
+  add_model(glmnet_final_t3)
+
+set.seed(1996)
+best_fit_t3 <- fit(wf_final_set_t3, data = data_t2)     
+
+glmnet_t3_result <- extract_glmnet_coefs(best_fit_t3)
+
 # Sauvegarde ----
 
 results_proteomic_ALS_occurrence_tidymodels <- list(
@@ -833,6 +888,20 @@ results_proteomic_ALS_occurrence_tidymodels <- list(
     mars_final_t2 = mars_final_t2))
 
 
+results_proteomic_ALS_occurrence_tidymodels$test_3 <- 
+  list( 
+    #data_t2 = data_t2,         # we used the same as t2
+    #folds_t2 = folds_t2,       # we used the same as t2
+    # Tuning test 3 
+    tune_glmnet_t3 = tune_glmnet_t3,
+    # Hyperparamètres optimaux
+    best_glmnet_t3  = best_glmnet_t3,
+    # comparaison finale test 3
+    glmnet_final_t3 = glmnet_final_t3, 
+    wf_final_set_t3 = wf_final_set_t3, 
+    best_fit_t3  = best_fit_t3, 
+    glmnet_t3_result = glmnet_t3_result)
+
 rm(tune_glmnet_t1,
    tune_rf_t1,
    tune_xgb_t1,
@@ -883,6 +952,15 @@ rm(tune_glmnet_t1,
    xgb_fit_t2, 
    xgb_tree2_id_t2, 
    xgb_tree2_fit_t2)
+
+rm(tune_glmnet_t3, 
+   best_glmnet_t3, 
+   glmnet_final_t3, 
+   wf_final_set_t3, 
+   best_fit_t3, 
+   selected_predictors, 
+   glmnet_t3_result)
+
 
 
 # Analyses poussées : glmnet + XGBoost pour Test 1 et Test 2 ----
@@ -1162,115 +1240,6 @@ if (length(results_proteomic_ALS_occurrence_tidymodels$test_2$overlap_t2) > 0) {
 rm(glmnet_t1_result, glmnet_t1_top, xgb_t1_shap, xgb_t1_top,  
    glmnet_t2_result, glmnet_t2_top, xgb_t2_shap, xgb_t2_top)
 
-
-# 
-# ## Additional investigation: xgboost tree_depth = 2 for Test 2 ----
-# xgb_tree2_t2_shap <- extract_xgb_and_shap(
-#   results_proteomic_ALS_occurrence_tidymodels$test_2$xgb_tree2_fit_t2,
-#   data = data_t2,
-#   test_label  = "Test 2 XGBoost - tree depth = 2")
-# 
-# # Top 20 variables by SHAP importance
-# results_proteomic_ALS_occurrence_tidymodels$test_2$t_xgb_tree2_t2 <- xgb_tree2_t2_shap$shap_summary |> 
-#   slice_head(n = 20) |> 
-#   as.data.frame() |>
-#   mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_")) |>
-#   flextable() |> 
-#   colformat_double(digits = 2) |>
-#   flextable::font(fontname = "Calibri", part = "all") |> 
-#   flextable::fontsize(size = 10, part = "all") |>
-#   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-#   set_table_properties(align = "left") |>
-#   autofit()
-# 
-# # SHAP beeswarm plot
-# results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_beeswarm_t2 <- 
-#   sv_importance(xgb_tree2_t2_shap$shap, kind = "beeswarm", max_display = 20) +
-#   labs(title = "Test 2 XGBoost - tree depth = 2 — SHAP beeswarm (top 20)")
-# 
-# # SHAP bar plot
-# results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_barplot_t2 <- 
-#   sv_importance(xgb_tree2_t2_shap$shap, kind = "bar", max_display = 20) +
-#   labs(title = "Test 2 XGBoost - tree depth = 2 — SHAP importance (top 20)")
-# 
-# # Dependence plots (top 6)
-# top6_t2_tree2 <- xgb_tree2_t2_shap$shap_summary |> 
-#   slice_head(n = 6) |> 
-#   pull(Feature)
-# 
-# results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_dependanceplot_t2 <- 
-#   lapply(top6_t2_tree2, function(prot) {
-#     sv_dependence(xgb_tree2_t2_shap$shap, v = prot) +
-#       labs(title = paste("Test 2 XGBoost - tree depth = 2 —", prot)) +
-#       theme_minimal()
-#   })
-# names(results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_dependanceplot_t2) <- top6_t2_tree2
-# 
-# # Dependence plots by follow-up duration (top 6)
-# results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_dependanceplot_by_followup_t2 <- 
-#   lapply(top6_t2_tree2, function(prot) {
-#     sv_dependence(xgb_tree2_t2_shap$shap, 
-#                   v = prot, 
-#                   color_var = "follow_up_no_na_y") +
-#       scale_color_viridis_c(name = "Follow-up\n(years)") +
-#       labs(title = paste("Test 2 - tree depth = 2 - ", prot, "× follow_up")) +
-#       theme_minimal()
-#   })
-# names(results_proteomic_ALS_occurrence_tidymodels$test_2$f_xgb_tree2_dependanceplot_by_followup_t2) <- top6_t2_tree2
-# rm(top6_t2_tree2)
-# 
-# # Interaction follow_up × protéines
-# fu_breaks_tree2 <- quantile(data_t2$follow_up_no_na_y, probs = c(0, 1/3, 2/3, 1), na.rm = TRUE)
-# fu_group_t2_tree2 <- cut(data_t2$follow_up_no_na_y,
-#                          breaks = fu_breaks_tree2,
-#                          labels = c("Early (≤1/3)", "Intermediate", "Late (≥2/3)"),
-#                          include.lowest = TRUE)
-# 
-# top15_prot_t2_tree2 <- xgb_tree2_t2_shap$shap_summary |> slice_head(n = 15) |> pull(Feature)
-# 
-# shap_by_fu_tree2 <- as_tibble(xgb_tree2_t2_shap$shap_matrix[, top15_prot_t2_tree2]) |>
-#   mutate(fu_group = fu_group_t2_tree2) |>
-#   pivot_longer(-fu_group, names_to = "Feature", values_to = "shap") |>
-#   group_by(fu_group, Feature) |>
-#   summarise(
-#     mean_abs_shap = mean(abs(shap)),
-#     mean_shap     = mean(shap),
-#     .groups = "drop") |>
-#   mutate(direction = if_else(mean_shap > 0, "↑ risk", "↓ risk"))
-# 
-# cat("\nSHAP |value| by follow-up tertile:\n")
-# results_proteomic_ALS_occurrence_tidymodels$test_2$f_fu_shap_tree2 <- 
-#   ggplot(shap_by_fu_tree2, aes(x = fu_group, y = mean_abs_shap, fill = direction)) +
-#   geom_col(position = "dodge") +
-#   facet_wrap(~ reorder(Feature, -mean_abs_shap), scales = "free_y", ncol = 3) +
-#   scale_fill_manual(values = c("↑ risk" = "firebrick", "↓ risk" = "steelblue")) +
-#   labs(title = "Test 2 — tree depth = 2 - SHAP |value| by follow-up tertile (top 15 proteins)",
-#        x = "Follow-up tertile", y = "Mean |SHAP|", fill = "") +
-#   theme_minimal() +
-#   theme(axis.text.x = element_text(angle = 30, hjust = 1))
-# 
-# 
-# # Trajectory analysis
-# cat("\nProtein signal trajectory:\n")
-# results_proteomic_ALS_occurrence_tidymodels$test_2$shap_fu_trend_tree2 <- shap_by_fu_tree2 |>
-#   select(fu_group, Feature, mean_abs_shap) |>
-#   pivot_wider(names_from = fu_group, values_from = mean_abs_shap) |>
-#   rename(early = `Early (≤1/3)`, intermediate = Intermediate, late = `Late (≥2/3)`) |>
-#   mutate(
-#     trend = case_when(
-#       late > early * 1.3  ~ "Late marker (↑ closer to diagnosis)",
-#       early > late * 1.3  ~ "Early marker (↑ years before)",
-#       TRUE                ~ "Stable across time"),
-#     ratio_late_early = round(late / (early + 1e-6), 2)) |>
-#   arrange(desc(ratio_late_early)) |> 
-#   as.data.frame() |>
-#   mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_")) |>
-#   flextable() |> 
-#   flextable::font(fontname = "Calibri", part = "all") |> 
-#   flextable::fontsize(size = 10, part = "all") |>
-#   padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-#   set_table_properties(align = "left") |>
-#   autofit()
 
 
 rm(fu_breaks_tree2, fu_group_t2_tree2, top15_prot_t2_tree2, shap_by_fu_tree2, xgb_tree2_t2_shap)
