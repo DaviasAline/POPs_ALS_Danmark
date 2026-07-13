@@ -4165,7 +4165,6 @@ if (length(results_proteomic_ALS_occurrence_tidymodels$test_2$overlap_t2) > 0) {
 #### Comparison of glmnet models 
 ```{r}
 #| label: tidymodel-test-3-1
-#| cache: false
 autoplot(results_proteomic_ALS_occurrence_tidymodels$test_3$tune_glmnet, type = "performance") +
   theme_minimal() + 
   ggtitle("Test 3 – glmnet (tune_bayes)")
@@ -4190,7 +4189,6 @@ cat("Best glmnet T3 — mixture (alpha):",
 #### Interpretation of the best glmnet model
 ```{r}
 #| label: tidymodel-test-3-2
-#| cache: false
 # Extraction de la valeur numérique moyenne du meilleur AUC
 best_auc_value <- show_best(
   results_proteomic_ALS_occurrence_tidymodels$test_3$tune_glmnet_t3, 
@@ -4226,7 +4224,6 @@ rm(best_auc_value, best_predictions_t3, roc_curve_data_t3)
 #### Extraction of the terms selected by elastic net 
 ```{r}
 #| label: tidymodel-test-3-3
-#| cache: false
 # if(results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$success) {
 #   cat("\n--- Test 3 results ---")
 #   cat("\nBest hyperparameters:")
@@ -4257,6 +4254,101 @@ results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$coefs_protei
 
 ```
 
+
+
+
+### Test 3: interaction with follow-up duration among individuals with follow-up >= 5 years
+#### Comparison of glmnet models 
+```{r}
+#| label: tidymodel-test-3-sensi-1
+autoplot(results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$tune_glmnet_t3_sensi, type = "performance") +
+  theme_minimal() + 
+  ggtitle("Test 3 sensi – glmnet (tune_bayes)")
+
+show_best(results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$tune_glmnet_t3_sensi, 
+          metric = "roc_auc",
+          n = 5) |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+cat("Best glmnet T3 sensi — mixture (alpha):", 
+    round(results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$best_glmnet_t3_sensi$mixture, 3),
+    "| penalty (lambda):", 
+    round(results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$best_glmnet_t3_sensi$penalty, 5), "\n")
+```
+
+#### Interpretation of the best glmnet model
+```{r}
+#| label: tidymodel-test-3-sensi-2
+# Extraction de la valeur numérique moyenne du meilleur AUC
+best_auc_value_t3_sensi <- show_best(
+  results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$tune_glmnet_t3_sensi, 
+  metric = "roc_auc", 
+  n = 1)$mean
+
+# Récupération des prédictions hors-échantillon
+best_predictions_t3_sensi <- 
+  results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$tune_glmnet_t3_sensi |> 
+  collect_predictions(
+    parameters = results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$best_glmnet_t3_sensi)
+
+# Calcul des points de la courbe ROC
+roc_curve_data_t3_sensi <- 
+  best_predictions_t3_sensi |>
+  roc_curve(truth = als, .pred_case)
+
+# plot
+roc_curve_data_t3_sensi |> 
+  autoplot() +
+  labs(
+    title = "AUC curve - Test 3 sensi (Elastic Net with follow-up interactions)",
+    subtitle = paste0("CV 10-folds — Mean AUC: ", round(best_auc_value_t3_sensi, 3))) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.subtitle = element_text(color = "gray40", size = 10))
+
+
+rm(best_auc_value_t3_sensi, best_predictions_t3_sensi, roc_curve_data_t3_sensi)
+```
+
+#### Extraction of the terms selected by elastic net 
+```{r}
+#| label: tidymodel-test-3-sensi-3
+# if(results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$success) {
+#   cat("\n--- Test 3 results ---")
+#   cat("\nBest hyperparameters:")
+#   cat("\n  - Alpha (mixture):", round(results_proteomic_ALS_occurrence_tidymodels$test_3$best_glmnet_t3$mixture, 3))
+#   cat("\n  - Lambda (penalty):", round(results_proteomic_ALS_occurrence_tidymodels$test_3$best_glmnet_t3$penalty, 5))
+#   cat("\nNumber of selected terms by elastic net:", results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$n_selected, "\n")
+#   
+#   print(head(results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$coefs_all, 143))
+# } else {
+#   cat("Erreur lors de l'extraction des coefficients :", results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$error, "\n")
+# }
+
+
+# Top 143 predictors (by |coefficient|)
+results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$glmnet_t3_result_sensi$coefs_protein |> 
+  slice_head(n = 143) |>
+  as.data.frame() |>
+  mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_"), 
+         Feature = str_replace(Feature, "_x_follow_up_no_na_y", " x follow-up")) |>
+  select(-abs_coef, -direction, - coefficient_raw) |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  flextable::fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+```
 
 
 # Proteomic and years to ALS

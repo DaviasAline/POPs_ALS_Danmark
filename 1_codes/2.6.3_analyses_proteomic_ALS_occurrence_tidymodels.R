@@ -762,23 +762,13 @@ xgb_fit_t2 <- fit_best_workflow(results_t2, xgb_id_t2, data_t2)
 rm(wf_set_t2)
 
 
-## TEST 3 : Selected proteins, selected covariates with two-way interactions with follow_up_no_na_y ----
+# TEST 3 : Proteins, covariates with two-way interactions with follow_up_no_na_y ----
 
-### Extraction of the selected predictors in test 2
-glmnet_t2_result <- extract_glmnet_coefs(
-  results_proteomic_ALS_occurrence_tidymodels$test_2$best_fit_t2)
-
-selected_predictors <- glmnet_t2_result$coefs_protein |> 
-  slice_head(n = 110) |>
-  as.data.frame() |>
-  select(Feature)
-selected_predictors <- selected_predictors$Feature
-
-### Preparation of the recipe with interactions 
+## Preparation of the recipe with interactions 
 rec_interact_t3 <- make_recipe_full(data_t2) |> 
-  step_interact(terms = ~ all_of(selected_predictors):follow_up_no_na_y)
+  step_interact(terms = ~ all_of(proteomic):follow_up_no_na_y)
 
-### TEST 3 - PHASE A : Tuning des hyperparamètres ----
+## TEST 3 - PHASE A : Tuning des hyperparamètres ----
 glmnet_spec_tune_t3 <- 
   logistic_reg(penalty = tune(), 
                mixture = tune()) |>
@@ -805,7 +795,7 @@ best_glmnet_t3 <- select_best(tune_glmnet_t3, metric = "roc_auc")               
 
 rm(glmnet_spec_tune_t3, wf_glmnet_t3)
 
-### TEST 3 - PHASE B : Entraînement du modèle final sur toutes les données ----
+## TEST 3 - PHASE B : Entraînement du modèle final sur toutes les données ----
 # ici, par rapport à test 1 et 2, on n'utilise pas workflow_map() et fit_best_workflow mais directement fit() car on a qu'un seul model
 
 glmnet_final_t3 <- logistic_reg(
@@ -822,6 +812,77 @@ set.seed(1996)
 best_fit_t3 <- fit(wf_final_set_t3, data = data_t2)     
 
 glmnet_t3_result <- extract_glmnet_coefs(best_fit_t3)
+
+
+# TEST 3 - sensitivity analysis (remove cases and controls with follow-up<5 years) ----
+# TEST 3 sensi : Proteins, covariates with two-way interactions with follow_up_no_na_y
+
+data_t3_sensi <- bdd_danish |>
+  select(als, match,
+         follow_up_no_na_y, birth_year, sex, bmi, smoking_2cat_i,
+         all_of(proteomic)) |>
+  filter(follow_up_no_na_y >= 5) |>
+  mutate(als = factor(als, levels = c(1, 0), labels = c("case", "control")))
+
+cat("Dimensions :", nrow(data_t3_sensi), "×", ncol(data_t3_sensi) - 2, "prédicteurs\n")
+cat("Outcome :", table(data_t3_sensi$als), "\n")
+
+folds_t3_sensi     <- make_folds_checked(data_t3_sensi)
+ncol_preds_t3_sensi <- ncol(data_t3_sensi) - 2  # -als -match 
+
+rec_full_t3_sensi  <- make_recipe_full(data_t3_sensi)
+rec_top20_t3_sensi <- make_recipe_top(data_t3_sensi, n_top = 20)
+
+
+## Preparation of the recipe with interactions 
+rec_interact_t3_sensi <- make_recipe_full(data_t3_sensi) |> 
+  step_interact(terms = ~ all_of(proteomic):follow_up_no_na_y)
+
+## TEST 3 sensi - PHASE A : Tuning des hyperparamètres ----
+glmnet_spec_tune_t3_sensi <- 
+  logistic_reg(penalty = tune(), 
+               mixture = tune()) |>
+  set_engine("glmnet") |>
+  set_mode("classification")
+
+wf_glmnet_t3_sensi <- workflow() |> 
+  add_recipe(rec_interact_t3_sensi) |> 
+  add_model(glmnet_spec_tune_t3_sensi)
+
+# Lancement de l'optimisation bayésienne sur les mêmes folds que test 1 et test 2 pour meilleure comparaison
+set.seed(1996)
+tune_glmnet_t3_sensi <- tune_bayes(
+  wf_glmnet_t3_sensi, 
+  resamples = folds_t3_sensi,                                                         # on garde toujours les memes folds
+  param_info = parameters(dials::penalty(range = c(-5, 0)), 
+                          mixture(range = c(0, 1))),
+  iter = 40, 
+  initial = 10, 
+  metrics = metric,
+  control = control_bayes(save_pred = TRUE, verbose = TRUE))
+
+best_glmnet_t3_sensi <- select_best(tune_glmnet_t3_sensi, metric = "roc_auc")               # Extraction des meilleurs hyperparamètres 
+
+rm(glmnet_spec_tune_t3_sensi, wf_glmnet_t3_sensi)
+
+## TEST 3 sensi - PHASE B : Entraînement du modèle final sur toutes les données ----
+# ici, par rapport à test 1 et 2, on n'utilise pas workflow_map() et fit_best_workflow mais directement fit() car on a qu'un seul model
+
+glmnet_final_t3_sensi <- logistic_reg(
+  penalty = best_glmnet_t3_sensi$penalty, 
+  mixture = best_glmnet_t3_sensi$mixture) |>
+  set_engine("glmnet") |> 
+  set_mode("classification")
+
+wf_final_set_t3_sensi <- workflow() |> 
+  add_recipe(rec_interact_t3_sensi) |> 
+  add_model(glmnet_final_t3_sensi)
+
+set.seed(1996)
+best_fit_t3_sensi <- fit(wf_final_set_t3_sensi, data = data_t3_sensi)     
+
+glmnet_t3_result_sensi <- extract_glmnet_coefs(best_fit_t3_sensi)
+
 
 # Sauvegarde ----
 
@@ -902,6 +963,21 @@ results_proteomic_ALS_occurrence_tidymodels$test_3 <-
     best_fit_t3  = best_fit_t3, 
     glmnet_t3_result = glmnet_t3_result)
 
+
+results_proteomic_ALS_occurrence_tidymodels$test_3_sensi <- 
+  list( 
+    #data_t3_sensi = data_t3_sensi,        
+    #folds_t3_sensi = folds_t3_sensi,     
+    # Tuning test 3 sensi
+    tune_glmnet_t3_sensi = tune_glmnet_t3_sensi,
+    # Hyperparamètres optimaux
+    best_glmnet_t3_sensi  = best_glmnet_t3_sensi,
+    # comparaison finale test 3 sensi
+    glmnet_final_t3_sensi = glmnet_final_t3_sensi, 
+    wf_final_set_t3_sensi = wf_final_set_t3_sensi, 
+    best_fit_t3_sensi  = best_fit_t3_sensi, 
+    glmnet_t3_result_sensi = glmnet_t3_result_sensi)
+
 rm(tune_glmnet_t1,
    tune_rf_t1,
    tune_xgb_t1,
@@ -959,7 +1035,20 @@ rm(tune_glmnet_t3,
    wf_final_set_t3, 
    best_fit_t3, 
    selected_predictors, 
-   glmnet_t3_result)
+   glmnet_t3_result, 
+   rec_interact_t3)
+
+rm(data_t3_sensi, 
+   folds_t3_sensi,   
+   rec_full_t3_sensi, 
+   rec_top20_t3_sensi, 
+   rec_interact_t3_sensi, 
+   tune_glmnet_t3_sensi,
+   best_glmnet_t3_sensi,
+   glmnet_final_t3_sensi,
+   wf_final_set_t3_sensi, 
+   best_fit_t3_sensi, 
+   glmnet_t3_result_sensi)
 
 
 
