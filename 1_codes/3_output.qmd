@@ -4165,6 +4165,7 @@ if (length(results_proteomic_ALS_occurrence_tidymodels$test_2$overlap_t2) > 0) {
 #### Comparison of glmnet models 
 ```{r}
 #| label: tidymodel-test-3-1
+#| cache: false
 autoplot(results_proteomic_ALS_occurrence_tidymodels$test_3$tune_glmnet, type = "performance") +
   theme_minimal() + 
   ggtitle("Test 3 – glmnet (tune_bayes)")
@@ -4189,6 +4190,7 @@ cat("Best glmnet T3 — mixture (alpha):",
 #### Interpretation of the best glmnet model
 ```{r}
 #| label: tidymodel-test-3-2
+#| cache: false
 # Extraction de la valeur numérique moyenne du meilleur AUC
 best_auc_value <- show_best(
   results_proteomic_ALS_occurrence_tidymodels$test_3$tune_glmnet_t3, 
@@ -4224,6 +4226,7 @@ rm(best_auc_value, best_predictions_t3, roc_curve_data_t3)
 #### Extraction of the terms selected by elastic net 
 ```{r}
 #| label: tidymodel-test-3-3
+#| cache: false
 # if(results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$success) {
 #   cat("\n--- Test 3 results ---")
 #   cat("\nBest hyperparameters:")
@@ -5300,16 +5303,52 @@ rm(plot_base_cox_gam_danish, plot_adjusted_cox_gam_danish,
 
 
 # POPs and proteomic 
-```{r, fig.height=6}
+## Main analysis
+```{r, fig.height=10, fig.width=10}
 #| label: danish-POPs-proteomic-1
 #| column: screen-inset-right
-results_POPs_proteomic$main$POPs_sd_proteomic_table
 results_POPs_proteomic$main$POPs_sd_proteomic_figure
 ```
 
-
 ```{r}
 #| label: danish-POPs-proteomic-2
+#| column: screen-inset-right
+results_POPs_proteomic$main$POPs_sd_proteomic_table
+```
+
+
+## Specific Nfl
+```{r}
+#| label: danish-POPs-proteomic-3
 results_POPs_proteomic$main$POPs_sd_NfL_table
 ```
+
+## Sensitivity analysis - sex effect?
+```{r, fig.height=30, fig.width=10}
+#| column: screen-inset-right
+#| label: danish-POPs-proteomic-4
+results_POPs_proteomic$sensi_sex$POPs_sd_proteomic_figure_sensi_sex
+```
+
+```{r}
+#| column: screen-inset-right
+#| label: danish-POPs-proteomic-5
+results_POPs_proteomic$sensi_sex$POPs_sd_proteomic_table_sensi_sex
+```
+
+
+## Sensitivity analysis - als status effect?
+```{r, fig.height=30, fig.width=10}
+#| label: danish-POPs-proteomic-6
+#| column: screen-inset-right
+results_POPs_proteomic$sensi_als$POPs_sd_proteomic_figure_sensi_als
+```
+
+```{r}
+#| column: screen-inset-right
+#| label: danish-POPs-proteomic-7
+results_POPs_proteomic$sensi_als$POPs_sd_proteomic_table_sensi_als
+```
+
+
 
