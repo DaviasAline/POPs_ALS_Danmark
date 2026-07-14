@@ -4,7 +4,7 @@
 source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 
 
-# 1. Cox analyses among cases ----
+# 1. Cox analyses (among cases) ----
 ## 1.1 Proteome wide associations ----
 bdd_danish_cases <- bdd_danish |> filter(als == 1)
 
@@ -1490,7 +1490,7 @@ rm(cv_10ans, final_xgb_10, importance_10, best_nrounds_10,
 
 
 # 3. Logistic models including time as a predictor----
-## Proteome wide associations ----
+## 3.1 Proteome wide associations ----
 ### Logistic models (sd) ----
 main_results_interaction_sd    <- data.frame()
 
@@ -1538,7 +1538,7 @@ main_results_interaction_sd <- main_results_interaction_sd |>
   select(protein_group, explanatory, analysis, term, model, OR,   "95% CI", p_value, OR_raw, lower_CI, upper_CI, p_value_raw)
 
 
-### Table ----
+### Tables and Figures ----
 proteomic_interaction_table <- main_results_interaction_sd |>
   group_by(explanatory) |>
   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>
@@ -1578,7 +1578,7 @@ results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$proteom
 
 rm(m1, m2, sum1, sum2, combined, form1, form2, var, main_results_interaction_sd, proteomic_interaction_table)
 
-## Machine learning (XGboost) ----
+## 3.2 Machine learning (XGboost) ----
 ### preparation des données ----
 covar_xgboost <- c(proteomic, "birth_year", "sex", "follow_up_no_na_y", "smoking_2cat_i", "bmi")    # pas besoin de standardisation avec xgboost
 X_data <- bdd_danish |> 
@@ -1806,185 +1806,265 @@ rm(covar_xgboost, X_data, id_match, Y_data,
    cv_sl_2_AUC, cv_sl_2_NNLS)
 
 # 4. Linear models ----
-library(fixest) # Pour les modèles à effets fixes 
 
-## Proteome wide associations (Conditional linear model sd) ----
-### Base ----
-model1_linear_sd <- map_dfr(proteomic_sd, function(expl) {
-  formula_danish <- as.formula(paste("follow_up_bis ~", expl, "| match")) 
-  model <- feols(formula_danish, data = bdd_danish)
-  coef_mat <- summary(model)$coeftable
-  tibble(
-    model       = "base", 
-    analysis    = "main", 
-    term        = rownames(coef_mat),
-    explanatory = expl, 
-    coef        = coef_mat[, "Estimate"],
-    se          = coef_mat[, "Std. Error"], 
-    p_value     = coef_mat[, "Pr(>|t|)"]) |>
-    filter(str_starts(term, explanatory)) 
-})
+## 4.1 Proteome wide associations (linear model sd) ----
+### Linear models (sd) ----
+# Préparation des combinaisons de variables 
+analysis_grid <- expand_grid(
+  exposure = proteomic_sd,
+  outcome = "follow_up_bis")
 
-### Adjusted ----
-model2_linear_sd <- map_dfr(proteomic_sd, function(expl) {
-  formula_danish <- as.formula(paste("follow_up_bis ~", expl, "+ smoking_2cat_i + bmi | match")) 
-  model <- feols(formula_danish, data = bdd_danish)
-  coef_mat <- summary(model)$coeftable
-  tibble(
-    model       = "adjusted", 
-    analysis    = "main", 
-    term        = rownames(coef_mat),
-    explanatory = expl, 
-    coef        = coef_mat[, "Estimate"],
-    se          = coef_mat[, "Std. Error"], 
-    p_value     = coef_mat[, "Pr(>|t|)"]) |>
-    filter(str_starts(term, explanatory))
-})
-
-## Assemblage ----
-main_results <-        
-  bind_rows(
-    model1_linear_sd, model2_linear_sd) |>
+# Automatisation des modèles 
+main_results <- analysis_grid |>
   mutate(
-    Beta = coef,
-    lower_CI = coef - 1.96 * se,
-    upper_CI = coef + 1.96 * se, 
-    term = case_when(
-      str_detect(term, "_sd") ~ "Continuous", 
-      str_detect(term, "Q2") ~ "Quartile 2",
-      str_detect(term, "Q3") ~ "Quartile 3",
-      str_detect(term, "Q4") ~ "Quartile 4"), 
-    protein_group = case_when(str_detect(explanatory, 'proteomic_immun_res') ~ "Immune response", 
-                              str_detect(explanatory, 'proteomic_metabolism') ~ "Metabolism", 
-                              str_detect(explanatory, 'proteomic_neuro_explo') ~ "Neuro-exploratory"), 
-    explanatory = gsub("_sd", "", explanatory), 
-    explanatory = str_replace(explanatory, "proteomic_immun_res_|proteomic_metabolism_|proteomic_neuro_explo_", ""), 
-    Beta_raw = Beta, 
-    Beta = as.numeric(sprintf("%.1f", Beta)),
-    lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
-    upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
-    `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
-    p_value_raw = p_value, 
-    p_value_shape = ifelse(p_value_raw<0.05, "p_value<0.05", "p_value≥0.05"), 
-    p_value = ifelse(p_value < 0.01, "<0.01", number(p_value, accuracy = 0.01, decimal.mark = ".")), 
-    p_value = ifelse(p_value == "1.00", ">0.99", p_value)) |>
-  select(model, protein_group, explanatory, analysis, term,  Beta, Beta_raw, `95% CI`, p_value, p_value_raw, p_value_shape, lower_CI, upper_CI)
+    # base model main             
+    base_model = map2(exposure, outcome, function(exp, out) {
+      formule <- as.formula(paste0(out, " ~ ", exp, " + as.factor(als) + baseline_age + sex"))
+      lm(formule, data = bdd_danish) |> 
+        tidy(conf.int = TRUE) |> 
+        filter(term == exp) |> 
+        mutate(analysis = "main", 
+               model = "base")}),
+    
+    # adjusted model main
+    adjusted_model = map2(exposure, outcome, function(exp, out) {
+      formule <- as.formula(paste0(out, " ~ ", exp, "  + as.factor(als) + baseline_age + sex + smoking_2cat_i + bmi"))
+      lm(formule, data = bdd_danish) |> 
+        tidy(conf.int = TRUE) |> 
+        filter(term == exp) |> 
+        mutate(analysis = "main", 
+               model = "adjusted")}), 
+    
+    # base model sensi sex female 
+    base_model_sensi_sex_f = map2(exposure, outcome, function(exp, out) {
+      formule <- as.formula(paste0(out, " ~ ", exp, " + as.factor(als) + baseline_age"))
+      lm(formule, data = bdd_danish |> filter(sex == "Female")) |> 
+        tidy(conf.int = TRUE) |> 
+        filter(term == exp) |> 
+        mutate(analysis = "sensi_sex_f", 
+               model = "base")}),
+    
+    # adjusted model sensi sex female 
+    adjusted_model_sensi_sex_f = map2(exposure, outcome, function(exp, out) {
+      formule <- as.formula(paste0(out, " ~ ", exp, "  + as.factor(als) + baseline_age + smoking_2cat_i + bmi"))
+      lm(formule, data = bdd_danish |> filter(sex == "Female")) |> 
+        tidy(conf.int = TRUE) |> 
+        filter(term == exp) |> 
+        mutate(analysis = "sensi_sex_f", 
+               model = "adjusted")}), 
+    
+    # base model sensi sex male 
+    base_model_sensi_sex_m = map2(exposure, outcome, function(exp, out) {
+      formule <- as.formula(paste0(out, " ~ ", exp, " + as.factor(als) + baseline_age"))
+      lm(formule, data = bdd_danish |> filter(sex == "Male")) |> 
+        tidy(conf.int = TRUE) |> 
+        filter(term == exp) |> 
+        mutate(analysis = "sensi_sex_m", 
+               model = "base")}),
+    
+    # adjusted model sensi sex male 
+    adjusted_model_sensi_sex_m = map2(exposure, outcome, function(exp, out) {
+      formule <- as.formula(paste0(out, " ~ ", exp, "  + as.factor(als) + baseline_age + smoking_2cat_i + bmi"))
+      lm(formule, data = bdd_danish |> filter(sex == "Male")) |> 
+        tidy(conf.int = TRUE) |> 
+        filter(term == exp) |> 
+        mutate(analysis = "sensi_sex_m", 
+               model = "adjusted")}))
 
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide <- 
-  list(main_results = main_results)
 
-rm(model1_linear_sd, model2_linear_sd, main_results)
-
-
-## Tables and figures ----
-
-### Table proteomic (sd) - als survival (main) ----
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$proteomic_sd_ALS_table_linear <- 
-  results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$main_results |>
-  filter(model %in% c("base", "adjusted") & term == "Continuous" & analysis == "main") |>     
-  group_by(explanatory) |>                                                      
-  filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
+# Mise en forme et calcul du False Discovery Rate (FDR) 
+main_results <- main_results |>
+  pivot_longer(
+    cols = c(base_model, adjusted_model, 
+             base_model_sensi_sex_f, adjusted_model_sensi_sex_f, 
+             base_model_sensi_sex_m, adjusted_model_sensi_sex_m), 
+    names_to = NULL, 
+    values_to = "model_summary") |>
+  unnest(model_summary) |>
+  # Calcul de la q-value (FDR) par type de modèle
+  mutate(fdr_group = case_when(
+    analysis == "main" ~ "main",
+    analysis %in% c("sensi_sex_f", "sensi_sex_m") ~ "sensi_sex")) |>
+  group_by(model, fdr_group) |>
+  mutate(q.value_raw = p.adjust(p.value, method = "fdr")) |>
   ungroup() |>
-  select(model, explanatory, protein_group, term, Beta, "95% CI", "p_value") |>
-  arrange(protein_group, explanatory) |>
-  pivot_wider(names_from = "model", values_from = c("Beta", "95% CI", "p_value")) |>
-  select(protein_group, explanatory, contains("base"), contains("adjusted")) |>
-  rename("Beta" = "Beta_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base", 
-         "Beta " = "Beta_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p_value_adjusted") |>
+  select(-fdr_group) |> 
+  mutate(
+    estimate_raw = estimate, 
+    estimate = sprintf("%.2f", estimate),
+    conf.low = sprintf("%.2f", conf.low),
+    conf.high = sprintf("%.2f", conf.high),
+    p.value_raw = p.value, 
+    "p-value" = ifelse(p.value < 0.01, "<0.01", number(p.value, accuracy = 0.01, decimal.mark = ".")), 
+    "FDR-corrected p-value" = ifelse(q.value_raw < 0.01, "<0.01", number(q.value_raw, accuracy = 0.01, decimal.mark = ".")), 
+    "95% CI" = paste(conf.low, ", ", conf.high, sep = ''), 
+    is_q_significant = if_else(q.value_raw < 0.05, "FDR-corrected p-value < 0.05", "FDR-corrected p-value ≥ 0.05"),
+    is_p_significant = if_else(p.value_raw < 0.05, "p-value < 0.05", "p-value ≥ 0.05"),
+    exposure_raw = exposure, 
+    exposure_group = case_when(
+      str_detect(exposure, 'proteomic_immun_res') ~ "Immune response", 
+      str_detect(exposure, 'proteomic_metabolism') ~ "Metabolism", 
+      str_detect(exposure, 'proteomic_neuro_explo') ~ "Neuro-exploratory"), 
+    exposure = str_replace(exposure, "proteomic_metabolism_|proteomic_neuro_explo_|proteomic_immun_res_", ""),
+    exposure = str_replace(exposure, "_sd", "")) |>
+  select(
+    analysis, 
+    model,
+    exposure_group, exposure, exposure_raw,
+    outcome,
+    Beta = estimate, estimate_raw,      
+    conf.low, conf.high, "95% CI", 
+    "p-value", p.value_raw, 
+    "FDR-corrected p-value", q.value_raw, 
+    is_p_significant, is_q_significant)
+
+### Tables and Figures ----
+Follow_up_proteomic_sd_table <-                                                       # select both base and adjusted results
+  main_results |>
+  filter(analysis == "main" & 
+           model %in% c("base", "adjusted")) |>            
+  group_by(exposure) |>                                                      # select explanatory vars significant                
+  filter(any(p.value_raw < 0.05, na.rm = TRUE)) |>                     
+  ungroup() |>
+  select(model, exposure_group, exposure, Beta, "95% CI", "p-value", "FDR-corrected p-value") |>
+  pivot_wider(names_from = "model", values_from = c("Beta", "95% CI", "p-value", "FDR-corrected p-value")) |>
+  select(exposure_group, exposure, contains("base"), contains("adjusted")) |>
+  rename("Beta" = "Beta_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "FDR-corrected p-value" = "FDR-corrected p-value_base", 
+         "Beta " = "Beta_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "FDR-corrected p-value " = "FDR-corrected p-value_adjusted") |>
   flextable() |>
   add_footer_lines(
-    "1All models are matched for birth year and sex. Adjusted models further account for smoking and body mass index. 
-    2Estimated change of follow-up duration (years) from baseline to ALS diagnosis (for cases) or to end of study or death (for controls) associated with a one standard deviation increase in pre-disease plasma concentration of proteins. 
+    "1All models are adjusted for ALS status, baseline age and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated increase of follow-up duration (years from baseline to ALS diagnosis for cases, or death or end of the study for controls) associated with a one standard deviation increase in pre-disease protein levels (NPX). 
     3CI: Confidence interval.") |>
   add_header(
-    "explanatory" = "Pre-disease plasma proteins", 
-    "protein_group" = "Protein group", 
-    "Beta" = "Base models", "95% CI" = "Base models", "p-value" = "Base models", 
-    "Beta " = "Adjusted models", "95% CI " = "Adjusted models", "p-value " = "Adjusted models") |>
+    "exposure_group" = "Protein groups", 
+    "exposure" = "Pre-disease protein levels", 
+    "Beta" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", "FDR-corrected p-value" = "Base model", 
+    "Beta " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model", "FDR-corrected p-value " = "Adjusted model") |>
   theme_vanilla() |>
   merge_h(part = "header") |>
   align(align = "center", part = "all") |>
-  bold(j = "protein_group", part = "body") |>
-  align(j = "protein_group", align = "left", part = "all") |> 
-  merge_at(j = "protein_group", part = "header") |>
-  merge_v(j = "protein_group") |>
-  merge_v(j = "explanatory") |>
-  bold(j = "explanatory", part = "body") |>
-  align(j = "explanatory", align = "left", part = "all") |> 
-  merge_at(j = "explanatory", part = "header") |>
+  merge_v(j = 1:2) |>
+  bold(j = 1:2, part = "body") |>
+  align(j = 1:2, align = "left", part = "all") |> 
+  merge_at(j = "exposure_group", part = "header") |>
+  merge_at(j = "exposure", part = "header") |>
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
-### Figure proteomic - als survival - base sd (main) ----
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$proteomic_sd_ALS_base_figure_linear <- 
-  results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$main_results |>
-  filter(model == "base" & term == "Continuous" & analysis == "main") |>
-  mutate(
-    #log2Beta = log2(Beta_raw),
-    neg_log10_p = -log10(p_value_raw),
-    significance = case_when(
-      p_value_raw < 0.05 & Beta_raw > 0 ~ "Beta>0 & p-value<0.05",
-      p_value_raw < 0.05 & Beta_raw < 0 ~ "Beta<0 & p-value<0.05",
-      TRUE ~ "p-value>0.05")) |>
-  ggplot(aes(x = Beta_raw, y = neg_log10_p, color = significance)) +
-  geom_point(alpha = 0.8, size = 2) +
+Follow_up_proteomic_sd_figure <- main_results |>
+  filter(analysis == "main" & model == "adjusted") |>
+  ggplot(aes(x = estimate_raw, y = -log10(p.value_raw))) +
+  geom_point(aes(color = is_p_significant), alpha = 0.6, size = 1.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "gray60", alpha = 0.5) +
+  geom_vline(xintercept = 0, linetype = "solid", color = "gray40", alpha = 0.3) +
   geom_text_repel(
-    data = ~filter(.x, p_value_raw < 0.05),       
-    aes(label = explanatory), 
-    size = 3.5,
+    aes(label = exposure),
+    size = 2.5,
     max.overlaps = 20,
-    box.padding = 0.4,
-    point.padding = 0.2,
-    segment.color = "grey20", 
-    color = "black") +
-  scale_color_manual(
-    values = c("Beta<0 & p-value<0.05" = "blue", 
-               "p-value>0.05" = "grey70", 
-               "Beta>0 & p-value<0.05" = "red")) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
-  theme_minimal(base_size = 14) +
-  labs(
-    title = "Base linear models",
-    x = "Beta",
-    y = "-log10(p-value)", 
-    color = "")
+    segment.color = 'grey50') +
+  scale_color_manual(values = c("p-value < 0.05" = "firebrick3", 
+                                "p-value ≥ 0.05" = "black")) +
+  labs(x = "Beta", y = "-log10(p-value)") +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "bottom", 
+    legend.title = element_blank())
 
-### Figure proteomic - als survival - adjusted sd (main) ----
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$proteomic_sd_ALS_adjusted_figure_linear <- 
-  results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$main_results |>
-  filter(model == "adjusted" & term == "Continuous" & analysis == "main") |>
-  mutate(
-    #log2Beta = log2(Beta_raw),
-    neg_log10_p = -log10(p_value_raw),
-    significance = case_when(
-      p_value_raw < 0.05 & Beta_raw > 0 ~ "Beta>0 & p-value<0.05",
-      p_value_raw < 0.05 & Beta_raw < 0 ~ "Beta<0 & p-value<0.05",
-      TRUE ~ "p-value>0.05")) |>
-  ggplot(aes(x = Beta_raw, y = neg_log10_p, color = significance)) +
-  geom_point(alpha = 0.8, size = 2) +
+
+Follow_up_proteomic_sd_table_sensi_sex <-                                                       # select adjusted results
+  main_results |>
+  filter(analysis %in% c("main", "sensi_sex_f", "sensi_sex_m") & 
+           model == "adjusted") |>            
+  group_by(exposure) |>                                                      # select explanatory vars significant                
+  filter(any(p.value_raw < 0.05, na.rm = TRUE)) |>                     
+  ungroup() |>
+  select(analysis, exposure_group, exposure, Beta, "95% CI", "p-value", "FDR-corrected p-value") |>
+  pivot_wider(names_from = "analysis", values_from = c("Beta", "95% CI", "p-value", "FDR-corrected p-value")) |>
+  select(exposure_group, exposure, contains("main"), contains("sensi_sex_m"), contains("sensi_sex_f")) |>
+  rename("Beta" = "Beta_main", "95% CI" = "95% CI_main", "p-value" = "p-value_main", "FDR-corrected p-value" = "FDR-corrected p-value_main", 
+         " Beta " = "Beta_sensi_sex_m", " 95% CI " = "95% CI_sensi_sex_m", " p-value " = "p-value_sensi_sex_m", " FDR-corrected p-value " = "FDR-corrected p-value_sensi_sex_m", 
+         "Beta " = "Beta_sensi_sex_f", "95% CI " = "95% CI_sensi_sex_f", "p-value " = "p-value_sensi_sex_f", "FDR-corrected p-value " = "FDR-corrected p-value_sensi_sex_f") |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are adjusted for ALS status, baseline age and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated increase of follow-up duration (years from baseline to ALS diagnosis for cases, or death or end of the study for controls) associated with a one standard deviation increase in pre-disease protein levels (NPX). 
+    3CI: Confidence interval.") |>
+  add_header(
+    "exposure_group" = "Protein groups", 
+    "exposure" = "Pre-disease proteins levels", 
+    "Beta" = "Main analysis (N = 498)", "95% CI" = "Main analysis (N = 498)", "p-value" = "Main analysis (N = 498)", "FDR-corrected p-value" = "Main analysis (N = 498)",
+    " Beta " = "Sensitivity analysis\nMales (N = 303)", " 95% CI " = "Sensitivity analysis\nMales (N = 303)", " p-value " = "Sensitivity analysis\nMales (N = 303)", " FDR-corrected p-value " = "Sensitivity analysis\nMales (N = 303)", 
+    "Beta " = "Sensitivity analysis\nFemales (N = 195)", "95% CI " = "Sensitivity analysis\nFemales (N = 195)", "p-value " = "Sensitivity analysis\nFemales (N = 195)", "FDR-corrected p-value " = "Sensitivity analysis\nFemales (N = 195)") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  merge_v(j = 1:2) |>
+  bold(j = 1:2, part = "body") |>
+  align(j = 1:2, align = "left", part = "all") |> 
+  merge_at(j = "exposure_group", part = "header") |>
+  merge_at(j = "exposure", part = "header") |>
+  bold(i = ~ as.numeric(gsub("<", "", `FDR-corrected p-value`)) < 0.05, j = "FDR-corrected p-value", part = "body") |>
+  bold(i = ~ as.numeric(gsub("<", "", `FDR-corrected p-value `)) < 0.05, j = "FDR-corrected p-value ", part = "body") |>
+  bold(i = ~ as.numeric(gsub("<", "", ` FDR-corrected p-value `)) < 0.05, j = " FDR-corrected p-value ", part = "body") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
+
+Follow_up_proteomic_sd_figure_sensi_sex <- 
+  main_results |>
+  filter(model == "adjusted" & 
+           analysis %in% c("main",  "sensi_sex_m", "sensi_sex_f")) |>
+  mutate(analysis = fct_recode(analysis,
+                               "Main analysis\n(N = 498)" = "main",
+                               "Sensitivity analysis\nMales (N = 303)" = "sensi_sex_m", 
+                               "Sensitivity analysis\nFemales (N = 195)" = "sensi_sex_f"), 
+         analysis = fct_relevel(analysis, 
+                                "Main analysis\n(N = 498)",
+                                "Sensitivity analysis\nMales (N = 303)",
+                                "Sensitivity analysis\nFemales (N = 195)")) |>
+  
+  ggplot(aes(x = estimate_raw, y = -log10(p.value_raw))) +
+  geom_point(aes(color = is_p_significant), alpha = 0.6, size = 1.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "gray60", alpha = 0.5) +
+  geom_vline(xintercept = 0, linetype = "solid", color = "gray40", alpha = 0.3) +
   geom_text_repel(
-    data = ~filter(.x, p_value_raw < 0.05),   
-    aes(label = explanatory), 
-    size = 3.5,
+    aes(label = exposure),
+    size = 2.5,
     max.overlaps = 20,
-    box.padding = 0.4,
-    point.padding = 0.2,
-    segment.color = "grey20", 
-    color = "black") +
-  scale_color_manual(
-    values = c("Beta<0 & p-value<0.05" = "blue", "p-value>0.05" = "grey70", "Beta>0 & p-value<0.05" = "red")) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
-  theme_minimal(base_size = 14) +
-  labs(
-    title = "Adjusted linear models",
-    x = "Beta",
-    y = "-log10(p-value)", 
-    color = "")
+    segment.color = 'grey50') +
+  facet_grid(~analysis, scales = "fixed", switch = "y") +
+  scale_color_manual(values = c("p-value < 0.05" = "firebrick3", 
+                                "p-value ≥ 0.05" = "black")) +
+  labs(x = "Beta", y = "-log10(p-value)") +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "bottom", 
+    legend.title = element_blank(),
+    strip.text = element_text(face = "bold"), 
+    strip.text.y.left = element_text(angle = 0, hjust = 1), # angle = 0 rend le texte horizontal
+    strip.placement = "outside")
 
-## Machine learning with tidymodels ----
+
+
+results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide <- 
+  list(
+    main = list(main_results = main_results, 
+                Follow_up_proteomic_sd_table = Follow_up_proteomic_sd_table, 
+                Follow_up_proteomic_sd_figure = Follow_up_proteomic_sd_figure), 
+    sensi_sex = list(Follow_up_proteomic_sd_table_sensi_sex = Follow_up_proteomic_sd_table_sensi_sex, 
+                     Follow_up_proteomic_sd_figure_sensi_sex = Follow_up_proteomic_sd_figure_sensi_sex))
+
+
+rm(analysis_grid, main_results, 
+   Follow_up_proteomic_sd_table, 
+   Follow_up_proteomic_sd_figure, 
+   Follow_up_proteomic_sd_table_sensi_sex, 
+   Follow_up_proteomic_sd_figure_sensi_sex)
+
+## 4.2 Machine learning with tidymodels ----
 
 ### Préparation des fonctions ----
 # Nouvelle fonction de sélection top N dédiée à la REGRESSION (basée sur la corrélation)

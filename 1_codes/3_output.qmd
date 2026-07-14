@@ -4680,16 +4680,25 @@ plot(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$ma
 
 ## Linear models 
 ### Proteome wide associations 
+#### Main analysis 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-22
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$proteomic_sd_ALS_table_linear 
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$proteomic_sd_ALS_base_figure_linear
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$proteomic_sd_ALS_adjusted_figure_linear 
+#| column: screen-inset-right
+results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$main$Follow_up_proteomic_sd_table
+results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$main$Follow_up_proteomic_sd_figure
+```
+
+#### Sensivitity analysis: sex effect?
+```{r}
+#| label: danish-proteomic-y-to-ALS-23
+#| column: screen-inset-right
+results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$sensi_sex$Follow_up_proteomic_sd_table_sensi_sex
+results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$sensi_sex$Follow_up_proteomic_sd_figure_sensi_sex
 ```
 
 ### Machine learning (tidymodels)
 ```{r}
-#| label: danish-proteomic-y-to-ALS-23
+#| label: danish-proteomic-y-to-ALS-24
 results_proteomic_ALS_occurrence_y_to_als$main_results_linear$machine_learning$t_glmnet_reg
 
 results_proteomic_ALS_occurrence_y_to_als$main_results_linear$machine_learning$f_glmnet_reg 
