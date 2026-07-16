@@ -2,11 +2,11 @@
 # October 20, 2025 
 # Analysis of als risk depending on proteomic profile
 
-# Data loading - package loading ----
+# Data and package loading ----
 source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 
 # Data preparation ----
-## Sensi_1 ----
+## Sensi_1 
 proteomic_sensi_1 <-
   proteomic |> 
   str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1")
@@ -40,7 +40,7 @@ bdd_danish_sensi_1 <-
                                                     labels = c("Q1", "Q2", "Q3", "Q4")),
                 .names = "{.col}_quart")) 
 
-## Sensi_2 ----
+## Sensi_2 
 bdd_danish_sensi_2 <- 
   bdd_danish |>
   group_by(match) |>                                                             
@@ -63,7 +63,7 @@ bdd_danish_sensi_2 <-
     .names = "{.col}_quart_med"
   ))
 
-## Sensi_3 ----
+## Sensi_3 
 bdd_danish_sensi_3 <- 
   bdd_danish |>
   group_by(match) |>
@@ -86,8 +86,7 @@ bdd_danish_sensi_3 <-
     .names = "{.col}_quart_med"
   ))
 
-## Sensi_1_3 ----
-
+## Sensi_1_3 
 proteomic_sensi_1_3 <-
   proteomic |> 
   str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3")
@@ -127,7 +126,7 @@ bdd_danish_sensi_1_3 <-
     .names = "{.col}_quart_med"
   ))
 
-## Sensi 1_3_4 ----
+## Sensi 1_3_4 
 proteomic_sensi_1_3_4 <-
   proteomic |> 
   str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3_4")
@@ -171,7 +170,7 @@ bdd_danish_sensi_1_3_4 <-
     .names = "{.col}_quart_med"
   ))
 
-## Sensi_1_3_5 ----
+## Sensi_1_3_5 
 proteomic_sensi_1_3_5 <-
   proteomic |> 
   str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_3_5")
@@ -216,7 +215,7 @@ bdd_danish_sensi_1_3_5 <-
     .names = "{.col}_quart_med"
   ))
 
-## Sensi_6 ----
+## Sensi_6 
 bdd_danish_sensi_6 <- bdd_danish |>                                             # just for visualisation of follow up distribution 
   group_by(match) |>
   mutate(follow_up_years = follow_up/12, 
@@ -228,8 +227,7 @@ bdd_danish_sensi_6 <- bdd_danish |>                                             
       breaks = quantile(follow_up_ter, probs = c(0, 1/3, 2/3, 1), na.rm = TRUE),
       include.lowest = TRUE))
 
-## Sensi_1_6 ----
-
+## Sensi_1_6 
 bdd_danish_sensi_1_6 <- 
   bdd_danish  |>
   mutate(
@@ -257,7 +255,7 @@ proteomic_sd_sensi_1_6 <-
   proteomic_sd |> 
   str_replace("proteomic_neuro_explo_NEFL_sd", "proteomic_neuro_explo_NEFL_sd_sensi_1_6")
 
-## Sensi_1_7_female ----
+## Sensi_1_7_female 
 proteomic_sensi_1_7_female <-
   proteomic |> 
   str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_7_female")
@@ -296,7 +294,7 @@ bdd_danish_sensi_1_7_female <-
     },
     .names = "{.col}_quart_med"))
 
-## Sensi_1_7_male ----
+## Sensi_1_7_male 
 proteomic_sensi_1_7_male <-
   proteomic |> 
   str_replace("proteomic_neuro_explo_NEFL", "proteomic_neuro_explo_NEFL_sensi_1_7_male")
@@ -338,7 +336,7 @@ bdd_danish_sensi_1_7_male <-
 
 
 
-# Effects of the covariates on ALS ----
+# Effects of the covariates on ALS risk ----
 covar <- tbl_merge(
   tbls = list(
     tbl_1 = bdd_danish |>
@@ -361,8 +359,9 @@ covar <- tbl_merge(
   tab_spanner = c("**Univariate**", "**Adjusted**"))
 
 
-# Main analysis ----
-## model 1 sd ----
+# PART 1.1: are the pre disease proteins associated with ALS risk? ----
+## Main analyses ----
+### model 1 sd ----
 model1_sd <- data.frame(explanatory = character(),
                            term = integer(),
                            OR = numeric(),
@@ -404,7 +403,7 @@ model1_sd <- model1_sd |>
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
-## model 1 quartiles ----
+### model 1 quartiles ----
 model1_quart <- data.frame(explanatory = character(),
                            term = integer(),
                            OR = numeric(),
@@ -495,7 +494,7 @@ for (var in proteomic_quart_med) {
 }
 rm(var, test, formula, p_value_trend)
 
-## model 1 gams ----
+### model 1 gams ----
 model1_gam <- list()
 
 for (var in proteomic) {
@@ -508,7 +507,7 @@ for (var in proteomic) {
 
 rm(var, formula, model, model_summary)
 
-## model 2 sd ----
+### model 2 sd ----
 model2_sd <- data.frame(explanatory = character(),
                            term = integer(),
                            OR = numeric(),
@@ -545,7 +544,7 @@ model2_sd <- model2_sd |>
   select(explanatory, model, everything())
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
-## model 2 quartiles ----
+### model 2 quartiles ----
 model2_quart <- data.frame(explanatory = character(),
                            term = integer(),
                            OR = numeric(),
@@ -633,7 +632,7 @@ for (var in proteomic_quart_med) {
 rm(var, test, formula, p_value_trend)
 
 
-## model 2 gams ----
+### model 2 gams ----
 model2_gam <- list()
 
 for (var in proteomic) {
@@ -647,15 +646,15 @@ for (var in proteomic) {
 rm(var, formula, model, model_summary)
 
 
-# Sensi 1 - Removing NfL outlier ----
+## Sensitivity analysis 1 removing NfL outlier ----
 ### model 1 sd ----
 model1_sd_sensi_1 <- data.frame(explanatory = character(),
-                        term = integer(),
-                        OR = numeric(),
-                        lower_CI = numeric(),
-                        upper_CI = numeric(),
-                        p_value = numeric(),
-                        stringsAsFactors = FALSE)
+                                term = integer(),
+                                OR = numeric(),
+                                lower_CI = numeric(),
+                                upper_CI = numeric(),
+                                p_value = numeric(),
+                                stringsAsFactors = FALSE)
 
 for (var in proteomic_sd_sensi_1) {
   
@@ -672,11 +671,11 @@ for (var in proteomic_sd_sensi_1) {
   term <- model_summary$term
   
   model1_sd_sensi_1 <- rbind(model1_sd_sensi_1, data.frame(explanatory = var,
-                                           term = term, 
-                                           OR = OR,
-                                           lower_CI = lower_CI,
-                                           upper_CI = upper_CI,
-                                           p_value = p_value))
+                                                           term = term, 
+                                                           OR = OR,
+                                                           lower_CI = lower_CI,
+                                                           upper_CI = upper_CI,
+                                                           p_value = p_value))
 }
 
 model1_sd_sensi_1 <- model1_sd_sensi_1 |> 
@@ -693,7 +692,7 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 
-## model 1 quartiles ----
+### model 1 quartiles ----
 model1_quart_sensi_1 <- data.frame(explanatory = character(),
                                    term = integer(),
                                    OR = numeric(),
@@ -787,9 +786,9 @@ heterogeneity_base_sensi_1 <- map_dfr(
 
 #### trend test 
 trend_base_sensi_1 <- data.frame(explanatory = character(),
-                                model = factor(), 
-                                p_value_trend = numeric(), 
-                                stringsAsFactors = FALSE)
+                                 model = factor(), 
+                                 p_value_trend = numeric(), 
+                                 stringsAsFactors = FALSE)
 
 for (var in proteomic_quart_med_sensi_1) {
   
@@ -800,10 +799,10 @@ for (var in proteomic_quart_med_sensi_1) {
   p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
   
   trend_base_sensi_1 <- rbind(trend_base_sensi_1, 
-                             data.frame(explanatory = var,
-                                        model = "base", 
-                                        analysis = "sensi_1",
-                                        p_value_trend = p_value_trend))
+                              data.frame(explanatory = var,
+                                         model = "base", 
+                                         analysis = "sensi_1",
+                                         p_value_trend = p_value_trend))
 }
 rm(var, test, formula, p_value_trend)
 
@@ -839,7 +838,7 @@ for (var in proteomic_sd_sensi_1) {
   formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
   
   model <- clogit(formula, data = bdd_danish_sensi_1)
-
+  
   model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
   
   OR <- exp(model_summary$estimate)
@@ -870,14 +869,14 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 
-## model 2 quartiles ----
+### model 2 quartiles ----
 model2_quart_sensi_1 <- data.frame(explanatory = character(),
-                                  term = integer(),
-                                  OR = numeric(),
-                                  lower_CI = numeric(),
-                                  upper_CI = numeric(),
-                                  p_value = numeric(),
-                                  stringsAsFactors = FALSE)
+                                   term = integer(),
+                                   OR = numeric(),
+                                   lower_CI = numeric(),
+                                   upper_CI = numeric(),
+                                   p_value = numeric(),
+                                   stringsAsFactors = FALSE)
 
 for (var in proteomic_quart_sensi_1) {
   
@@ -890,11 +889,11 @@ for (var in proteomic_quart_sensi_1) {
   p_value <- model_summary$p.value
   term <- model_summary$term
   model2_quart_sensi_1 <- rbind(model2_quart_sensi_1, data.frame(explanatory = var,
-                                                               term = term, 
-                                                               OR = OR,
-                                                               lower_CI = lower_CI,
-                                                               upper_CI = upper_CI,
-                                                               p_value = p_value))
+                                                                 term = term, 
+                                                                 OR = OR,
+                                                                 lower_CI = lower_CI,
+                                                                 upper_CI = upper_CI,
+                                                                 p_value = p_value))
 }
 
 model2_quart_sensi_1 <- model2_quart_sensi_1 |> 
@@ -959,9 +958,9 @@ heterogeneity_adjusted_sensi_1 <- map_dfr(
 ### trend tests
 
 trend_adjusted_sensi_1 <- data.frame(explanatory = character(),
-                                    model = factor(), 
-                                    p_value_trend = numeric(), 
-                                    stringsAsFactors = FALSE)
+                                     model = factor(), 
+                                     p_value_trend = numeric(), 
+                                     stringsAsFactors = FALSE)
 
 for (var in proteomic_quart_med_sensi_1) {
   
@@ -970,10 +969,10 @@ for (var in proteomic_quart_med_sensi_1) {
   p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
   
   trend_adjusted_sensi_1 <- rbind(trend_adjusted_sensi_1, 
-                                 data.frame(explanatory = var,
-                                            model = "adjusted", 
-                                            analysis = "sensi_1",
-                                            p_value_trend = p_value_trend))
+                                  data.frame(explanatory = var,
+                                             model = "adjusted", 
+                                             analysis = "sensi_1",
+                                             p_value_trend = p_value_trend))
 }
 rm(var, test, formula, p_value_trend)
 
@@ -994,9 +993,723 @@ for (var in proteomic_sensi_1) {
 rm(var, formula, model, model_summary)
 
 
-
-# Sensi 2 - Filtering to cases and their controls with follow-up < 5 years ----
+## Sensitivity analysis 1 + 7 removing the oulier for NfL + filtering to females ----
 ### model 1 sd ----
+
+model1_sd_sensi_1_7_female <- data.frame(explanatory = character(),
+                                         term = integer(),
+                                         OR = numeric(),
+                                         lower_CI = numeric(),
+                                         upper_CI = numeric(),
+                                         p_value = numeric(),
+                                         stringsAsFactors = FALSE)
+
+for (var in proteomic_sd_sensi_1_7_female) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_1_7_female)
+  
+  model_summary <- tidy(model)
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model1_sd_sensi_1_7_female <- rbind(model1_sd_sensi_1_7_female, data.frame(explanatory = var,
+                                                                             term = term, 
+                                                                             OR = OR,
+                                                                             lower_CI = lower_CI,
+                                                                             upper_CI = upper_CI,
+                                                                             p_value = p_value))
+}
+
+model1_sd_sensi_1_7_female <- model1_sd_sensi_1_7_female |> 
+  mutate(
+    term = case_when(
+      grepl("_sd", term) ~ "Continuous",
+      TRUE ~ NA_character_),
+    model = "base", 
+    analysis = "sensi_1_7_female") |>
+  select(explanatory, model, everything())
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
+
+
+### model 1 quartiles ----
+
+model1_quart_sensi_1_7_female <- data.frame(explanatory = character(),
+                                            term = integer(),
+                                            OR = numeric(),
+                                            lower_CI = numeric(),
+                                            upper_CI = numeric(),
+                                            p_value = numeric(),
+                                            stringsAsFactors = FALSE)
+
+for (var in proteomic_quart_sensi_1_7_female) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_1_7_female)
+  
+  model_summary <- tidy(model)
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model1_quart_sensi_1_7_female <- rbind(model1_quart_sensi_1_7_female, data.frame(explanatory = var,
+                                                                                   term = term, 
+                                                                                   OR = OR,
+                                                                                   lower_CI = lower_CI,
+                                                                                   upper_CI = upper_CI,
+                                                                                   p_value = p_value))
+}
+
+model1_quart_sensi_1_7_female <- model1_quart_sensi_1_7_female |> 
+  mutate(
+    term = case_when(
+      grepl("_quart_sensi_1_7_femaleQ2", term) ~ "Quartile 2",
+      grepl("_quart_sensi_1_7_femaleQ3", term) ~ "Quartile 3",
+      grepl("_quart_sensi_1_7_femaleQ4", term) ~ "Quartile 4",
+      grepl("_quartQ2", term) ~ "Quartile 2",
+      grepl("_quartQ3", term) ~ "Quartile 3",
+      grepl("_quartQ4", term) ~ "Quartile 4",
+      TRUE ~ NA_character_),
+    model = "base", 
+    analysis = "sensi_1_7_female") |>
+  select(explanatory, model, everything())
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
+
+
+#### heterogeneity test 
+heterogeneity_base_sensi_1_7_female <- map_dfr(
+  proteomic_quart_sensi_1_7_female,
+  function(var) {
+    
+    data_sub <- bdd_danish_sensi_1_7_female |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL_sensi_1_7_female")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, match, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "base",
+        analysis = "sensi_1_7_female",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    test_1 <- clogit(
+      als ~ strata(match),
+      data = data_sub)
+    
+    test_2 <- clogit(
+      reformulate(
+        termlabels = c(var, "strata(match)"),
+        response = "als"),
+      data = data_sub)
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "base",
+      analysis = "sensi_1_7_female",
+      p_value_heterogeneity = p_lr)
+  })
+
+
+
+#### trend test 
+trend_base_sensi_1_7_female <- data.frame(explanatory = character(),
+                                          model = factor(), 
+                                          p_value_trend = numeric(), 
+                                          stringsAsFactors = FALSE)
+
+for (var in proteomic_quart_med_sensi_1_7_female) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  test <- 
+    clogit(formula, data = bdd_danish_sensi_1_7_female) |>
+    summary() 
+  p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
+  
+  trend_base_sensi_1_7_female <- rbind(trend_base_sensi_1_7_female, 
+                                       data.frame(explanatory = var,
+                                                  model = "base", 
+                                                  analysis = "sensi_1_7_female",
+                                                  p_value_trend = p_value_trend))
+}
+rm(var, test, formula, p_value_trend)
+
+
+
+
+
+### model 1 gams ---- 
+model1_gam_sensi_1_7_female <- list()
+
+for (var in proteomic_sensi_1_7_female) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + baseline_age"))
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_7_female)
+  model_summary <- summary(model)
+  model1_gam_sensi_1_7_female[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
+
+
+
+### model 2 sd ----
+model2_sd_sensi_1_7_female <- data.frame(explanatory = character(),
+                                         term = integer(),
+                                         OR = numeric(),
+                                         lower_CI = numeric(),
+                                         upper_CI = numeric(),
+                                         p_value = numeric(),
+                                         stringsAsFactors = FALSE)
+
+for (var in proteomic_sd_sensi_1_7_female) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_1_7_female)
+  
+  model_summary <- tidy(model)  |> filter(grepl(paste0("^", var), term))
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model2_sd_sensi_1_7_female <- rbind(model2_sd_sensi_1_7_female, data.frame(explanatory = var,
+                                                                             term = term, 
+                                                                             OR = OR,
+                                                                             lower_CI = lower_CI,
+                                                                             upper_CI = upper_CI,
+                                                                             p_value = p_value))
+}
+
+model2_sd_sensi_1_7_female <- model2_sd_sensi_1_7_female |> 
+  mutate(
+    term = case_when(
+      grepl("_sd", term) ~ "Continuous",
+      TRUE ~ NA_character_),
+    model = "adjusted", 
+    analysis = "sensi_1_7_female") |>
+  select(explanatory, model, everything())
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
+
+
+
+### model 2 quartiles ----
+model2_quart_sensi_1_7_female <- data.frame(explanatory = character(),
+                                            term = integer(),
+                                            OR = numeric(),
+                                            lower_CI = numeric(),
+                                            upper_CI = numeric(),
+                                            p_value = numeric(),
+                                            stringsAsFactors = FALSE)
+
+for (var in proteomic_quart_sensi_1_7_female) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  model <- clogit(formula, data = bdd_danish_sensi_1_7_female)
+  model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  model2_quart_sensi_1_7_female <- rbind(model2_quart_sensi_1_7_female, data.frame(explanatory = var,
+                                                                                   term = term, 
+                                                                                   OR = OR,
+                                                                                   lower_CI = lower_CI,
+                                                                                   upper_CI = upper_CI,
+                                                                                   p_value = p_value))
+}
+
+model2_quart_sensi_1_7_female <- model2_quart_sensi_1_7_female |> 
+  mutate(
+    term = case_when(
+      grepl("_quart_sensi_1_7_femaleQ2", term) ~ "Quartile 2",
+      grepl("_quart_sensi_1_7_femaleQ3", term) ~ "Quartile 3",
+      grepl("_quart_sensi_1_7_femaleQ4", term) ~ "Quartile 4",
+      grepl("_quartQ2", term) ~ "Quartile 2",
+      grepl("_quartQ3", term) ~ "Quartile 3",
+      grepl("_quartQ4", term) ~ "Quartile 4",
+      TRUE ~ NA_character_),
+    model = "adjusted", 
+    analysis = "sensi_1_7_female") |>
+  select(explanatory, model, everything())
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
+
+### heterogeneity tests
+heterogeneity_adjusted_sensi_1_7_female <- map_dfr(
+  proteomic_quart_sensi_1_7_female,
+  function(var) {
+    
+    data_sub <- bdd_danish_sensi_1_7_female |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL_sensi_1_7_female")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, match, smoking_2cat_i, bmi, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "adjusted",
+        analysis = "sensi_1_7_female",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    test_1 <- clogit(
+      als ~ strata(match) + smoking_2cat_i + bmi,
+      data = data_sub)
+    
+    test_2 <- clogit(
+      reformulate(
+        termlabels = c(var, "strata(match)", "smoking_2cat_i", "bmi"),
+        response = "als"),
+      data = data_sub)
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "adjusted",
+      analysis = "sensi_1_7_female",
+      p_value_heterogeneity = p_lr)
+  })
+
+
+
+### trend tests
+
+trend_adjusted_sensi_1_7_female <- data.frame(explanatory = character(),
+                                              model = factor(), 
+                                              p_value_trend = numeric(), 
+                                              stringsAsFactors = FALSE)
+
+for (var in proteomic_quart_med_sensi_1_7_female) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  test <- clogit(formula, data = bdd_danish_sensi_1_7_female) |> summary()
+  p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
+  
+  trend_adjusted_sensi_1_7_female <- rbind(trend_adjusted_sensi_1_7_female, 
+                                           data.frame(explanatory = var,
+                                                      model = "adjusted", 
+                                                      analysis = "sensi_1_7_female",
+                                                      p_value_trend = p_value_trend))
+}
+rm(var, test, formula, p_value_trend)
+
+
+
+### model 2 gams ---- 
+
+model2_gam_sensi_1_7_female <- list()
+
+for (var in proteomic_sensi_1_7_female) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + baseline_age + smoking_2cat_i + bmi"))
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_7_female)
+  model_summary <- summary(model)
+  model2_gam_sensi_1_7_female[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
+
+
+
+
+## Sensitivity analysis 1 + 7 removing the oulier for NfL + filtering to male ----
+### model 1 sd ----
+
+model1_sd_sensi_1_7_male <- data.frame(explanatory = character(),
+                                       term = integer(),
+                                       OR = numeric(),
+                                       lower_CI = numeric(),
+                                       upper_CI = numeric(),
+                                       p_value = numeric(),
+                                       stringsAsFactors = FALSE)
+
+for (var in proteomic_sd_sensi_1_7_male) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_1_7_male)
+  
+  model_summary <- tidy(model)
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model1_sd_sensi_1_7_male <- rbind(model1_sd_sensi_1_7_male, data.frame(explanatory = var,
+                                                                         term = term, 
+                                                                         OR = OR,
+                                                                         lower_CI = lower_CI,
+                                                                         upper_CI = upper_CI,
+                                                                         p_value = p_value))
+}
+
+model1_sd_sensi_1_7_male <- model1_sd_sensi_1_7_male |> 
+  mutate(
+    term = case_when(
+      grepl("_sd", term) ~ "Continuous",
+      TRUE ~ NA_character_),
+    model = "base", 
+    analysis = "sensi_1_7_male") |>
+  select(explanatory, model, everything())
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
+
+
+### model 1 quartiles ----
+
+model1_quart_sensi_1_7_male <- data.frame(explanatory = character(),
+                                          term = integer(),
+                                          OR = numeric(),
+                                          lower_CI = numeric(),
+                                          upper_CI = numeric(),
+                                          p_value = numeric(),
+                                          stringsAsFactors = FALSE)
+
+for (var in proteomic_quart_sensi_1_7_male) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_1_7_male)
+  
+  model_summary <- tidy(model)
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model1_quart_sensi_1_7_male <- rbind(model1_quart_sensi_1_7_male, data.frame(explanatory = var,
+                                                                               term = term, 
+                                                                               OR = OR,
+                                                                               lower_CI = lower_CI,
+                                                                               upper_CI = upper_CI,
+                                                                               p_value = p_value))
+}
+
+model1_quart_sensi_1_7_male <- model1_quart_sensi_1_7_male |> 
+  mutate(
+    term = case_when(
+      grepl("_quart_sensi_1_7_maleQ2", term) ~ "Quartile 2",
+      grepl("_quart_sensi_1_7_maleQ3", term) ~ "Quartile 3",
+      grepl("_quart_sensi_1_7_maleQ4", term) ~ "Quartile 4",
+      grepl("_quartQ2", term) ~ "Quartile 2",
+      grepl("_quartQ3", term) ~ "Quartile 3",
+      grepl("_quartQ4", term) ~ "Quartile 4",
+      TRUE ~ NA_character_),
+    model = "base", 
+    analysis = "sensi_1_7_male") |>
+  select(explanatory, model, everything())
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
+
+
+#### heterogeneity test 
+heterogeneity_base_sensi_1_7_male <- map_dfr(
+  proteomic_quart_sensi_1_7_male,
+  function(var) {
+    
+    data_sub <- bdd_danish_sensi_1_7_male |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL_sensi_1_7_male")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, match, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "base",
+        analysis = "sensi_1_7_male",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    test_1 <- clogit(
+      als ~ strata(match),
+      data = data_sub)
+    
+    test_2 <- clogit(
+      reformulate(
+        termlabels = c(var, "strata(match)"),
+        response = "als"),
+      data = data_sub)
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "base",
+      analysis = "sensi_1_7_male",
+      p_value_heterogeneity = p_lr)
+  })
+
+
+
+#### trend test 
+trend_base_sensi_1_7_male <- data.frame(explanatory = character(),
+                                        model = factor(), 
+                                        p_value_trend = numeric(), 
+                                        stringsAsFactors = FALSE)
+
+for (var in proteomic_quart_med_sensi_1_7_male) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  test <- 
+    clogit(formula, data = bdd_danish_sensi_1_7_male) |>
+    summary() 
+  p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
+  
+  trend_base_sensi_1_7_male <- rbind(trend_base_sensi_1_7_male, 
+                                     data.frame(explanatory = var,
+                                                model = "base", 
+                                                analysis = "sensi_1_7_male",
+                                                p_value_trend = p_value_trend))
+}
+rm(var, test, formula, p_value_trend)
+
+
+
+
+
+### model 1 gams ---- 
+
+model1_gam_sensi_1_7_male <- list()
+
+for (var in proteomic_sensi_1_7_male) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + baseline_age"))
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_7_male)
+  model_summary <- summary(model)
+  model1_gam_sensi_1_7_male[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
+
+
+
+
+### model 2 sd ----
+
+model2_sd_sensi_1_7_male <- data.frame(explanatory = character(),
+                                       term = integer(),
+                                       OR = numeric(),
+                                       lower_CI = numeric(),
+                                       upper_CI = numeric(),
+                                       p_value = numeric(),
+                                       stringsAsFactors = FALSE)
+
+for (var in proteomic_sd_sensi_1_7_male) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  
+  model <- clogit(formula, data = bdd_danish_sensi_1_7_male)
+  
+  model_summary <- tidy(model)  |> filter(grepl(paste0("^", var), term))
+  
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  
+  model2_sd_sensi_1_7_male <- rbind(model2_sd_sensi_1_7_male, data.frame(explanatory = var,
+                                                                         term = term, 
+                                                                         OR = OR,
+                                                                         lower_CI = lower_CI,
+                                                                         upper_CI = upper_CI,
+                                                                         p_value = p_value))
+}
+
+model2_sd_sensi_1_7_male <- model2_sd_sensi_1_7_male |> 
+  mutate(
+    term = case_when(
+      grepl("_sd", term) ~ "Continuous",
+      TRUE ~ NA_character_),
+    model = "adjusted", 
+    analysis = "sensi_1_7_male") |>
+  select(explanatory, model, everything())
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
+
+
+
+### model 2 quartiles ----
+model2_quart_sensi_1_7_male <- data.frame(explanatory = character(),
+                                          term = integer(),
+                                          OR = numeric(),
+                                          lower_CI = numeric(),
+                                          upper_CI = numeric(),
+                                          p_value = numeric(),
+                                          stringsAsFactors = FALSE)
+
+for (var in proteomic_quart_sensi_1_7_male) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  model <- clogit(formula, data = bdd_danish_sensi_1_7_male)
+  model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
+  OR <- exp(model_summary$estimate)
+  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
+  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
+  p_value <- model_summary$p.value
+  term <- model_summary$term
+  model2_quart_sensi_1_7_male <- rbind(model2_quart_sensi_1_7_male, data.frame(explanatory = var,
+                                                                               term = term, 
+                                                                               OR = OR,
+                                                                               lower_CI = lower_CI,
+                                                                               upper_CI = upper_CI,
+                                                                               p_value = p_value))
+}
+
+model2_quart_sensi_1_7_male <- model2_quart_sensi_1_7_male |> 
+  mutate(
+    term = case_when(
+      grepl("_quart_sensi_1_7_maleQ2", term) ~ "Quartile 2",
+      grepl("_quart_sensi_1_7_maleQ3", term) ~ "Quartile 3",
+      grepl("_quart_sensi_1_7_maleQ4", term) ~ "Quartile 4",
+      grepl("_quartQ2", term) ~ "Quartile 2",
+      grepl("_quartQ3", term) ~ "Quartile 3",
+      grepl("_quartQ4", term) ~ "Quartile 4",
+      TRUE ~ NA_character_),
+    model = "adjusted", 
+    analysis = "sensi_1_7_male") |>
+  select(explanatory, model, everything())
+rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
+
+
+
+### heterogeneity tests
+
+heterogeneity_adjusted_sensi_1_7_male <- map_dfr(
+  proteomic_quart_sensi_1_7_male,
+  function(var) {
+    
+    data_sub <- bdd_danish_sensi_1_7_male |>
+      filter(
+        if (var == "proteomic_neuro_explo_NEFL_sensi_1_7_male")
+          match != 159
+        else
+          TRUE) |>
+      
+      filter(
+        complete.cases(
+          pick(als, match, smoking_2cat_i, bmi, all_of(var))))
+    
+    if (nrow(data_sub) == 0) {
+      return(tibble(
+        explanatory = var,
+        model = "adjusted",
+        analysis = "sensi_1_7_male",
+        p_value_heterogeneity = NA_real_))
+    }
+    
+    test_1 <- clogit(
+      als ~ strata(match) + smoking_2cat_i + bmi,
+      data = data_sub)
+    
+    test_2 <- clogit(
+      reformulate(
+        termlabels = c(var, "strata(match)", "smoking_2cat_i", "bmi"),
+        response = "als"),
+      data = data_sub)
+    
+    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
+    
+    tibble(
+      explanatory = var,
+      model = "adjusted",
+      analysis = "sensi_1_7_male",
+      p_value_heterogeneity = p_lr)
+  })
+
+
+
+
+### trend tests
+
+trend_adjusted_sensi_1_7_male <- data.frame(explanatory = character(),
+                                            model = factor(), 
+                                            p_value_trend = numeric(), 
+                                            stringsAsFactors = FALSE)
+
+for (var in proteomic_quart_med_sensi_1_7_male) {
+  
+  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
+  test <- clogit(formula, data = bdd_danish_sensi_1_7_male) |> summary()
+  p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
+  
+  trend_adjusted_sensi_1_7_male <- rbind(trend_adjusted_sensi_1_7_male, 
+                                         data.frame(explanatory = var,
+                                                    model = "adjusted", 
+                                                    analysis = "sensi_1_7_male",
+                                                    p_value_trend = p_value_trend))
+}
+rm(var, test, formula, p_value_trend)
+
+
+
+
+
+### model 2 gams ---- 
+
+model2_gam_sensi_1_7_male <- list()
+
+for (var in proteomic_sensi_1_7_male) {
+  
+  formula <- as.formula(paste("als ~ s(", var, ") + baseline_age + smoking_2cat_i + bmi"))
+  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_7_male)
+  model_summary <- summary(model)
+  model2_gam_sensi_1_7_male[[var]] <- model_summary
+}
+
+rm(var, formula, model, model_summary)
+
+
+
+
+
+# PART 1.2: are the pre disease proteins predicting ALS risk? ----
+## Super learner ----
+# cf specific code 2.6.2_analyses_proteomic_ALS_occurrence_SL
+
+## Tidymodels ----
+# cf specific code 2.6.3_analyses_proteomic_ALS_occurrence_tidymodels
+
+
+# PART 2.1: Is the follow up duration modifying the associations? ----
+## Main analysis filtering to cases and their controls with follow-up < 5 years ----
+#### model 1 sd ----
 model1_sd_sensi_2 <- data.frame(explanatory = character(),
                                   term = integer(),
                                   OR = numeric(),
@@ -1038,7 +1751,7 @@ model1_sd_sensi_2 <- model1_sd_sensi_2 |>
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
-## model 1 quartiles ----
+#### model 1 quartiles ----
 model1_quart_sensi_2 <- data.frame(explanatory = character(),
                                      term = integer(),
                                      OR = numeric(),
@@ -1136,9 +1849,7 @@ rm(var, test, formula, p_value_trend)
 
 
 
-### model 1 gams ---- 
-
-
+#### model 1 gams ---- 
 model1_gam_sensi_2 <- list()
 
 for (var in proteomic) {
@@ -1153,9 +1864,7 @@ rm(var, formula, model, model_summary)
 
 
 
-### model 2 sd ----
-
-
+#### model 2 sd ----
 model2_sd_sensi_2 <- data.frame(explanatory = character(),
                                   term = integer(),
                                   OR = numeric(),
@@ -1198,7 +1907,7 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 
-## model 2 quartiles ----
+#### model 2 quartiles ----
 model2_quart_sensi_2 <- data.frame(explanatory = character(),
                                      term = integer(),
                                      OR = numeric(),
@@ -1292,7 +2001,7 @@ rm(var, test, formula, p_value_trend)
 
 
 
-### model 2 gams ---- 
+#### model 2 gams ---- 
 
 model2_gam_sensi_2 <- list()
 
@@ -1307,9 +2016,8 @@ for (var in proteomic) {
 rm(var, formula, model, model_summary)
 
 
-# Sensi 3 - Filtering to cases and their controls with follow_up > 5 years ----
-### model 1 sd ----
-
+## Main analysis filtering to cases and their controls with follow_up > 5 years ----
+#### model 1 sd ----
 model1_sd_sensi_3 <- data.frame(explanatory = character(),
                                 term = integer(),
                                 OR = numeric(),
@@ -1351,8 +2059,7 @@ model1_sd_sensi_3 <- model1_sd_sensi_3 |>
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
-## model 1 quartiles ----
-
+#### model 1 quartiles ----
 model1_quart_sensi_3 <- data.frame(explanatory = character(),
                                    term = integer(),
                                    OR = numeric(),
@@ -1445,7 +2152,7 @@ rm(var, test, formula, p_value_trend)
 
 
 
-### model 1 gams ----
+#### model 1 gams ----
 model1_gam_sensi_3 <- list()
 
 for (var in proteomic) {
@@ -1461,7 +2168,7 @@ rm(var, formula, model, model_summary)
 
 
 
-### model 2 sd ----
+#### model 2 sd ----
 
 model2_sd_sensi_3 <- data.frame(explanatory = character(),
                                 term = integer(),
@@ -1504,7 +2211,7 @@ model2_sd_sensi_3 <- model2_sd_sensi_3 |>
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
-## model 2 quartiles ----
+#### model 2 quartiles ----
 model2_quart_sensi_3 <- data.frame(explanatory = character(),
                                    term = integer(),
                                    OR = numeric(),
@@ -1595,7 +2302,7 @@ rm(var, test, formula, p_value_trend)
 
 
 
-### model 2 gams ----
+#### model 2 gams ----
 model2_gam_sensi_3 <- list()
 
 for (var in proteomic) {
@@ -1610,7 +2317,7 @@ rm(var, formula, model, model_summary)
 
 
 
-# Sensi 1 + sensi 3 - Removing the oulier for NfL + filtering cases and their controls with follow_up > 5 years ----
+## Sensitivity analysis 1 removing the oulier for NfL and filtering cases and their controls with follow_up > 5 years ----
 ### model 1 sd ----
 
 model1_sd_sensi_1_3 <- data.frame(explanatory = character(),
@@ -1654,7 +2361,7 @@ model1_sd_sensi_1_3 <- model1_sd_sensi_1_3 |>
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
-## model 1 quartiles ----
+### model 1 quartiles ----
 
 model1_quart_sensi_1_3 <- data.frame(explanatory = character(),
                                      term = integer(),
@@ -1769,9 +2476,6 @@ for (var in proteomic_quart_med_sensi_1_3) {
 rm(var, test, formula, p_value_trend)
 
 
-
-
-
 ### model 1 gams ---- 
 
 model1_gam_sensi_1_3 <- list()
@@ -1787,10 +2491,7 @@ for (var in proteomic_sensi_1_3) {
 rm(var, formula, model, model_summary)
 
 
-
-
 ### model 2 sd ----
-
 model2_sd_sensi_1_3 <- data.frame(explanatory = character(),
                                   term = integer(),
                                   OR = numeric(),
@@ -1833,7 +2534,7 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 
-## model 2 quartiles ----
+### model 2 quartiles ----
 model2_quart_sensi_1_3 <- data.frame(explanatory = character(),
                                      term = integer(),
                                      OR = numeric(),
@@ -1945,7 +2646,6 @@ rm(var, test, formula, p_value_trend)
 
 
 ### model 2 gams ---- 
-
 model2_gam_sensi_1_3 <- list()
 
 for (var in proteomic_sensi_1_3) {
@@ -1961,8 +2661,8 @@ rm(var, formula, model, model_summary)
 
 
 
-# Sensi 1 + sensi 3 + sensi 4 - Removing NfL outlier + filtering cases and their controls with follow- up < 5 years + filtering follow-up <= 50%----
-### model 1 sd ----
+## Sensitivity analysis 1 removing the oulier for NfL and filtering cases and their controls with follow- up > 5 years + filtering follow-up <= 50%----
+#### model 1 sd ----
 
 model1_sd_sensi_1_3_4 <- data.frame(explanatory = character(),
                                     term = integer(),
@@ -2005,8 +2705,7 @@ model1_sd_sensi_1_3_4 <- model1_sd_sensi_1_3_4 |>
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
-## model 1 quartiles ----
-
+#### model 1 quartiles ----
 model1_quart_sensi_1_3_4 <- data.frame(explanatory = character(),
                                        term = integer(),
                                        OR = numeric(),
@@ -2123,7 +2822,7 @@ rm(var, test, formula, p_value_trend)
 
 
 
-### model 1 gams ---- 
+#### model 1 gams ---- 
 
 model1_gam_sensi_1_3_4 <- list()
 
@@ -2140,7 +2839,7 @@ rm(var, formula, model, model_summary)
 
 
 
-### model 2 sd ----
+#### model 2 sd ----
 
 model2_sd_sensi_1_3_4 <- data.frame(explanatory = character(),
                                     term = integer(),
@@ -2184,7 +2883,7 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 
-## model 2 quartiles ----
+#### model 2 quartiles ----
 model2_quart_sensi_1_3_4 <- data.frame(explanatory = character(),
                                        term = integer(),
                                        OR = numeric(),
@@ -2296,7 +2995,7 @@ rm(var, test, formula, p_value_trend)
 
 
 
-### model 2 gams ---- 
+#### model 2 gams ---- 
 
 model2_gam_sensi_1_3_4 <- list()
 
@@ -2312,9 +3011,8 @@ rm(var, formula, model, model_summary)
 
 
 
-# Sensi 1 + sensi 3 + sensi 5 - Removing NfL outlier + filtering cases and their controls with follow-up < 5 years + filtering follow-up > 50%----
-### model 1 sd ----
-
+## Sensitivity analysis filtering cases and their controls with follow-up > 5 years + filtering follow-up > 50%----
+#### model 1 sd ----
 model1_sd_sensi_1_3_5 <- data.frame(explanatory = character(),
                                     term = integer(),
                                     OR = numeric(),
@@ -2356,7 +3054,7 @@ model1_sd_sensi_1_3_5 <- model1_sd_sensi_1_3_5 |>
 rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
-## model 1 quartiles ----
+#### model 1 quartiles ----
 
 model1_quart_sensi_1_3_5 <- data.frame(explanatory = character(),
                                        term = integer(),
@@ -2473,7 +3171,7 @@ rm(var, test, formula, p_value_trend)
 
 
 
-### model 1 gams ---- 
+#### model 1 gams ---- 
 
 
 model1_gam_sensi_1_3_5 <- list()
@@ -2490,7 +3188,7 @@ rm(var, formula, model, model_summary)
 
 
 
-### model 2 sd ----
+#### model 2 sd ----
 
 
 model2_sd_sensi_1_3_5 <- data.frame(explanatory = character(),
@@ -2535,7 +3233,7 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 
-## model 2 quartiles ----
+#### model 2 quartiles ----
 model2_quart_sensi_1_3_5 <- data.frame(explanatory = character(),
                                        term = integer(),
                                        OR = numeric(),
@@ -2646,7 +3344,7 @@ rm(var, test, formula, p_value_trend)
 
 
 
-### model 2 gams ---- 
+#### model 2 gams ---- 
 
 model2_gam_sensi_1_3_5 <- list()
 
@@ -2663,7 +3361,7 @@ rm(var, formula, model, model_summary)
 
 
 
-# Sensi 6 - stratifiyng the analysis in tertiles of follow-up duration  ----
+## Main analysis stratifiyng the analysis in tertiles of follow-up duration  ----
 ### Visualization ----
 sensi_6_table_follow_up <- bdd_danish_sensi_6 |>                                # for visualisation of follow up distribution 
   select(follow_up_years, follow_up_ter) |>
@@ -2961,8 +3659,8 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var,
 
 
 
-# Sensi 1 + sensi 6 - Removing the oulier for NfL + stratifiyng the analysis in tertiles of follow-up duration  ----
-### model 1 T1 ----
+## Sensitivity analysis 1 removing the oulier for NfL + stratifiyng the analysis in tertiles of follow-up duration  ----
+#### model 1 T1 ----
 model1_sd_sensi_1_6_T1 <- data.frame(explanatory = character(),
                                      term = integer(),
                                      OR = numeric(),
@@ -3003,7 +3701,7 @@ model1_sd_sensi_1_6_T1 <- model1_sd_sensi_1_6_T1 |>
   select(explanatory, model, everything())
 
 
-### model 1 T2 ----
+#### model 1 T2 ----
 model1_sd_sensi_1_6_T2 <- data.frame(explanatory = character(),
                                      term = integer(),
                                      OR = numeric(),
@@ -3045,7 +3743,7 @@ model1_sd_sensi_1_6_T2 <- model1_sd_sensi_1_6_T2 |>
 
 
 
-### model 1 T3 ----
+#### model 1 T3 ----
 model1_sd_sensi_1_6_T3 <- data.frame(explanatory = character(),
                                      term = integer(),
                                      OR = numeric(),
@@ -3090,7 +3788,7 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 
 
-### model 2 T1 ----
+#### model 2 T1 ----
 model2_sd_sensi_1_6_T1 <- data.frame(explanatory = character(),
                                      term = integer(),
                                      OR = numeric(),
@@ -3131,7 +3829,7 @@ model2_sd_sensi_1_6_T1 <- model2_sd_sensi_1_6_T1 |>
   select(explanatory, model, everything())
 
 
-### model 2 T2 ----
+#### model 2 T2 ----
 model2_sd_sensi_1_6_T2 <- data.frame(explanatory = character(),
                                      term = integer(),
                                      OR = numeric(),
@@ -3173,7 +3871,7 @@ model2_sd_sensi_1_6_T2 <- model2_sd_sensi_1_6_T2 |>
 
 
 
-### model 2 T3 ----
+#### model 2 T3 ----
 model2_sd_sensi_1_6_T3 <- data.frame(explanatory = character(),
                                      term = integer(),
                                      OR = numeric(),
@@ -3219,707 +3917,88 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var,
    proteomic_sd_sensi_1_6)
 
 
-# Sensi 1 + sensi 7 - Removing the oulier for NfL + filtering to females ----
-### model 1 sd ----
+## Logistic models including time as a predictor----
+### Logistic models (sd) ----
+main_results_interaction_sd    <- data.frame()
 
-model1_sd_sensi_1_7_female <- data.frame(explanatory = character(),
-                                         term = integer(),
-                                         OR = numeric(),
-                                         lower_CI = numeric(),
-                                         upper_CI = numeric(),
-                                         p_value = numeric(),
-                                         stringsAsFactors = FALSE)
-
-for (var in proteomic_sd_sensi_1_7_female) {
+for (var in proteomic_sd) {
+  form1 <- as.formula(glue::glue("als ~ {var} * follow_up_no_na_y + strata(match)"))
+  form2 <- as.formula(glue::glue("als ~ {var} * follow_up_no_na_y + strata(match) + smoking_2cat_i + bmi"))
   
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
+  m1   <- clogit(form1, data = bdd_danish)
+  sum1 <- tidy(m1) |> filter(grepl(paste0("^", var), term)) |> mutate(model = "base")
   
-  model <- clogit(formula, data = bdd_danish_sensi_1_7_female)
+  m2   <- clogit(form2, data = bdd_danish)
+  sum2 <- tidy(m2) |> filter(grepl(paste0("^", var), term)) |> mutate(model = "adjusted")
   
-  model_summary <- tidy(model)
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  term <- model_summary$term
-  
-  model1_sd_sensi_1_7_female <- rbind(model1_sd_sensi_1_7_female, data.frame(explanatory = var,
-                                                                             term = term, 
-                                                                             OR = OR,
-                                                                             lower_CI = lower_CI,
-                                                                             upper_CI = upper_CI,
-                                                                             p_value = p_value))
-}
-
-model1_sd_sensi_1_7_female <- model1_sd_sensi_1_7_female |> 
-  mutate(
-    term = case_when(
-      grepl("_sd", term) ~ "Continuous",
-      TRUE ~ NA_character_),
-    model = "base", 
-    analysis = "sensi_1_7_female") |>
-  select(explanatory, model, everything())
-rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
-
-
-## model 1 quartiles ----
-
-model1_quart_sensi_1_7_female <- data.frame(explanatory = character(),
-                                            term = integer(),
-                                            OR = numeric(),
-                                            lower_CI = numeric(),
-                                            upper_CI = numeric(),
-                                            p_value = numeric(),
-                                            stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_sensi_1_7_female) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  
-  model <- clogit(formula, data = bdd_danish_sensi_1_7_female)
-  
-  model_summary <- tidy(model)
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  term <- model_summary$term
-  
-  model1_quart_sensi_1_7_female <- rbind(model1_quart_sensi_1_7_female, data.frame(explanatory = var,
-                                                                                   term = term, 
-                                                                                   OR = OR,
-                                                                                   lower_CI = lower_CI,
-                                                                                   upper_CI = upper_CI,
-                                                                                   p_value = p_value))
-}
-
-model1_quart_sensi_1_7_female <- model1_quart_sensi_1_7_female |> 
-  mutate(
-    term = case_when(
-      grepl("_quart_sensi_1_7_femaleQ2", term) ~ "Quartile 2",
-      grepl("_quart_sensi_1_7_femaleQ3", term) ~ "Quartile 3",
-      grepl("_quart_sensi_1_7_femaleQ4", term) ~ "Quartile 4",
-      grepl("_quartQ2", term) ~ "Quartile 2",
-      grepl("_quartQ3", term) ~ "Quartile 3",
-      grepl("_quartQ4", term) ~ "Quartile 4",
-      TRUE ~ NA_character_),
-    model = "base", 
-    analysis = "sensi_1_7_female") |>
-  select(explanatory, model, everything())
-rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
-
-
-#### heterogeneity test 
-heterogeneity_base_sensi_1_7_female <- map_dfr(
-  proteomic_quart_sensi_1_7_female,
-  function(var) {
-    
-    data_sub <- bdd_danish_sensi_1_7_female |>
-      filter(
-        if (var == "proteomic_neuro_explo_NEFL_sensi_1_7_female")
-          match != 159
-        else
-          TRUE) |>
-      
-      filter(
-        complete.cases(
-          pick(als, match, all_of(var))))
-    
-    if (nrow(data_sub) == 0) {
-      return(tibble(
-        explanatory = var,
-        model = "base",
-        analysis = "sensi_1_7_female",
-        p_value_heterogeneity = NA_real_))
-    }
-    
-    test_1 <- clogit(
-      als ~ strata(match),
-      data = data_sub)
-    
-    test_2 <- clogit(
-      reformulate(
-        termlabels = c(var, "strata(match)"),
-        response = "als"),
-      data = data_sub)
-    
-    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
-    
-    tibble(
+  combined <- bind_rows(sum1, sum2) |> 
+    mutate(
       explanatory = var,
-      model = "base",
-      analysis = "sensi_1_7_female",
-      p_value_heterogeneity = p_lr)
-  })
-
-
-
-#### trend test 
-trend_base_sensi_1_7_female <- data.frame(explanatory = character(),
-                                          model = factor(), 
-                                          p_value_trend = numeric(), 
-                                          stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_med_sensi_1_7_female) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  test <- 
-    clogit(formula, data = bdd_danish_sensi_1_7_female) |>
-    summary() 
-  p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
-  
-  trend_base_sensi_1_7_female <- rbind(trend_base_sensi_1_7_female, 
-                                       data.frame(explanatory = var,
-                                                  model = "base", 
-                                                  analysis = "sensi_1_7_female",
-                                                  p_value_trend = p_value_trend))
-}
-rm(var, test, formula, p_value_trend)
-
-
-
-
-
-### model 1 gams ---- 
-model1_gam_sensi_1_7_female <- list()
-
-for (var in proteomic_sensi_1_7_female) {
-  
-  formula <- as.formula(paste("als ~ s(", var, ") + baseline_age"))
-  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_7_female)
-  model_summary <- summary(model)
-  model1_gam_sensi_1_7_female[[var]] <- model_summary
+      analysis    = "interaction",
+      OR          = exp(estimate),
+      lower_CI    = exp(estimate - 1.96 * std.error),
+      upper_CI    = exp(estimate + 1.96 * std.error),
+      p_value     = p.value)
+  main_results_interaction_sd <- bind_rows(main_results_interaction_sd, combined)
 }
 
-rm(var, formula, model, model_summary)
 
-
-
-### model 2 sd ----
-model2_sd_sensi_1_7_female <- data.frame(explanatory = character(),
-                                         term = integer(),
-                                         OR = numeric(),
-                                         lower_CI = numeric(),
-                                         upper_CI = numeric(),
-                                         p_value = numeric(),
-                                         stringsAsFactors = FALSE)
-
-for (var in proteomic_sd_sensi_1_7_female) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  
-  model <- clogit(formula, data = bdd_danish_sensi_1_7_female)
-  
-  model_summary <- tidy(model)  |> filter(grepl(paste0("^", var), term))
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  term <- model_summary$term
-  
-  model2_sd_sensi_1_7_female <- rbind(model2_sd_sensi_1_7_female, data.frame(explanatory = var,
-                                                                             term = term, 
-                                                                             OR = OR,
-                                                                             lower_CI = lower_CI,
-                                                                             upper_CI = upper_CI,
-                                                                             p_value = p_value))
-}
-
-model2_sd_sensi_1_7_female <- model2_sd_sensi_1_7_female |> 
+main_results_interaction_sd <- main_results_interaction_sd |> 
   mutate(
     term = case_when(
-      grepl("_sd", term) ~ "Continuous",
-      TRUE ~ NA_character_),
-    model = "adjusted", 
-    analysis = "sensi_1_7_female") |>
-  select(explanatory, model, everything())
-rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
+      !grepl(":", term) ~ "Protein",
+      grepl(":", term)  ~ "Protein x Follow-up",
+      TRUE ~ NA_character_), 
+    term = fct_relevel(term, "Protein x Follow-up", "Protein"), 
+    explanatory = gsub("_sd", "", explanatory), 
+    OR_raw = OR, 
+    OR = as.numeric(sprintf("%.2f", OR)), 
+    lower_CI = as.numeric(sprintf("%.2f", lower_CI)),
+    upper_CI = as.numeric(sprintf("%.2f", upper_CI)),
+    p_value_raw = p_value, 
+    p_value = ifelse(p_value < 0.01, "<0.01", number(p_value, accuracy = 0.01, decimal.mark = ".")), 
+    "95% CI" = paste(lower_CI, ", ", upper_CI, sep = ''), 
+    protein_group = case_when(str_detect(explanatory, 'proteomic_immun_res') ~ "Immune response", 
+                              str_detect(explanatory, 'proteomic_metabolism') ~ "Metabolism", 
+                              str_detect(explanatory, 'proteomic_neuro_explo') ~ "Neuro-exploratory"), 
+    explanatory = str_replace(explanatory, 'proteomic_immun_res_|proteomic_metabolism_|proteomic_neuro_explo_', "")) |>
+  select(protein_group, explanatory, analysis, term, model, OR,   "95% CI", p_value, OR_raw, lower_CI, upper_CI, p_value_raw)
+
+
+### Tables and Figures ----
+proteomic_interaction_table <- main_results_interaction_sd |>
+  group_by(explanatory) |>
+  filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>
+  ungroup() |>
+  select(protein_group, explanatory, term, model, OR, "95% CI", p_value) |>
+  pivot_wider(names_from = "model", values_from = c("OR", "95% CI", "p_value")) |>
+  select(protein_group, explanatory, term, contains("base"), contains("adjusted")) |>
+  rename("OR" = "OR_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base", 
+         "OR " = "OR_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p_value_adjusted") |>
+  arrange(protein_group, explanatory, desc(term)) |> 
+  flextable() |>
+  add_footer_lines(
+    "1Protein represents the baseline risk of ALS (at blood collection) per one standard deviation increase in pre-diagnostic plasma concentration. Protein x Follow-up represents the multiplicative interaction coefficient showing the change in the OR per additional year of pre-diagnostic follow-up.
+     2All models are matched for sex and birth year. Adjusted models further account for smoking and body mass index. 
+    3CI: Confidence interval.") |>
+  add_header("explanatory" = "Pre-disease plasma proteins", "protein_group" = "Protein group", "term" = "Term", 
+             "OR" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", 
+             "OR " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model") |>
+  theme_vanilla() |> merge_h(part = "header") |> align(align = "center", part = "all") |>
+  merge_v(j = "explanatory") |> 
+  bold(j = "explanatory", part = "body") |> 
+  align(j = "explanatory", align = "left", part = "all") |> 
+  merge_at(j = "explanatory", part = "header") |> 
+  merge_v(j = "protein_group") |> 
+  bold(j = "protein_group", part = "body") |>
+  align(j = "protein_group", align = "left", part = "all") |> 
+  merge_at(j = "protein_group", part = "header") |>
+  merge_v(j = "term") |> 
+  bold(j = "term", part = "body") |>
+  align(j = "term", align = "left", part = "all") |> 
+  merge_at(j = "term", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> fontsize(size = 10, part = "all") |> padding(padding.top = 0, padding.bottom = 0, part = "all")
 
-
-
-## model 2 quartiles ----
-model2_quart_sensi_1_7_female <- data.frame(explanatory = character(),
-                                            term = integer(),
-                                            OR = numeric(),
-                                            lower_CI = numeric(),
-                                            upper_CI = numeric(),
-                                            p_value = numeric(),
-                                            stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_sensi_1_7_female) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  model <- clogit(formula, data = bdd_danish_sensi_1_7_female)
-  model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  term <- model_summary$term
-  model2_quart_sensi_1_7_female <- rbind(model2_quart_sensi_1_7_female, data.frame(explanatory = var,
-                                                                                   term = term, 
-                                                                                   OR = OR,
-                                                                                   lower_CI = lower_CI,
-                                                                                   upper_CI = upper_CI,
-                                                                                   p_value = p_value))
-}
-
-model2_quart_sensi_1_7_female <- model2_quart_sensi_1_7_female |> 
-  mutate(
-    term = case_when(
-      grepl("_quart_sensi_1_7_femaleQ2", term) ~ "Quartile 2",
-      grepl("_quart_sensi_1_7_femaleQ3", term) ~ "Quartile 3",
-      grepl("_quart_sensi_1_7_femaleQ4", term) ~ "Quartile 4",
-      grepl("_quartQ2", term) ~ "Quartile 2",
-      grepl("_quartQ3", term) ~ "Quartile 3",
-      grepl("_quartQ4", term) ~ "Quartile 4",
-      TRUE ~ NA_character_),
-    model = "adjusted", 
-    analysis = "sensi_1_7_female") |>
-  select(explanatory, model, everything())
-rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
-
-### heterogeneity tests
-heterogeneity_adjusted_sensi_1_7_female <- map_dfr(
-  proteomic_quart_sensi_1_7_female,
-  function(var) {
-    
-    data_sub <- bdd_danish_sensi_1_7_female |>
-      filter(
-        if (var == "proteomic_neuro_explo_NEFL_sensi_1_7_female")
-          match != 159
-        else
-          TRUE) |>
-      
-      filter(
-        complete.cases(
-          pick(als, match, smoking_2cat_i, bmi, all_of(var))))
-    
-    if (nrow(data_sub) == 0) {
-      return(tibble(
-        explanatory = var,
-        model = "adjusted",
-        analysis = "sensi_1_7_female",
-        p_value_heterogeneity = NA_real_))
-    }
-    
-    test_1 <- clogit(
-      als ~ strata(match) + smoking_2cat_i + bmi,
-      data = data_sub)
-    
-    test_2 <- clogit(
-      reformulate(
-        termlabels = c(var, "strata(match)", "smoking_2cat_i", "bmi"),
-        response = "als"),
-      data = data_sub)
-    
-    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
-    
-    tibble(
-      explanatory = var,
-      model = "adjusted",
-      analysis = "sensi_1_7_female",
-      p_value_heterogeneity = p_lr)
-  })
-
-
-
-### trend tests
-
-trend_adjusted_sensi_1_7_female <- data.frame(explanatory = character(),
-                                              model = factor(), 
-                                              p_value_trend = numeric(), 
-                                              stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_med_sensi_1_7_female) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  test <- clogit(formula, data = bdd_danish_sensi_1_7_female) |> summary()
-  p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
-  
-  trend_adjusted_sensi_1_7_female <- rbind(trend_adjusted_sensi_1_7_female, 
-                                           data.frame(explanatory = var,
-                                                      model = "adjusted", 
-                                                      analysis = "sensi_1_7_female",
-                                                      p_value_trend = p_value_trend))
-}
-rm(var, test, formula, p_value_trend)
-
-
-
-### model 2 gams ---- 
-
-model2_gam_sensi_1_7_female <- list()
-
-for (var in proteomic_sensi_1_7_female) {
-  
-  formula <- as.formula(paste("als ~ s(", var, ") + baseline_age + smoking_2cat_i + bmi"))
-  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_7_female)
-  model_summary <- summary(model)
-  model2_gam_sensi_1_7_female[[var]] <- model_summary
-}
-
-rm(var, formula, model, model_summary)
-
-
-
-
-# Sensi 1 + sensi 7 - Removing the oulier for NfL + filtering to male ----
-### model 1 sd ----
-
-model1_sd_sensi_1_7_male <- data.frame(explanatory = character(),
-                                       term = integer(),
-                                       OR = numeric(),
-                                       lower_CI = numeric(),
-                                       upper_CI = numeric(),
-                                       p_value = numeric(),
-                                       stringsAsFactors = FALSE)
-
-for (var in proteomic_sd_sensi_1_7_male) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  
-  model <- clogit(formula, data = bdd_danish_sensi_1_7_male)
-  
-  model_summary <- tidy(model)
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  term <- model_summary$term
-  
-  model1_sd_sensi_1_7_male <- rbind(model1_sd_sensi_1_7_male, data.frame(explanatory = var,
-                                                                         term = term, 
-                                                                         OR = OR,
-                                                                         lower_CI = lower_CI,
-                                                                         upper_CI = upper_CI,
-                                                                         p_value = p_value))
-}
-
-model1_sd_sensi_1_7_male <- model1_sd_sensi_1_7_male |> 
-  mutate(
-    term = case_when(
-      grepl("_sd", term) ~ "Continuous",
-      TRUE ~ NA_character_),
-    model = "base", 
-    analysis = "sensi_1_7_male") |>
-  select(explanatory, model, everything())
-rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
-
-
-## model 1 quartiles ----
-
-model1_quart_sensi_1_7_male <- data.frame(explanatory = character(),
-                                          term = integer(),
-                                          OR = numeric(),
-                                          lower_CI = numeric(),
-                                          upper_CI = numeric(),
-                                          p_value = numeric(),
-                                          stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_sensi_1_7_male) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  
-  model <- clogit(formula, data = bdd_danish_sensi_1_7_male)
-  
-  model_summary <- tidy(model)
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  term <- model_summary$term
-  
-  model1_quart_sensi_1_7_male <- rbind(model1_quart_sensi_1_7_male, data.frame(explanatory = var,
-                                                                               term = term, 
-                                                                               OR = OR,
-                                                                               lower_CI = lower_CI,
-                                                                               upper_CI = upper_CI,
-                                                                               p_value = p_value))
-}
-
-model1_quart_sensi_1_7_male <- model1_quart_sensi_1_7_male |> 
-  mutate(
-    term = case_when(
-      grepl("_quart_sensi_1_7_maleQ2", term) ~ "Quartile 2",
-      grepl("_quart_sensi_1_7_maleQ3", term) ~ "Quartile 3",
-      grepl("_quart_sensi_1_7_maleQ4", term) ~ "Quartile 4",
-      grepl("_quartQ2", term) ~ "Quartile 2",
-      grepl("_quartQ3", term) ~ "Quartile 3",
-      grepl("_quartQ4", term) ~ "Quartile 4",
-      TRUE ~ NA_character_),
-    model = "base", 
-    analysis = "sensi_1_7_male") |>
-  select(explanatory, model, everything())
-rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
-
-
-#### heterogeneity test 
-heterogeneity_base_sensi_1_7_male <- map_dfr(
-  proteomic_quart_sensi_1_7_male,
-  function(var) {
-    
-    data_sub <- bdd_danish_sensi_1_7_male |>
-      filter(
-        if (var == "proteomic_neuro_explo_NEFL_sensi_1_7_male")
-          match != 159
-        else
-          TRUE) |>
-      
-      filter(
-        complete.cases(
-          pick(als, match, all_of(var))))
-    
-    if (nrow(data_sub) == 0) {
-      return(tibble(
-        explanatory = var,
-        model = "base",
-        analysis = "sensi_1_7_male",
-        p_value_heterogeneity = NA_real_))
-    }
-    
-    test_1 <- clogit(
-      als ~ strata(match),
-      data = data_sub)
-    
-    test_2 <- clogit(
-      reformulate(
-        termlabels = c(var, "strata(match)"),
-        response = "als"),
-      data = data_sub)
-    
-    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
-    
-    tibble(
-      explanatory = var,
-      model = "base",
-      analysis = "sensi_1_7_male",
-      p_value_heterogeneity = p_lr)
-  })
-
-
-
-#### trend test 
-trend_base_sensi_1_7_male <- data.frame(explanatory = character(),
-                                        model = factor(), 
-                                        p_value_trend = numeric(), 
-                                        stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_med_sensi_1_7_male) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match)"))
-  test <- 
-    clogit(formula, data = bdd_danish_sensi_1_7_male) |>
-    summary() 
-  p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
-  
-  trend_base_sensi_1_7_male <- rbind(trend_base_sensi_1_7_male, 
-                                     data.frame(explanatory = var,
-                                                model = "base", 
-                                                analysis = "sensi_1_7_male",
-                                                p_value_trend = p_value_trend))
-}
-rm(var, test, formula, p_value_trend)
-
-
-
-
-
-### model 1 gams ---- 
-
-model1_gam_sensi_1_7_male <- list()
-
-for (var in proteomic_sensi_1_7_male) {
-  
-  formula <- as.formula(paste("als ~ s(", var, ") + baseline_age"))
-  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_7_male)
-  model_summary <- summary(model)
-  model1_gam_sensi_1_7_male[[var]] <- model_summary
-}
-
-rm(var, formula, model, model_summary)
-
-
-
-
-### model 2 sd ----
-
-model2_sd_sensi_1_7_male <- data.frame(explanatory = character(),
-                                       term = integer(),
-                                       OR = numeric(),
-                                       lower_CI = numeric(),
-                                       upper_CI = numeric(),
-                                       p_value = numeric(),
-                                       stringsAsFactors = FALSE)
-
-for (var in proteomic_sd_sensi_1_7_male) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  
-  model <- clogit(formula, data = bdd_danish_sensi_1_7_male)
-  
-  model_summary <- tidy(model)  |> filter(grepl(paste0("^", var), term))
-  
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  term <- model_summary$term
-  
-  model2_sd_sensi_1_7_male <- rbind(model2_sd_sensi_1_7_male, data.frame(explanatory = var,
-                                                                         term = term, 
-                                                                         OR = OR,
-                                                                         lower_CI = lower_CI,
-                                                                         upper_CI = upper_CI,
-                                                                         p_value = p_value))
-}
-
-model2_sd_sensi_1_7_male <- model2_sd_sensi_1_7_male |> 
-  mutate(
-    term = case_when(
-      grepl("_sd", term) ~ "Continuous",
-      TRUE ~ NA_character_),
-    model = "adjusted", 
-    analysis = "sensi_1_7_male") |>
-  select(explanatory, model, everything())
-rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
-
-
-
-## model 2 quartiles ----
-model2_quart_sensi_1_7_male <- data.frame(explanatory = character(),
-                                          term = integer(),
-                                          OR = numeric(),
-                                          lower_CI = numeric(),
-                                          upper_CI = numeric(),
-                                          p_value = numeric(),
-                                          stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_sensi_1_7_male) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  model <- clogit(formula, data = bdd_danish_sensi_1_7_male)
-  model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  term <- model_summary$term
-  model2_quart_sensi_1_7_male <- rbind(model2_quart_sensi_1_7_male, data.frame(explanatory = var,
-                                                                               term = term, 
-                                                                               OR = OR,
-                                                                               lower_CI = lower_CI,
-                                                                               upper_CI = upper_CI,
-                                                                               p_value = p_value))
-}
-
-model2_quart_sensi_1_7_male <- model2_quart_sensi_1_7_male |> 
-  mutate(
-    term = case_when(
-      grepl("_quart_sensi_1_7_maleQ2", term) ~ "Quartile 2",
-      grepl("_quart_sensi_1_7_maleQ3", term) ~ "Quartile 3",
-      grepl("_quart_sensi_1_7_maleQ4", term) ~ "Quartile 4",
-      grepl("_quartQ2", term) ~ "Quartile 2",
-      grepl("_quartQ3", term) ~ "Quartile 3",
-      grepl("_quartQ4", term) ~ "Quartile 4",
-      TRUE ~ NA_character_),
-    model = "adjusted", 
-    analysis = "sensi_1_7_male") |>
-  select(explanatory, model, everything())
-rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
-
-
-
-### heterogeneity tests
-
-heterogeneity_adjusted_sensi_1_7_male <- map_dfr(
-  proteomic_quart_sensi_1_7_male,
-  function(var) {
-    
-    data_sub <- bdd_danish_sensi_1_7_male |>
-      filter(
-        if (var == "proteomic_neuro_explo_NEFL_sensi_1_7_male")
-          match != 159
-        else
-          TRUE) |>
-      
-      filter(
-        complete.cases(
-          pick(als, match, smoking_2cat_i, bmi, all_of(var))))
-    
-    if (nrow(data_sub) == 0) {
-      return(tibble(
-        explanatory = var,
-        model = "adjusted",
-        analysis = "sensi_1_7_male",
-        p_value_heterogeneity = NA_real_))
-    }
-    
-    test_1 <- clogit(
-      als ~ strata(match) + smoking_2cat_i + bmi,
-      data = data_sub)
-    
-    test_2 <- clogit(
-      reformulate(
-        termlabels = c(var, "strata(match)", "smoking_2cat_i", "bmi"),
-        response = "als"),
-      data = data_sub)
-    
-    p_lr <- anova(test_1, test_2, test = "LR")$`Pr(>|Chi|)`[2]
-    
-    tibble(
-      explanatory = var,
-      model = "adjusted",
-      analysis = "sensi_1_7_male",
-      p_value_heterogeneity = p_lr)
-  })
-
-
-
-
-### trend tests
-
-trend_adjusted_sensi_1_7_male <- data.frame(explanatory = character(),
-                                            model = factor(), 
-                                            p_value_trend = numeric(), 
-                                            stringsAsFactors = FALSE)
-
-for (var in proteomic_quart_med_sensi_1_7_male) {
-  
-  formula <- as.formula(paste("als ~", var, "+ strata(match) + smoking_2cat_i + bmi"))
-  test <- clogit(formula, data = bdd_danish_sensi_1_7_male) |> summary()
-  p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
-  
-  trend_adjusted_sensi_1_7_male <- rbind(trend_adjusted_sensi_1_7_male, 
-                                         data.frame(explanatory = var,
-                                                    model = "adjusted", 
-                                                    analysis = "sensi_1_7_male",
-                                                    p_value_trend = p_value_trend))
-}
-rm(var, test, formula, p_value_trend)
-
-
-
-
-
-### model 2 gams ---- 
-
-model2_gam_sensi_1_7_male <- list()
-
-for (var in proteomic_sensi_1_7_male) {
-  
-  formula <- as.formula(paste("als ~ s(", var, ") + baseline_age + smoking_2cat_i + bmi"))
-  model <- mgcv::gam(formula, family = binomial, method = 'REML', data = bdd_danish_sensi_1_7_male)
-  model_summary <- summary(model)
-  model2_gam_sensi_1_7_male[[var]] <- model_summary
-}
-
-rm(var, formula, model, model_summary)
 
 
 # Merging the main results ----
@@ -4277,7 +4356,7 @@ ff_stat <- function(mat1, mat2) {
 
 
 ## All proteins ----
-### data prep ----
+### data prep 
 data_matrix1_all <- 
   main_results |> 
   filter(analysis == "main",
@@ -4304,13 +4383,13 @@ data_matrix2_all <-
 
 
 
-### Fasano Franceschini test ----
+### Fasano Franceschini test
 additional_analysis_2_all_results <- 
   fasano.franceschini.test(data_matrix1_all[, c("OR_log2", "p_value_log")],
                            data_matrix2_all[, c("OR_log2", "p_value_log")],
                            seed = 0)
 
-### Jackknife approach ----
+### Jackknife approach 
 T0 <- additional_analysis_2_all_results$statistic                               # d statistic from the inital ff test with all observations 
 
 influence_1 <- numeric(nrow(data_matrix1_all))                                  # Initialize vectors
@@ -4358,7 +4437,7 @@ proteomic_selected <- sort(proteomic_selected)
 
 valeurs_communes <- intersect(proteomic_influence, proteomic_selected)          # check the commune proteins 
 
-### plots ----
+### plots 
 plot1_all <- 
   data_matrix1_all |>
   mutate(influence_flag = ifelse(explanatory %in% proteomic_influence,
@@ -4404,7 +4483,7 @@ rm(data_matrix1_all, data_matrix2_all,
    proteomic_influence, proteomic_selected, valeurs_communes)
 
 ## Immune response ----
-### data prep ----
+### data prep 
 data_matrix1_immune <- 
   main_results |> 
   filter(analysis == "main",
@@ -4432,13 +4511,13 @@ data_matrix2_immune <-
   select(explanatory, OR_log2, p_value_log)
 
 
-### Fasano Franceschini test ----
+### Fasano Franceschini test
 additional_analysis_2_immune_results <- 
   fasano.franceschini.test(data_matrix1_immune[, c("OR_log2", "p_value_log")],
                            data_matrix2_immune[, c("OR_log2", "p_value_log")],
                            seed = 0)
 
-### Jackknife approach ----
+### Jackknife approach
 T0 <- additional_analysis_2_immune_results$statistic                               # d statistic from the inital ff test with all observations 
 
 influence_1 <- numeric(nrow(data_matrix1_immune))                                      # Initialize vectors
@@ -4489,8 +4568,7 @@ proteomic_selected <- sort(proteomic_selected)
 valeurs_communes <- intersect(proteomic_influence, proteomic_selected)          # check the commune proteins 
 
 
-### plots ----
-
+### plots 
 plot1_immune <- 
   data_matrix1_immune |>
   mutate(influence_flag = ifelse(explanatory %in% proteomic_influence,
@@ -4538,7 +4616,7 @@ rm(data_matrix1_immune, data_matrix2_immune,
 
 
 ## Metabolism ----
-### data prep ----
+### data prep
 data_matrix1_metabolism <- 
   main_results |> 
   filter(analysis == "main",
@@ -4566,13 +4644,13 @@ data_matrix2_metabolism <-
   select(explanatory, OR_log2, p_value_log)
 
 
-### Fasano Franceschini test ----
+### Fasano Franceschini test 
 additional_analysis_2_metabolism_results <- 
   fasano.franceschini.test(data_matrix1_metabolism[, c("OR_log2", "p_value_log")],
                            data_matrix2_metabolism[, c("OR_log2", "p_value_log")],
                            seed = 0)
 
-### Jackknife approach ----
+### Jackknife approach
 T0 <- additional_analysis_2_metabolism_results$statistic                        # d statistic from the inital ff test with all observations 
 
 influence_1 <- numeric(nrow(data_matrix1_metabolism))                           # Initialize vectors
@@ -4623,8 +4701,7 @@ proteomic_selected <- sort(proteomic_selected)
 valeurs_communes <- intersect(proteomic_influence, proteomic_selected)          # check the commune proteins 
 
 
-### plots ----
-
+### plots
 plot1_metabolism <- 
   data_matrix1_metabolism |>
   mutate(influence_flag = ifelse(explanatory %in% proteomic_influence,
@@ -4669,7 +4746,7 @@ rm(data_matrix1_metabolism, data_matrix2_metabolism,
    proteomic_influence, proteomic_selected, valeurs_communes)
 
 ## Neuro-exploratory ----
-### data prep ----
+### data prep 
 data_matrix1_neuro <- 
   main_results |> 
   filter(analysis == "main",
@@ -4696,13 +4773,13 @@ data_matrix2_neuro <-
     p_value_log = -log10(p_value_raw)) |>
   select(explanatory, OR_log2, p_value_log)
 
-### Fasano Franceschini test ----
+### Fasano Franceschini test 
 additional_analysis_2_neuro_results <- 
   fasano.franceschini.test(data_matrix1_neuro[, c("OR_log2", "p_value_log")],
                            data_matrix2_neuro[, c("OR_log2", "p_value_log")],
                            seed = 0)
 
-### Jackknife approach ----
+### Jackknife approach 
 T0 <- additional_analysis_2_neuro_results$statistic                             # d statistic from the inital ff test with all observations 
 
 influence_1 <- numeric(nrow(data_matrix1_neuro))                                # Initialize vectors
@@ -4753,7 +4830,7 @@ proteomic_selected <- sort(proteomic_selected)
 valeurs_communes <- intersect(proteomic_influence, proteomic_selected)          # check the commune proteins 
 
 
-### plots ----
+### plots 
 plot1_neuro <- 
   data_matrix1_neuro |>
   mutate(influence_flag = ifelse(explanatory %in% proteomic_influence,
@@ -4800,14 +4877,9 @@ rm(data_matrix1_neuro, data_matrix2_neuro,
    T0, influence_1, influence_2, i, j, mat1_minus, mat2_minus, Ti, Tj, 
    proteomic_influence, proteomic_selected, valeurs_communes)
 
-# Additionnal analysis 3 - SL learner ----
-# cf specific code 
-
-# Additionnal analysis 4 - tidymodels ----
-# cf specific code 
 
 
-# Analyses special NfL ----
+# Additionnal analysis 3 - Special NfL ----
 ## NfL x sex interaction ----
 model_interac <- 
   clogit(als ~  sex*proteomic_neuro_explo_NEFL_sd + 
@@ -8200,6 +8272,10 @@ results_proteomic_ALS_occurrence <-
       proteomic_sd_ALS_base_figure_sensi_1_7 = proteomic_sd_ALS_base_figure_sensi_1_7, 
       proteomic_sd_ALS_adjusted_figure_sensi_1_7 = proteomic_sd_ALS_adjusted_figure_sensi_1_7), 
     
+    logistic_models_including_time = list(
+      main_results_interaction_sd = main_results_interaction_sd, 
+      proteomic_interaction_table = proteomic_interaction_table),
+    
     additional_analysis_1 = list(
       OR_distribution = OR_distribution, 
       boxplot_OR = boxplot_OR, 
@@ -8363,3 +8439,5 @@ rm(covar,                                   # main results
    
 )
   
+
+rm(m1, m2, sum1, sum2, combined, form1, form2, var, main_results_interaction_sd, proteomic_interaction_table)
