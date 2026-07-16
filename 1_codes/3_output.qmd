@@ -1915,9 +1915,10 @@ results_proteomic_ALS_occurrence$main$covar |>
   set_table_properties(align = "left")
 ```
 
-## Main analysis
+## Are the pre disease proteins associated with ALS risk?
 
-### Logistic regressions
+### Main analysis 
+#### Logistic regressions
 
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
@@ -1944,7 +1945,7 @@ results_proteomic_ALS_occurrence$main$proteomic_quart_ALS_table  |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-### GAMs
+#### GAMs
 
 Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
 
@@ -1995,9 +1996,9 @@ rm(all_vars_labels, plots_lists, all_proteins, plot_grid)
 
 ```
 
-## Sensitivity 1: Removing NEFL outlier
+### Sensitivity 1: Removing NEFL outlier
 
-### Logistic regressions
+#### Logistic regressions
 
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
@@ -2028,7 +2029,7 @@ results_proteomic_ALS_occurrence$sensi_1$proteomic_quart_ALS_table_sensi_1 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-### GAMs
+#### GAMs
 
 Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
 
@@ -2080,9 +2081,9 @@ rm(all_vars_labels,
 
 
 
-## Sensitivity 2: Filtering to cases and their controls with follow-up \< 5 years
+### Sensitivity 2: Filtering to cases and their controls with follow-up \< 5 years
 
-### Logistic regressions
+#### Logistic regressions
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-10
@@ -2111,7 +2112,7 @@ results_proteomic_ALS_occurrence$sensi_3$proteomic_quart_ALS_table_sensi_3 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-### GAMs
+#### GAMs
 
 ```{r fig.height=60, fig.width=12}
 #| label: danish-proteomic-ALS-occurence-13
@@ -2172,9 +2173,9 @@ rm(plots_lists, all_proteins, plot_grid,
 
 ```
 
-## Sensitivity 3: Filtering to cases and their controls with follow-up \> 5 years
+### Sensitivity 3: Filtering to cases and their controls with follow-up \> 5 years
 
-### Logistic regressions
+#### Logistic regressions
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-14
@@ -2203,7 +2204,7 @@ results_proteomic_ALS_occurrence$sensi_3$proteomic_quart_ALS_table_sensi_3 |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-### GAMs
+#### GAMs
 
 ```{r fig.height=60, fig.width=12}
 #| label: danish-proteomic-ALS-occurence-17
@@ -2263,9 +2264,9 @@ rm(plots_lists, all_proteins, plot_grid,
 
 ```
 
-## Sensitivity 1 + 3: Removing NEFL outlier + filtering cases and their controls with follow-up \> 5 years
+### Sensitivity 1 + 3: Removing NEFL outlier + filtering cases and their controls with follow-up \> 5 years
 
-### Logistic regressions
+#### Logistic regressions
 
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
@@ -2305,7 +2306,7 @@ results_proteomic_ALS_occurrence$sensi_1_3$proteomic_quart_ALS_table_sensi_1_3 |
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-### GAMs
+#### GAMs
 
 Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
 
@@ -2377,9 +2378,9 @@ rm(plots_lists, all_proteins, plot_grid,
 
 ```
 
-## Sensitivity 1 + 3 + 4: Removing NEFL outlier + filtering cases and their controls with follow-up \> 5 years + filtering follow-up \< 50%
+### Sensitivity 1 + 3 + 4: Removing NEFL outlier + filtering cases and their controls with follow-up \> 5 years + filtering follow-up \< 50%
 
-### Logistic regressions
+#### Logistic regressions
 
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
@@ -2420,7 +2421,7 @@ results_proteomic_ALS_occurrence$sensi_1_3_4$proteomic_quart_ALS_table_sensi_1_3
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-### GAMs
+#### GAMs
 
 Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
 
@@ -2496,9 +2497,9 @@ rm(plots_lists, all_proteins, plot_grid,
 
 ```
 
-## Sensitivity 1 + 3 + 5: Removing NEFL outlier + filtering cases and their controls with follow-up \> 5 years + filtering follow-up \> 50%
+### Sensitivity 1 + 3 + 5: Removing NEFL outlier + filtering cases and their controls with follow-up \> 5 years + filtering follow-up \> 50%
 
-### Logistic regressions
+#### Logistic regressions
 
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
@@ -2539,7 +2540,7 @@ results_proteomic_ALS_occurrence$sensi_1_3_5$proteomic_quart_ALS_table_sensi_1_3
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-### GAMs
+#### GAMs
 
 Generalized additive models modeling proteins as smooth terms (thin plate splines), base models adjusted on sex and age at baseline. Adjusted models further account for smoking and body mass index
 
@@ -2616,7 +2617,7 @@ rm(plots_lists, all_proteins, plot_grid,
 
 ```
 
-## Sensitivity 6: stratifiyng the analysis in tertiles of follow-up duration
+### Sensitivity 6: stratifiyng the analysis in tertiles of follow-up duration
 
 Data not shown because of merging sensi 1 and sensi 6
 
@@ -2638,7 +2639,7 @@ results_proteomic_ALS_occurrence$main$proteomic_sd_ALS_adjusted_figure + labs(ti
   results_proteomic_ALS_occurrence$sensi_6$proteomic_sd_ALS_adjusted_figure_sensi_6_T3 + labs(title = "Filtered to follow-up T3 (>16 years)") + theme(legend.position = "bottom") 
 ```
 
-## Sensitivity 1 + 6: Removing NEFL outlier + stratifiyng the analysis in tertiles of follow-up duration
+### Sensitivity 1 + 6: Removing NEFL outlier + stratifiyng the analysis in tertiles of follow-up duration
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-31
@@ -2650,7 +2651,7 @@ results_proteomic_ALS_occurrence$sensi_6$sensi_6_table_follow_up
 results_proteomic_ALS_occurrence$sensi_6$sensi_6_densityplot_follow_up
 ```
 
-### Logistic regressions
+#### Logistic regressions
 
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
 
@@ -2671,9 +2672,9 @@ results_proteomic_ALS_occurrence$sensi_1_6$proteomic_sd_ALS_adjusted_figure_sens
 
 NEFL is not significantly associated with ALS occurence when the follow-up duration is \>16 years. We don't see many associations in the follow-up group T1: I suspect that it is because of high heterogeneity in follow-up duration among this sub-group (0-11 years). --\> then I trust more the sensi 2 results where we just remove the cases (and their controls) with follow-up \<5 years.
 
-## Sensitivity 1 + 7: Removing NEFL outlier + stratifiyng the analysis on sex
+### Sensitivity 1 + 7: Removing NEFL outlier + stratifiyng the analysis on sex
 
-### Continuous coding (standardized)
+#### Continuous coding (standardized)
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-34
@@ -2701,7 +2702,7 @@ results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_
 
 ```
 
-### Quartiles
+#### Quartiles
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-36
@@ -2709,7 +2710,7 @@ results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_
 results_proteomic_ALS_occurrence$sensi_1_7$proteomic_quart_ALS_table_sensi_1_7
 ```
 
-### GAMs
+#### GAMs
 
 ```{r fig.width=9, fig.height=70}
 #| label: danish-proteomic-ALS-occurence-37
@@ -2842,7 +2843,17 @@ rm(   make_gam_plot_base,
       plot_adjusted_gam_sensi_1_7_male)
 ```
 
-## Additionnal analysis 1
+
+### Sensitivity 8: Logistic models including time
+#### Proteome wide associations 
+
+```{r}
+#| label: danish-proteomic-ALS-occurence-38_bis
+results_proteomic_ALS_occurrence$logistic_models_including_time$proteome_wide$proteomic_interaction_table
+```
+
+
+### Additionnal analysis 1
 
 ```{r, fig.height=3, fig.width=3}
 #| label: danish-proteomic-ALS-occurence-39
@@ -2852,7 +2863,7 @@ results_proteomic_ALS_occurrence$additional_analysis_1$boxplot_OR
 results_proteomic_ALS_occurrence$additional_analysis_1$densityplot_OR
 ```
 
-## Additionnal analysis 2
+### Additionnal analysis 2
 
 Testing the distribution of the p-values depending on OR\>=1 to the distribution of the p-values depending on OR\<1 using a Fasano-Franceschini test
 
@@ -2862,7 +2873,7 @@ It works by evaluating, for every point of one dataset, how the cumulative distr
 
 The null hypothesis (H₀) is: H₀: The two datasets come from the same multivariate distribution. A small p-value indicates a significant deviation between the two distributions.
 
-### all proteins
+#### all proteins
 
 ```{r, fig.height=3, fig.width=9}
 #| label: danish-proteomic-ALS-occurence-40
@@ -2882,7 +2893,7 @@ Because the p-value is 0.00587, which is well below the standard 0.05 threshold,
 
 This means that the two groups of proteins, those associated with increased risk and those associated with decreased risk, show significantly different joint distributions of odds ratios and p-values. Therefore, the asymmetric patterns we observe are unlikely to be due to random fluctuation caused by multiple testing. The results support the idea that the proteins associated with increased disease risk and those associated with decreased disease risk represent genuinely different biological signals, rather than artifacts of high-dimensional multiple testing.
 
-### Immune response
+#### Immune response
 
 ```{r, fig.height=3, fig.width=9}
 #| label: danish-proteomic-ALS-occurence-41
@@ -2896,7 +2907,7 @@ results_proteomic_ALS_occurrence$additional_analysis_2$jackknife_immune_results 
   tbl_summary()
 ```
 
-### Metbolism
+#### Metbolism
 
 ```{r, fig.height=3, fig.width=9}
 #| label: danish-proteomic-ALS-occurence-42
@@ -2911,7 +2922,7 @@ results_proteomic_ALS_occurrence$additional_analysis_2$jackknife_metabolism_resu
 
 ```
 
-### Neuro explo
+#### Neuro explo
 
 ```{r, fig.height=3, fig.width=9}
 #| label: danish-proteomic-ALS-occurence-43
@@ -2925,9 +2936,9 @@ results_proteomic_ALS_occurrence$additional_analysis_2$jackknife_neuro_results |
   tbl_summary()
 ```
 
-## Additional analysis 3 - superlearner
+## Are the pre disease proteins predicting ALS risk?
 
-### Test 1 a : method AUC, many algorithms, no pre screening, default hyperparameters
+### Test 1 a (SL) : method AUC, many algorithms, no pre screening, default hyperparameters
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-44
@@ -3067,7 +3078,7 @@ plot(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_earth) +
   geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
 ```
 
-### Test 1 b : method AUC, many algorithms, pre screening, optimized hyperparameters
+### Test 1 b (SL): method AUC, many algorithms, pre screening, optimized hyperparameters
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-50
@@ -3109,7 +3120,7 @@ plot(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_1_b_opt_10) +
   geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
 ```
 
-### Test 1 c : method AUC, selected algorithms, pre screening, optimized hyperparameters
+### Test 1 c (SL): method AUC, selected algorithms, pre screening, optimized hyperparameters
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-52
@@ -3282,313 +3293,7 @@ CD302: C-type lectin receptor involved in cell adhesion and migration, primarily
 
 PADI2: Protein-arginine deiminase type-2
 
-### Test 2: + time as a predictor
-
-### Defining the best hyperparameter combinaison for each algorithm
-
-#### SL.glmnet
-
-```{r}
-#| label: danish-proteomic-ALS-occurence-57
-summary(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_glmnet)$Table |>
-  as.data.frame() |>
-  flextable() |> 
-  colformat_double(digits = 2) |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
-
-plot(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_glmnet) + 
-  theme_minimal() + 
-  labs(title = "Model Performance (Specific to SL.glmnet)", 
-       subtitle = "ALS detection",
-       x = "Hyperparameter combinaisons", y = "Cross-Validated AUC") +
-  geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
-```
-
-#### SL.ranger
-
-```{r}
-#| label: danish-proteomic-ALS-occurence-58
-summary(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_ranger)$Table |>
-  as.data.frame() |>
-  flextable() |> 
-  colformat_double(digits = 2) |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
-
-plot(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_ranger) + 
-  theme_minimal() + 
-  labs(title = "Model Performance (Specific to SL.ranger)", 
-       subtitle = "ALS detection",
-       x = "Hyperparameter combinaisons", y = "Cross-Validated AUC") +
-  geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
-```
-
-#### SL.xgboost
-
-```{r}
-#| label: danish-proteomic-ALS-occurence-59
-summary(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_xgboost)$Table |>
-  as.data.frame() |>
-  flextable() |> 
-  colformat_double(digits = 2) |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
-
-plot(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_xgboost) + 
-  theme_minimal() + 
-  labs(title = "Model Performance (Specific to SL.xgboost)", 
-       subtitle = "ALS detection",
-       x = "Hyperparameter combinaisons", y = "Cross-Validated AUC") +
-  geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
-```
-
-#### SL.ksvm
-
-```{r}
-#| label: danish-proteomic-ALS-occurence-60
-summary(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_ksvm)$Table |>
-  as.data.frame() |>
-  flextable() |> 
-  colformat_double(digits = 2) |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
-
-plot(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_ksvm) + 
-  theme_minimal() + 
-  labs(title = "Model Performance (Specific to SL.ksvm)", 
-       subtitle = "ALS detection",
-       x = "Hyperparameter combinaisons", y = "Cross-Validated AUC") +
-  geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
-```
-
-#### SL.earth
-
-```{r}
-#| label: danish-proteomic-ALS-occurence-61
-summary(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_earth)$Table |>
-  as.data.frame() |>
-  flextable() |> 
-  colformat_double(digits = 2) |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
-
-plot(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_earth) + 
-  theme_minimal() + 
-  labs(title = "Model Performance (Specific to SL.earth)", 
-       subtitle = "ALS detection",
-       x = "Hyperparameter combinaisons", y = "Cross-Validated AUC") +
-  geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
-```
-
-### Test 2 b : method AUC, many algorithms, pre screening, optimized hyperparameters
-
-```{r}
-#| label: danish-proteomic-ALS-occurence-62
-summary(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_2_b_opt_20)$Table |>
-  as.data.frame() |>
-  flextable() |> 
-  colformat_double(digits = 2) |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
-
-plot(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_2_b_opt_20) + 
-  theme_minimal() + 
-  labs(title = "Model Performance (Step 1b top 20)", 
-       subtitle = "ALS detection",
-       x = "Algorithm", y = "Cross-Validated AUC") +
-  geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
-```
-
-```{r}
-#| label: danish-proteomic-ALS-occurence-63
-summary(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_2_b_opt_10)$Table |>
-  as.data.frame() |>
-  flextable() |> 
-  colformat_double(digits = 2) |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
-
-plot(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_2_b_opt_10) + 
-  theme_minimal() + 
-  labs(title = "Model Performance (Step 1b top 10)", 
-       subtitle = "ALS detection",
-       x = "Algorithm", y = "Cross-Validated AUC") +
-  geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
-```
-
-### Test 2 c : method AUC, selected algorithms, pre screening, optimized hyperparameters
-
-```{r}
-#| label: danish-proteomic-ALS-occurence-64
-summary(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_2_c_opt_20)$Table |>
-  as.data.frame() |>
-  flextable() |> 
-  colformat_double(digits = 2) |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
-
-plot(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_2_c_opt_20) + 
-  theme_minimal() + 
-  labs(title = "Model Performance (Step 1c top 20)", 
-       subtitle = "ALS detection",
-       x = "Algorithm", y = "Cross-Validated AUC") +
-  geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
-```
-
-```{r}
-#| label: danish-proteomic-ALS-occurence-65
-summary(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_2_c_opt_10)$Table |>
-  as.data.frame() |>
-  flextable() |> 
-  colformat_double(digits = 2) |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
-
-plot(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_2_c_opt_10) + 
-  theme_minimal() + 
-  labs(title = "Model Performance (Step 1c top 10)", 
-       subtitle = "ALS detection",
-       x = "Algorithm", y = "Cross-Validated AUC") +
-  geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
-```
-
-
-### Weights of the algorithms ()
-
-```{r}
-#| label: danish-proteomic-ALS-occurence-66
-# Calcul des poids moyens en pourcentage
-all_weights <- lapply(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_2_c_opt_10$AllSL, function(x) x$coef)
-weights_matrix <- do.call(rbind, all_weights)
-colnames(weights_matrix) <- results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_2_c_opt_10$libraryNames
-
-df_weights <- data.frame(
-  Algorithms = colnames(weights_matrix),
-  Mean_weights = colMeans(weights_matrix) * 100) |> 
-  dplyr::arrange(desc(Mean_weights))
-
-df_weights |>
-  flextable() |>
-  set_header_labels(Mean_weights = "Mean weights (%)") |>
-  colformat_double(j = "Mean_weights", digits = 1) |>
-  flextable::font(fontname = "Calibri", part = "all") |>
-  fontsize(size = 10, part = "all") |>
-  autofit()
-
-rm(all_weights, weights_matrix, df_weights)
-```
-
-### Selected proteins by leeklasso
-
-```{r}
-#| label: danish-proteomic-ALS-occurence-67
-# Extraction des protéines et coefficients pour Leekasso
-leek_results_list <- lapply(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_2_c_opt_10$AllSL, function(fold_fit) {
-  obj <- fold_fit$fitLibrary$SL.leekasso_All$object
-  if(is.null(obj)) return(NULL)
-  
-  coefs <- coef(obj)
-  coefs <- coefs[names(coefs) != "(Intercept)"]
-  
-  data.frame(
-    Protein = names(coefs),
-    Log_Odds = as.numeric(coefs)
-  )
-})
-
-df_leek_final <- do.call(rbind, leek_results_list) |>
-  dplyr::group_by(Protein) |>
-  dplyr::summarise(
-    Consistency = n() / 10 * 100,
-    Mean_OR = exp(mean(Log_Odds)) ) |>
-  dplyr::arrange(desc(Consistency))
-
-
-df_leek_final |>
-  flextable() |>
-  set_header_labels(
-    Protein = "Selected proteins",
-    Consistency = "Consistency across folds (%)", 
-    Mean_OR = "Mean ORs across folds") |>
-  colformat_double(j = "Mean_OR", digits = 2) |>
-  colformat_double(j = "Consistency", digits = 1) |>
-  flextable::font(fontname = "Calibri", part = "all") |>
-  fontsize(size = 10, part = "all") |>
-  autofit()
-
-rm(leek_results_list, df_leek_final)
-```
-
-### Selected proteins by GLMNet
-
-```{r}
-#| label: danish-proteomic-ALS-occurence-68
-# Extraction des protéines selectionnées par GLMNet dans chaque pli
-glm_results_list <- lapply(results_proteomic_ALS_occurrence_SL$test_2$sl_fit_CV_2_c_opt_10$AllSL, function(fold_fit) {
-  fit_glmnet <- fold_fit$fitLibrary$SL.glmnet.a0.9_Al$object
-  coefs <- as.matrix(coef(fit_glmnet, s = "lambda.min"))
-  
-  data.frame(
-    Protein = rownames(coefs),
-    Log_Odds = as.numeric(coefs)
-  ) |>
-    dplyr::filter(Protein != "(Intercept)")
-})
-
-df_glm_final <- do.call(rbind, glm_results_list) |>
-  dplyr::group_by(Protein) |>
-  dplyr::summarise(
-    Consistency = sum(Log_Odds != 0) / 10 * 100,
-    Mean_OR = exp(mean(Log_Odds[Log_Odds != 0]))) |>
-  dplyr::filter(Consistency > 0) |>
-  dplyr::arrange(desc(Consistency))
-
-df_glm_final |>
-  flextable() |>
-  set_header_labels(
-    Protein = "Proteine",
-    Consistency = "Consistency across folds (%)", 
-    Mean_OR = "Mean ORs across folds") |>
-  colformat_double(j = "Mean_OR", digits = 2) |>
-  colformat_double(j = "Consistency", digits = 1) |>
-  flextable::font(fontname = "Calibri", part = "all") |>
-  fontsize(size = 10, part = "all") |>
-  autofit()
-
-rm(glm_results_list, df_glm_final)
-```
-
-## Additional analysis 4 - tidymodels 
-
-### Test 1: Can plasma proteins predict ALS? (proteins + covariates: birth year, sex, BMI, smoking)
+### Test 1 (tidymodels): Can plasma proteins predict ALS? (proteins + covariates: birth year, sex, BMI, smoking)
 
 For each test, the pipeline follows two phases:
 
@@ -3869,7 +3574,7 @@ if (length(results_proteomic_ALS_occurrence_tidymodels$test_1$overlap_t1) > 0) {
 ```
 
 
-### Test 2: Can plasma proteins predict ALS? (proteins + follow-up + covariates: birth year, sex, BMI, smoking) 
+### Test 2 (tidymodels): Can plasma proteins predict ALS? (proteins + follow-up + covariates: birth year, sex, BMI, smoking) 
 #### Penalized Logistic Regression (glmnet) tuning
 
 Standard logistic regression would fail here because p \> n (\~280 predictors, 166 cases). glmnet solves this by adding a penalty term to the loss function that shrinks coefficients toward zero, effectively performing implicit variable selection.
@@ -4161,7 +3866,7 @@ if (length(results_proteomic_ALS_occurrence_tidymodels$test_2$overlap_t2) > 0) {
 ```
 
 
-### Test 3: interaction with follow-up duration?
+### Test 3 (tidymodels): interaction with follow-up duration?
 #### Comparison of glmnet models 
 ```{r}
 #| label: tidymodel-test-3-1
@@ -4257,7 +3962,7 @@ results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$coefs_protei
 
 
 
-### Test 3: interaction with follow-up duration among individuals with follow-up >= 5 years
+### Test 3 (tidymodels): interaction with follow-up duration among individuals with follow-up >= 5 years
 #### Comparison of glmnet models 
 ```{r}
 #| label: tidymodel-test-3-sensi-1
@@ -4353,37 +4058,39 @@ results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$glmnet_t3_result_sensi$
 
 # Proteomic and years to ALS
 
-## Cox models among cases
+## Are pre-diagnostic protein levels (up to 23 years before onset) statistically associated with the time-to-onset of the disease?
+
+### Cox models among cases
 
 Event = ALS, time to event = from baseline to ALS diagnostic (cases)
 
 
-### continuous standardized
+#### continuous standardized
 
-```{r, fig.width=15, fig.height=5}
+```{r}
 #| label: danish-proteomic-y-to-ALS-1
-results_proteomic_ALS_occurrence_y_to_als$main_results_cox$proteomic_sd_ALS_table_cox |>
+results_proteomic_ALS_occurrence_y_to_als$cox_cases$proteomic_sd_ALS_table_cox |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
 ```{r, fig.width=15, fig.height=6}
 #| column: screen-inset-right
 #| label: danish-proteomic-y-to-ALS-2
-wrap_plots(results_proteomic_ALS_occurrence_y_to_als$main_results_cox$proteomic_sd_ALS_base_figure_cox, 
-           results_proteomic_ALS_occurrence_y_to_als$main_results_cox$proteomic_sd_ALS_adjusted_figure_cox, 
+wrap_plots(results_proteomic_ALS_occurrence_y_to_als$cox_cases$proteomic_sd_ALS_base_figure_cox, 
+           results_proteomic_ALS_occurrence_y_to_als$cox_cases$proteomic_sd_ALS_adjusted_figure_cox, 
            ncol = 2)
 ```
 
-### quartiles
+#### quartiles
 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-3
 #| column: screen-inset-right
-results_proteomic_ALS_occurrence_y_to_als$main_results_cox$proteomic_quart_ALS_table_cox |>
+results_proteomic_ALS_occurrence_y_to_als$cox_cases$proteomic_quart_ALS_table_cox |>
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-### GAMs
+#### GAMs
 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-4
@@ -4449,57 +4156,114 @@ rm(plots_lists, all_proteins, plot_grid, plot_base_cox_gam_danish, plot_adjusted
 
 ```
 
-## Fixed-horizon logistic analyses
 
-### Proteome wide associations (logistic regressions)
+### Cox models among cases anc controls 
+
+Event = ALS, time to event = from baseline to ALS diagnostic (not end of study)
+
+
+#### continuous standardized
+
+```{r, fig.width=15, fig.height=5}
+#| label: danish-proteomic-y-to-ALS-6
+results_proteomic_ALS_occurrence_y_to_als$cox_all$proteomic_sd_ALS_table_cox |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
+```
+
+```{r, fig.width=15, fig.height=6}
+#| column: screen-inset-right
+#| label: danish-proteomic-y-to-ALS-7
+wrap_plots(results_proteomic_ALS_occurrence_y_to_als$cox_all$proteomic_sd_ALS_base_figure_cox, 
+           results_proteomic_ALS_occurrence_y_to_als$cox_all$proteomic_sd_ALS_adjusted_figure_cox, 
+           ncol = 2)
+```
+
+#### quartiles
+
+```{r}
+#| label: danish-proteomic-y-to-ALS-8
+#| column: screen-inset-right
+results_proteomic_ALS_occurrence_y_to_als$cox_all$proteomic_quart_ALS_table_cox |>
+  set_table_properties(width = 1, layout = "autofit", align = "left")
+```
+
+
+
+### Fixed-horizon logistic analyses
 
 #### Continuous coding (standardized)
 
 ```{r}
-#| label: danish-proteomic-y-to-ALS-6
+#| label: danish-proteomic-y-to-ALS-9
 results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$proteome_wide$proteomic_sd_ALS_table_y_10_20
 ```
 
 ```{r}
-#| label: danish-proteomic-y-to-ALS-7
+#| label: danish-proteomic-y-to-ALS-10
 results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$proteome_wide$proteomic_sd_ALS_adjusted_figure_y_10ans
 ```
 
 ```{r}
-#| label: danish-proteomic-y-to-ALS-8
+#| label: danish-proteomic-y-to-ALS-11
 results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$proteome_wide$proteomic_sd_ALS_adjusted_figure_y_20ans
 ```
 
 #### Quartiles
 
 ```{r}
-#| label: danish-proteomic-y-to-ALS-9
+#| label: danish-proteomic-y-to-ALS-12
 #| column: screen-inset-right
 results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$proteome_wide$proteomic_quart_ALS_table_y_10_20
 ```
 
-### Machine learning (Xboost)
+### Linear models 
+
+#### Main analysis 
+```{r}
+#| label: danish-proteomic-y-to-ALS-13
+results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$main$Follow_up_proteomic_sd_table |>
+  flextable::autofit()
+```
+
+```{r}
+#| label: danish-proteomic-y-to-ALS-14
+results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$main$Follow_up_proteomic_sd_figure
+```
+
+#### Sensivitity analysis: sex effect?
+```{r}
+#| label: danish-proteomic-y-to-ALS-15
+results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$sensi_sex$Follow_up_proteomic_sd_table_sensi_sex |> flextable::autofit()
+```
+
+```{r}
+#| label: danish-proteomic-y-to-ALS-16
+results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$sensi_sex$Follow_up_proteomic_sd_figure_sensi_sex
+```
+
+## Can pre-diagnostic protein levels (up to 23 years before onset) predict the time-to-onset of ALS?
+### Fixed-horizon logistic analyses Machine learning (Xboost)
 
 #### 10 years horizon
 
 Number of optimal trees
 
 ```{r}
-#| label: danish-proteomic-y-to-ALS-10
+#| label: danish-proteomic-y-to-ALS-17
 cat("---> Optimal number of trees (10 years horizon) :", results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$best_nrounds_10, "\n")
 ```
 
 Maximum AUC (Cross-validated)
 
 ```{r}
-#| label: danish-proteomic-y-to-ALS-11
+#| label: danish-proteomic-y-to-ALS-18
 cat("---> Maximum AUC (cross validated, 10 years horizon) :", max(results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$cv_10ans$evaluation_log$test_auc_mean), "\n")
 ```
 
 Importance top 20 variables (10 years horizon)
 
 ```{r}
-#| label: danish-proteomic-y-to-ALS-12
+#| label: danish-proteomic-y-to-ALS-19
 cat("\nTop 20 predictors - 10 years horizon :\n")
 head(results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$importance_10, 20) |>
     flextable() |>
@@ -4512,7 +4276,7 @@ head(results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression
 ```
 
 ```{r}
-#| label: danish-proteomic-y-to-ALS-13
+#| label: danish-proteomic-y-to-ALS-20
 xgb.plot.importance(
   importance_matrix = results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$importance_10[1:20, ], 
   main = "Importance of the top 20 predictors (10 years horizon)")
@@ -4523,21 +4287,21 @@ xgb.plot.importance(
 Number of optimal trees
 
 ```{r}
-#| label: danish-proteomic-y-to-ALS-14
+#| label: danish-proteomic-y-to-ALS-21
 cat("---> Optimal number of trees (20 years horizon) :", results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$best_nrounds_20, "\n")
 ```
 
 Maximum AUC (Cross-validated)
 
 ```{r}
-#| label: danish-proteomic-y-to-ALS-15
+#| label: danish-proteomic-y-to-ALS-22
 cat("---> Maximum AUC (cross validated, 20 years horizon) :", max(results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$cv_20ans$evaluation_log$test_auc_mean), "\n")
 ```
 
 Importance top 20 variables (20 year horizon)
 
 ```{r}
-#| label: danish-proteomic-y-to-ALS-16
+#| label: danish-proteomic-y-to-ALS-23
 cat("\nTop 20 predictors - 20 years horizon :\n")
 head(results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$importance_20, 20) |>
     flextable() |>
@@ -4550,155 +4314,18 @@ head(results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression
 ```
 
 ```{r}
-#| label: danish-proteomic-y-to-ALS-17
+#| label: danish-proteomic-y-to-ALS-24
 xgb.plot.importance(
   importance_matrix = results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$importance_20[1:20, ], 
   main = "Importance of the top 20 predictors (20 years horizon)")
 ```
 
-## Logistic models including time
 
-### Proteome wide associations
 
+
+## Linear models  Machine learning (tidymodels)
 ```{r}
-#| label: danish-proteomic-y-to-ALS-18
-results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$proteome_wide$proteomic_interaction_table
-```
-
-### Machine learning (XGboost)
-
-#### Etape 1 : choisir les meilleurs hyperparameters avec super learner (excepté nb de trees) 
-```{r}
-#| label: danish-proteomic-y-to-ALS-19
-summary(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost$cv_sl_1_AUC)$Table |>
-  as.data.frame() |>
-  flextable() |> 
-  colformat_double(digits = 2) |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
-plot(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost$cv_sl_1_AUC) + 
-  theme_minimal() + 
-  labs(title = "Model Performance (Step 1 to choose the best hyperparameters except nb of trees)", 
-       subtitle = "ALS detection",
-       x = "Algorithm", y = "Cross-Validated AUC") +
-  geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
-
-summary(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost$cv_sl_1_NNLS)$Table |>
-  as.data.frame() |>
-  flextable() |> 
-  colformat_double(digits = 2) |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
-plot(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost$cv_sl_1_NNLS)  + 
-  theme_minimal() + 
-  labs(title = "Model Performance (Step 1 to choose the best hyperparameters except nb of trees)", 
-       subtitle = "ALS detection",
-       x = "Algorithm", y = "V-fold CV Risk Estimate (NNLS)") +
-  geom_hline(yintercept = 0.222, linetype = "dashed", color = "red")
-```
-
-$$MSE_{hasard} = p(1-p) = \frac{1}{3} \times \frac{2}{3} = \frac{2}{9} \approx 0.222$$
-
-
-#### Etape 2 : choisir le nb de trees avec SL (grace a l'argument early_stopping_rounds ) et les meilleurs hyperparameters choisis en 1
-```{r}
-#| label: danish-proteomic-y-to-ALS-20
-summary(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost$cv_sl_2_AUC)$Table |>
-  as.data.frame() |>
-  flextable() |> 
-  colformat_double(digits = 2) |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
-plot(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost$cv_sl_2_AUC) + 
-  theme_minimal() + 
-  labs(title = "Model Performance (Step 2 to choose the best nb of trees)", 
-       subtitle = "ALS detection",
-       x = "Algorithm", y = "Cross-Validated AUC") +
-  geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
-
-summary(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost$cv_sl_2_NNLS)$Table |>
-  as.data.frame() |>
-  flextable() |> 
-  colformat_double(digits = 2) |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
-plot(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost$cv_sl_2_NNLS) + 
-  theme_minimal() + 
-  labs(title = "Model Performance (Step 2 to choose the best nb of trees)", 
-       subtitle = "ALS detection",
-       x = "Algorithm", y = "V-fold CV Risk Estimate (NNLS)") +
-  geom_hline(yintercept = 0.222, linetype = "dashed", color = "red")
-```
-
-#### Etapes 1 et 2 mixées ensembles
-```{r}
-#| label: danish-proteomic-y-to-ALS-21
-summary(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost$cv_sl_1_2_AUC)$Table |>
-  as.data.frame() |>
-  flextable() |> 
-  colformat_double(digits = 2) |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
-plot(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost$cv_sl_1_2_AUC) + 
-  theme_minimal() + 
-  labs(title = "Model Performance (Step 1 and 2 mixed to choose the best hyperparameters and nb of trees)", 
-       subtitle = "ALS detection",
-       x = "Algorithm", y = "Cross-Validated AUC") +
-  geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
-
-summary(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost$cv_sl_1_2_NNLS)$Table |>
-  as.data.frame() |>
-  flextable() |> 
-  colformat_double(digits = 2) |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
-  set_table_properties(align = "left") |>
-  autofit()
-plot(results_proteomic_ALS_occurrence_y_to_als$logistic_models_including_time$machine_learning_xgboost$cv_sl_1_2_NNLS)  + 
-  theme_minimal() + 
-  labs(title = "Model Performance (Step 1 and 2 mixed to choose the best hyperparameters and nb of trees)", 
-       subtitle = "ALS detection",
-       x = "Algorithm", y = "V-fold CV Risk Estimate (NNLS)") +
-  geom_hline(yintercept = 0.222, linetype = "dashed", color = "red")
-```
-
-## Linear models 
-### Proteome wide associations 
-#### Main analysis 
-```{r}
-#| label: danish-proteomic-y-to-ALS-22
-#| column: screen-inset-right
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$main$Follow_up_proteomic_sd_table
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$main$Follow_up_proteomic_sd_figure
-```
-
-#### Sensivitity analysis: sex effect?
-```{r}
-#| label: danish-proteomic-y-to-ALS-23
-#| column: screen-inset-right
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$sensi_sex$Follow_up_proteomic_sd_table_sensi_sex
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$sensi_sex$Follow_up_proteomic_sd_figure_sensi_sex
-```
-
-### Machine learning (tidymodels)
-```{r}
-#| label: danish-proteomic-y-to-ALS-24
+#| label: danish-proteomic-y-to-ALS-25
 results_proteomic_ALS_occurrence_y_to_als$main_results_linear$machine_learning$t_glmnet_reg
 
 results_proteomic_ALS_occurrence_y_to_als$main_results_linear$machine_learning$f_glmnet_reg 
