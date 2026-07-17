@@ -1,4 +1,48 @@
 
+# POPs and ALS survival revision ----
+library(dplyr)
+library(forcats)
+library(gtsummary)
+
+bdd_danish |>
+  filter(als == 1) |>                          # Among cases 
+  # 1. Conversion de pg/mL vers ng/g lipid
+  mutate(across(all_of(POPs_tot), ~ .x / (lipid_tot_phillips_g_L * 10))) |> 
+  select(all_of(POPs_tot)) |>
+  # 2. Affichage des moyennes (mean) et écarts-types (sd)
+  tbl_summary(
+    statistic = all_continuous() ~ "{mean} ({sd})", 
+    digits = all_continuous() ~ 1,
+    # --- LA CORRECTION ICI : On force explicitement les étiquettes des totaux ---
+    label = list(
+      `ΣDDT`       ~ "ΣDDT",
+      `ΣHCH`       ~ "ΣHCH",
+      `Σchlordane` ~ "Σchlordane",
+      `ΣPBDE`      ~ "ΣPBDE")) |>
+  bold_labels() |>
+  add_overall()
+
+
+bdd_danish |>
+  filter(als == 1) |>                          # Parmi les cas d'ALS
+  # Conversion de pg/mL vers µg/mL (division par 1 000 000)
+  mutate(across(all_of(POPs_tot), ~ .x / 1000000)) |> 
+  select(all_of(POPs_tot)) |>
+  tbl_summary(
+    statistic = all_continuous() ~ "{mean} ({sd})", 
+    # Augmentation des décimales car les valeurs en µg/mL vont être très petites
+    digits = all_continuous() ~ 6) |>
+  bold_labels() |>
+  add_overall()
+
+
+
+
+
+
+
+
+
 # Loading ----
 source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 library(survival)

@@ -2853,7 +2853,7 @@ results_proteomic_ALS_occurrence$logistic_models_including_time$proteome_wide$pr
 ```
 
 
-### Additionnal analysis 1
+### Additionnal analysis 1 - normality of the OR distribution?
 
 ```{r, fig.height=3, fig.width=3}
 #| label: danish-proteomic-ALS-occurence-39
@@ -2863,7 +2863,7 @@ results_proteomic_ALS_occurrence$additional_analysis_1$boxplot_OR
 results_proteomic_ALS_occurrence$additional_analysis_1$densityplot_OR
 ```
 
-### Additionnal analysis 2
+### Additionnal analysis 2 - normality of the OR/p-value bidimentional distribution?
 
 Testing the distribution of the p-values depending on OR\>=1 to the distribution of the p-values depending on OR\<1 using a Fasano-Franceschini test
 
@@ -2937,8 +2937,8 @@ results_proteomic_ALS_occurrence$additional_analysis_2$jackknife_neuro_results |
 ```
 
 ## Are the pre disease proteins predicting ALS risk?
-
-### Test 1 a (SL) : method AUC, many algorithms, no pre screening, default hyperparameters
+### Superlearner package
+#### Test 1 a: method AUC, many algorithms, no pre screening, default hyperparameters
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-44
@@ -2966,9 +2966,9 @@ Trees methodologies are not doing a great job but there are supposed to handle c
 
 Algorithms such as SL.bayesglm, SL.stepAIC, SL.ksvm, SL.gam, SL.polymars and SL.earth should do better wit pre screening
 
-### Defining the best hyperparameter combinaison for each algorithm
+#### Defining the best hyperparameter combinaison for each algorithm
 
-#### SL.glmnet
+##### SL.glmnet
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-45
@@ -2990,7 +2990,7 @@ plot(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_glmnet) +
   geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
 ```
 
-#### SL.ranger
+##### SL.ranger
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-46
@@ -3012,7 +3012,7 @@ plot(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_ranger) +
   geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
 ```
 
-#### SL.xgboost
+##### SL.xgboost
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-47
@@ -3034,7 +3034,7 @@ plot(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_xgboost) +
   geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
 ```
 
-#### SL.ksvm
+##### SL.ksvm
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-48
@@ -3056,7 +3056,7 @@ plot(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_ksvm) +
   geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
 ```
 
-#### SL.earth
+##### SL.earth
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-49
@@ -3078,7 +3078,7 @@ plot(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_earth) +
   geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
 ```
 
-### Test 1 b (SL): method AUC, many algorithms, pre screening, optimized hyperparameters
+#### Test 1 b: method AUC, many algorithms, pre screening, optimized hyperparameters
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-50
@@ -3120,7 +3120,7 @@ plot(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_1_b_opt_10) +
   geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
 ```
 
-### Test 1 c (SL): method AUC, selected algorithms, pre screening, optimized hyperparameters
+#### Test 1 c: method AUC, selected algorithms, pre screening, optimized hyperparameters
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-52
@@ -3162,7 +3162,7 @@ plot(results_proteomic_ALS_occurrence_SL$test_1$sl_fit_CV_1_c_opt_10) +
   geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
 ```
 
-### Weights of the algorithms (sl_fit_CV_1_c_opt_20)
+#### Weights of the algorithms (sl_fit_CV_1_c_opt_20)
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-54
@@ -3187,7 +3187,7 @@ df_weights |>
 rm(all_weights, weights_matrix, df_weights)
 ```
 
-### Selected proteins by leeklasso (sl_fit_CV_1_c_All)
+#### Selected proteins by leeklasso (sl_fit_CV_1_c_All)
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-55
@@ -3228,7 +3228,7 @@ df_leek_final |>
 rm(leek_results_list, df_leek_final)
 ```
 
-### Selected proteins by GLMNet (sl_fit_CV_1_c_All)
+#### Selected proteins by GLMNet (sl_fit_CV_1_c_All)
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-56
@@ -3293,7 +3293,8 @@ CD302: C-type lectin receptor involved in cell adhesion and migration, primarily
 
 PADI2: Protein-arginine deiminase type-2
 
-### Test 1 (tidymodels): Can plasma proteins predict ALS? (proteins + covariates: birth year, sex, BMI, smoking)
+### Tidymodels package
+#### Test 1: Can plasma proteins predict ALS? (proteins + covariates: birth year, sex, BMI, smoking)
 
 For each test, the pipeline follows two phases:
 
@@ -3303,7 +3304,7 @@ For each test, the pipeline follows two phases:
 
 All models use a grouped 10-cross-validation respecting the matching structure: all 3 individuals from a same triplet (1 case + 2 controls) are always kept on the same side — either all in the training set or all in the test set. Without this grouping, the model could learn patterns tied to the matching variables (birth year and sex) rather than the true proteomic signal, artificially inflating AUC.
 
-#### Penalized Logistic Regression (glmnet) tuning
+##### Penalized Logistic Regression (glmnet) tuning
 Standard logistic regression would fail here because p \> n (\~280 predictors, 166 cases). glmnet solves this by adding a penalty term to the loss function that shrinks coefficients toward zero, effectively performing implicit variable selection.
 
 Two hyperparameters are tuned:
@@ -3344,7 +3345,7 @@ cat("Best glmnet T1 — mixture (alpha):",
     round(results_proteomic_ALS_occurrence_tidymodels$test_1$best_glmnet$penalty, 5), "\n")
 ```
 
-#### Random forest tuning
+##### Random forest tuning
 
 Random Forest trains 1,000 decision trees independently, each on a random bootstrap sample of the data and using only a random subset of predictors at each split. The final prediction is the average across all 1,000 trees.This double randomization makes Random Forest highly resistant to overfitting.
 
@@ -3365,7 +3366,7 @@ cat("Best RF T1 — splitrule:", results_proteomic_ALS_occurrence_tidymodels$tes
     "| min_n:", results_proteomic_ALS_occurrence_tidymodels$test_1$best_rf_t1$best$min_n, "\n")
 ```
 
-#### Gradient Boosting (XGBoost) tuning
+##### Gradient Boosting (XGBoost) tuning
 
 XGBoost builds trees sequentially: each tree corrects the residual errors of the previous one. This sequential method generally yields higher accuracy than random forest but makes XGBoost more prone to overfitting and sensitive to more hyperparameters.
 
@@ -3440,7 +3441,7 @@ results_proteomic_ALS_occurrence_tidymodels$test_1$xgb_cv_es_t1$evaluation_log |
   theme_minimal()
 ```
 
-#### Linear Support Vector Machine (SMV) tuning
+##### Linear Support Vector Machine (SMV) tuning
 
 The SVM finds the hyperplane that best separates cases from controls by maximizing the margin between the two groups.
 
@@ -3470,7 +3471,7 @@ show_best(results_proteomic_ALS_occurrence_tidymodels$test_1$tune_svm_t1, metric
 cat("Best SVM T1 — cost:", round(results_proteomic_ALS_occurrence_tidymodels$test_1$best_svm_t1$cost, 4), "\n")
 ```
 
-#### Multivariate Adaptive Regression Splines (MARS) tuning
+##### Multivariate Adaptive Regression Splines (MARS) tuning
 
 MARS is a non-linear model that automatically discovers breakpoints in predictor-outcome relationships. For example, it can learn "if protein X \> threshold, the effect is strong; otherwise it is negligible". More flexible than linear models but more interpretable than tree ensembles.
 
@@ -3494,7 +3495,7 @@ show_best(results_proteomic_ALS_occurrence_tidymodels$test_1$tune_mars_t1, metri
   autofit()
 ```
 
-#### Comparaison of the best combinaisons Test 1
+##### Comparaison of the best combinaisons Test 1
 
 Once the best hyperparameters are identified for each algorithm, all models are evaluated on the same 10 cross-validation folds. This ensures a fair comparison: same data splits, same metric (AUC).
 
@@ -3516,18 +3517,20 @@ autoplot(results_proteomic_ALS_occurrence_tidymodels$test_1$results_t1, metric =
        x = "Mean AUC (CV)", y = "")
 ```
 
-#### Best model Test 1
+##### Best model Test 1
 
 ```{r}
 #| label: test1-best-model
 cat("Best model Test 1:", results_proteomic_ALS_occurrence_tidymodels$test_1$best_wf_id_t1, "\n")
 cat("   Mean AUC:", round(results_proteomic_ALS_occurrence_tidymodels$test_1$summary_t1$mean[1], 3),
     "± SE:", round(results_proteomic_ALS_occurrence_tidymodels$test_1$summary_t1$std_err[1], 3), "\n")
+
+results_proteomic_ALS_occurrence_tidymodels$test_1$roc_curve_data_t1
 ```
 
-#### Interpretation : glmnet (winner) + XGBoost (comparison)
+##### Interpretation : glmnet (winner) + XGBoost (comparison)
 
-##### Glmnet
+###### Glmnet
 
 Top 89 predictors (by \|coefficient\|) selected by glmnet elasticnet
 
@@ -3536,7 +3539,7 @@ results_proteomic_ALS_occurrence_tidymodels$test_1$t_glmnet_t1
 results_proteomic_ALS_occurrence_tidymodels$test_1$f_glmnet_t1
 ```
 
-##### XGboost
+###### XGboost
 
 Top 20 variables by SHAP importance
 
@@ -3563,7 +3566,7 @@ results_proteomic_ALS_occurrence_tidymodels$test_1$f_xgb_dependanceplot_t1 |>
   wrap_plots(ncol = 1, nrow = 6)
 ```
 
-#### Comparison: glmnet vs XGBoost across both tests
+##### Comparison: glmnet vs XGBoost across both tests
 
 ```{r}
 cat("COMPARISON: glmnet vs XGBoost COEFFICIENTS/SHAP\n")
@@ -3574,8 +3577,8 @@ if (length(results_proteomic_ALS_occurrence_tidymodels$test_1$overlap_t1) > 0) {
 ```
 
 
-### Test 2 (tidymodels): Can plasma proteins predict ALS? (proteins + follow-up + covariates: birth year, sex, BMI, smoking) 
-#### Penalized Logistic Regression (glmnet) tuning
+#### Test 2: Can plasma proteins predict ALS? (proteins + follow-up + covariates: birth year, sex, BMI, smoking) 
+##### Penalized Logistic Regression (glmnet) tuning
 
 Standard logistic regression would fail here because p \> n (\~280 predictors, 166 cases). glmnet solves this by adding a penalty term to the loss function that shrinks coefficients toward zero, effectively performing implicit variable selection.
 
@@ -3616,7 +3619,7 @@ cat("Best glmnet T2 — mixture (alpha):",
     round(results_proteomic_ALS_occurrence_tidymodels$test_2$best_glmnet$penalty, 5), "\n")
 ```
 
-#### Random forest tuning
+##### Random forest tuning
 
 ```{r}
 #| label: test2-rf
@@ -3625,7 +3628,7 @@ cat("Best RF T2 — splitrule:", results_proteomic_ALS_occurrence_tidymodels$tes
     "| min_n:", results_proteomic_ALS_occurrence_tidymodels$test_2$best_rf_t2$best$min_n, "\n")
 ```
 
-#### Gradient Boosting (XGBoost) tuning
+##### Gradient Boosting (XGBoost) tuning
 
 XGBoost builds trees sequentially: each tree corrects the residual errors of the previous one. This sequential method generally yields higher accuracy than random forest but makes XGBoost more prone to overfitting and sensitive to more hyperparameters.
 
@@ -3701,7 +3704,7 @@ results_proteomic_ALS_occurrence_tidymodels$test_2$xgb_cv_es_t2$evaluation_log |
   theme_minimal()
 ```
 
-#### Linear Support Vector Machine (SMV) tuning
+##### Linear Support Vector Machine (SMV) tuning
 
 The SVM finds the hyperplane that best separates cases from controls by maximizing the margin between the two groups.
 
@@ -3731,7 +3734,7 @@ show_best(results_proteomic_ALS_occurrence_tidymodels$test_2$tune_svm_t2, metric
 cat("Best SVM T2 — cost:", round(results_proteomic_ALS_occurrence_tidymodels$test_2$best_svm_t2$cost, 4), "\n")
 ```
 
-#### Multivariate Adaptive Regression Splines (MARS) tuning
+##### Multivariate Adaptive Regression Splines (MARS) tuning
 
 MARS is a non-linear model that automatically discovers breakpoints in predictor-outcome relationships. For example, it can learn "if protein X \> threshold, the effect is strong; otherwise it is negligible". More flexible than linear models but more interpretable than tree ensembles.
 
@@ -3755,7 +3758,7 @@ show_best(results_proteomic_ALS_occurrence_tidymodels$test_2$tune_mars_t2, metri
   autofit()
 ```
 
-#### Comparaison of the best combinaisons Test 2
+##### Comparaison of the best combinaisons Test 2
 
 Once the best hyperparameters are identified for each algorithm, all models are evaluated on the same 10 cross-validation folds. This ensures a fair comparison: same data splits, same metric (AUC).
 
@@ -3777,18 +3780,20 @@ autoplot(results_proteomic_ALS_occurrence_tidymodels$test_2$results_t2, metric =
        x = "Mean AUC", y = "")
 ```
 
-#### Best model Test 2
+##### Best model Test 2
 
 ```{r}
 #| label: test2-best-model
 cat("Best model Test 2 :", results_proteomic_ALS_occurrence_tidymodels$test_2$best_wf_id_t2, "\n")
 cat("   Mean AUC:", round(results_proteomic_ALS_occurrence_tidymodels$test_2$summary_t2$mean[1], 3),
     "± SE:", round(results_proteomic_ALS_occurrence_tidymodels$test_2$summary_t2$std_err[1], 3), "\n")
+
+results_proteomic_ALS_occurrence_tidymodels$test_2$roc_curve_data_t2 
 ```
 
-#### Interpreation : glmnet (winner) + XGBoost (comparison)
+##### Interpreation : glmnet (winner) + XGBoost (comparison)
 
-##### Glmnet
+###### Glmnet
 
 Top 110 predictors (by \|coefficient\|)
 
@@ -3798,7 +3803,7 @@ results_proteomic_ALS_occurrence_tidymodels$test_2$t_glmnet_t2
 results_proteomic_ALS_occurrence_tidymodels$test_2$p_glmnet_t2
 ```
 
-##### XGboost
+###### XGboost
 
 Top 20 variables by SHAP importance
 
@@ -3854,7 +3859,7 @@ cat("\nProtein signal trajectory:\n")
 results_proteomic_ALS_occurrence_tidymodels$test_2$shap_fu_trend 
 ```
 
-#### Comparison: glmnet vs XGBoost across both tests
+##### Comparison: glmnet vs XGBoost across both tests
 
 ```{r}
 #| label: Interpreation:glmnet(winner)+XGBoost(comparison)-9
@@ -3866,8 +3871,8 @@ if (length(results_proteomic_ALS_occurrence_tidymodels$test_2$overlap_t2) > 0) {
 ```
 
 
-### Test 3 (tidymodels): interaction with follow-up duration?
-#### Comparison of glmnet models 
+#### Test 3: interaction with follow-up duration?
+##### Comparison of glmnet models 
 ```{r}
 #| label: tidymodel-test-3-1
 autoplot(results_proteomic_ALS_occurrence_tidymodels$test_3$tune_glmnet, type = "performance") +
@@ -3891,42 +3896,13 @@ cat("Best glmnet T3 — mixture (alpha):",
     round(results_proteomic_ALS_occurrence_tidymodels$test_3$best_glmnet$penalty, 5), "\n")
 ```
 
-#### Interpretation of the best glmnet model
+##### Interpretation of the best glmnet model
 ```{r}
 #| label: tidymodel-test-3-2
-# Extraction de la valeur numérique moyenne du meilleur AUC
-best_auc_value <- show_best(
-  results_proteomic_ALS_occurrence_tidymodels$test_3$tune_glmnet_t3, 
-  metric = "roc_auc", 
-  n = 1)$mean
-
-# Récupération des prédictions hors-échantillon
-best_predictions_t3 <- 
-  results_proteomic_ALS_occurrence_tidymodels$test_3$tune_glmnet_t3 |> 
-  collect_predictions(
-    parameters = results_proteomic_ALS_occurrence_tidymodels$test_3$best_glmnet_t3)
-
-# Calcul des points de la courbe ROC
-roc_curve_data_t3 <- 
-  best_predictions_t3 |>
-  roc_curve(truth = als, .pred_case)
-
-# plot
-roc_curve_data_t3 |> 
-  autoplot() +
-  labs(
-    title = "AUC curve - Test 3 (Elastic Net with follow-up interactions)",
-    subtitle = paste0("CV 10-folds — Mean AUC: ", round(best_auc_value, 3))) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 12),
-    plot.subtitle = element_text(color = "gray40", size = 10))
-
-
-rm(best_auc_value, best_predictions_t3, roc_curve_data_t3)
+results_proteomic_ALS_occurrence_tidymodels$test_3$roc_curve_data_t3 
 ```
 
-#### Extraction of the terms selected by elastic net 
+##### Extraction of the terms selected by elastic net 
 ```{r}
 #| label: tidymodel-test-3-3
 # if(results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$success) {
@@ -3962,8 +3938,8 @@ results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$coefs_protei
 
 
 
-### Test 3 (tidymodels): interaction with follow-up duration among individuals with follow-up >= 5 years
-#### Comparison of glmnet models 
+#### Test 3: interaction with follow-up duration among individuals with follow-up >= 5 years
+##### Comparison of glmnet models 
 ```{r}
 #| label: tidymodel-test-3-sensi-1
 autoplot(results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$tune_glmnet_t3_sensi, type = "performance") +
@@ -3987,7 +3963,7 @@ cat("Best glmnet T3 sensi — mixture (alpha):",
     round(results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$best_glmnet_t3_sensi$penalty, 5), "\n")
 ```
 
-#### Interpretation of the best glmnet model
+##### Interpretation of the best glmnet model
 ```{r}
 #| label: tidymodel-test-3-sensi-2
 # Extraction de la valeur numérique moyenne du meilleur AUC
@@ -4022,7 +3998,7 @@ roc_curve_data_t3_sensi |>
 rm(best_auc_value_t3_sensi, best_predictions_t3_sensi, roc_curve_data_t3_sensi)
 ```
 
-#### Extraction of the terms selected by elastic net 
+##### Extraction of the terms selected by elastic net 
 ```{r}
 #| label: tidymodel-test-3-sensi-3
 # if(results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$success) {
@@ -4058,7 +4034,7 @@ results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$glmnet_t3_result_sensi$
 
 # Proteomic and years to ALS
 
-## Are pre-diagnostic protein levels (up to 23 years before onset) statistically associated with the time-to-onset of the disease?
+## Are the pre-diagnostic protein levels associated with the time-to-onset of the disease?
 
 ### Cox models among cases
 
@@ -4157,7 +4133,7 @@ rm(plots_lists, all_proteins, plot_grid, plot_base_cox_gam_danish, plot_adjusted
 ```
 
 
-### Cox models among cases anc controls 
+### Conditional Cox models among cases anc controls 
 
 Event = ALS, time to event = from baseline to ALS diagnostic (not end of study)
 
@@ -4241,7 +4217,7 @@ results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$sens
 results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$sensi_sex$Follow_up_proteomic_sd_figure_sensi_sex
 ```
 
-## Can pre-diagnostic protein levels (up to 23 years before onset) predict the time-to-onset of ALS?
+## Are the pre-diagnostic protein levels predicting the time-to-onset of ALS?
 ### Fixed-horizon logistic analyses Machine learning (Xboost)
 
 #### 10 years horizon
@@ -4323,7 +4299,7 @@ xgb.plot.importance(
 
 
 
-## Linear models  Machine learning (tidymodels)
+### Linear models  Machine learning (tidymodels)
 ```{r}
 #| label: danish-proteomic-y-to-ALS-25
 results_proteomic_ALS_occurrence_y_to_als$main_results_linear$machine_learning$t_glmnet_reg

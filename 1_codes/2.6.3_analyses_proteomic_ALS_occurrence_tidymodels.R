@@ -1,23 +1,6 @@
 # Aline Davias
 # Juin 2026
-# Prédiction ALS par protéomique – tidymodels (v2)
-# 
-# Structure :
-#   Test 1 : protéines + covariables (birth_year, sex, bmi, smoking_2cat_i)
-#   Test 2 : idem + follow_up_no_na_y
-#   Chaque test :
-#     Phase A : tuning hyperparamètres modèle par modèle (tune_grid / tune_bayes)
-#     Phase B : comparaison finale workflow_set, hyperparamètres fixés
-#     Phase C : analyse détaillée du meilleur modèle (SHAP, calibration, etc.)
-#
-# Points clés :
-#   - Early stopping xgboost via xgb.cv (même approche que ton script xgboost)
-#   - Matching 1:2 géré par group_vfold_cv sur `match`
-#   - Filtrage univarié (top-N) via step custom basé sur pROC (CRAN stable)
-#   - tune_bayes pour glmnet et RF (plus efficace que grid_regular sur p >> n)
-#   - grid_latin_hypercube pour les espaces continus (xgb, svm, mars)
-#   - Vérification anti-leakage des folds
-
+# Prédiction ALS par protéomique – tidymodels 
 
 
 # Packages and data ----
@@ -136,47 +119,6 @@ fit_best_workflow <- function(wf_set_results, wf_id, data, seed = 1996) {
 
 
 # Fonction pour extraire les coefficients glmnet d'un fit tidymodels
-extract_glmnet_coefs <- function(best_fit) {
-  tryCatch({
-    glmnet_fit <- best_fit |> extract_fit_engine()
-    lambda_opt <- best_fit |>
-      extract_fit_parsnip() |>
-      pluck("spec", "args", "penalty") |>
-      as.numeric()
-    
-    # Extraire les coefficients de manière plus robuste
-    coef_matrix <- coef(glmnet_fit, s = lambda_opt)
-    
-    # Convertir en tibble correctement
-    coefs <- as_tibble(
-      data.frame(
-        Feature = rownames(coef_matrix),
-        coefficient = as.numeric(coef_matrix[, 1]),
-        stringsAsFactors = FALSE),
-      rownames = NA) |>
-      filter(Feature != "(Intercept)" & coefficient != 0) |>
-      arrange(desc(abs(coefficient)))
-    
-    coefs_annotated <- coefs |>
-      mutate(
-        direction  = case_when(
-          coefficient > 0 ~ "↑ ALS risk", 
-          coefficient < 0 ~ "↓ ALS risk", 
-          TRUE ~ "neutral"),
-        abs_coef = abs(coefficient))
-    
-    return(list(
-      success = TRUE, 
-      coefs_all = coefs_annotated, 
-      coefs_protein = coefs_annotated, 
-      lambda_opt = lambda_opt, 
-      n_selected = nrow(coefs_annotated)))
-    
-  }, error = function(e) {
-    return(list(success = FALSE, error = as.character(e)))
-  })
-}
-
 extract_glmnet_coefs <- function(best_fit) {
   tryCatch({
     glmnet_fit <- best_fit |> extract_fit_engine()
@@ -946,10 +888,9 @@ results_proteomic_ALS_occurrence_tidymodels <- list(
     rf_final_t2 = rf_final_t2, 
     xgb_final_t2 = xgb_final_t2, 
     svm_final_t2 = svm_final_t2, 
-    mars_final_t2 = mars_final_t2))
-
-
-results_proteomic_ALS_occurrence_tidymodels$test_3 <- 
+    mars_final_t2 = mars_final_t2), 
+  
+  test_3 = 
   list( 
     #data_t2 = data_t2,         # we used the same as t2
     #folds_t2 = folds_t2,       # we used the same as t2
@@ -961,10 +902,9 @@ results_proteomic_ALS_occurrence_tidymodels$test_3 <-
     glmnet_final_t3 = glmnet_final_t3, 
     wf_final_set_t3 = wf_final_set_t3, 
     best_fit_t3  = best_fit_t3, 
-    glmnet_t3_result = glmnet_t3_result)
-
-
-results_proteomic_ALS_occurrence_tidymodels$test_3_sensi <- 
+    glmnet_t3_result = glmnet_t3_result), 
+  
+  test_3_sensi =
   list( 
     #data_t3_sensi = data_t3_sensi,        
     #folds_t3_sensi = folds_t3_sensi,     
@@ -976,7 +916,7 @@ results_proteomic_ALS_occurrence_tidymodels$test_3_sensi <-
     glmnet_final_t3_sensi = glmnet_final_t3_sensi, 
     wf_final_set_t3_sensi = wf_final_set_t3_sensi, 
     best_fit_t3_sensi  = best_fit_t3_sensi, 
-    glmnet_t3_result_sensi = glmnet_t3_result_sensi)
+    glmnet_t3_result_sensi = glmnet_t3_result_sensi))
 
 rm(tune_glmnet_t1,
    tune_rf_t1,
@@ -1027,18 +967,18 @@ rm(tune_glmnet_t1,
    xgb_id_t2, 
    xgb_fit_t2, 
    xgb_tree2_id_t2, 
-   xgb_tree2_fit_t2)
-
-rm(tune_glmnet_t3, 
+   xgb_tree2_fit_t2,
+   
+   tune_glmnet_t3, 
    best_glmnet_t3, 
    glmnet_final_t3, 
    wf_final_set_t3, 
    best_fit_t3, 
    selected_predictors, 
    glmnet_t3_result, 
-   rec_interact_t3)
-
-rm(data_t3_sensi, 
+   rec_interact_t3, 
+   
+   data_t3_sensi, 
    folds_t3_sensi,   
    rec_full_t3_sensi, 
    rec_top20_t3_sensi, 
@@ -1062,7 +1002,7 @@ cat("Test 2 best model:", results_proteomic_ALS_occurrence_tidymodels$test_2$bes
 ## Test 1 interpretation : glmnet (winner) + XGBoost (comparison) ----
 
 ### glmnet test 1 ----
-glmnet_t1_result <- extract_glmnet_coefs(
+results_proteomic_ALS_occurrence_tidymodels$test_1$glmnet_t1_result <- extract_glmnet_coefs(
   results_proteomic_ALS_occurrence_tidymodels$test_1$best_fit_t1)
 
 cat("  Lambda optimal:", round(glmnet_t1_result$lambda_opt, 6), "\n")
@@ -1097,6 +1037,35 @@ results_proteomic_ALS_occurrence_tidymodels$test_1$f_glmnet_t1 <- glmnet_t1_resu
        x = "Coefficient (standardized)", y = NULL) +
   theme_minimal() + 
   theme(legend.position = "bottom")
+
+# AUC moyenne glmnet 
+results_proteomic_ALS_occurrence_tidymodels$test_1$best_auc_value <- show_best(                                                    # Extraction de la valeur numérique moyenne du meilleur AUC
+  results_proteomic_ALS_occurrence_tidymodels$test_1$tune_glmnet_t1, 
+  metric = "roc_auc", 
+  n = 1)$mean
+
+best_predictions_t1 <-                                                          # Récupération des prédictions hors-échantillon
+  results_proteomic_ALS_occurrence_tidymodels$test_1$tune_glmnet_t1 |> 
+  collect_predictions(
+    parameters = results_proteomic_ALS_occurrence_tidymodels$test_1$best_glmnet_t1)
+
+roc_curve_data_t1 <-                                                            # Calcul des points de la courbe ROC
+  best_predictions_t1 |>
+  roc_curve(truth = als, .pred_case)
+
+results_proteomic_ALS_occurrence_tidymodels$test_1$roc_curve_data_t1 <-         # plot
+  roc_curve_data_t1 |>
+  autoplot() +
+  labs(
+    title = "AUC curve - Test 1 (Elastic Net)",
+    subtitle = paste0("CV 10-folds — Mean AUC: ", 
+                      round(results_proteomic_ALS_occurrence_tidymodels$test_1$best_auc_value, 3))) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.subtitle = element_text(color = "gray40", size = 10))
+
+rm(best_predictions_t1, roc_curve_data_t1)
 
 
 ### xgboost test 1 ----
@@ -1148,7 +1117,7 @@ results_proteomic_ALS_occurrence_tidymodels$test_1$f_xgb_dependanceplot_t1$prote
 ## Test 2 interpreation : glmnet (winner) + XGBoost (comparison) ----
 
 ### glmnet test 2 ----
-glmnet_t2_result <- extract_glmnet_coefs(
+results_proteomic_ALS_occurrence_tidymodels$test_2$glmnet_t2_result <- extract_glmnet_coefs(
   results_proteomic_ALS_occurrence_tidymodels$test_2$best_fit_t2)
 
 cat("  Lambda optimal:", round(glmnet_t2_result$lambda_opt, 6), "\n")
@@ -1183,6 +1152,35 @@ results_proteomic_ALS_occurrence_tidymodels$test_2$p_glmnet_t2 <-
        x = "Coefficient (standardized)", y = NULL) +
   theme_minimal() + 
   theme(legend.position = "bottom")
+
+# AUC moyenne glmnet 
+results_proteomic_ALS_occurrence_tidymodels$test_2$best_auc_value <- show_best(                                                    # Extraction de la valeur numérique moyenne du meilleur AUC
+  results_proteomic_ALS_occurrence_tidymodels$test_2$tune_glmnet_t2, 
+  metric = "roc_auc", 
+  n = 1)$mean
+
+best_predictions_t2 <-                                                          # Récupération des prédictions hors-échantillon
+  results_proteomic_ALS_occurrence_tidymodels$test_2$tune_glmnet_t2 |> 
+  collect_predictions(
+    parameters = results_proteomic_ALS_occurrence_tidymodels$test_2$best_glmnet_t2)
+
+roc_curve_data_t2 <-                                                            # Calcul des points de la courbe ROC
+  best_predictions_t2 |>
+  roc_curve(truth = als, .pred_case)
+
+results_proteomic_ALS_occurrence_tidymodels$test_2$roc_curve_data_t2 <-         # plot
+  roc_curve_data_t2 |>
+  autoplot() +
+  labs(
+    title = "AUC curve - Test 2 (Elastic Net including follow-up as predictor)",
+    subtitle = paste0("CV 10-folds — Mean AUC: ", 
+                      round(results_proteomic_ALS_occurrence_tidymodels$test_2$best_auc_value, 3))) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.subtitle = element_text(color = "gray40", size = 10))
+
+rm(best_predictions_t2, roc_curve_data_t2)
 
 
 ### xgboost test 2 ----
@@ -1288,7 +1286,6 @@ results_proteomic_ALS_occurrence_tidymodels$test_2$shap_fu_trend <- shap_by_fu |
   set_table_properties(align = "left") |>
   autofit()
 
-
 rm(fu_breaks, fu_group_t2, top15_prot_t2, shap_by_fu)
 
 ## Comparison: glmnet vs XGBoost across both tests ----
@@ -1327,11 +1324,38 @@ if (length(results_proteomic_ALS_occurrence_tidymodels$test_2$overlap_t2) > 0) {
 }
 
 rm(glmnet_t1_result, glmnet_t1_top, xgb_t1_shap, xgb_t1_top,  
-   glmnet_t2_result, glmnet_t2_top, xgb_t2_shap, xgb_t2_top)
+   glmnet_t2_result, glmnet_t2_top, xgb_t2_shap, xgb_t2_top, 
+   fu_breaks_tree2, fu_group_t2_tree2, top15_prot_t2_tree2, shap_by_fu_tree2, xgb_tree2_t2_shap)
 
+## Test 3 interpretation ----
+results_proteomic_ALS_occurrence_tidymodels$test_3$best_auc_value <- show_best(                                                    # Extraction de la valeur numérique moyenne du meilleur AUC
+  results_proteomic_ALS_occurrence_tidymodels$test_3$tune_glmnet_t3, 
+  metric = "roc_auc", 
+  n = 1)$mean
 
+best_predictions_t3 <-                                                          # Récupération des prédictions hors-échantillon
+  results_proteomic_ALS_occurrence_tidymodels$test_3$tune_glmnet_t3 |> 
+  collect_predictions(
+    parameters = results_proteomic_ALS_occurrence_tidymodels$test_3$best_glmnet_t3)
 
-rm(fu_breaks_tree2, fu_group_t2_tree2, top15_prot_t2_tree2, shap_by_fu_tree2, xgb_tree2_t2_shap)
+roc_curve_data_t3 <-                                                            # Calcul des points de la courbe ROC
+  best_predictions_t3 |>
+  roc_curve(truth = als, .pred_case)
+
+results_proteomic_ALS_occurrence_tidymodels$test_3$roc_curve_data_t3 <-         # plot
+  roc_curve_data_t3 |>
+  autoplot() +
+  labs(
+    title = "AUC curve - Test 3 (Elastic Net with follow-up interactions)",
+    subtitle = paste0("CV 10-folds — Mean AUC: ", 
+                      round(results_proteomic_ALS_occurrence_tidymodels$test_3$best_auc_value, 3))) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.subtitle = element_text(color = "gray40", size = 10))
+
+rm(best_predictions_t3, roc_curve_data_t3)
+
 
 rm(step_select_auc_top, bake.step_select_auc_top, prep.step_select_auc_top, 
    print.step_select_auc_top, make_folds_checked, summarise_wf_results, fit_best_workflow, 
@@ -1341,6 +1365,8 @@ rm(step_select_auc_top, bake.step_select_auc_top, prep.step_select_auc_top,
    data_t2, folds_t2,
    rec_full_t2, rec_top20_t2, ncol_preds_t2)
 
+
+# Sauvegarde ----
 saveRDS(
   results_proteomic_ALS_occurrence_tidymodels,
   file = "~/Documents/POP_ALS_2025_02_03/2_output/2.6.3_results_proteomic_ALS_occurrence_tidymodels.rds")

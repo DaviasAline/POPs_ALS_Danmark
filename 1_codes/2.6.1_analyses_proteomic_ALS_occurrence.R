@@ -5431,8 +5431,8 @@ proteomic_sd_ALS_base_figure <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "") +
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 
 
@@ -5472,8 +5472,8 @@ proteomic_sd_ALS_adjusted_figure <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "") +
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 
 
@@ -5633,8 +5633,8 @@ proteomic_sd_ALS_base_figure_sensi_1 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 
 ### Figure proteomic - als occurence - adjusted sd (sensi_1) ----
@@ -5675,8 +5675,8 @@ proteomic_sd_ALS_adjusted_figure_sensi_1 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 
 
@@ -5840,9 +5840,8 @@ proteomic_sd_ALS_base_figure_sensi_2 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
-
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 
 ### Figure proteomic - als occurence - adjusted sd (sensi_2) ----
@@ -5883,8 +5882,8 @@ proteomic_sd_ALS_adjusted_figure_sensi_2 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 
 rm(bdd_danish_sensi_2, all_vars_labels)
@@ -6042,8 +6041,8 @@ proteomic_sd_ALS_base_figure_sensi_3 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 
 
@@ -6085,8 +6084,8 @@ proteomic_sd_ALS_adjusted_figure_sensi_3 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 rm(bdd_danish_sensi_3)
 
@@ -6247,8 +6246,8 @@ proteomic_sd_ALS_base_figure_sensi_1_3 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 
 
@@ -6290,8 +6289,8 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 
 rm(bdd_danish_sensi_1_3, 
@@ -6454,8 +6453,8 @@ proteomic_sd_ALS_base_figure_sensi_1_3_4 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 
 
@@ -6497,8 +6496,8 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3_4 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 rm(proteomic_sensi_1_3_4,
    proteomic_sd_sensi_1_3_4,
@@ -6659,8 +6658,8 @@ proteomic_sd_ALS_base_figure_sensi_1_3_5 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 
 
@@ -6702,8 +6701,8 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_3_5 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 
 rm(proteomic_sensi_1_3_5,
@@ -6795,8 +6794,8 @@ proteomic_sd_ALS_base_figure_sensi_6_T2 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 proteomic_sd_ALS_base_figure_sensi_6_T3 <- 
   main_results |>
@@ -6835,8 +6834,8 @@ proteomic_sd_ALS_base_figure_sensi_6_T3 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 
 ### Figure proteomic - als occurence - adjusted sd (sensi_6) ----
@@ -7040,8 +7039,8 @@ proteomic_sd_ALS_base_figure_sensi_1_6_T2 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 proteomic_sd_ALS_base_figure_sensi_1_6_T3 <- 
   main_results |>
@@ -7205,8 +7204,8 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_6_T3 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5))
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
 
 
 
@@ -7370,8 +7369,8 @@ proteomic_sd_ALS_base_figure_sensi_1_7 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "")+
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5)) +
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
   facet_grid(cols = vars(analysis))
 
 
@@ -7414,8 +7413,8 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_7 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "") +
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5)) +
+  scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+  scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1)) +
   facet_grid(cols = vars(analysis))
 
 

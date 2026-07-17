@@ -40,7 +40,7 @@ table_1 <- bdd_danish |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 
-# Figure 1 - Main results (volcano plot) ----
+# Figure 1 - Associations - Pre-disease protein levels and risk of developping ALS ----
 figure_1 <- wrap_plots(
   list(results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_1 +  # All + removing NfL outlier 
          theme(legend.position = "none") + 
@@ -63,6 +63,74 @@ figure_1 <- wrap_plots(
          scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
          scale_y_continuous(limits = c(0, 3), breaks = seq(0, 3, by = 1))), 
   ncol = 2, widths = c(2.7, 4), heights = c(4.6, 3.2))
+
+
+# Figure 2 - Prediction - Pre-disease protein levels and risk of developping ALS ----
+## Figure 2 a ----
+figure_2a <- 
+  autoplot(results_proteomic_ALS_occurrence_tidymodels$test_1$results_t1, metric = "roc_auc") +
+  geom_text(aes(label = round(mean, 3)), hjust = -0.1, size = 3) +
+  labs(title = "a) Algorithm predictive performance comparison", 
+       subtitle = "10-fold cross-validation - mean AUC", 
+       y = "Mean AUC", 
+       x = NULL, 
+       color = "Algorithms") +
+  scale_color_discrete(
+    labels = c(
+      "boost_tree" = "Gradient Boosted Trees",
+      "logistic_reg" = "Penalized Logistic Regression",
+      "mars" = "Multivariate Adaptive Regression Splines",
+      "rand_forest" = "Random Forest",
+      "svm_linear" = "Linear Support Vector Machine")) +
+  guides(
+    shape = "none",  
+    color = guide_legend(override.aes = list(shape = 16))) +
+  scale_x_continuous(limits = c(1, 6), breaks = seq(0, 6, by = 1)) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.subtitle = element_text(color = "gray40", size = 10), 
+    axis.text.x = element_blank(), 
+    panel.grid.minor.x = element_blank(), 
+    legend.position = "bottom",          
+    legend.direction = "vertical", 
+    legend.key.spacing.x = unit(0, "cm"))
+
+## Figure 2 b ----
+figure_2b <- results_proteomic_ALS_occurrence_tidymodels$test_1$roc_curve_data_t1 +  
+  coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) + # plot
+  labs(
+    title = "b) ROC AUC - Penalized logistic regression",
+    subtitle = paste0("10-fold cross-validation - mean AUC: ", 
+                      round(results_proteomic_ALS_occurrence_tidymodels$test_1$best_auc_value, 3))) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.subtitle = element_text(color = "gray40", size = 10), 
+    legend.position = "none")
+
+## Figure 2 c ----
+figure_2c <- results_proteomic_ALS_occurrence_tidymodels$test_1$glmnet_t1_result$coefs_protein |> 
+  slice_head(n = 50) |>
+  mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_metabolism_|proteomic_immun_res_"), 
+         Feature = fct_reorder(Feature, abs_coef)) |>
+  ggplot(aes(x = coefficient, y = Feature, fill = direction)) +
+  geom_col() +
+  scale_fill_manual(values = c("↑ ALS risk" = "firebrick", "↓ ALS risk" = "steelblue")) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(title = "c) Top 50 of selected proteins by penalized logistic regression", 
+       subtitle = "Total number of selected proteins: 89",
+       x = "Coefficients", 
+       y = NULL) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.subtitle = element_text(color = "gray40", size = 10), 
+    legend.position = "bottom")
+
+figure_2 <- (figure_2a / figure_2b) | figure_2c 
+figure_2 <- figure_2 + plot_layout(widths = c(4,6)) 
+rm(figure_2a, figure_2b, figure_2c)
 
 
 # Supplementary table S1 - Main results ----
@@ -234,6 +302,13 @@ ggsave(
   figure_1,
   height = 10,
   width = 13, 
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/figure_2.tiff",
+  figure_2,
+  height = 8,
+  width = 10, 
   units = "in")
 
 table_S1 <- read_docx() |> body_add_flextable(table_S1)

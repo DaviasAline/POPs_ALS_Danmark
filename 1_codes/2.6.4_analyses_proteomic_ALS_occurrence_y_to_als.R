@@ -4,7 +4,7 @@
 # Can we predict years to ALS with the proteins levels?
 source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 
-# PARTIE 1 : associations ----
+# PARTIE 1 : ASSOCIATIONS ----
 # 1. Cox analyses (among cases) ----
 bdd_danish_cases <- bdd_danish |> filter(als == 1)
 
@@ -2019,7 +2019,7 @@ rm(analysis_grid, main_results,
 
 
 
-# PARTIE 2: prediction ----
+# PARTIE 2: PREDICTION ----
 # 3. Analyse logistic a horizon fixe en machine learning (XGboost) ----
 ### horizon 10 ans ----
 params_binary <- list(
