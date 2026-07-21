@@ -5,7 +5,7 @@ format:
     embed-resources: true
 editor: visual
 toc: true
-toc_depth: 4
+toc-depth: 4
 theme:
   light: flatly
   dark: darkly
@@ -39,6 +39,7 @@ results_POPs_proteomic <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.8_r
 ```
 
 # Danish data description
+
 ## Metadata
 
 Not imputed for missing data
@@ -1613,16 +1614,19 @@ wrap_plots(list(
 ```
 
 ## Sensitivity analysis 5: time trend effect?
+
 ```{r}
 results_POPs_ALS_survival$sensi5$POPs_sd_ALS_figure_danish_sensi_5
 ```
 
 ## Sensitivity analysis 6: sex effect?
+
 ```{r}
 results_POPs_ALS_survival$sensi6$POPs_sd_ALS_figure_danish_sensi_6
 ```
 
 ## Sensitivity analysis 7: age at diagnosis effect effect?
+
 ```{r}
 results_POPs_ALS_survival$sensi7$POPs_sd_ALS_figure_danish_sensi_7
 ```
@@ -1796,8 +1800,6 @@ results_proteomic_ALS_occurrence$NfL_results$NfL_quart_ALS_table_sensi_1 |>
   flextable::set_table_properties(align = "left", layout = "autofit")
 ```
 
-
-
 ## Sensitivity analysis: effect of follow_up duration
 
 ### Continuous (standardized)
@@ -1814,7 +1816,6 @@ results_proteomic_ALS_occurrence$NfL_results$NfL_sd_ALS_table_sensi_follow_up_ba
   flextable::set_table_properties(align = "left", layout = "autofit")
 ```
 
-
 ## Sensitivity analysis: effect of sex
 
 ### Continuous (standardized)
@@ -1823,8 +1824,6 @@ results_proteomic_ALS_occurrence$NfL_results$NfL_sd_ALS_table_sensi_follow_up_ba
 #| label: danish-nfl-ALS-occurence-6
 results_proteomic_ALS_occurrence$NfL_results$NfL_sd_ALS_table_sensi_sex_adj 
 ```
-
-
 
 ## Additionnal analysis: NfL over time
 
@@ -1879,7 +1878,6 @@ results_proteomic_ALS_survival$NfL_results$NfL_sd_ALS_table |>
 results_proteomic_ALS_survival$NfL_results$NfL_quart_ALS_table 
 ```
 
-
 ## Sensitivity analysis: effect of follow-up duration
 
 ```{r, fig.height=4}
@@ -1900,7 +1898,6 @@ results_proteomic_ALS_survival$NfL_results$NfL_sd_ALS_table_sensi_follow_up |>
 results_proteomic_ALS_survival$NfL_results$NfL_sd_ALS_table_sensi_sex
 ```
 
-
 # Proteomic and ALS occurrence
 
 ## Effects of subject characterist on ALS occurence in the Danish cohort
@@ -1917,7 +1914,8 @@ results_proteomic_ALS_occurrence$main$covar |>
 
 ## Are the pre disease proteins associated with ALS risk?
 
-### Main analysis 
+### Main analysis
+
 #### Logistic regressions
 
 Conditional logistic regressions (continuous standardized), matched on age at baseline and sex (further adjusted for smoking and body mass index)
@@ -2078,8 +2076,6 @@ rm(all_vars_labels,
    proteomic_sensi_1)
 
 ```
-
-
 
 ### Sensitivity 2: Filtering to cases and their controls with follow-up \< 5 years
 
@@ -2843,15 +2839,14 @@ rm(   make_gam_plot_base,
       plot_adjusted_gam_sensi_1_7_male)
 ```
 
-
 ### Sensitivity 8: Logistic models including time
-#### Proteome wide associations 
+
+#### Proteome wide associations
 
 ```{r}
 #| label: danish-proteomic-ALS-occurence-38_bis
 results_proteomic_ALS_occurrence$logistic_models_including_time$proteome_wide$proteomic_interaction_table
 ```
-
 
 ### Additionnal analysis 1 - normality of the OR distribution?
 
@@ -2937,7 +2932,9 @@ results_proteomic_ALS_occurrence$additional_analysis_2$jackknife_neuro_results |
 ```
 
 ## Are the pre disease proteins predicting ALS risk?
+
 ### Superlearner package
+
 #### Test 1 a: method AUC, many algorithms, no pre screening, default hyperparameters
 
 ```{r}
@@ -3294,6 +3291,7 @@ CD302: C-type lectin receptor involved in cell adhesion and migration, primarily
 PADI2: Protein-arginine deiminase type-2
 
 ### Tidymodels package
+
 #### Test 1: Can plasma proteins predict ALS? (proteins + covariates: birth year, sex, BMI, smoking)
 
 For each test, the pipeline follows two phases:
@@ -3305,6 +3303,7 @@ For each test, the pipeline follows two phases:
 All models use a grouped 10-cross-validation respecting the matching structure: all 3 individuals from a same triplet (1 case + 2 controls) are always kept on the same side — either all in the training set or all in the test set. Without this grouping, the model could learn patterns tied to the matching variables (birth year and sex) rather than the true proteomic signal, artificially inflating AUC.
 
 ##### Penalized Logistic Regression (glmnet) tuning
+
 Standard logistic regression would fail here because p \> n (\~280 predictors, 166 cases). glmnet solves this by adding a penalty term to the loss function that shrinks coefficients toward zero, effectively performing implicit variable selection.
 
 Two hyperparameters are tuned:
@@ -3576,8 +3575,8 @@ if (length(results_proteomic_ALS_occurrence_tidymodels$test_1$overlap_t1) > 0) {
 }
 ```
 
+#### Test 2: Can plasma proteins predict ALS? (proteins + follow-up + covariates: birth year, sex, BMI, smoking)
 
-#### Test 2: Can plasma proteins predict ALS? (proteins + follow-up + covariates: birth year, sex, BMI, smoking) 
 ##### Penalized Logistic Regression (glmnet) tuning
 
 Standard logistic regression would fail here because p \> n (\~280 predictors, 166 cases). glmnet solves this by adding a penalty term to the loss function that shrinks coefficients toward zero, effectively performing implicit variable selection.
@@ -3871,8 +3870,95 @@ if (length(results_proteomic_ALS_occurrence_tidymodels$test_2$overlap_t2) > 0) {
 ```
 
 
+#### Test 1 sensi: only in individuals with follow-up \>= 5 years
+
+##### Comparison of glmnet models
+
+```{r}
+#| label: tidymodel-test-1-sensi-1
+autoplot(results_proteomic_ALS_occurrence_tidymodels$test_1_sensi$tune_glmnet_t1_sensi, type = "performance") +
+  theme_minimal() + 
+  ggtitle("Test 3 sensi – glmnet (tune_bayes)")
+
+show_best(results_proteomic_ALS_occurrence_tidymodels$test_1_sensi$tune_glmnet_t1_sensi, 
+          metric = "roc_auc",
+          n = 5) |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+cat("Best glmnet t1 sensi — mixture (alpha):", 
+    round(results_proteomic_ALS_occurrence_tidymodels$test_1_sensi$best_glmnet_t1_sensi$mixture, 3),
+    "| penalty (lambda):", 
+    round(results_proteomic_ALS_occurrence_tidymodels$test_1_sensi$best_glmnet_t1_sensi$penalty, 5), "\n")
+```
+
+##### Interpretation of the best glmnet model
+
+```{r}
+#| label: tidymodel-test-3-sensi-2
+# Extraction de la valeur numérique moyenne du meilleur AUC
+best_auc_value_t1_sensi <- show_best(
+  results_proteomic_ALS_occurrence_tidymodels$test_1_sensi$tune_glmnet_t1_sensi, 
+  metric = "roc_auc", 
+  n = 1)$mean
+
+# Récupération des prédictions hors-échantillon
+best_predictions_t1_sensi <- 
+  results_proteomic_ALS_occurrence_tidymodels$test_1_sensi$tune_glmnet_t1_sensi |> 
+  collect_predictions(
+    parameters = results_proteomic_ALS_occurrence_tidymodels$test_1_sensi$best_glmnet_t1_sensi)
+
+# Calcul des points de la courbe ROC
+roc_curve_data_t1_sensi <- 
+  best_predictions_t1_sensi |>
+  roc_curve(truth = als, .pred_case)
+
+# plot
+roc_curve_data_t1_sensi |> 
+  autoplot() +
+  labs(
+    title = "AUC curve - Test 3 sensi (Elastic Net with follow-up interactions)",
+    subtitle = paste0("CV 10-folds — Mean AUC: ", round(best_auc_value_t1_sensi, 3))) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.subtitle = element_text(color = "gray40", size = 10))
+
+
+rm(best_auc_value_t1_sensi, best_predictions_t1_sensi, roc_curve_data_t1_sensi)
+```
+
+##### Extraction of the terms selected by elastic net
+
+```{r}
+#| label: tidymodel-test-3-sensi-3
+# Top 215 predictors (by |coefficient|)
+results_proteomic_ALS_occurrence_tidymodels$test_1_sensi$glmnet_t1_result_sensi$coefs_protein |> 
+  slice_head(n = 143) |>
+  as.data.frame() |>
+  mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_"), 
+         Feature = str_replace(Feature, "_x_follow_up_no_na_y", " x follow-up")) |>
+  select(-abs_coef, -direction, - coefficient_raw) |>
+  flextable() |> 
+  colformat_double(digits = 2) |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  flextable::fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all") |>
+  set_table_properties(align = "left") |>
+  autofit()
+
+```
+
+
 #### Test 3: interaction with follow-up duration?
-##### Comparison of glmnet models 
+
+##### Comparison of glmnet models
+
 ```{r}
 #| label: tidymodel-test-3-1
 autoplot(results_proteomic_ALS_occurrence_tidymodels$test_3$tune_glmnet, type = "performance") +
@@ -3897,25 +3983,27 @@ cat("Best glmnet T3 — mixture (alpha):",
 ```
 
 ##### Interpretation of the best glmnet model
+
 ```{r}
 #| label: tidymodel-test-3-2
 results_proteomic_ALS_occurrence_tidymodels$test_3$roc_curve_data_t3 
 ```
 
-##### Extraction of the terms selected by elastic net 
+##### Extraction of the terms selected by elastic net
+
 ```{r}
 #| label: tidymodel-test-3-3
-# if(results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$success) {
-#   cat("\n--- Test 3 results ---")
-#   cat("\nBest hyperparameters:")
-#   cat("\n  - Alpha (mixture):", round(results_proteomic_ALS_occurrence_tidymodels$test_3$best_glmnet_t3$mixture, 3))
-#   cat("\n  - Lambda (penalty):", round(results_proteomic_ALS_occurrence_tidymodels$test_3$best_glmnet_t3$penalty, 5))
-#   cat("\nNumber of selected terms by elastic net:", results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$n_selected, "\n")
-#   
-#   print(head(results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$coefs_all, 143))
-# } else {
-#   cat("Erreur lors de l'extraction des coefficients :", results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$error, "\n")
-# }
+# <!-- # if(results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$success) { -->
+# <!-- #   cat("\n--- Test 3 results ---") -->
+# <!-- #   cat("\nBest hyperparameters:") -->
+# <!-- #   cat("\n  - Alpha (mixture):", round(results_proteomic_ALS_occurrence_tidymodels$test_3$best_glmnet_t3$mixture, 3)) -->
+# <!-- #   cat("\n  - Lambda (penalty):", round(results_proteomic_ALS_occurrence_tidymodels$test_3$best_glmnet_t3$penalty, 5)) -->
+# <!-- #   cat("\nNumber of selected terms by elastic net:", results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$n_selected, "\n") -->
+# <!-- #    -->
+# <!-- #   print(head(results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$coefs_all, 143)) -->
+# <!-- # } else { -->
+# <!-- #   cat("Erreur lors de l'extraction des coefficients :", results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$error, "\n") -->
+# <!-- # } -->
 
 
 # Top 143 predictors (by |coefficient|)
@@ -3935,11 +4023,10 @@ results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$coefs_protei
 
 ```
 
+#### Test 3 sensi: interaction with follow-up duration among individuals with follow-up \>= 5 years
 
+##### Comparison of glmnet models
 
-
-#### Test 3: interaction with follow-up duration among individuals with follow-up >= 5 years
-##### Comparison of glmnet models 
 ```{r}
 #| label: tidymodel-test-3-sensi-1
 autoplot(results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$tune_glmnet_t3_sensi, type = "performance") +
@@ -3964,6 +4051,7 @@ cat("Best glmnet T3 sensi — mixture (alpha):",
 ```
 
 ##### Interpretation of the best glmnet model
+
 ```{r}
 #| label: tidymodel-test-3-sensi-2
 # Extraction de la valeur numérique moyenne du meilleur AUC
@@ -3998,24 +4086,12 @@ roc_curve_data_t3_sensi |>
 rm(best_auc_value_t3_sensi, best_predictions_t3_sensi, roc_curve_data_t3_sensi)
 ```
 
-##### Extraction of the terms selected by elastic net 
+##### Extraction of the terms selected by elastic net
+
 ```{r}
 #| label: tidymodel-test-3-sensi-3
-# if(results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$success) {
-#   cat("\n--- Test 3 results ---")
-#   cat("\nBest hyperparameters:")
-#   cat("\n  - Alpha (mixture):", round(results_proteomic_ALS_occurrence_tidymodels$test_3$best_glmnet_t3$mixture, 3))
-#   cat("\n  - Lambda (penalty):", round(results_proteomic_ALS_occurrence_tidymodels$test_3$best_glmnet_t3$penalty, 5))
-#   cat("\nNumber of selected terms by elastic net:", results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$n_selected, "\n")
-#   
-#   print(head(results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$coefs_all, 143))
-# } else {
-#   cat("Erreur lors de l'extraction des coefficients :", results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$error, "\n")
-# }
-
-
-# Top 143 predictors (by |coefficient|)
-results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$glmnet_t3_result_sensi$coefs_protein |> 
+# Top predictors (by |coefficient|)
+results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$glmnet_t3_result_sensi$coefs_protein |> View()
   slice_head(n = 143) |>
   as.data.frame() |>
   mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_"), 
@@ -4031,7 +4107,6 @@ results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$glmnet_t3_result_sensi$
 
 ```
 
-
 # Proteomic and years to ALS
 
 ## Are the pre-diagnostic protein levels associated with the time-to-onset of the disease?
@@ -4039,7 +4114,6 @@ results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$glmnet_t3_result_sensi$
 ### Cox models among cases
 
 Event = ALS, time to event = from baseline to ALS diagnostic (cases)
-
 
 #### continuous standardized
 
@@ -4132,11 +4206,9 @@ rm(plots_lists, all_proteins, plot_grid, plot_base_cox_gam_danish, plot_adjusted
 
 ```
 
-
-### Conditional Cox models among cases anc controls 
+### Cox models among cases and controls
 
 Event = ALS, time to event = from baseline to ALS diagnostic (not end of study)
-
 
 #### continuous standardized
 
@@ -4163,148 +4235,105 @@ results_proteomic_ALS_occurrence_y_to_als$cox_all$proteomic_quart_ALS_table_cox 
   set_table_properties(width = 1, layout = "autofit", align = "left")
 ```
 
-
-
 ### Fixed-horizon logistic analyses
 
 #### Continuous coding (standardized)
 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-9
-results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$proteome_wide$proteomic_sd_ALS_table_y_10_20
+results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_sd_ALS_table_y_10_20
 ```
 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-10
-results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$proteome_wide$proteomic_sd_ALS_adjusted_figure_y_10ans
+#| column: screen-inset-right
+results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_sd_ALS_adjusted_figure_y_5_10ans + theme(legend.position = "none") +
+results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_sd_ALS_adjusted_figure_y_10_15ans + theme(legend.position = "bottom") + results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_sd_ALS_adjusted_figure_y_15_20ans + theme(legend.position = "none")
 ```
 
-```{r}
-#| label: danish-proteomic-y-to-ALS-11
-results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$proteome_wide$proteomic_sd_ALS_adjusted_figure_y_20ans
-```
 
 #### Quartiles
 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-12
 #| column: screen-inset-right
-results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$proteome_wide$proteomic_quart_ALS_table_y_10_20
+results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_quart_ALS_table_y_10_20
 ```
 
-### Linear models 
 
-#### Main analysis 
+### Linear models among cases
+
+#### Main analysis
+
 ```{r}
 #| label: danish-proteomic-y-to-ALS-13
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$main$Follow_up_proteomic_sd_table |>
+#| column: screen-inset-right
+results_proteomic_ALS_occurrence_y_to_als$linear_cases$proteome_wide$main$Follow_up_proteomic_sd_table |>
   flextable::autofit()
 ```
 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-14
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$main$Follow_up_proteomic_sd_figure
+results_proteomic_ALS_occurrence_y_to_als$linear_cases$proteome_wide$main$Follow_up_proteomic_sd_figure
 ```
 
 #### Sensivitity analysis: sex effect?
+
 ```{r}
 #| label: danish-proteomic-y-to-ALS-15
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$sensi_sex$Follow_up_proteomic_sd_table_sensi_sex |> flextable::autofit()
+#| column: screen-inset-right
+results_proteomic_ALS_occurrence_y_to_als$linear_cases$proteome_wide$sensi_sex$Follow_up_proteomic_sd_table_sensi_sex |> flextable::autofit()
 ```
 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-16
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$proteome_wide$sensi_sex$Follow_up_proteomic_sd_figure_sensi_sex
+#| column: screen-inset-right
+results_proteomic_ALS_occurrence_y_to_als$linear_cases$proteome_wide$sensi_sex$Follow_up_proteomic_sd_figure_sensi_sex
 ```
 
-## Are the pre-diagnostic protein levels predicting the time-to-onset of ALS?
-### Fixed-horizon logistic analyses Machine learning (Xboost)
 
-#### 10 years horizon
+### Linear models among cases and controls
 
-Number of optimal trees
+#### Main analysis
 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-17
-cat("---> Optimal number of trees (10 years horizon) :", results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$best_nrounds_10, "\n")
+#| column: screen-inset-right
+results_proteomic_ALS_occurrence_y_to_als$linear_all$proteome_wide$main$Follow_up_proteomic_sd_table |>
+  flextable::autofit()
 ```
-
-Maximum AUC (Cross-validated)
 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-18
-cat("---> Maximum AUC (cross validated, 10 years horizon) :", max(results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$cv_10ans$evaluation_log$test_auc_mean), "\n")
+results_proteomic_ALS_occurrence_y_to_als$linear_all$proteome_wide$main$Follow_up_proteomic_sd_figure
 ```
 
-Importance top 20 variables (10 years horizon)
+#### Sensivitity analysis: sex effect?
 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-19
-cat("\nTop 20 predictors - 10 years horizon :\n")
-head(results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$importance_10, 20) |>
-    flextable() |>
-  merge_h(part = "header") |>
-  theme_vanilla() |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all") |> 
-  set_table_properties(align = "left")
+#| column: screen-inset-right
+results_proteomic_ALS_occurrence_y_to_als$linear_all$proteome_wide$sensi_sex$Follow_up_proteomic_sd_table_sensi_sex |> flextable::autofit()
 ```
 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-20
-xgb.plot.importance(
-  importance_matrix = results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$importance_10[1:20, ], 
-  main = "Importance of the top 20 predictors (10 years horizon)")
+#| column: screen-inset-right
+results_proteomic_ALS_occurrence_y_to_als$linear_all$proteome_wide$sensi_sex$Follow_up_proteomic_sd_figure_sensi_sex
 ```
 
-#### 20 years horizon
+## Are the pre-diagnostic protein levels predicting the time-to-onset of ALS?
 
-Number of optimal trees
+### Fixed-horizon logistic analyses (tidymodels)
+To do
 
-```{r}
-#| label: danish-proteomic-y-to-ALS-21
-cat("---> Optimal number of trees (20 years horizon) :", results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$best_nrounds_20, "\n")
-```
-
-Maximum AUC (Cross-validated)
+### Linear models (tidymodels)
 
 ```{r}
-#| label: danish-proteomic-y-to-ALS-22
-cat("---> Maximum AUC (cross validated, 20 years horizon) :", max(results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$cv_20ans$evaluation_log$test_auc_mean), "\n")
-```
+#| label: danish-proteomic-y-to-ALS-29
+results_proteomic_ALS_occurrence_y_to_als$linear_all$machine_learning$t_glmnet_reg
 
-Importance top 20 variables (20 year horizon)
-
-```{r}
-#| label: danish-proteomic-y-to-ALS-23
-cat("\nTop 20 predictors - 20 years horizon :\n")
-head(results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$importance_20, 20) |>
-    flextable() |>
-  merge_h(part = "header") |>
-  theme_vanilla() |>
-  flextable::font(fontname = "Calibri", part = "all") |> 
-  fontsize(size = 10, part = "all") |>
-  padding(padding.top = 0, padding.bottom = 0, part = "all")|> 
-  set_table_properties(align = "left")
-```
-
-```{r}
-#| label: danish-proteomic-y-to-ALS-24
-xgb.plot.importance(
-  importance_matrix = results_proteomic_ALS_occurrence_y_to_als$fixed_horizon_logistic_regression_analysis$machine_learning_xgboost$importance_20[1:20, ], 
-  main = "Importance of the top 20 predictors (20 years horizon)")
-```
-
-
-
-
-### Linear models  Machine learning (tidymodels)
-```{r}
-#| label: danish-proteomic-y-to-ALS-25
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$machine_learning$t_glmnet_reg
-
-results_proteomic_ALS_occurrence_y_to_als$main_results_linear$machine_learning$f_glmnet_reg 
+results_proteomic_ALS_occurrence_y_to_als$linear_all$machine_learning$f_glmnet_reg 
 ```
 
 # Proteomic and ALS survival
@@ -5005,9 +5034,10 @@ rm(plot_base_cox_gam_danish, plot_adjusted_cox_gam_danish,
 
 ```
 
+# POPs and proteomic
 
-# POPs and proteomic 
 ## Main analysis
+
 ```{r, fig.height=10, fig.width=10}
 #| label: danish-POPs-proteomic-1
 #| column: screen-inset-right
@@ -5020,14 +5050,15 @@ results_POPs_proteomic$main$POPs_sd_proteomic_figure
 results_POPs_proteomic$main$POPs_sd_proteomic_table
 ```
 
-
 ## Specific Nfl
+
 ```{r}
 #| label: danish-POPs-proteomic-3
 results_POPs_proteomic$main$POPs_sd_NfL_table
 ```
 
 ## Sensitivity analysis - sex effect?
+
 ```{r, fig.height=30, fig.width=10}
 #| column: screen-inset-right
 #| label: danish-POPs-proteomic-4
@@ -5040,8 +5071,8 @@ results_POPs_proteomic$sensi_sex$POPs_sd_proteomic_figure_sensi_sex
 results_POPs_proteomic$sensi_sex$POPs_sd_proteomic_table_sensi_sex
 ```
 
-
 ## Sensitivity analysis - als status effect?
+
 ```{r, fig.height=30, fig.width=10}
 #| label: danish-POPs-proteomic-6
 #| column: screen-inset-right
@@ -5053,6 +5084,3 @@ results_POPs_proteomic$sensi_als$POPs_sd_proteomic_figure_sensi_als
 #| label: danish-POPs-proteomic-7
 results_POPs_proteomic$sensi_als$POPs_sd_proteomic_table_sensi_als
 ```
-
-
-

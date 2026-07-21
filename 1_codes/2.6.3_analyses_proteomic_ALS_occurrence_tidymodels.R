@@ -484,6 +484,76 @@ xgb_fit_t1 <- fit_best_workflow(results_t1, xgb_id_t1, data_t1)
 rm(wf_set_t1)
 
 
+# TEST 1 - sensitivity analysis (remove cases and controls with follow-up<5 years) ----
+# TEST 1 sensi : Proteins and covariates 
+data_t1_sensi <- bdd_danish |>
+  filter(follow_up_no_na_y >= 5) |>
+  select(als, match,
+         birth_year, sex, bmi, smoking_2cat_i,
+         all_of(proteomic)) |>
+  mutate(als = factor(als, levels = c(1, 0), labels = c("case", "control"))) 
+
+cat("Dimensions :", nrow(data_t1_sensi), "×", ncol(data_t1_sensi) - 2, "prédicteurs\n")
+cat("Outcome :", table(data_t1_sensi$als), "\n")
+
+folds_t1_sensi     <- make_folds_checked(data_t1_sensi)
+ncol_preds_t1_sensi <- ncol(data_t1_sensi) - 2  # -als -match 
+
+rec_full_t1_sensi  <- make_recipe_full(data_t1_sensi)
+rec_top20_t1_sensi <- make_recipe_top(data_t1_sensi, n_top = 20)
+
+
+## Preparation of the recipe with interactions 
+rec_interact_t1_sensi <- make_recipe_full(data_t1_sensi) 
+
+## TEST 1 sensi - PHASE A : Tuning des hyperparamètres ----
+glmnet_spec_tune_t1_sensi <- 
+  logistic_reg(penalty = tune(), 
+               mixture = tune()) |>
+  set_engine("glmnet") |>
+  set_mode("classification")
+
+wf_glmnet_t1_sensi <- workflow() |> 
+  add_recipe(rec_interact_t1_sensi) |> 
+  add_model(glmnet_spec_tune_t1_sensi)
+
+# Lancement de l'optimisation bayésienne
+set.seed(1996)
+tune_glmnet_t1_sensi <- tune_bayes(
+  wf_glmnet_t1_sensi, 
+  resamples = folds_t1_sensi,                                                         # on garde toujours les memes folds
+  param_info = parameters(dials::penalty(range = c(-5, 0)), 
+                          mixture(range = c(0, 1))),
+  iter = 40, 
+  initial = 10, 
+  metrics = metric,
+  control = control_bayes(save_pred = TRUE, verbose = TRUE))
+
+best_glmnet_t1_sensi <- select_best(tune_glmnet_t1_sensi, metric = "roc_auc")               # Extraction des meilleurs hyperparamètres 
+
+rm(glmnet_spec_tune_t1_sensi, wf_glmnet_t1_sensi)
+
+## TEST 1 sensi - PHASE B : Entraînement du modèle final sur toutes les données ----
+# ici, par rapport à test 1 et 2, on n'utilise pas workflow_map() et fit_best_workflow mais directement fit() car on a qu'un seul model
+
+glmnet_final_t1_sensi <- logistic_reg(
+  penalty = best_glmnet_t1_sensi$penalty, 
+  mixture = best_glmnet_t1_sensi$mixture) |>
+  set_engine("glmnet") |> 
+  set_mode("classification")
+
+wf_final_set_t1_sensi <- workflow() |> 
+  add_recipe(rec_interact_t1_sensi) |> 
+  add_model(glmnet_final_t1_sensi)
+
+set.seed(1996)
+best_fit_t1_sensi <- fit(wf_final_set_t1_sensi, data = data_t1_sensi)     
+
+glmnet_t1_result_sensi <- extract_glmnet_coefs(best_fit_t1_sensi)
+
+
+
+
 # TEST 2 : Protéines + covariables + follow_up_no_na_y ----
 
 data_t2 <- bdd_danish |>
@@ -704,7 +774,7 @@ xgb_fit_t2 <- fit_best_workflow(results_t2, xgb_id_t2, data_t2)
 rm(wf_set_t2)
 
 
-# TEST 3 : Proteins, covariates with two-way interactions with follow_up_no_na_y ----
+# TEST 3 : GLMNET only: Proteins, covariates with two-way interactions with follow_up_no_na_y ----
 
 ## Preparation of the recipe with interactions 
 rec_interact_t3 <- make_recipe_full(data_t2) |> 
@@ -827,7 +897,6 @@ glmnet_t3_result_sensi <- extract_glmnet_coefs(best_fit_t3_sensi)
 
 
 # Sauvegarde ----
-
 results_proteomic_ALS_occurrence_tidymodels <- list(
   
   test_1 = list(
@@ -859,6 +928,20 @@ results_proteomic_ALS_occurrence_tidymodels <- list(
     xgb_final_t1 = xgb_final_t1, 
     svm_final_t1 = svm_final_t1, 
     mars_final_t1 = mars_final_t1),
+  
+  test_1_sensi =
+    list( 
+      #data_t1_sensi = data_t1_sensi,        
+      #folds_t1_sensi = folds_t1_sensi,     
+      # Tuning test 1 sensi
+      tune_glmnet_t1_sensi = tune_glmnet_t1_sensi,
+      # Hyperparamètres optimaux
+      best_glmnet_t1_sensi  = best_glmnet_t1_sensi,
+      # comparaison finale test 1 sensi
+      glmnet_final_t1_sensi = glmnet_final_t1_sensi, 
+      wf_final_set_t1_sensi = wf_final_set_t1_sensi, 
+      best_fit_t1_sensi  = best_fit_t1_sensi, 
+      glmnet_t1_result_sensi = glmnet_t1_result_sensi), 
   
   test_2 = list(
     #data_t2 = data_t2,

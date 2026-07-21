@@ -7335,7 +7335,7 @@ rm(extra_rows)
 proteomic_sd_ALS_base_figure_sensi_1_7 <- 
   main_results |>
   filter(model == "base" &                                                      # select only adjusted results
-           term != "Continuous" &                                               # select only continuous results
+           term == "Continuous" &                                               # select only continuous results
            analysis %in% c("sensi_1_7_female", "sensi_1_7_male")) |>     
   mutate(
     log2OR = log2(OR_raw),
@@ -7379,7 +7379,7 @@ proteomic_sd_ALS_base_figure_sensi_1_7 <-
 proteomic_sd_ALS_adjusted_figure_sensi_1_7 <- 
   main_results |>
   filter(model == "adjusted" &                                                  # select only adjusted results
-           term != "Continuous" &                                               # select only continuous results
+           term == "Continuous" &                                               # select only continuous results
            analysis %in% c("sensi_1_7_female", "sensi_1_7_male")) |>     
   mutate(
     log2OR = log2(OR_raw),

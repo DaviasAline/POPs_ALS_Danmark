@@ -5,7 +5,6 @@
 source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 
 results_proteomic_ALS_occurrence <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.6.1_results_proteomic_ALS_occurrence.rds")
-results_proteomic_ALS_occurrence_SL <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.6.2_results_proteomic_ALS_occurrence_SL.rds")
 results_proteomic_ALS_occurrence_tidymodels <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.6.3_results_proteomic_ALS_occurrence_tidymodels.rds")
 results_proteomic_ALS_occurrence_y_to_als <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.6.4_results_proteomic_ALS_occurrence_y_to_als.rds") 
 
@@ -45,7 +44,7 @@ figure_1 <- wrap_plots(
   list(results_proteomic_ALS_occurrence$sensi_1$proteomic_sd_ALS_adjusted_figure_sensi_1 +  # All + removing NfL outlier 
          theme(legend.position = "none") + 
          labs(title = "All cases and controls (N=495)", x = "") +
-         scale_x_continuous(limits = c(0, 2.5), breaks = seq(0, 2.5, by = 0.5)) +
+         scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
          scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1)), 
        results_proteomic_ALS_occurrence$sensi_2$proteomic_sd_ALS_adjusted_figure_sensi_2 +  # < 5 years of follow-up
          theme(legend.position = "none") + 
@@ -55,14 +54,16 @@ figure_1 <- wrap_plots(
        results_proteomic_ALS_occurrence$sensi_1_3_4$proteomic_sd_ALS_adjusted_figure_sensi_1_3_4 + # > 5 years follow- up + filtering follow-up <= 50% + removing NfL outlier
          theme(legend.position = "none") + 
          labs(title = "Years to ALS between 5 and 14.6 years (N=225)") +
-         scale_x_continuous(limits = c(0, 2.5), breaks = seq(0, 2.5, by = 0.5)) +
-         scale_y_continuous(limits = c(0, 3), breaks = seq(0, 3, by = 1)),  
+         scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
+         scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1)),  
        results_proteomic_ALS_occurrence$sensi_1_3_5$proteomic_sd_ALS_adjusted_figure_sensi_1_3_5 +  # > 5 years follow- up + filtering follow-up > 50% + removing NfL outlier
          theme(legend.position = "bottom") + 
          labs(title = "Years to ALS > 14.6 years (N=219)", y = "") +
          scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
-         scale_y_continuous(limits = c(0, 3), breaks = seq(0, 3, by = 1))), 
-  ncol = 2, widths = c(2.7, 4), heights = c(4.6, 3.2))
+         scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))), 
+  ncol = 2, 
+  widths = c(1.05, 1), 
+  heights = c(1, 1.05)) 
 
 
 # Figure 2 - Prediction - Pre-disease protein levels and risk of developping ALS ----
@@ -131,6 +132,45 @@ figure_2c <- results_proteomic_ALS_occurrence_tidymodels$test_1$glmnet_t1_result
 figure_2 <- (figure_2a / figure_2b) | figure_2c 
 figure_2 <- figure_2 + plot_layout(widths = c(4,6)) 
 rm(figure_2a, figure_2b, figure_2c)
+
+# Figure 3 - Prediction - Pre-disease protein levels with follow-up interaction hard coded in glmnet ----
+results_proteomic_ALS_occurrence_tidymodels$test_3
+
+
+## Figure 3 a ----
+figure_3a <- results_proteomic_ALS_occurrence_tidymodels$test_3$roc_curve_data_t3 +  
+  coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) + # plot
+  labs(
+    title = "a) ROC AUC - Penalized logistic regression",
+    subtitle = paste0("10-fold cross-validation - mean AUC: ", 
+                      round(results_proteomic_ALS_occurrence_tidymodels$test_3$best_auc_value, 3))) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.subtitle = element_text(color = "gray40", size = 10), 
+    legend.position = "none")
+
+## Figure 3 b ----
+figure_3b <- results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$coefs_protein |> 
+  slice_head(n = 50) |>
+  mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_"), 
+         Feature = str_replace(Feature, "_x_follow_up_no_na_y", " x follow-up")) |>
+  ggplot(aes(x = coefficient, y = Feature, fill = direction)) +
+  geom_col() +
+  scale_fill_manual(values = c("↑ ALS risk" = "firebrick", "↓ ALS risk" = "steelblue")) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(title = "b) Top 50 of selected proteins by penalized logistic regression", 
+       subtitle = "Total number of selected proteins: ?",
+       x = "Coefficients", 
+       y = NULL) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.subtitle = element_text(color = "gray40", size = 10), 
+    legend.position = "bottom")
+
+figure_3 <- figure_3a + figure_3b
+rm(figure_3a, figure_3b)
 
 
 # Supplementary table S1 - Main results ----
@@ -252,8 +292,8 @@ corrplot(results_descriptive$danish$proteomic_heatmap_danish_metabolism,
 figure_S4 <-
   results_proteomic_ALS_occurrence$main$main_results |>
   filter(model == "adjusted" &                                                  # select only adjusted results
-           term != "Continuous" &                                               # select only continuous results
-           analysis %in% c("main", "sensi_1_7_female", "sensi_1_7_male")) |>     
+           term == "Continuous" &                                               # select only continuous results
+           analysis %in% c("main", "sensi_1_7_female", "sensi_1_7_male")) |>  
   mutate(
     analysis = fct_recode(analysis, 
                           "All case and controls (N=495)" = "main", 
@@ -289,9 +329,10 @@ figure_S4 <-
     x = "OR",
     y = "-log10(p-value)", 
     color = "") +
-  scale_x_continuous(limits = c(0, 2.5)) +
-  scale_y_continuous(limits = c(0, 4.5)) +
-  facet_grid(cols = vars(analysis))
+  # scale_x_continuous(limits = c(0, 2)) +
+  # scale_y_continuous(limits = c(0, 4.6)) +
+  facet_grid(cols = vars(analysis), scales = "fixed") +
+  theme(legend.position = "bottom")
 
 # Export ----
 table_1 <- read_docx() |> body_add_flextable(table_1) 
@@ -307,6 +348,13 @@ ggsave(
 ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/figure_2.tiff",
   figure_2,
+  height = 8,
+  width = 10, 
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/figure_3.tiff",
+  figure_3,
   height = 8,
   width = 10, 
   units = "in")
@@ -344,7 +392,7 @@ ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/figure_S4.tiff",
   figure_S4,
   height = 8,
-  width = 15,
+  width = 12,
   units = "in")
 
 

@@ -577,7 +577,12 @@ bdd_danish <- bdd_danish |>
   mutate(
     follow_up_no_na_y = follow_up_no_na / 12, 
     y_10ans = ifelse(als == 1 & follow_up_no_na <= 120, 1, 0),      # attention follow_up_no_na est en mois 
-    y_20ans = ifelse(als == 1 & follow_up_no_na <= 240, 1, 0))       # attention follow_up_no_na est en mois 
+    y_20ans = ifelse(als == 1 & follow_up_no_na <= 240, 1, 0),        # attention follow_up_no_na est en mois 
+    y_5ans = ifelse(als == 1 & follow_up_no_na <= 60, 1, 0), 
+    y_5_10ans = ifelse(als == 1 & follow_up_no_na >= 60 & follow_up_no_na <= 120, 1, 0),      # attention follow_up_no_na est en mois 
+    y_10_15ans = ifelse(als == 1 & follow_up_no_na >= 120 & follow_up_no_na <= 180, 1, 0), 
+    y_15_20ans = ifelse(als == 1 & follow_up_no_na >= 180 & follow_up_no_na <= 240, 1, 0), 
+    y_20_23ans = ifelse(als == 1 & follow_up_no_na >= 240, 1, 0))       # attention follow_up_no_na est en mois 
 
 bdd_danish <- bdd_danish|>
   replace_with_median(OCP_HCB, OCP_HCB_quart)|>
@@ -860,6 +865,11 @@ var_label(bdd_danish) <- list(
   follow_up_no_na_y = "Length of follow-up from baseline to ALS diagnosis (years)", 
   y_10ans = "ALS diagnosed within 10 years of follow-up", 
   y_20ans = "ALS diagnosed within 20 years of follow-up", 
+  y_5ans = "ALS diagnosed within 5 years of follow-up",
+  y_5_10ans = "ALS diagnosed within 5 to 10 years of follow-up",
+  y_10_15ans = "ALS diagnosed within 10 to 15 years of follow-up", 
+  y_15_20ans = "ALS diagnosed within 15 to 20 years of follow-up", 
+  y_20_23ans = "ALS diagnosed within 20 to 23 years of follow-up", 
   
   marital_status = "Marital status",
   marital_status_2cat = "Marital status", 
