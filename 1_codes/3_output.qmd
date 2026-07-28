@@ -3870,7 +3870,7 @@ if (length(results_proteomic_ALS_occurrence_tidymodels$test_2$overlap_t2) > 0) {
 ```
 
 
-#### Test 1 sensi: only in individuals with follow-up \>= 5 years
+#### Test 1 sensi: only in individuals with follow-up >= 5 years
 
 ##### Comparison of glmnet models
 
@@ -3900,7 +3900,7 @@ cat("Best glmnet t1 sensi — mixture (alpha):",
 ##### Interpretation of the best glmnet model
 
 ```{r}
-#| label: tidymodel-test-3-sensi-2
+#| label: tidymodel-test-1-sensi-2
 # Extraction de la valeur numérique moyenne du meilleur AUC
 best_auc_value_t1_sensi <- show_best(
   results_proteomic_ALS_occurrence_tidymodels$test_1_sensi$tune_glmnet_t1_sensi, 
@@ -3936,7 +3936,7 @@ rm(best_auc_value_t1_sensi, best_predictions_t1_sensi, roc_curve_data_t1_sensi)
 ##### Extraction of the terms selected by elastic net
 
 ```{r}
-#| label: tidymodel-test-3-sensi-3
+#| label: tidymodel-test-1-sensi-3
 # Top 215 predictors (by |coefficient|)
 results_proteomic_ALS_occurrence_tidymodels$test_1_sensi$glmnet_t1_result_sensi$coefs_protein |> 
   slice_head(n = 143) |>
@@ -4091,7 +4091,7 @@ rm(best_auc_value_t3_sensi, best_predictions_t3_sensi, roc_curve_data_t3_sensi)
 ```{r}
 #| label: tidymodel-test-3-sensi-3
 # Top predictors (by |coefficient|)
-results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$glmnet_t3_result_sensi$coefs_protein |> View()
+results_proteomic_ALS_occurrence_tidymodels$test_3_sensi$glmnet_t3_result_sensi$coefs_protein |> 
   slice_head(n = 143) |>
   as.data.frame() |>
   mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_"), 
@@ -4241,14 +4241,20 @@ results_proteomic_ALS_occurrence_y_to_als$cox_all$proteomic_quart_ALS_table_cox 
 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-9
-results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_sd_ALS_table_y_10_20
+#| column: page-right
+#| cache: false
+results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_sd_ALS_table
 ```
 
-```{r}
+```{r, fig.width=15, fig.height=12}
 #| label: danish-proteomic-y-to-ALS-10
 #| column: screen-inset-right
-results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_sd_ALS_adjusted_figure_y_5_10ans + theme(legend.position = "none") +
-results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_sd_ALS_adjusted_figure_y_10_15ans + theme(legend.position = "bottom") + results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_sd_ALS_adjusted_figure_y_15_20ans + theme(legend.position = "none")
+#| cache: false
+results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_sd_ALS_adjusted_figure_y_10ans + theme(legend.position = "none") +
+  results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_sd_ALS_adjusted_figure_y_15ans + theme(legend.position = "none") +
+  results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_sd_ALS_adjusted_figure_y_5_10ans + theme(legend.position = "none") +
+results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_sd_ALS_adjusted_figure_y_10_15ans + theme(legend.position = "bottom") + results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_sd_ALS_adjusted_figure_y_15_20ans + theme(legend.position = "none") +
+  plot_layout(ncol = 3, nrow = 2)
 ```
 
 
@@ -4257,7 +4263,8 @@ results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$p
 ```{r}
 #| label: danish-proteomic-y-to-ALS-12
 #| column: screen-inset-right
-results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_quart_ALS_table_y_10_20
+#| cache: false
+results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_quart_ALS_table
 ```
 
 
@@ -4293,7 +4300,7 @@ results_proteomic_ALS_occurrence_y_to_als$linear_cases$proteome_wide$sensi_sex$F
 
 
 ### Linear models among cases and controls
-
+Controls have a follow-up duration until death or end of study 
 #### Main analysis
 
 ```{r}
@@ -4324,10 +4331,8 @@ results_proteomic_ALS_occurrence_y_to_als$linear_all$proteome_wide$sensi_sex$Fol
 
 ## Are the pre-diagnostic protein levels predicting the time-to-onset of ALS?
 
-### Fixed-horizon logistic analyses (tidymodels)
-To do
-
-### Linear models (tidymodels)
+### Linear models among cases and controls (tidymodels)
+Controls have a follow-up duration until death or end of study 
 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-29
@@ -4335,6 +4340,9 @@ results_proteomic_ALS_occurrence_y_to_als$linear_all$machine_learning$t_glmnet_r
 
 results_proteomic_ALS_occurrence_y_to_als$linear_all$machine_learning$f_glmnet_reg 
 ```
+
+### Fixed-horizon logistic analyses (tidymodels)
+To do after discussing with Marc
 
 # Proteomic and ALS survival
 
@@ -5044,8 +5052,14 @@ rm(plot_base_cox_gam_danish, plot_adjusted_cox_gam_danish,
 results_POPs_proteomic$main$POPs_sd_proteomic_figure
 ```
 
-```{r}
+```{r, fig.height=20, fig.width=10}
 #| label: danish-POPs-proteomic-2
+#| column: screen-inset-right
+results_POPs_proteomic$main$POPs_sd_proteomic_figure_forest
+```
+
+```{r}
+#| label: danish-POPs-proteomic-3
 #| column: screen-inset-right
 results_POPs_proteomic$main$POPs_sd_proteomic_table
 ```
@@ -5053,7 +5067,7 @@ results_POPs_proteomic$main$POPs_sd_proteomic_table
 ## Specific Nfl
 
 ```{r}
-#| label: danish-POPs-proteomic-3
+#| label: danish-POPs-proteomic-4
 results_POPs_proteomic$main$POPs_sd_NfL_table
 ```
 
@@ -5061,26 +5075,26 @@ results_POPs_proteomic$main$POPs_sd_NfL_table
 
 ```{r, fig.height=30, fig.width=10}
 #| column: screen-inset-right
-#| label: danish-POPs-proteomic-4
+#| label: danish-POPs-proteomic-5
 results_POPs_proteomic$sensi_sex$POPs_sd_proteomic_figure_sensi_sex
 ```
 
 ```{r}
 #| column: screen-inset-right
-#| label: danish-POPs-proteomic-5
+#| label: danish-POPs-proteomic-6
 results_POPs_proteomic$sensi_sex$POPs_sd_proteomic_table_sensi_sex
 ```
 
 ## Sensitivity analysis - als status effect?
 
 ```{r, fig.height=30, fig.width=10}
-#| label: danish-POPs-proteomic-6
+#| label: danish-POPs-proteomic-7
 #| column: screen-inset-right
 results_POPs_proteomic$sensi_als$POPs_sd_proteomic_figure_sensi_als
 ```
 
 ```{r}
 #| column: screen-inset-right
-#| label: danish-POPs-proteomic-7
+#| label: danish-POPs-proteomic-8
 results_POPs_proteomic$sensi_als$POPs_sd_proteomic_table_sensi_als
 ```

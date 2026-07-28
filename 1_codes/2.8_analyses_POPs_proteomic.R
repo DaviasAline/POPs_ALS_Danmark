@@ -12,12 +12,14 @@ bdd_danish <- bdd_danish |>
                 .names = "{.col}_sd"))  
 
 # Préparation des combinaisons de variables ----
-analysis_grid <- expand_grid(
+analysis_grid_uni <- expand_grid(
   exposure = POPs_group_sd,
   outcome = proteomic)
 
-# Automatisation des modèles (Régressions Linéaires) ----
-main_results <- analysis_grid |>
+analysis_grid_copol <- tibble(outcome = proteomic)
+
+# Automatisation  ----
+main_results_uni <- analysis_grid_uni |>
   mutate(
     # base model main             
     base_model = map2(exposure, outcome, function(exp, out) {
@@ -108,25 +110,104 @@ main_results <- analysis_grid |>
         tidy(conf.int = TRUE) |> 
         filter(term == exp) |> 
         mutate(analysis = "sensi_als_controls", 
-               model = "adjusted")}))
-rm(analysis_grid)
-
-# Mise en forme et calcul du False Discovery Rate (FDR) ----
-main_results <- main_results |>
+               model = "adjusted")}), 
+    
+    # base model sensi outlier NfL (exclusion match 159 si outcome = NEFL)
+    base_model_sensi_outlier_NfL = map2(exposure, outcome, function(exp, out) {
+      formule <- as.formula(paste0(out, " ~ ", exp, " + as.factor(als) + baseline_age + sex"))
+      d_sub <- if (out == "proteomic_neuro_explo_NEFL") filter(bdd_danish, match != 159) else bdd_danish
+      lm(formule, data = d_sub) |> 
+        tidy(conf.int = TRUE) |> 
+        filter(term == exp) |> 
+        mutate(analysis = "sensi_outlier_NfL", model = "base")
+    }),
+    
+    # adjusted model sensi outlier NfL
+    adjusted_model_sensi_outlier_NfL = map2(exposure, outcome, function(exp, out) {
+      formule <- as.formula(paste0(out, " ~ ", exp, " + as.factor(als) + baseline_age + sex + smoking_2cat_i + bmi"))
+      d_sub <- if (out == "proteomic_neuro_explo_NEFL") filter(bdd_danish, match != 159) else bdd_danish
+      lm(formule, data = d_sub) |> 
+        tidy(conf.int = TRUE) |> 
+        filter(term == exp) |> 
+        mutate(analysis = "sensi_outlier_NfL", model = "adjusted")
+    })) |> 
   pivot_longer(
     cols = c(base_model, adjusted_model, 
              base_model_sensi_sex_f, adjusted_model_sensi_sex_f, 
              base_model_sensi_sex_m, adjusted_model_sensi_sex_m, 
              base_model_sensi_als_cases, adjusted_model_sensi_als_cases, 
-             base_model_sensi_als_controls, adjusted_model_sensi_als_controls), 
+             base_model_sensi_als_controls, adjusted_model_sensi_als_controls,
+             base_model_sensi_outlier_NfL, adjusted_model_sensi_outlier_NfL), 
     names_to = NULL, 
     values_to = "model_summary") |>
   unnest(model_summary) |>
+  select(-term)
+
+
+
+copollutant_formula <- paste(setdiff(POPs_group_sd, "PCB_4_sd"), collapse = " + ")
+
+main_results_copol <- analysis_grid_copol |>
+  mutate(
+    # base model copollutant
+    base_model = map(outcome, function(out) {
+      formule <- as.formula(paste0(out, " ~ ", copollutant_formula, " + as.factor(als) + baseline_age + sex"))
+      lm(formule, data = bdd_danish) |> 
+        tidy(conf.int = TRUE) |> 
+        filter(term %in% setdiff(POPs_group_sd, "PCB_4_sd")) |> 
+        rename(exposure = term) |> 
+        mutate(analysis = "copollutant", model = "base")
+    }),
+    
+    # adjusted model copollutant
+    adjusted_model = map(outcome, function(out) {
+      formule <- as.formula(paste0(out, " ~ ", copollutant_formula, " + as.factor(als) + baseline_age + sex + smoking_2cat_i + bmi"))
+      lm(formule, data = bdd_danish) |> 
+        tidy(conf.int = TRUE) |> 
+        filter(term %in% setdiff(POPs_group_sd, "PCB_4_sd")) |> 
+        rename(exposure = term) |> 
+        mutate(analysis = "copollutant", model = "adjusted")
+    }), 
+    
+    # base model copollutant sensi outlier NfL
+    base_model_copol_sensi_outlier_NfL = map(outcome, function(out) {
+      formule <- as.formula(paste0(out, " ~ ", copollutant_formula, " + as.factor(als) + baseline_age + sex"))
+      d_sub <- if (out == "proteomic_neuro_explo_NEFL") filter(bdd_danish, match != 159) else bdd_danish
+      lm(formule, data = d_sub) |> 
+        tidy(conf.int = TRUE) |> 
+        filter(term %in% setdiff(POPs_group_sd, "PCB_4_sd")) |> 
+        rename(exposure = term) |> 
+        mutate(analysis = "copollutant_sensi_outlier_NfL", model = "base")
+    }),
+    
+    # adjusted model copollutant sensi outlier NfL
+    adjusted_model_copol_sensi_outlier_NfL = map(outcome, function(out) {
+      formule <- as.formula(paste0(out, " ~ ", copollutant_formula, " + as.factor(als) + baseline_age + sex + smoking_2cat_i + bmi"))
+      d_sub <- if (out == "proteomic_neuro_explo_NEFL") filter(bdd_danish, match != 159) else bdd_danish
+      lm(formule, data = d_sub) |> 
+        tidy(conf.int = TRUE) |> 
+        filter(term %in% setdiff(POPs_group_sd, "PCB_4_sd")) |> 
+        rename(exposure = term) |> 
+        mutate(analysis = "copollutant_sensi_outlier_NfL", model = "adjusted")
+    })) |> 
+  pivot_longer(
+    cols = c(base_model, adjusted_model,
+             base_model_copol_sensi_outlier_NfL, adjusted_model_copol_sensi_outlier_NfL), 
+    names_to = NULL, 
+    values_to = "model_summary") |>
+  unnest(model_summary)
+
+
+# Mise en forme et calcul du False Discovery Rate (FDR) ----
+main_results <- bind_rows(main_results_uni, main_results_copol) |>
   # Calcul de la q-value (FDR) par type de modèle
   mutate(fdr_group = case_when(
     analysis == "main" ~ "main",
+    analysis == "copollutant" ~ "copollutant",
     analysis %in% c("sensi_sex_f", "sensi_sex_m") ~ "sensi_sex",
-    analysis %in% c("sensi_als_cases", "sensi_als_controls") ~ "sensi_als")) |>
+    analysis %in% c("sensi_als_cases", "sensi_als_controls") ~ "sensi_als", 
+    analysis == "sensi_outlier_NfL" ~ "sensi_outlier_NfL",
+    analysis == "copollutant_sensi_outlier_NfL" ~ "copollutant_sensi_outlier_NfL")) |>
   group_by(model, fdr_group) |>
   mutate(q.value_raw = p.adjust(p.value, method = "fdr")) |>
   ungroup() |>
@@ -172,6 +253,9 @@ main_results <- main_results |>
     "p-value", p.value_raw, 
     "FDR-corrected p-value", q.value_raw, 
     is_p_significant, is_q_significant)
+
+
+rm(analysis_grid_uni, analysis_grid_copol, copollutant_formula, main_results_uni, main_results_copol)
 
 # Visualisation ----
 # main_results |> 
@@ -278,6 +362,25 @@ POPs_sd_proteomic_figure <- main_results |>
     legend.position = "bottom", 
     legend.title = element_blank())
 
+POPs_sd_proteomic_figure_forest <- results_POPs_proteomic$main$main_results |>
+  filter(!exposure %in% c("PCB-4")) |>
+  filter(analysis == "main" & model == "adjusted") |>
+  filter(outcome %in% outcome[is_q_significant == "FDR-corrected p-value < 0.05"]) |>
+  mutate(exposure = fct_relevel(exposure, "PCB-DL", "PCB-NDL", "Σchlordane", "HCB", "ΣDDT", "β-HCH", "ΣPBDE")) |>
+  mutate(across(c(estimate_raw, conf.low, conf.high), as.numeric)) |>
+  ggplot(aes(x = estimate_raw, y = outcome, color = is_q_significant)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50", alpha = 0.7) +
+  geom_pointrange(aes(xmin = conf.low, xmax = conf.high), size = 0.4) +
+  facet_wrap(~ exposure, ncol = 4) +
+  scale_color_manual(values = c(
+    "FDR-corrected p-value < 0.05" = "firebrick3",
+    "FDR-corrected p-value ≥ 0.05" = "gray40")) +
+  labs(x = "Beta (95% CI)", y = "Protéines", color = NULL) +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "bottom",
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(color = "gray80", fill = NA, size = 0.5))
 
 POPs_sd_proteomic_table_sensi_sex <-                                                       # select adjusted results
   main_results |>
@@ -437,7 +540,8 @@ results_POPs_proteomic <- list(
   main = list(main_results = main_results, 
               POPs_sd_proteomic_table = POPs_sd_proteomic_table, 
               POPs_sd_proteomic_figure = POPs_sd_proteomic_figure, 
-              POPs_sd_NfL_table = POPs_sd_NfL_table), 
+              POPs_sd_NfL_table = POPs_sd_NfL_table, 
+              POPs_sd_proteomic_figure_forest = POPs_sd_proteomic_figure_forest), 
   sensi_sex = list(POPs_sd_proteomic_table_sensi_sex = POPs_sd_proteomic_table_sensi_sex, 
                    POPs_sd_proteomic_figure_sensi_sex = POPs_sd_proteomic_figure_sensi_sex),
   sensi_als = list(POPs_sd_proteomic_table_sensi_als = POPs_sd_proteomic_table_sensi_als, 
@@ -448,6 +552,7 @@ saveRDS(results_POPs_proteomic, file = "~/Documents/POP_ALS_2025_02_03/2_output/
 rm(main_results, 
    POPs_sd_proteomic_table, 
    POPs_sd_proteomic_figure, 
+   POPs_sd_proteomic_figure_forest, 
    POPs_sd_NfL_table, 
    POPs_sd_proteomic_table_sensi_sex, 
    POPs_sd_proteomic_figure_sensi_sex, 

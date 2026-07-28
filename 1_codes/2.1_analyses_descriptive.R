@@ -332,7 +332,7 @@ proteomic_boxplot_danish <- bdd_danish |>
   geom_boxplot() +
   scale_fill_hue(direction = 1) +
   scale_y_continuous(labels = number_format(accuracy = 1)) +
-  labs(x = "proteomic", y = "Pre-disease serum concentrations (unit?)") +
+  labs(x = "proteomic", y = "Pre-disease serum concentrations (NPX)") +
   coord_flip() +
   theme_lucid()
 
@@ -354,7 +354,7 @@ proteomic_boxplot_danish_by_als <- bdd_danish |>
   scale_fill_hue(direction = 1, 
                  guide = guide_legend(reverse = TRUE)) +
   scale_y_continuous(labels = number_format(accuracy = 1)) +
-  labs(x = "proteomic", y = "Pre-disease serum concentrations (unit?)", fill = "ALS") +
+  labs(x = "proteomic", y = "Pre-disease serum concentrations (NPX)", fill = "ALS") +
   coord_flip() +
   theme_lucid()
 
@@ -415,7 +415,7 @@ proteomic_boxplot_danish_by_death <- bdd_danish |>
   scale_fill_hue(direction = 1, 
                  guide = guide_legend(reverse = TRUE)) +
   scale_y_continuous(labels = number_format(accuracy = 1)) +
-  labs(x = "proteomic", y = "Pre-disease serum concentrations (unit?)", fill = "") +
+  labs(x = "proteomic", y = "Pre-disease serum concentrations (NPX)", fill = "") +
   coord_flip() +
   theme_lucid()
 

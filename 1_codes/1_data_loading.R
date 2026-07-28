@@ -576,9 +576,10 @@ bdd_danish <- bdd_danish |>
   ungroup() |>
   mutate(
     follow_up_no_na_y = follow_up_no_na / 12, 
-    y_10ans = ifelse(als == 1 & follow_up_no_na <= 120, 1, 0),      # attention follow_up_no_na est en mois 
-    y_20ans = ifelse(als == 1 & follow_up_no_na <= 240, 1, 0),        # attention follow_up_no_na est en mois 
     y_5ans = ifelse(als == 1 & follow_up_no_na <= 60, 1, 0), 
+    y_10ans = ifelse(als == 1 & follow_up_no_na <= 120, 1, 0),      # attention follow_up_no_na est en mois 
+    y_15ans = ifelse(als == 1 & follow_up_no_na <= 180, 1, 0),        # attention follow_up_no_na est en mois 
+    y_20ans = ifelse(als == 1 & follow_up_no_na <= 240, 1, 0),        # attention follow_up_no_na est en mois 
     y_5_10ans = ifelse(als == 1 & follow_up_no_na >= 60 & follow_up_no_na <= 120, 1, 0),      # attention follow_up_no_na est en mois 
     y_10_15ans = ifelse(als == 1 & follow_up_no_na >= 120 & follow_up_no_na <= 180, 1, 0), 
     y_15_20ans = ifelse(als == 1 & follow_up_no_na >= 180 & follow_up_no_na <= 240, 1, 0), 
