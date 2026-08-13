@@ -861,24 +861,23 @@ model1_sd_y_10ans <- data.frame(explanatory = character(),
 
 for (var in proteomic_sd) {
   
-  formula <- as.formula(paste("y_10ans ~", var, "+ strata(match)"))
+  formula <- as.formula(paste("y_10ans ~", var, "+ birth_year + sex"))
   
-  model <- clogit(formula, data = bdd_danish)
+  model <- glm(formula, family = binomial(link = "logit"), data = bdd_danish)
   
-  model_summary <- tidy(model) |> filter(grepl(paste0("^", var), term))
+  model_summary <- tidy(model, exponentiate = TRUE, conf.int = TRUE) |> 
+    filter(grepl(paste0("^", var), term))
   
-  OR <- exp(model_summary$estimate)
-  lower_CI <- exp(model_summary$estimate - 1.96 * model_summary$std.error)
-  upper_CI <- exp(model_summary$estimate + 1.96 * model_summary$std.error)
-  p_value <- model_summary$p.value
-  term <- model_summary$term
+  res_row <- data.frame(
+    explanatory = var,
+    term        = model_summary$term, 
+    OR          = model_summary$estimate,
+    lower_CI    = model_summary$conf.low,
+    upper_CI    = model_summary$conf.high,
+    p_value     = model_summary$p.value,
+    stringsAsFactors = FALSE)
   
-  model1_sd_y_10ans <- rbind(model1_sd_y_10ans, data.frame(explanatory = var,
-                                                           term = term, 
-                                                           OR = OR,
-                                                           lower_CI = lower_CI,
-                                                           upper_CI = upper_CI,
-                                                           p_value = p_value))
+  model1_sd_y_10ans <- rbind(model1_sd_y_10ans, res_row)
 }
 
 model1_sd_y_10ans <- model1_sd_y_10ans |> 

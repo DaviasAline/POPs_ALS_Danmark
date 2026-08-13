@@ -268,7 +268,7 @@ rm(analysis_grid_uni, analysis_grid_copol, copollutant_formula, main_results_uni
 #   filter(p.value_raw <0.05) |> 
 #   View()
 
-
+## POPs_sd_proteomic_table ----
 POPs_sd_proteomic_table <-                                                       # select both base and adjusted results
   main_results |>
   filter(analysis == "main" & 
@@ -305,6 +305,44 @@ POPs_sd_proteomic_table <-                                                      
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
+## POPs_sd_proteomic_table_copol ----
+POPs_sd_proteomic_table_copol <-                                                       # select both base and adjusted results
+  main_results |>
+  filter(analysis == "copollutant" & 
+           model %in% c("base", "adjusted")) |>            
+  group_by(exposure, outcome) |>                                                      # select explanatory vars significant                
+  filter(any(q.value_raw < 0.05, na.rm = TRUE)) |>                     
+  ungroup() |>
+  select(model, exposure, outcome_group, outcome, Beta, "95% CI", "p-value", "FDR-corrected p-value") |>
+  pivot_wider(names_from = "model", values_from = c("Beta", "95% CI", "p-value", "FDR-corrected p-value")) |>
+  select(exposure, outcome_group, outcome, contains("base"), contains("adjusted")) |>
+  rename("Beta" = "Beta_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "FDR-corrected p-value" = "FDR-corrected p-value_base", 
+         "Beta " = "Beta_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "FDR-corrected p-value " = "FDR-corrected p-value_adjusted") |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are matched on birth year and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated increase of plasma protein level (NPX) associated with a one standard deviation increase in pre-disease POP.
+    3CI: Confidence interval.") |>
+  add_header(
+    "exposure" = "Pre-disease exposures", 
+    "outcome_group" = "Protein groups", 
+    "outcome" = "Proteins", 
+    "Beta" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", "FDR-corrected p-value" = "Base model", 
+    "Beta " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model", "FDR-corrected p-value " = "Adjusted model") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  merge_v(j = 1:3) |>
+  bold(j = 1:3, part = "body") |>
+  align(j = 1:3, align = "left", part = "all") |> 
+  merge_at(j = "outcome", part = "header") |>
+  merge_at(j = "exposure", part = "header") |>
+  merge_at(j = "outcome_group", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
+## POPs_sd_NfL_table ----
 POPs_sd_NfL_table <-                                                       # select both base and adjusted results
   main_results |>
   filter(analysis == "main" & 
@@ -342,7 +380,47 @@ POPs_sd_NfL_table <-                                                       # sel
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 
-POPs_sd_proteomic_figure <- main_results |>
+## POPs_sd_NfL_table_sensi_outlier_NfL ----
+POPs_sd_NfL_table_sensi_outlier_NfL <-                                                       # select both base and adjusted results
+  main_results |>
+  filter(analysis == "sensi_outlier_NfL" & 
+           outcome == "NEFL" &
+           model %in% c("base", "adjusted")) |>    
+  mutate(outcome = fct_recode(outcome, "Neurofilament light polypeptide" = "NEFL")) |>        
+  select(model, exposure, outcome, Beta, "95% CI", "p-value", "FDR-corrected p-value") |>
+  pivot_wider(names_from = "model", values_from = c("Beta", "95% CI", "p-value", "FDR-corrected p-value")) |>
+  select(exposure, outcome, contains("base"), contains("adjusted")) |>
+  rename("Beta" = "Beta_base", "95% CI" = "95% CI_base", "p-value" = "p-value_base", "FDR-corrected p-value" = "FDR-corrected p-value_base", 
+         "Beta " = "Beta_adjusted", "95% CI " = "95% CI_adjusted", "p-value " = "p-value_adjusted", "FDR-corrected p-value " = "FDR-corrected p-value_adjusted") |>
+  flextable() |>
+  add_footer_lines(
+    "1All models are matched on birth year and sex. Adjusted models further account for smoking and body mass index. 
+    2Estimated increase of plasma protein level (NPX) associated with a one standard deviation increase in pre-disease POP.
+    3CI: Confidence interval.") |>
+  add_header(
+    "exposure" = "Pre-disease exposures", 
+    "outcome" = "Protein", 
+    "Beta" = "Base model", "95% CI" = "Base model", "p-value" = "Base model", "FDR-corrected p-value" = "Base model", 
+    "Beta " = "Adjusted model", "95% CI " = "Adjusted model", "p-value " = "Adjusted model", "FDR-corrected p-value " = "Adjusted model") |>
+  theme_vanilla() |>
+  merge_h(part = "header") |>
+  align(align = "center", part = "all") |>
+  merge_v(j = "outcome") |>
+  bold(j = "outcome", part = "body") |>
+  align(j = "outcome", align = "left", part = "all") |> 
+  merge_at(j = "outcome", part = "header") |>
+  merge_v(j = "exposure") |>
+  bold(j = "exposure", part = "body") |>
+  align(j = "exposure", align = "left", part = "all") |> 
+  merge_at(j = "exposure", part = "header") |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
+
+## POPs_sd_proteomic_figure ----
+POPs_sd_proteomic_figure <- 
+  main_results |>
   filter(analysis == "main" & model == "adjusted") |>
   ggplot(aes(x = estimate_raw, y = -log10(p.value_raw))) +
   geom_point(aes(color = is_q_significant), alpha = 0.6, size = 1.5) +
@@ -362,7 +440,33 @@ POPs_sd_proteomic_figure <- main_results |>
     legend.position = "bottom", 
     legend.title = element_blank())
 
-POPs_sd_proteomic_figure_forest <- results_POPs_proteomic$main$main_results |>
+## POPs_sd_proteomic_figure_copol ----
+POPs_sd_proteomic_figure_copol <- 
+  main_results |>
+  filter(!exposure %in% c("PCB-4")) |>
+  filter(analysis %in% c("main", "copollutant") & model == "adjusted") |>
+  mutate(analysis = fct_relevel(analysis, "main", "copollutant")) |>
+  ggplot(aes(x = estimate_raw, y = -log10(p.value_raw))) +
+  geom_point(aes(color = is_q_significant), alpha = 0.6, size = 1.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "gray60", alpha = 0.5) +
+  geom_vline(xintercept = 0, linetype = "solid", color = "gray40", alpha = 0.3) +
+  geom_text_repel(
+    aes(label = outcome),
+    size = 2.5,
+    max.overlaps = 20,
+    segment.color = 'grey50') +
+  facet_wrap(exposure~analysis, scales = "fixed", ncol = 2, nrow = 7) +
+  scale_color_manual(values = c("FDR-corrected p-value < 0.05" = "firebrick3", 
+                                "FDR-corrected p-value ≥ 0.05" = "black")) +
+  labs(x = "Beta", y = "-log10(p-value)") +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "bottom", 
+    legend.title = element_blank())
+
+## POPs_sd_proteomic_figure_forest ----
+POPs_sd_proteomic_figure_forest <- 
+  main_results |>
   filter(!exposure %in% c("PCB-4")) |>
   filter(analysis == "main" & model == "adjusted") |>
   filter(outcome %in% outcome[is_q_significant == "FDR-corrected p-value < 0.05"]) |>
@@ -375,13 +479,37 @@ POPs_sd_proteomic_figure_forest <- results_POPs_proteomic$main$main_results |>
   scale_color_manual(values = c(
     "FDR-corrected p-value < 0.05" = "firebrick3",
     "FDR-corrected p-value ≥ 0.05" = "gray40")) +
-  labs(x = "Beta (95% CI)", y = "Protéines", color = NULL) +
+  labs(x = "Beta (95% CI)", y = "Proteins", color = NULL) +
   theme_minimal(base_size = 12) +
   theme(
     legend.position = "bottom",
     panel.grid.minor = element_blank(),
     panel.border = element_rect(color = "gray80", fill = NA, size = 0.5))
 
+## POPs_sd_proteomic_figure_forest_copol ----
+POPs_sd_proteomic_figure_forest_copol <- 
+  main_results |>
+  filter(!exposure %in% c("PCB-4")) |>
+  filter(analysis %in% c("main", "copollutant") & model == "adjusted") |>
+  filter(outcome %in% outcome[is_q_significant == "FDR-corrected p-value < 0.05"]) |>
+  mutate(exposure = fct_relevel(exposure, "PCB-DL", "PCB-NDL", "Σchlordane", "HCB", "ΣDDT", "β-HCH", "ΣPBDE"), 
+         analysis = fct_relevel(analysis, "main", "copollutant")) |>
+  mutate(across(c(estimate_raw, conf.low, conf.high), as.numeric)) |>
+  ggplot(aes(x = estimate_raw, y = outcome, color = is_q_significant)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50", alpha = 0.7) +
+  geom_pointrange(aes(xmin = conf.low, xmax = conf.high), size = 0.4) +
+  facet_wrap(exposure ~ analysis, ncol = 2, nrow = 7) +
+  scale_color_manual(values = c(
+    "FDR-corrected p-value < 0.05" = "firebrick3",
+    "FDR-corrected p-value ≥ 0.05" = "gray40")) +
+  labs(x = "Beta (95% CI)", y = "Proteins", color = NULL) +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "bottom",
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(color = "gray80", fill = NA, size = 0.5))
+
+## POPs_sd_proteomic_table_sensi_sex ----
 POPs_sd_proteomic_table_sensi_sex <-                                                       # select adjusted results
   main_results |>
   filter(analysis %in% c("main", "sensi_sex_f", "sensi_sex_m") & 
@@ -423,7 +551,7 @@ POPs_sd_proteomic_table_sensi_sex <-                                            
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
-
+## POPs_sd_proteomic_figure_sensi_sex ----
 POPs_sd_proteomic_figure_sensi_sex <- 
   main_results |>
   filter(model == "adjusted" & 
@@ -458,7 +586,7 @@ POPs_sd_proteomic_figure_sensi_sex <-
     strip.text.y.left = element_text(angle = 0, hjust = 1), # angle = 0 rend le texte horizontal
     strip.placement = "outside")
 
-
+## POPs_sd_proteomic_table_sensi_als ----
 POPs_sd_proteomic_table_sensi_als <-                                                       # select adjusted results
   main_results |>
   filter(analysis %in% c("main", "sensi_als_cases", "sensi_als_controls") & 
@@ -500,7 +628,7 @@ POPs_sd_proteomic_table_sensi_als <-                                            
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
-
+## POPs_sd_proteomic_figure_sensi_als ----
 POPs_sd_proteomic_figure_sensi_als <- 
   main_results |>
   filter(model == "adjusted" & 
@@ -535,7 +663,7 @@ POPs_sd_proteomic_figure_sensi_als <-
     strip.text.y.left = element_text(angle = 0, hjust = 1), 
     strip.placement = "outside")
 
-
+# Assemblage ----
 results_POPs_proteomic <- list(
   main = list(main_results = main_results, 
               POPs_sd_proteomic_table = POPs_sd_proteomic_table, 
@@ -545,8 +673,13 @@ results_POPs_proteomic <- list(
   sensi_sex = list(POPs_sd_proteomic_table_sensi_sex = POPs_sd_proteomic_table_sensi_sex, 
                    POPs_sd_proteomic_figure_sensi_sex = POPs_sd_proteomic_figure_sensi_sex),
   sensi_als = list(POPs_sd_proteomic_table_sensi_als = POPs_sd_proteomic_table_sensi_als, 
-                   POPs_sd_proteomic_figure_sensi_als = POPs_sd_proteomic_figure_sensi_als))
+                   POPs_sd_proteomic_figure_sensi_als = POPs_sd_proteomic_figure_sensi_als), 
+  sensi_outlier_NfL = list(POPs_sd_NfL_table_sensi_outlier_NfL = POPs_sd_NfL_table_sensi_outlier_NfL), 
+  copol = list(POPs_sd_proteomic_table_copol = POPs_sd_proteomic_table_copol, 
+               POPs_sd_proteomic_figure_copol = POPs_sd_proteomic_figure_copol, 
+               POPs_sd_proteomic_figure_forest_copol = POPs_sd_proteomic_figure_forest_copol))
 
+# Export ----
 saveRDS(results_POPs_proteomic, file = "~/Documents/POP_ALS_2025_02_03/2_output/2.8_results_POPs_proteomic.rds")
 
 rm(main_results, 
@@ -554,7 +687,11 @@ rm(main_results,
    POPs_sd_proteomic_figure, 
    POPs_sd_proteomic_figure_forest, 
    POPs_sd_NfL_table, 
+   POPs_sd_NfL_table_sensi_outlier_NfL, 
    POPs_sd_proteomic_table_sensi_sex, 
    POPs_sd_proteomic_figure_sensi_sex, 
    POPs_sd_proteomic_table_sensi_als, 
-   POPs_sd_proteomic_figure_sensi_als)
+   POPs_sd_proteomic_figure_sensi_als, 
+   POPs_sd_proteomic_table_copol, 
+   POPs_sd_proteomic_figure_copol, 
+   POPs_sd_proteomic_figure_forest_copol)

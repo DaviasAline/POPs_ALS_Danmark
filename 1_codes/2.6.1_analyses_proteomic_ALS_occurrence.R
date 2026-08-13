@@ -7572,17 +7572,17 @@ NfL_sd_ALS_table_sensi_follow_up_base_adj <- main_results |>
          term == "Continuous", 
          explanatory == "NEFL") |>
   mutate(    analysis = fct_recode(analysis, 
-                                   "All cases and\ncontrols (n=495)" = "sensi_1",
-                                   "Years to ALS < 5 years\n (n=51)" = "sensi_2",
+                                   "All cases and controls (n=495)" = "sensi_1",
+                                   "Years to ALS diagnosis < 5 years (n=51)" = "sensi_2",
                                    #"Filtered to\nfollow-up > 5 years\n (n=444)" = "sensi_1_3",
-                                   "Years to ALS\nbetween 5 and 14.6 years\n(n=225)" = "sensi_1_3_4",
-                                   "Years to ALS > 14.6 years\n (n=219)" = "sensi_1_3_5"), 
+                                   "Years to ALS diagnosis between 5 and 14.6 years (n=225)" = "sensi_1_3_4",
+                                   "Years to ALS diagnosis > 14.6 years (n=219)" = "sensi_1_3_5"), 
              analysis = fct_relevel(analysis, 
-                                    "All cases and\ncontrols (n=495)", 
-                                    "Years to ALS < 5 years\n (n=51)", 
+                                    "All cases and controls (n=495)", 
+                                    "Years to ALS diagnosis < 5 years (n=51)", 
                                     #"Filtered to\nfollow-up > 5 years\n (n=444)", 
-                                    "Years to ALS\nbetween 5 and 14.6 years\n(n=225)",
-                                    "Years to ALS > 14.6 years\n (n=219)")) |> 
+                                    "Years to ALS diagnosis between 5 and 14.6 years (n=225)",
+                                    "Years to ALS diagnosis > 14.6 years (n=219)")) |> 
   select(analysis, model, explanatory, OR, "95% CI", p_value) |> 
   pivot_wider(
     names_from = model,  
@@ -7627,16 +7627,16 @@ NfL_sd_ALS_figure_sensi_follow_up_base_adj <- main_results |>
          model = fct_relevel(model, "Base models", "Adjusted models"), 
          analysis = fct_recode(analysis, 
                                "All cases and\ncontrols (n=495)" = "sensi_1",
-                               "Years to ALS < 5 years\n (n=51)" = "sensi_2",
+                               "Years to ALS diagnosis\n< 5 years (n=51)" = "sensi_2",
                                #"Filtered to\nfollow-up > 5 years\n (n=444)" = "sensi_1_3",
-                               "Years to ALS\nbetween 5 and 14.6 years\n(n=225)" = "sensi_1_3_4",
-                               "Years to ALS > 14.6 years\n (n=219)" = "sensi_1_3_5"), 
+                               "Years to ALS diagnosis\nbetween 5 and 14.6 years\n(n=225)" = "sensi_1_3_4",
+                               "Years to ALS diagnosis\n> 14.6 years (n=219)" = "sensi_1_3_5"), 
          analysis = fct_relevel(analysis, 
                                 "All cases and\ncontrols (n=495)", 
-                                "Years to ALS < 5 years\n (n=51)", 
+                                "Years to ALS diagnosis\n< 5 years (n=51)", 
                                 #"Filtered to\nfollow-up > 5 years\n (n=444)", 
-                                "Years to ALS\nbetween 5 and 14.6 years\n(n=225)",
-                                "Years to ALS > 14.6 years\n (n=219)")) |> 
+                                "Years to ALS diagnosis\nbetween 5 and 14.6 years\n(n=225)",
+                                "Years to ALS diagnosis\n> 14.6 years (n=219)")) |> 
   ggplot(aes(x = explanatory, y = OR_raw, ymin = lower_CI, ymax = upper_CI, color = signif)) +
   geom_pointrange(size = 0.5) + 
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
@@ -7704,19 +7704,19 @@ NfL_sd_ALS_table_sensi_follow_up_sex_base_adj <-
          term == "Continuous", 
          explanatory == "NEFL") |>
   mutate(analysis = fct_recode(analysis, 
-                               "All cases and\ncontrols (n=495)" = "sensi_1",
-                               "Years to ALS < 5 years\n (n=51)" = "sensi_2",
+                               "All cases and controls (n=495)" = "sensi_1",
+                               "Years to ALS diagnosis < 5 years (n=51)" = "sensi_2",
                                #"Filtered to\nfollow-up > 5 years\n (n=444)" = "sensi_1_3",
-                               "Years to ALS\nbetween 5 and 14.6 years\n(n=225)" = "sensi_1_3_4",
-                               "Years to ALS > 14.6 years\n (n=219)" = "sensi_1_3_5", 
+                               "Years to ALS diagnosis between 5 and 14.6 years (n=225)" = "sensi_1_3_4",
+                               "Years to ALS diagnosis > 14.6 years (n=219)" = "sensi_1_3_5", 
                                "Females (n=192)" = "sensi_1_7_female", 
                                "Males (n=303)" = "sensi_1_7_male"), 
          analysis = fct_relevel(analysis, 
-                                "All cases and\ncontrols (n=495)", 
-                                "Years to ALS < 5 years\n (n=51)", 
+                                "All cases and controls (n=495)", 
+                                "Years to ALS diagnosis < 5 years (n=51)", 
                                 #"Filtered to\nfollow-up > 5 years\n (n=444)", 
-                                "Years to ALS\nbetween 5 and 14.6 years\n(n=225)",
-                                "Years to ALS > 14.6 years\n (n=219)", 
+                                "Years to ALS diagnosis between 5 and 14.6 years (n=225)",
+                                "Years to ALS diagnosis > 14.6 years (n=219)", 
                                 "Females (n=192)", 
                                 "Males (n=303)")) |> 
   select(analysis, model, explanatory, OR, "95% CI", p_value) |> 
@@ -7764,18 +7764,18 @@ NfL_sd_ALS_figure_sensi_follow_up_sex_adj <-
   mutate(signif = ifelse(p_value_raw<0.05, "p-value<0.05", "p-value≥0.05"), 
          analysis = fct_recode(analysis, 
                                "All cases and\ncontrols (n=495)" = "sensi_1",
-                               "Years to ALS < 5 years\n (n=51)" = "sensi_2",
+                               "Years to ALS diagnosis\n< 5 years (n=51)" = "sensi_2",
                                #"Filtered to\nfollow-up > 5 years\n (n=444)" = "sensi_1_3",
-                               "Years to ALS\nbetween 5 and 14.6 years\n(n=225)" = "sensi_1_3_4",
-                               "Years to ALS > 14.6 years\n (n=219)" = "sensi_1_3_5", 
+                               "Years to ALS diagnosis\nbetween 5 and 14.6 years\n(n=225)" = "sensi_1_3_4",
+                               "Years to ALS diagnosis\n> 14.6 years (n=219)" = "sensi_1_3_5", 
                                "Females (n=192)" = "sensi_1_7_female", 
                                "Males (n=303)" = "sensi_1_7_male"), 
          analysis = fct_relevel(analysis, 
                                 "All cases and\ncontrols (n=495)", 
-                                "Years to ALS < 5 years\n (n=51)", 
+                                "Years to ALS diagnosis\n< 5 years (n=51)", 
                                 #"Filtered to\nfollow-up > 5 years\n (n=444)", 
-                                "Years to ALS\nbetween 5 and 14.6 years\n(n=225)",
-                                "Years to ALS > 14.6 years\n (n=219)", 
+                                "Years to ALS diagnosis\nbetween 5 and 14.6 years\n(n=225)",
+                                "Years to ALS diagnosis\n> 14.6 years (n=219)", 
                                 "Females (n=192)",
                                 "Males (n=303)")) |> 
   ggplot(aes(x = explanatory, y = OR_raw, ymin = lower_CI, ymax = upper_CI)) +
@@ -7811,8 +7811,8 @@ rm(ratios)
 
 figure_NfL_over_time_sensi_1 <- 
   ggplot(ratios_sensi_1, aes(x = follow_up_neg, y = ratio_proteomic_neuro_explo_NEFL)) +
-  geom_point(alpha = 0.6, color = "darkblue") +
-  geom_smooth(method = "loess", se = TRUE, color = "red", span = 0.75) +
+  geom_point(alpha = 0.6, color = "black") +
+  geom_smooth(method = "loess", se = TRUE, color = "black", span = 0.75) +
   labs(
     x = "Time to ALS diagnosis (years)",
     y = "Ratio of NfL in case and matched controls") +
@@ -7831,21 +7831,21 @@ label_main_analysis <-
          " and specificity: ", round(youden_best_NfL_all["specificity"], 2), ")\n")
 
 label_sensi_2 <- 
-  paste0("Years to ALS < 5 years (n=51)\n", 
+  paste0("Years to ALS diagnosis < 5 years (n=51)\n", 
          "AUC = ", round(auc(roc_NfL_sensi_2), 2), 
          "\nOptimal NfL cut-off: ", round(youden_best_NfL_sensi_2["threshold"], 2), 
          "\n(sensitivity: ", round(youden_best_NfL_sensi_2["sensitivity"], 2), 
          " and specificity: ", round(youden_best_NfL_sensi_2["specificity"], 2), ")\n")
 
 label_sensi_1_3_4 <- 
-  paste0("Years to ALS between 5 and 14.6 years (n=225)\n", 
+  paste0("Years to ALS diagnosis between 5 and 14.6 years (n=225)\n", 
          "AUC = ", round(auc(roc_NfL_sensi_1_3_4), 2), 
          "\nOptimal NfL cut-off: ", round(youden_best_NfL_sensi_1_3_4["threshold"], 2), 
          "\n(sensitivity: ", round(youden_best_NfL_sensi_1_3_4["sensitivity"], 2), 
          " and specificity: ", round(youden_best_NfL_sensi_1_3_4["specificity"], 2), ")\n")
 
 label_sensi_1_3_5 <- 
-  paste0("Years to ALS > 14.6 years (n=219)\n", 
+  paste0("Years to ALS diagnosis > 14.6 years (n=219)\n", 
          "AUC = ", round(auc(roc_NfL_sensi_1_3_5), 2), 
          "\nOptimal NfL cut-off: ", round(youden_best_NfL_sensi_1_3_5["threshold"], 2), 
          "\n(sensitivity: ", round(youden_best_NfL_sensi_1_3_5["sensitivity"], 2), 
@@ -7934,15 +7934,15 @@ label_main_analysis <-
          "AUC = ", round(auc(roc_NfL_all_adjusted), 2), "\n")
 
 label_sensi_2 <- 
-  paste0("Years to ALS < 5 years (n=51)\n", 
+  paste0("Years to ALS diagnosis < 5 years (n=51)\n", 
          "AUC = ", round(auc(roc_NfL_sensi_2_adjusted), 2), "\n")
 
 label_sensi_1_3_4 <- 
-  paste0("Years to ALS between 5 and 14.6 years (n=225)\n", 
+  paste0("Years to ALS diagnosis between 5 and 14.6 years (n=225)\n", 
          "AUC = ", round(auc(roc_NfL_sensi_1_3_4_adjusted), 2), "\n")
 
 label_sensi_1_3_5 <- 
-  paste0("Years to ALS > 14.6 years (n=219)\n", 
+  paste0("Years to ALS diagnosis > 14.6 years (n=219)\n", 
          "AUC = ", round(auc(roc_NfL_sensi_1_3_5_adjusted), 2), "\n")
 
 roc_patterns <- c(

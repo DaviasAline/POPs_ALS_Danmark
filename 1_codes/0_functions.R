@@ -67,6 +67,7 @@ library(tune)
 library(vip)
 library(writexl)
 library(xgboost)    # gradient boosting
+library(ggtext)
 
 
 

@@ -38,6 +38,16 @@ results_proteomic_ALS_survival <- readRDS("~/Documents/POP_ALS_2025_02_03/2_outp
 results_POPs_proteomic <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.8_results_POPs_proteomic.rds")
 ```
 
+```{r setup}
+#| message: false
+#| warning: false
+#| include: false
+# Définir l'alignement par défaut à gauche pour tous les flextables
+set_flextable_defaults(
+  table.layout = "autofit",
+  align = "left")
+```
+
 # Danish data description
 
 ## Metadata
@@ -3869,8 +3879,7 @@ if (length(results_proteomic_ALS_occurrence_tidymodels$test_2$overlap_t2) > 0) {
 }
 ```
 
-
-#### Test 1 sensi: only in individuals with follow-up >= 5 years
+#### Test 1 sensi: only in individuals with follow-up \>= 5 years
 
 ##### Comparison of glmnet models
 
@@ -3953,7 +3962,6 @@ results_proteomic_ALS_occurrence_tidymodels$test_1_sensi$glmnet_t1_result_sensi$
   autofit()
 
 ```
-
 
 #### Test 3: interaction with follow-up duration?
 
@@ -4241,7 +4249,7 @@ results_proteomic_ALS_occurrence_y_to_als$cox_all$proteomic_quart_ALS_table_cox 
 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-9
-#| column: page-right
+#| column: screen-inset-right
 #| cache: false
 results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_sd_ALS_table
 ```
@@ -4257,7 +4265,6 @@ results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$p
   plot_layout(ncol = 3, nrow = 2)
 ```
 
-
 #### Quartiles
 
 ```{r}
@@ -4266,7 +4273,6 @@ results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$p
 #| cache: false
 results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$proteomic_quart_ALS_table
 ```
-
 
 ### Linear models among cases
 
@@ -4298,10 +4304,9 @@ results_proteomic_ALS_occurrence_y_to_als$linear_cases$proteome_wide$sensi_sex$F
 results_proteomic_ALS_occurrence_y_to_als$linear_cases$proteome_wide$sensi_sex$Follow_up_proteomic_sd_figure_sensi_sex
 ```
 
-
 ### Linear models among cases and controls
-Controls have a follow-up duration until death or end of study 
-#### Main analysis
+
+Controls have a follow-up duration until death or end of study \#### Main analysis
 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-17
@@ -4332,7 +4337,8 @@ results_proteomic_ALS_occurrence_y_to_als$linear_all$proteome_wide$sensi_sex$Fol
 ## Are the pre-diagnostic protein levels predicting the time-to-onset of ALS?
 
 ### Linear models among cases and controls (tidymodels)
-Controls have a follow-up duration until death or end of study 
+
+Controls have a follow-up duration until death or end of study
 
 ```{r}
 #| label: danish-proteomic-y-to-ALS-29
@@ -4342,6 +4348,7 @@ results_proteomic_ALS_occurrence_y_to_als$linear_all$machine_learning$f_glmnet_r
 ```
 
 ### Fixed-horizon logistic analyses (tidymodels)
+
 To do after discussing with Marc
 
 # Proteomic and ALS survival
@@ -5044,7 +5051,7 @@ rm(plot_base_cox_gam_danish, plot_adjusted_cox_gam_danish,
 
 # POPs and proteomic
 
-## Main analysis
+## Main analysis unipollutant
 
 ```{r, fig.height=10, fig.width=10}
 #| label: danish-POPs-proteomic-1
@@ -5060,18 +5067,18 @@ results_POPs_proteomic$main$POPs_sd_proteomic_figure_forest
 
 ```{r}
 #| label: danish-POPs-proteomic-3
-#| column: screen-inset-right
 results_POPs_proteomic$main$POPs_sd_proteomic_table
+#| column: screen-inset-right
 ```
 
-## Specific Nfl
+### Specific Nfl
 
 ```{r}
 #| label: danish-POPs-proteomic-4
 results_POPs_proteomic$main$POPs_sd_NfL_table
 ```
 
-## Sensitivity analysis - sex effect?
+### Sensitivity analysis - sex effect?
 
 ```{r, fig.height=30, fig.width=10}
 #| column: screen-inset-right
@@ -5085,7 +5092,7 @@ results_POPs_proteomic$sensi_sex$POPs_sd_proteomic_figure_sensi_sex
 results_POPs_proteomic$sensi_sex$POPs_sd_proteomic_table_sensi_sex
 ```
 
-## Sensitivity analysis - als status effect?
+### Sensitivity analysis - als status effect?
 
 ```{r, fig.height=30, fig.width=10}
 #| label: danish-POPs-proteomic-7
@@ -5097,4 +5104,29 @@ results_POPs_proteomic$sensi_als$POPs_sd_proteomic_figure_sensi_als
 #| column: screen-inset-right
 #| label: danish-POPs-proteomic-8
 results_POPs_proteomic$sensi_als$POPs_sd_proteomic_table_sensi_als
+```
+
+### Sensitivity analysis - NfL outlier?
+
+```{r}
+#| label: danish-POPs-proteomic-9
+results_POPs_proteomic$sensi_outlier_NfL$POPs_sd_NfL_table_sensi_outlier_NfL
+```
+
+## Main analysis copollutant
+
+```{r}
+#| label: danish-POPs-proteomic-10
+#| column: screen-inset-right
+results_POPs_proteomic$copol$POPs_sd_proteomic_table_copol
+```
+
+```{r, fig.height=40, fig.width=10}
+#| label: danish-POPs-proteomic-11
+results_POPs_proteomic$copol$POPs_sd_proteomic_figure_copol
+```
+
+```{r, fig.height=60, fig.width=10}
+#| label: danish-POPs-proteomic-12
+results_POPs_proteomic$copol$POPs_sd_proteomic_figure_forest_copol
 ```

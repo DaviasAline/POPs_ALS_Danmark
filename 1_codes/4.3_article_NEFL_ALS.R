@@ -2,7 +2,8 @@
 # 10/11/2025
 
 # data loading - package loading ----
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2.6_analyses_proteomic_ALS_occurrence.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
+results_proteomic_ALS_occurrence <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.6.1_results_proteomic_ALS_occurrence.rds")
 
 
 # Table 1 - Subject characteristics description ---- 
@@ -46,21 +47,17 @@ table_1 <-
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
-# Figure 1 - Descriptive figure of NEFL distribution (density and boxplots) ----
-figure_1 <- 
-  results_descriptive$danish$figure_NEFL_2
 
-# Figure 2 - Base and adjusted logistic regressions (ALS risk) ----
+# Figure 1 - Base and adjusted logistic regressions (ALS risk) ----
+figure_1 <- results_proteomic_ALS_occurrence$NfL_results$NfL_sd_ALS_figure_sensi_follow_up_sex_adj
+
+# Figure 2 - Additional analysis (NfL level over follow-up time) ----
 figure_2 <- 
-  results_proteomic_ALS_occurrence$Nfl_results$NfL_sd_ALS_figure_sensi_follow_up_adj
+  results_proteomic_ALS_occurrence$NfL_results$NfL_over_time$figure_NfL_over_time_sensi_1
 
-# Figure 3 - Additional analysis (NfL level over follow-up time) ----
+# Figure 3 - Additional analysis (AUC) ----
 figure_3 <- 
-  results_proteomic_ALS_occurrence$additional_analysis_2$figure_NEFL_over_time_sensi_1
-
-# Figure 4 - Additional analysis (AUC) ----
-figure_4 <- 
-  results_proteomic_ALS_occurrence$additional_analysis_4$additional_analysis_4_figure_unadjusted_pattern +
+  results_proteomic_ALS_occurrence$NfL_results$AUC_figure_unadjusted_pattern +
   labs(title = "") + 
   guides(linetype = guide_legend(nrow = 2, byrow = TRUE))
 
@@ -116,30 +113,23 @@ print(table_S4, target = "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_
 
 
 ## figures ----
-ggsave(                                                                         # NfL descriptive figure 
+ggsave(                                                                         # Forest plots of logistic regressions results (ALS risk)
   "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_ALS/figure_1.tiff",
   figure_1,
-  height = 5,
-  width = 10,
-  units = "in")
-
-ggsave(                                                                         # Forest plots of logistic regressions results (ALS risk)
-  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_ALS/figure_2.tiff",
-  figure_2,
   height = 5,
   width = 8,
   units = "in")
 
 ggsave(                                                                         # LOESS curve of NfL ratios depending on time to diagnosis
-  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_ALS/figure_3.tiff",
-  figure_3,
+  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_ALS/figure_2.tiff",
+  figure_2,
   height = 5.5,
   width = 10,
   units = "in")
 
 ggsave(                                                                         # AUC curve
-  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_ALS/figure_4.tiff",
-  figure_4,
+  "~/Documents/POP_ALS_2025_02_03/2_output/3.Article_NfL_ALS/figure_3.tiff",
+  figure_3,
   height = 9,
   width = 12,
   units = "in")

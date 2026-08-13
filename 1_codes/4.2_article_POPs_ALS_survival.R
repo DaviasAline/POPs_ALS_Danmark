@@ -2,7 +2,9 @@
 # 18/03/2025
 
 # data loading - package loading ----
-source("~/Documents/POP_ALS_2025_02_03/1_codes/2.3_analyses_POPs_ALS_survival.R")
+source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
+results_descriptive <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.1_results_descriptive.rds")
+results_POPs_ALS_survival <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.3_results_POPs_ALS_survival.rds")
 
 
 # Table 1 - description of the subjects ----
@@ -17,7 +19,10 @@ table_1 <- results_descriptive$danish$covar_danish_cases |>
 
 # Figure 1 - description of the POP levels (boxplots) ----
 # Distribution of pre-disease POP concentrations in ALS cases from the Danish EPIC, the FMC, the FMCF and the MFH Finnish cohorts (total sample size=263).
-figure_1 <- results_descriptive$danish$POPs_group_boxplot_danish_by_death
+figure_1 <- results_descriptive$danish$POPs_group_boxplot_danish_by_death +
+  scale_fill_grey(start = 0.5, 
+                  end = 0.9, 
+                  guide = guide_legend(reverse = TRUE)) 
 
 # Figure 2 - forest plot expo - ALS survival (danish EPIC cohort) ----
 # Association between pre-diagnostic POP concentrations and survival among ALS cases from the Danish Diet, Cancer and Health cohort (cox models by exposure quartiles; n = 166).
@@ -41,7 +46,9 @@ figure_2 <-
   coord_flip()
 
 # Figure 3 - s(t) curves depending on ERS ----
-figure_3 <- results_POPs_ALS_survival$sensi1$figure_survival_poly
+figure_3 <- results_POPs_ALS_survival$sensi1$figure_survival_poly +
+  scale_color_manual(values = c("grey70", "grey20"),
+                     labels = c("Mean ERS", "+1 SD ERS"))
 
 
 # Table S1 - description of the POP levels (table) ----
