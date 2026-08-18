@@ -1324,4 +1324,98 @@ ggsave(                                                                         
   device = "tiff")
 
 
+# ISEE 2026 ----
+source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
+results_descriptive <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.1_results_descriptive.rds")
+results_POPs_ALS_survival <- readRDS("~/Documents/POP_ALS_2025_02_03/2_output/2.3_results_POPs_ALS_survival.rds")
+
+## heatmap ----
+dev.off()
+# Augmentation de la largeur (width) de 130 à 160 mm pour donner de l'air à droite
+tiff(filename = "~/Documents/POP_ALS_2025_02_03/2_output/Oral presentations/5. ISEE_2026/heatmap.tiff", 
+     units = "mm", width = 140, height = 130, res = 300)
+corrplot(results_descriptive$danish$POPs_heatmap_danish_cases_group, 
+         method = 'color', 
+         type = "lower", 
+         tl.col = 'black', 
+         tl.srt = 45, 
+         tl.cex = 1.1,       # Grossit les noms de variables (passé de 0.85 à 1.1)
+         cl.pos = 'b',
+         cl.lim = c(-1, 1),
+         cl.length = 3,
+         cl.ratio = 0.15,
+         cl.offset = 0.5,
+         cl.cex = 1.1,       # Grossit le texte de la légende (-1, 0, 1)
+         mar = c(3, 1, 1, 1),# Légèrement augmenté la marge du bas pour le texte plus grand
+         col = rev(COL2(diverging = "RdYlBu")))
+
+dev.off()
+
+## forest plots ----
+figure_2 <- 
+  results_POPs_ALS_survival$main_analysis$main_results_POPs_ALS_survival |>
+  filter(term == "Continuous") |>
+  filter(analysis %in% c("main", "sensi_1")) |>
+  filter(model %in% c("adjusted", "ERS")) |>
+  mutate(explanatory = factor(explanatory, levels = c(POPs_group_labels, "Environmental risk score" = "ERS_score_from_elastic_net_sensi_1")),
+         explanatory = fct_rev(explanatory),
+         explanatory = fct_recode(explanatory, !!!c(POPs_group_labels, "Environmental risk score" = "ERS_score_from_elastic_net_sensi_1"))) |>
+  arrange(explanatory) |> 
+  ggplot(aes(x = explanatory, y = HR_raw, ymin = lower_CI, ymax = upper_CI)) +
+  geom_pointrange(size = 0.5) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +  
+  labs(x = "POPs", y = "Hazard Ratio (HR)") +
+  theme_lucid() +
+  theme(strip.text = element_text(face = "bold"), 
+        legend.position = "bottom", 
+        strip.text.y = element_text(hjust = 0.5)) +
+  coord_flip()
+
+
+## survival curves ----
+figure_3 <- results_POPs_ALS_survival$sensi1$figure_survival_poly
+
+figure_3 <- 
+  newdata |>
+  ggplot(aes(x = t,
+             y = survival,
+             color = factor(ERS_score_from_elastic_net_sensi_1_sd))) +
+  geom_line(size = 1.2) +
+  geom_segment(data = median_surv,
+               aes(x = 0, xend = t,
+                   y = 0.5, yend = 0.5,
+                   color = factor(ERS_score_from_elastic_net_sensi_1_sd)),
+               linetype = "dashed",
+               show.legend = FALSE) +
+  geom_segment(data = median_surv,
+               aes(x = t, xend = t,
+                   y = 0, yend = 0.5,
+                   color = factor(ERS_score_from_elastic_net_sensi_1_sd)),
+               linetype = "dashed",
+               show.legend = FALSE) +
+  # scale_x_continuous(breaks = x_breaks,
+  #                    labels = x_labels) +
+  labs(x = "Months since diagnosis",
+       y = "Survival probability",
+       color = "Environmental risk score (ERS)") +
+  scale_color_manual(values = c("blue", "red"),
+                     labels = c("Mean ERS", "+1 SD ERS")) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+## export ----
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/Oral presentations/5. ISEE_2026/forestplot.tiff",
+  figure_2,
+  height = 4,
+  width = 6,
+  units = "in")
+
+ggsave(
+  "~/Documents/POP_ALS_2025_02_03/2_output/Oral presentations/5. ISEE_2026/survival curve.tiff",
+  figure_3,
+  height = 3,
+  width = 5, 
+  units = "in")
+
 
