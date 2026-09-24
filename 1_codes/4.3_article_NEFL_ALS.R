@@ -49,7 +49,8 @@ table_1 <-
 
 
 # Figure 1 - Base and adjusted logistic regressions (ALS risk) ----
-figure_1 <- results_proteomic_ALS_occurrence$NfL_results$NfL_sd_ALS_figure_sensi_follow_up_sex_adj
+figure_1 <- results_proteomic_ALS_occurrence$NfL_results$NfL_sd_ALS_figure_sensi_follow_up_sex_adj + 
+  labs(y = "Odds ratios")
 
 # Figure 2 - Additional analysis (NfL level over follow-up time) ----
 figure_2 <- 
@@ -57,7 +58,7 @@ figure_2 <-
 
 # Figure 3 - Additional analysis (AUC) ----
 figure_3 <- 
-  results_proteomic_ALS_occurrence$NfL_results$AUC_figure_unadjusted_pattern +
+  results_proteomic_ALS_occurrence$NfL_results$AUC_NfL$AUC_figure_unadjusted_pattern +
   labs(title = "") + 
   guides(linetype = guide_legend(nrow = 2, byrow = TRUE))
 

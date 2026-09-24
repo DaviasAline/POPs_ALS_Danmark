@@ -8317,7 +8317,6 @@ results_proteomic_ALS_occurrence <-
                        other_disease = list(
                          table_without_other_diseases = table_without_other_diseases)))
 
-
 saveRDS(results_proteomic_ALS_occurrence, file = "~/Documents/POP_ALS_2025_02_03/2_output/2.6.1_results_proteomic_ALS_occurrence.rds")
 
 rm(covar,                                   # main results 
