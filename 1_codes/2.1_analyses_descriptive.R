@@ -677,10 +677,10 @@ table_other_diag_3 <- bdd_danish_icd_long |>
 rm(individuals_cibles)
 
 ## EVs ----
-EVs_table_danish <- descrip_num(data = bdd_danish, vars = EVs)
+EVs_table_danish <- descrip_num(data = bdd_danish, vars = EVs_log10)
 
 EVs_table_danish_by_als <- bdd_danish |>
-  select(als, all_of(EVs)) |>
+  select(als, all_of(EVs_log10)) |>
   mutate(
     als = as.character(als), 
     als = fct_recode(als, "Controls" = "0", "Cases" = "1"), 
@@ -692,11 +692,11 @@ EVs_table_danish_by_als <- bdd_danish |>
   add_p()
 
 EVs_boxplot_danish <- bdd_danish |>
-  select(all_of(EVs)) |>
+  select(all_of(EVs_log10)) |>
   remove_var_label() |>
   pivot_longer(cols = everything(), names_to = "EVs", values_to = "values") |>
-  mutate(EVs = factor(EVs, levels = EVs_labels),
-         EVs = fct_recode(EVs, !!!EVs_labels),
+  mutate(EVs = factor(EVs, levels = EVs_log10_labels),
+         EVs = fct_recode(EVs, !!!EVs_log10_labels),
          EVs = fct_rev(EVs)) |>
   arrange(EVs) |>
   ggplot() +
@@ -704,16 +704,16 @@ EVs_boxplot_danish <- bdd_danish |>
   geom_boxplot() +
   scale_fill_hue(direction = 1) +
   scale_y_continuous(labels = number_format(accuracy = 1)) +
-  labs(x = "EVs", y = "Pre-disease serum concentrations (unit?)") +
+  labs(x = "EVs", y = "Pre-disease serum concentrations (unit?, log10 transformed)") +
   coord_flip() +
   theme_lucid()
 
 EVs_boxplot_danish_by_als <- bdd_danish |>
-  select(als, all_of(EVs)) |>
+  select(als, all_of(EVs_log10)) |>
   remove_var_label() |>
   pivot_longer(cols = -als, names_to = "EVs", values_to = "values") |>
-  mutate(EVs = factor(EVs, levels = EVs_labels), 
-         EVs = fct_recode(EVs, !!!EVs_labels), 
+  mutate(EVs = factor(EVs, levels = EVs_log10_labels), 
+         EVs = fct_recode(EVs, !!!EVs_log10_labels), 
          EVs = fct_rev(EVs),
          als = as.character(als), 
          als = fct_recode(als, 
@@ -726,14 +726,14 @@ EVs_boxplot_danish_by_als <- bdd_danish |>
   scale_fill_hue(direction = 1, 
                  guide = guide_legend(reverse = TRUE)) +
   scale_y_continuous(labels = number_format(accuracy = 1)) +
-  labs(x = "EVs", y = "Pre-disease serum concentrations (unit?)", fill = "ALS") +
+  labs(x = "EVs", y = "Pre-disease serum concentrations (unit?, log10 transformed)", fill = "ALS") +
   coord_flip() +
   theme_lucid()
 
 EVs_heatmap_danish <- 
   bdd_danish |> 
-  select(all_of(EVs)) |>
-  rename(!!!EVs_labels) 
+  select(all_of(EVs_log10)) |>
+  rename(!!!EVs_log10_labels) 
 EVs_heatmap_danish <- 
   cor(EVs_heatmap_danish, 
       use = "pairwise.complete.obs", 
@@ -741,11 +741,11 @@ EVs_heatmap_danish <-
 
 EVs_boxplot_danish_by_death <- bdd_danish |>
   filter(als == 1) |>
-  select(status_death, all_of(EVs)) |>
+  select(status_death, all_of(EVs_log10)) |>
   remove_var_label() |>
   pivot_longer(cols = -status_death, names_to = "EVs", values_to = "values") |>
-  mutate(EVs = factor(EVs, levels = EVs_labels), 
-         EVs = fct_recode(EVs, !!!EVs_labels), 
+  mutate(EVs = factor(EVs, levels = EVs_log10_labels), 
+         EVs = fct_recode(EVs, !!!EVs_log10_labels), 
          EVs = fct_rev(EVs),
          status_death = as.character(status_death), 
          status_death = fct_recode(status_death, 

@@ -46,10 +46,19 @@ bdd_danish_proteomic_wide <- bdd_danish_proteomic|>
     values_from = NPX) |>
   rename(code = SampleID)
 
-bdd_danish_EV <- 
-  read_excel("/Volumes/shared/EOME/Weisskopf/POPs-ALS/Data/Danish EPIC data/20250527 MACSPLEX all log10FC values.xlsx") |>
+bdd_danish_EV_log10 <- 
+  read_excel("/Volumes/shared/EOME/Weisskopf/POPs-ALS/Data/Danish EPIC data/20250527 MACSPLEX all log10FC values plus bgcorr.xlsx", 
+             sheet = "log10FC") |>
   select(-filename, -BOX, -POSITION, -SAMPLE) |>
-  rename_with(~ ifelse(.x %in% c("SET", "CODE"), .x, paste0("ev_", .x))) |>
+  rename_with(~ ifelse(.x %in% c("SET", "CODE"), .x, paste0("ev_", .x, "_log10"))) |>
+  rename(code = CODE, saet = SET) |>
+  mutate(code = as.character(code))
+
+bdd_danish_EV_background_subtracted_raw <- 
+  read_excel("/Volumes/shared/EOME/Weisskopf/POPs-ALS/Data/Danish EPIC data/20250527 MACSPLEX all log10FC values plus bgcorr.xlsx", 
+             sheet = "background-subtracted raw") |>
+  select(-filename, -BOX, -POSITION, -SAMPLE) |>
+  rename_with(~ ifelse(.x %in% c("SET", "CODE"), .x, paste0("ev_", .x, "_raw"))) |>
   rename(code = CODE, saet = SET) |>
   mutate(code = as.character(code))
 
@@ -57,8 +66,10 @@ bdd_danish <- left_join(bdd_danish, bdd_danish_POPs, by = "code")               
 bdd_danish <- left_join(bdd_danish, bdd_danish_fattyacids, by = "code")
 bdd_danish <- left_join(bdd_danish, bdd_danish_lipids, by = "Barcode")
 bdd_danish <- left_join(bdd_danish, bdd_danish_proteomic_wide, by = "code")
-bdd_danish <- left_join(bdd_danish, bdd_danish_EV, by = c("code", "saet"))
-rm(bdd_danish_POPs, bdd_danish_lipids, bdd_danish_fattyacids, bdd_danish_proteomic_wide, bdd_danish_EV)
+bdd_danish <- left_join(bdd_danish, bdd_danish_EV_log10, by = c("code", "saet"))
+bdd_danish <- left_join(bdd_danish, bdd_danish_EV_background_subtracted_raw, by = c("code", "saet"))
+rm(bdd_danish_POPs, bdd_danish_lipids, bdd_danish_fattyacids, bdd_danish_proteomic_wide, 
+   bdd_danish_EV_log10, bdd_danish_EV_background_subtracted_raw)
 
 # bdd_danish |> filter(saet == 72) |> View()                           
 bdd_danish <- bdd_danish|> filter(!code %in% c("208", "209", "210"))        # we decided to remove match 72 because the controls doesn't match in term of sex and age with the case
@@ -205,6 +216,12 @@ bdd_danish <- bdd_danish |>
          "SampleStatusText_bdd_fattyacids" = "SampleStatusText", 
          "Comment_bdd_POPs" = "Comment", 
          "proteomic_metabolism_NT_proBNP" = "proteomic_metabolism_NT-proBNP",
+         "ev_HLA_ABC_log10" = "ev_HLA-ABC_log10", 
+         "ev_HLA_DRDPDQ_log10" = "ev_HLA-DRDPDQ_log10", 
+         "ev_SSEA_4_log10" = "ev_SSEA-4_log10",  
+         "ev_HLA_ABC_raw" = "ev_HLA-ABC_raw", 
+         "ev_HLA_DRDPDQ_raw" = "ev_HLA-DRDPDQ_raw", 
+         "ev_SSEA_4_raw" = "ev_SSEA-4_raw",  
          everything())  |>                                                      # occupations
   select(-X1, -X7, -X3, -XDATE2, -LIM1, -LIM2, -LIM3, -LIM4, -X, -XInt3, -XINT1)# empty variables to delate
 
@@ -447,7 +464,22 @@ proteomic_immun_res <- bdd_danish |> select(contains("proteomic_immun_res_")) |>
 proteomic_metabolism <- bdd_danish |> select(contains("proteomic_metabolism_")) |> colnames()
 
 ## EVs ----
-EVs <- bdd_danish |> select(starts_with("ev_")) |> colnames()
+EVs_log10 <- bdd_danish |> 
+  select(starts_with("ev_") & ends_with("log10")) |> 
+  select(-"ev_mIgG1_log10", -"ev_REA_log10") |> 
+  colnames()
+EVs_log10_sd <- paste0(EVs_log10, "_sd")
+EVs_log10_quart <- paste0(EVs_log10, "_quart")
+EVs_log10_quart_med <- paste0(EVs_log10, "_quart_med")
+
+
+EVs_raw <- bdd_danish |> 
+  select(starts_with("ev_") & ends_with("_raw")) |> 
+  select(-"ev_mIgG1_raw", -"ev_REA_raw") |> 
+  colnames()
+EVs_raw_sd <- paste0(EVs_raw, "_sd")
+EVs_raw_quart <- paste0(EVs_raw, "_quart")
+EVs_raw_quart_med <- paste0(EVs_raw, "_quart_med")
 
 # variable creation ----
 ## danish data ----
@@ -559,6 +591,39 @@ bdd_danish <- bdd_danish |>
       quart_meds[quartiles]                                                     
     },
     .names = "{.col}_quart_med")) |>
+  
+  mutate(across(all_of(EVs_log10),
+                ~as.numeric(scale(.x)),
+                .names = "{.col}_sd")) |>
+  mutate(across(all_of(EVs_log10), ~ factor(ntile(.x, 4),                           
+                                            labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) |>
+  mutate(across(
+    all_of(EVs_log10),
+    ~ {
+      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
+      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
+      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
+      quart_meds[quartiles]                                                     
+    },
+    .names = "{.col}_quart_med")) |>
+  
+  mutate(across(all_of(EVs_raw),
+                ~as.numeric(scale(.x)),
+                .names = "{.col}_sd")) |>
+  mutate(across(all_of(EVs_raw), ~ factor(ntile(.x, 4),                           
+                                            labels = c("Q1", "Q2", "Q3", "Q4")),
+                .names = "{.col}_quart")) |>
+  mutate(across(
+    all_of(EVs_raw),
+    ~ {
+      cuts <- quantile(.x, probs = seq(0, 1, 0.25), na.rm = TRUE)               
+      quartiles <- cut(.x, breaks = cuts, include.lowest = TRUE, labels = FALSE)
+      quart_meds <- tapply(.x, quartiles, median, na.rm = TRUE)                 
+      quart_meds[quartiles]                                                     
+    },
+    .names = "{.col}_quart_med")) |>
+  
   mutate(lipid_tot_phillips_g_L = 2.27*0.3866*fS_Kol + 0.885*fS_Trigly + 0.623, # conversion avec la masse molaire (estimation trouvé sur google car les valeurs initiales sont en mmol/L)
          diabetes_rec = ifelse(diabetes == 8, NA, diabetes), 
          diabetes_rec = as.factor(as.character(diabetes_rec))) |>
@@ -987,8 +1052,37 @@ for (var in proteomic_quart) {
   var_lab(bdd_danish[[var]]) <- gsub("_quart", "", var)
 }
 
-for (var in EVs) {
-  var_lab(bdd_danish[[var]]) <- gsub("^ev_", "", var)
+for (var in EVs_log10) {
+  var_lab(bdd_danish[[var]]) <- sub("^ev_|_log10$", "", var)
+}
+
+for (var in EVs_log10_sd) {
+  var_lab(bdd_danish[[var]]) <- sub("^ev_|_log10_sd$", "", var)
+}
+
+for (var in EVs_log10_quart) {
+  var_lab(bdd_danish[[var]]) <- sub("^ev_|_log10_quart$", "", var)
+}
+
+for (var in EVs_log10_quart_med) {
+  var_lab(bdd_danish[[var]]) <- sub("^ev_|_log10_quart_med", "", var)
+}
+
+
+for (var in EVs_raw) {
+  var_lab(bdd_danish[[var]]) <- sub("^ev_|_raw$", "", var)
+}
+
+for (var in EVs_log10_sd) {
+  var_lab(bdd_danish[[var]]) <- sub("^ev_|_raw_sd$", "", var)
+}
+
+for (var in EVs_log10_quart) {
+  var_lab(bdd_danish[[var]]) <- sub("^ev_|_raw_quart$", "", var)
+}
+
+for (var in EVs_log10_quart_med) {
+  var_lab(bdd_danish[[var]]) <- sub("^ev_|_raw_quart_med", "", var)
 }
 
 rm(var)
@@ -1410,6 +1504,11 @@ proteomic_immun_res_labels <- setNames(proteomic_immun_res, gsub("proteomic_immu
 proteomic_metabolism_labels <- setNames(proteomic_metabolism, gsub("proteomic_metabolism_", "", proteomic_metabolism))
 
 ## Evs ----
-EVs_labels <- setNames(EVs, gsub("ev_", "", EVs))
+EVs_log10_labels <- setNames(EVs_log10, gsub("ev_|_log10", "", EVs_log10))
+EVs_log10_sd_labels <- setNames(EVs_log10_sd, gsub("ev_|_log10_sd", "", EVs_log10_sd))
+EVs_log10_quart_labels <- setNames(EVs_log10_quart, gsub("ev_|_log10_quart", "", EVs_log10_quart))
 
+EVs_raw_labels <- setNames(EVs_raw, gsub("ev_|_raw", "", EVs_raw))
+EVs_raw_sd_labels <- setNames(EVs_raw_sd, gsub("ev_|_raw_sd", "", EVs_raw_sd))
+EVs_raw_quart_labels <- setNames(EVs_raw_quart, gsub("ev_|_raw_quart", "", EVs_raw_quart))
 

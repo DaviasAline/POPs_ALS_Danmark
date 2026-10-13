@@ -201,73 +201,114 @@ table_S1 <-
   filter(term == "Continuous") |>
   filter(model == "adjusted") |>
   filter(analysis %in% c("sensi_1", "sensi_2", "sensi_1_3_4", "sensi_1_3_5")) |>
-  group_by(explanatory) |>                                                      # select explanatory vars significant                
+  group_by(explanatory) |>                                                      
   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>                     
   ungroup() |>
-  select(analysis, explanatory, protein_group, OR, "95% CI", "p_value") |>
-  pivot_wider(names_from = "analysis", values_from = c("OR", "95% CI", "p_value")) |>
+  select(analysis, explanatory, protein_group, OR, "95% CI", "p_value", "p_value_raw") |>
+  pivot_wider(names_from = "analysis", values_from = c("OR", "95% CI", "p_value", "p_value_raw")) |>
   select(
     protein_group, explanatory,
     OR_sensi_1, `95% CI_sensi_1`, p_value_sensi_1,
     OR_sensi_2, `95% CI_sensi_2`, p_value_sensi_2,
     OR_sensi_1_3_4, `95% CI_sensi_1_3_4`, p_value_sensi_1_3_4,
-    OR_sensi_1_3_5, `95% CI_sensi_1_3_5`, p_value_sensi_1_3_5) |>
-  rename("OR" = "OR_sensi_1", "95% CI" = "95% CI_sensi_1", "p-value" = "p_value_sensi_1", 
-         "OR " = "OR_sensi_2", "95% CI " = "95% CI_sensi_2", "p-value " = "p_value_sensi_2", 
-         " OR" = "OR_sensi_1_3_4", " 95% CI" = "95% CI_sensi_1_3_4", " p-value" = "p_value_sensi_1_3_4",
-         " OR " = "OR_sensi_1_3_5", " 95% CI " = "95% CI_sensi_1_3_5", " p-value " = "p_value_sensi_1_3_5") |>
-  flextable() |>
-  add_footer_lines(
-    "1All models are matched on birth year and sex, and adjusted for smoking and body mass index. 
-    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
-    3CI: Confidence interval.") |>
-  add_header(
-    "explanatory" = "Pre-disease plasma proteins", 
-    "protein_group" = "Protein group", 
-    "OR" = "Main analyses\nAll cases and controls (N=495)", 
-    "95% CI" = "Main analyses\nAll cases and controls (N=495)", 
-    "p-value" = "Main analyses\nAll cases and controls (N=495)", 
-    "OR " = "Filtered to years to ALS diagnosis < 5 years (N=51)", 
-    "95% CI " = "Filtered to years to ALS diagnosis < 5 years (N=51)", 
-    "p-value " = "Filtered to years to ALS diagnosis < 5 years (N=51)", 
-    " OR" = "Filtered to years to ALS diagnosis between 5 and 14.6 years (N=225)", 
-    " 95% CI" = "Filtered to years to ALS diagnosis between 5 and 14.6 years (N=225)", 
-    " p-value" = "Filtered to years to ALS diagnosis between 5 and 14.6 years (N=225)", 
-    " OR " = "Filtered to years to ALS diagnosis > 14.6 years (N=219)", 
-    " 95% CI " = "Filtered to years to ALS diagnosis > 14.6 years (N=219)", 
-    " p-value " = "Filtered to years to ALS diagnosis > 14.6 years (N=219)") |>
+    OR_sensi_1_3_5, `95% CI_sensi_1_3_5`, p_value_sensi_1_3_5,
+    p_value_raw_sensi_1, p_value_raw_sensi_2, p_value_raw_sensi_1_3_4, p_value_raw_sensi_1_3_5) |>
+  
+  flextable(col_keys = c(
+    "protein_group", "explanatory",
+    "OR_sensi_1", "95% CI_sensi_1", "p_value_sensi_1",
+    "OR_sensi_2", "95% CI_sensi_2", "p_value_sensi_2",
+    "OR_sensi_1_3_4", "95% CI_sensi_1_3_4", "p_value_sensi_1_3_4",
+    "OR_sensi_1_3_5", "95% CI_sensi_1_3_5", "p_value_sensi_1_3_5")) |>
+  
+  bold(j = "p_value_sensi_1", i = ~ p_value_raw_sensi_1 < 0.05, bold = TRUE) |>
+  bg(j = c("OR_sensi_1", "95% CI_sensi_1", "p_value_sensi_1"), i = ~ p_value_raw_sensi_1 < 0.05 & as.numeric(OR_sensi_1) > 1, bg = "#FFE5D9") |>
+  bg(j = c("OR_sensi_1", "95% CI_sensi_1", "p_value_sensi_1"), i = ~ p_value_raw_sensi_1 < 0.05 & as.numeric(OR_sensi_1) < 1, bg = "#D8F3DC") |>
+  
+  bold(j = "p_value_sensi_2", i = ~ p_value_raw_sensi_2 < 0.05, bold = TRUE) |>
+  bg(j = c("OR_sensi_2", "95% CI_sensi_2", "p_value_sensi_2"), i = ~ p_value_raw_sensi_2 < 0.05 & as.numeric(OR_sensi_2) > 1, bg = "#FFE5D9") |>
+  bg(j = c("OR_sensi_2", "95% CI_sensi_2", "p_value_sensi_2"), i = ~ p_value_raw_sensi_2 < 0.05 & as.numeric(OR_sensi_2) < 1, bg = "#D8F3DC") |>
+  
+  bold(j = "p_value_sensi_1_3_4", i = ~ p_value_raw_sensi_1_3_4 < 0.05, bold = TRUE) |>
+  bg(j = c("OR_sensi_1_3_4", "95% CI_sensi_1_3_4", "p_value_sensi_1_3_4"), i = ~ p_value_raw_sensi_1_3_4 < 0.05 & as.numeric(OR_sensi_1_3_4) > 1, bg = "#FFE5D9") |>
+  bg(j = c("OR_sensi_1_3_4", "95% CI_sensi_1_3_4", "p_value_sensi_1_3_4"), i = ~ p_value_raw_sensi_1_3_4 < 0.05 & as.numeric(OR_sensi_1_3_4) < 1, bg = "#D8F3DC") |>
+  
+  bold(j = "p_value_sensi_1_3_5", i = ~ p_value_raw_sensi_1_3_5 < 0.05, bold = TRUE) |>
+  bg(j = c("OR_sensi_1_3_5", "95% CI_sensi_1_3_5", "p_value_sensi_1_3_5"), i = ~ p_value_raw_sensi_1_3_5 < 0.05 & as.numeric(OR_sensi_1_3_5) > 1, bg = "#FFE5D9") |>
+  bg(j = c("OR_sensi_1_3_5", "95% CI_sensi_1_3_5", "p_value_sensi_1_3_5"), i = ~ p_value_raw_sensi_1_3_5 < 0.05 & as.numeric(OR_sensi_1_3_5) < 1, bg = "#D8F3DC") |>
+  
+  set_header_labels(
+    protein_group = "Protein group",
+    explanatory = "Pre-disease plasma proteins",
+    OR_sensi_1 = "OR", `95% CI_sensi_1` = "95% CI", p_value_sensi_1 = "p-value",
+    OR_sensi_2 = "OR", `95% CI_sensi_2` = "95% CI", p_value_sensi_2 = "p-value",
+    OR_sensi_1_3_4 = "OR", `95% CI_sensi_1_3_4` = "95% CI", p_value_sensi_1_3_4 = "p-value",
+    OR_sensi_1_3_5 = "OR", `95% CI_sensi_1_3_5` = "95% CI", p_value_sensi_1_3_5 = "p-value") |>
+  add_header_row(
+    top = TRUE,
+    values = c(
+      "Protein group", "Pre-disease plasma proteins",
+      rep("Main analyses\nAll cases and controls (N=495)", 3),
+      rep("Filtered to years to ALS diagnosis < 5 years (N=51)", 3),
+      rep("Filtered to years to ALS diagnosis between 5 and 14.6 years (N=225)", 3),
+      rep("Filtered to years to ALS diagnosis > 14.6 years (N=219)", 3))) |>
+  append_chunks(
+    i = 1, 
+    j = c("OR_sensi_1", "95% CI_sensi_1", "p_value_sensi_1",
+          "OR_sensi_2", "95% CI_sensi_2", "p_value_sensi_2",
+          "OR_sensi_1_3_4", "95% CI_sensi_1_3_4", "p_value_sensi_1_3_4",
+          "OR_sensi_1_3_5", "95% CI_sensi_1_3_5", "p_value_sensi_1_3_5"), 
+    part = "header", 
+    as_sup("1")) |>
+  append_chunks(
+    i = 2, 
+    j = c("OR_sensi_1", "OR_sensi_2", "OR_sensi_1_3_4", "OR_sensi_1_3_5"), 
+    part = "header", 
+    as_sup("2")) |>
+  append_chunks(
+    i = 2, 
+    j = c("95% CI_sensi_1", "95% CI_sensi_2", "95% CI_sensi_1_3_4", "95% CI_sensi_1_3_5"), 
+    part = "header", 
+    as_sup("3")) |>
+  add_footer_row(
+    top = FALSE,
+    values = as_paragraph(
+      as_sup("1"), "All models are matched on birth year and sex, and adjusted for smoking and body mass index.\n",
+      as_sup("2"), "Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.\n",
+      as_sup("3"), "CI: Confidence interval."),
+    colwidths = 14) |>
   theme_vanilla() |>
   merge_h(part = "header") |>
+  merge_v(part = "header") |>
   align(align = "center", part = "all") |>
   merge_v(j = "explanatory") |>
   bold(j = "explanatory", part = "body") |>
   align(j = "explanatory", align = "left", part = "all") |> 
-  merge_at(j = "explanatory", part = "header") |>
   merge_v(j = "protein_group") |>
   bold(j = "protein_group", part = "body") |>
   align(j = "protein_group", align = "left", part = "all") |> 
-  merge_at(j = "protein_group", part = "header") |>
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 
-
 # Supplementary table S2 - Sensitivity results (fixed 5-year time-to-diagnosis windows and sex stratified) ----
 table_S2 <- 
-  bind_rows(results_proteomic_ALS_occurrence$main$main_results |> 
-               filter(term == "Continuous") |>
-               filter(model == "adjusted") |>
-               filter(analysis %in% c("sensi_1", "sensi_1_7_male", "sensi_1_7_female")), 
-            results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$main_results |> 
-              filter(term == "Continuous") |>
-              filter(model == "adjusted") |>
-              filter(analysis %in% c("main_y_5_10ans", "main_y_10_15ans", "main_y_15_20ans"))) |>
-  group_by(explanatory) |>                                                      # select explanatory vars significant                
+  bind_rows(
+    results_proteomic_ALS_occurrence$main$main_results |> 
+      filter(term == "Continuous") |>
+      filter(model == "adjusted") |>
+      filter(analysis %in% c("sensi_1", "sensi_1_7_male", "sensi_1_7_female")),
+    
+    results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$main_results |> 
+      filter(term == "Continuous") |>
+      filter(model == "adjusted") |>
+      filter(analysis %in% c("main_y_5_10ans", "main_y_10_15ans", "main_y_15_20ans"))) |>
+  group_by(explanatory) |>                                                      
   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>                     
   ungroup() |>
-  select(analysis, explanatory, protein_group, OR, "95% CI", "p_value") |>
-  pivot_wider(names_from = "analysis", values_from = c("OR", "95% CI", "p_value")) |>
+  select(analysis, explanatory, protein_group, OR, "95% CI", "p_value", "p_value_raw") |>
+  pivot_wider(names_from = "analysis", values_from = c("OR", "95% CI", "p_value", "p_value_raw")) |>
   select(
     protein_group, explanatory,
     OR_sensi_1, `95% CI_sensi_1`, p_value_sensi_1,
@@ -275,55 +316,108 @@ table_S2 <-
     OR_main_y_10_15ans, `95% CI_main_y_10_15ans`, p_value_main_y_10_15ans,
     OR_main_y_15_20ans, `95% CI_main_y_15_20ans`, p_value_main_y_15_20ans,
     OR_sensi_1_7_male, `95% CI_sensi_1_7_male`, p_value_sensi_1_7_male,
-    OR_sensi_1_7_female, `95% CI_sensi_1_7_female`, p_value_sensi_1_7_female) |>
-  rename("OR" = "OR_sensi_1", "95% CI" = "95% CI_sensi_1", "p-value" = "p_value_sensi_1", 
-         "OR " = "OR_main_y_5_10ans", "95% CI " = "95% CI_main_y_5_10ans", "p-value " = "p_value_main_y_5_10ans", 
-         " OR" = "OR_main_y_10_15ans", " 95% CI" = "95% CI_main_y_10_15ans", " p-value" = "p_value_main_y_10_15ans",
-         " OR " = "OR_main_y_15_20ans", " 95% CI " = "95% CI_main_y_15_20ans", " p-value " = "p_value_main_y_15_20ans", 
-         "OR  " = "OR_sensi_1_7_male", "95% CI  " = "95% CI_sensi_1_7_male", "p-value  " = "p_value_sensi_1_7_male",
-         " OR  " = "OR_sensi_1_7_female", " 95% CI  " = "95% CI_sensi_1_7_female", " p-value  " = "p_value_sensi_1_7_female") |>
-  flextable() |>
-  add_footer_lines(
-    "1All models are matched on birth year and sex (except the sex-stratified models), and adjusted for smoking and body mass index. 
-    2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
-    3CI: Confidence interval.") |>
-  add_header(
-    "explanatory" = "Pre-disease plasma proteins", 
-    "protein_group" = "Protein group", 
-    "OR" = "Main analyses\nAll cases and controls (N=495)", 
-    "95% CI" = "Main analyses\nAll cases and controls (N=495)", 
-    "p-value" = "Main analyses\nAll cases and controls (N=495)", 
-    
-    "OR " = "Sensitivity analyses\nCases diagnosed within 5 to 10 years (27 cases - 468 controls)", 
-    "95% CI " = "Sensitivity analyses\nCases diagnosed within 5 to 10 years (27 cases - 468 controls)", 
-    "p-value " = "Sensitivity analyses\nCases diagnosed within 5 to 10 years (27 cases - 468 controls)", 
-    " OR" = "Sensitivity analyses\nCases diagnosed within 10 to 15 years (54 cases - 441 controls)", 
-    " 95% CI" = "Sensitivity analyses\nCases diagnosed within 10 to 15 years (54 cases - 441 controls)", 
-    " p-value" = "Sensitivity analyses\nCases diagnosed within 10 to 15 years (54 cases - 441 controls)", 
-    " OR " = "Sensitivity analyses\nCases diagnosed within 15 to 20 years (57 cases - 438 controls)", 
-    " 95% CI " = "Sensitivity analyses\nCases diagnosed within 15 to 20 years (57 cases - 438 controls)", 
-    " p-value " = "Sensitivity analyses\nCases diagnosed within 15 to 20 years (57 cases - 438 controls)", 
-    "OR  " = "Sensitivity analyses\nFiltered to males (N=303)", 
-    "95% CI  " = "Sensitivity analyses\nFiltered to males (N=303)", 
-    "p-value  " = "Sensitivity analyses\nFiltered to males (N=303)", 
-    " OR  " = "Sensitivity analyses\nFiltered to females (N=192)", 
-    " 95% CI  " = "Sensitivity analyses\nFiltered to females (N=192)", 
-    " p-value  " = "Sensitivity analyses\nFiltered to females (N=192)") |>
+    OR_sensi_1_7_female, `95% CI_sensi_1_7_female`, p_value_sensi_1_7_female,
+    p_value_raw_sensi_1, p_value_raw_main_y_5_10ans, p_value_raw_main_y_10_15ans, 
+    p_value_raw_main_y_15_20ans, p_value_raw_sensi_1_7_male, p_value_raw_sensi_1_7_female) |>
+  
+  flextable(col_keys = c(
+    "protein_group", "explanatory",
+    "OR_sensi_1", "95% CI_sensi_1", "p_value_sensi_1",
+    "OR_main_y_5_10ans", "95% CI_main_y_5_10ans", "p_value_main_y_5_10ans",
+    "OR_main_y_10_15ans", "95% CI_main_y_10_15ans", "p_value_main_y_10_15ans",
+    "OR_main_y_15_20ans", "95% CI_main_y_15_20ans", "p_value_main_y_15_20ans",
+    "OR_sensi_1_7_male", "95% CI_sensi_1_7_male", "p_value_sensi_1_7_male",
+    "OR_sensi_1_7_female", "95% CI_sensi_1_7_female", "p_value_sensi_1_7_female")) |>
+  
+  bold(j = "p_value_sensi_1", i = ~ p_value_raw_sensi_1 < 0.05, bold = TRUE) |>
+  bg(j = c("OR_sensi_1", "95% CI_sensi_1", "p_value_sensi_1"), i = ~ p_value_raw_sensi_1 < 0.05 & as.numeric(OR_sensi_1) > 1, bg = "#FFE5D9") |>
+  bg(j = c("OR_sensi_1", "95% CI_sensi_1", "p_value_sensi_1"), i = ~ p_value_raw_sensi_1 < 0.05 & as.numeric(OR_sensi_1) < 1, bg = "#D8F3DC") |>
+  
+  bold(j = "p_value_main_y_5_10ans", i = ~ p_value_raw_main_y_5_10ans < 0.05, bold = TRUE) |>
+  bg(j = c("OR_main_y_5_10ans", "95% CI_main_y_5_10ans", "p_value_main_y_5_10ans"), i = ~ p_value_raw_main_y_5_10ans < 0.05 & as.numeric(OR_main_y_5_10ans) > 1, bg = "#FFE5D9") |>
+  bg(j = c("OR_main_y_5_10ans", "95% CI_main_y_5_10ans", "p_value_main_y_5_10ans"), i = ~ p_value_raw_main_y_5_10ans < 0.05 & as.numeric(OR_main_y_5_10ans) < 1, bg = "#D8F3DC") |>
+  
+  bold(j = "p_value_main_y_10_15ans", i = ~ p_value_raw_main_y_10_15ans < 0.05, bold = TRUE) |>
+  bg(j = c("OR_main_y_10_15ans", "95% CI_main_y_10_15ans", "p_value_main_y_10_15ans"), i = ~ p_value_raw_main_y_10_15ans < 0.05 & as.numeric(OR_main_y_10_15ans) > 1, bg = "#FFE5D9") |>
+  bg(j = c("OR_main_y_10_15ans", "95% CI_main_y_10_15ans", "p_value_main_y_10_15ans"), i = ~ p_value_raw_main_y_10_15ans < 0.05 & as.numeric(OR_main_y_10_15ans) < 1, bg = "#D8F3DC") |>
+  
+  bold(j = "p_value_main_y_15_20ans", i = ~ p_value_raw_main_y_15_20ans < 0.05, bold = TRUE) |>
+  bg(j = c("OR_main_y_15_20ans", "95% CI_main_y_15_20ans", "p_value_main_y_15_20ans"), i = ~ p_value_raw_main_y_15_20ans < 0.05 & as.numeric(OR_main_y_15_20ans) > 1, bg = "#FFE5D9") |>
+  bg(j = c("OR_main_y_15_20ans", "95% CI_main_y_15_20ans", "p_value_main_y_15_20ans"), i = ~ p_value_raw_main_y_15_20ans < 0.05 & as.numeric(OR_main_y_15_20ans) < 1, bg = "#D8F3DC") |>
+  
+  bold(j = "p_value_sensi_1_7_male", i = ~ p_value_raw_sensi_1_7_male < 0.05, bold = TRUE) |>
+  bg(j = c("OR_sensi_1_7_male", "95% CI_sensi_1_7_male", "p_value_sensi_1_7_male"), i = ~ p_value_raw_sensi_1_7_male < 0.05 & as.numeric(OR_sensi_1_7_male) > 1, bg = "#FFE5D9") |>
+  bg(j = c("OR_sensi_1_7_male", "95% CI_sensi_1_7_male", "p_value_sensi_1_7_male"), i = ~ p_value_raw_sensi_1_7_male < 0.05 & as.numeric(OR_sensi_1_7_male) < 1, bg = "#D8F3DC") |>
+  
+  bold(j = "p_value_sensi_1_7_female", i = ~ p_value_raw_sensi_1_7_female < 0.05, bold = TRUE) |>
+  bg(j = c("OR_sensi_1_7_female", "95% CI_sensi_1_7_female", "p_value_sensi_1_7_female"), i = ~ p_value_raw_sensi_1_7_female < 0.05 & as.numeric(OR_sensi_1_7_female) > 1, bg = "#FFE5D9") |>
+  bg(j = c("OR_sensi_1_7_female", "95% CI_sensi_1_7_female", "p_value_sensi_1_7_female"), i = ~ p_value_raw_sensi_1_7_female < 0.05 & as.numeric(OR_sensi_1_7_female) < 1, bg = "#D8F3DC") |>
+  
+  # --- LABELS DU SOUS-EN-TÊTE ---
+  set_header_labels(
+    protein_group = "Protein group",
+    explanatory = "Pre-disease plasma proteins",
+    OR_sensi_1 = "OR", `95% CI_sensi_1` = "95% CI", p_value_sensi_1 = "p-value",
+    OR_main_y_5_10ans = "OR", `95% CI_main_y_5_10ans` = "95% CI", p_value_main_y_5_10ans = "p-value",
+    OR_main_y_10_15ans = "OR", `95% CI_main_y_10_15ans` = "95% CI", p_value_main_y_10_15ans = "p-value",
+    OR_main_y_15_20ans = "OR", `95% CI_main_y_15_20ans` = "95% CI", p_value_main_y_15_20ans = "p-value",
+    OR_sensi_1_7_male = "OR", `95% CI_sensi_1_7_male` = "95% CI", p_value_sensi_1_7_male = "p-value",
+    OR_sensi_1_7_female = "OR", `95% CI_sensi_1_7_female` = "95% CI", p_value_sensi_1_7_female = "p-value") |>
+  add_header_row(
+    top = TRUE,
+    values = c(
+      "Protein group", "Pre-disease plasma proteins",
+      rep("Main analyses\nAll cases and controls (N=495)", 3),
+      rep("Sensitivity analyses\nCases diagnosed within 5 to 10 years (27 cases - 468 controls)", 3),
+      rep("Sensitivity analyses\nCases diagnosed within 10 to 15 years (54 cases - 441 controls)", 3),
+      rep("Sensitivity analyses\nCases diagnosed within 15 to 20 years (57 cases - 438 controls)", 3),
+      rep("Sensitivity analyses\nFiltered to males (N=303)", 3),
+      rep("Sensitivity analyses\nFiltered to females (N=192)", 3))) |>
+  append_chunks(
+    i = 1, 
+    j = c("OR_sensi_1", "95% CI_sensi_1", "p_value_sensi_1"), 
+    part = "header", 
+    as_sup("1")) |>
+  append_chunks(
+    i = 1, 
+    j = c("OR_main_y_5_10ans", "95% CI_main_y_5_10ans", "p_value_main_y_5_10ans",
+          "OR_main_y_10_15ans", "95% CI_main_y_10_15ans", "p_value_main_y_10_15ans",
+          "OR_main_y_15_20ans", "95% CI_main_y_15_20ans", "p_value_main_y_15_20ans",
+          "OR_sensi_1_7_male", "95% CI_sensi_1_7_male", "p_value_sensi_1_7_male",
+          "OR_sensi_1_7_female", "95% CI_sensi_1_7_female", "p_value_sensi_1_7_female"), 
+    part = "header", 
+    as_sup("2")) |>
+  append_chunks(
+    i = 2, 
+    j = c("OR_sensi_1", "OR_main_y_5_10ans", "OR_main_y_10_15ans", "OR_main_y_15_20ans", "OR_sensi_1_7_male", "OR_sensi_1_7_female"), 
+    part = "header", 
+    as_sup("3")) |>
+  append_chunks(
+    i = 2, 
+    j = c("95% CI_sensi_1", "95% CI_main_y_5_10ans", "95% CI_main_y_10_15ans", "95% CI_main_y_15_20ans", "95% CI_sensi_1_7_male", "95% CI_sensi_1_7_female"), 
+    part = "header", 
+    as_sup("4")) |>
+  add_footer_row(
+    top = FALSE,
+    values = as_paragraph(
+      as_sup("1"), "Models are matched on birth year and sex, and adjusted for smoking and body mass index.\n",
+      as_sup("2"), "Models are adjusted on birth year, sex (except the sex-stratified models), smoking and body mass index.\n",
+      as_sup("3"), "Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.\n",
+      as_sup("4"), "CI: Confidence interval."),
+    colwidths = 20) |>
   theme_vanilla() |>
   merge_h(part = "header") |>
+  merge_v(part = "header") |>
   align(align = "center", part = "all") |>
   merge_v(j = "explanatory") |>
   bold(j = "explanatory", part = "body") |>
   align(j = "explanatory", align = "left", part = "all") |> 
-  merge_at(j = "explanatory", part = "header") |>
   merge_v(j = "protein_group") |>
   bold(j = "protein_group", part = "body") |>
   align(j = "protein_group", align = "left", part = "all") |> 
-  merge_at(j = "protein_group", part = "header") |>
   flextable::font(fontname = "Calibri", part = "all") |> 
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
-
 
 
 # Supplementary figure 1 - Sensitivity analysis (volcanoplot fixed 5-year time-to-diagnosis windows) ----
@@ -377,52 +471,81 @@ figure_S1 <-
 
 
 # Supplementary figure 2 - Sensitivity analysis (vocanoplot filtered on sex) ----
-figure_S2 <-
-  results_proteomic_ALS_occurrence$main$main_results |>
-  filter(model == "adjusted" &                                                  # select only adjusted results
-           term == "Continuous" &                                               # select only continuous results
-           analysis %in% c("sensi_1", "sensi_1_7_female", "sensi_1_7_male")) |>  
-  mutate(
-    Significance = case_when(
-      p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
-      p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
-      TRUE ~ "p-value>0.05"), 
-    analysis = fct_recode(analysis, 
-                          "<b>All case and controls (N=495)</b>" = "sensi_1",
-                          "<b>Females (N=192)</b>" = "sensi_1_7_female",
-                          "<b>Males (N=303)</b>" = "sensi_1_7_male"), 
-    analysis = fct_relevel(analysis, 
-                           "<b>All case and controls (N=495)</b>", 
-                           "<b>Females (N=192)</b>",  
-                           "<b>Males (N=303)</b>")) |>
-  ggplot(aes(x = OR_raw, y = -log10(p_value_raw), color = Significance)) +
-  geom_point(alpha = 0.8, size = 2, show.legend = FALSE) +
-  geom_text_repel(
-    data = ~filter(.x, p_value_raw < 0.05),        
-    aes(label = explanatory), 
-    size = 3.5,
-    max.overlaps = 20,
-    box.padding = 0.4,
-    point.padding = 0.2,
-    segment.color = "grey20", 
-    color = "black") +
-  scale_color_manual(
-    values = c("OR<1 & p-value<0.05" = "blue", 
-               "p-value>0.05" = "grey70", 
-               "OR>1 & p-value<0.05" = "red")) +
-  geom_vline(xintercept = 1, linetype = "dashed") +
-  geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
-  theme_minimal(base_size = 14) +
-  labs(
-    x = "OR",
-    y = "-log10(p-value)", 
-    color = "") +
-  facet_wrap(vars(analysis), ncol = 3L, nrow = 1L) +
-  theme(
-    strip.text = element_markdown(hjust = 0, size = 12, lineheight = 1.1),
-    strip.background = element_blank(), 
-    panel.spacing.y = unit(1.5, "lines"))
+# figure_S2 <-
+#   results_proteomic_ALS_occurrence$main$main_results |>
+#   filter(model == "adjusted" &                                                  # select only adjusted results
+#            term == "Continuous" &                                               # select only continuous results
+#            analysis %in% c("sensi_1", "sensi_1_7_female", "sensi_1_7_male")) |>  
+#   mutate(
+#     Significance = case_when(
+#       p_value_raw < 0.05 & OR > 1 ~ "OR>1 & p-value<0.05",
+#       p_value_raw < 0.05 & OR < 1 ~ "OR<1 & p-value<0.05",
+#       TRUE ~ "p-value>0.05"), 
+#     analysis = fct_recode(analysis, 
+#                           "<b>All case and controls (N=495)</b>" = "sensi_1",
+#                           "<b>Females (N=192)</b>" = "sensi_1_7_female",
+#                           "<b>Males (N=303)</b>" = "sensi_1_7_male"), 
+#     analysis = fct_relevel(analysis, 
+#                            "<b>All case and controls (N=495)</b>", 
+#                            "<b>Females (N=192)</b>",  
+#                            "<b>Males (N=303)</b>")) |>
+#   ggplot(aes(x = OR_raw, y = -log10(p_value_raw), color = Significance)) +
+#   geom_point(alpha = 0.8, size = 2, show.legend = FALSE) +
+#   geom_text_repel(
+#     data = ~filter(.x, p_value_raw < 0.05),        
+#     aes(label = explanatory), 
+#     size = 3.5,
+#     max.overlaps = 20,
+#     box.padding = 0.4,
+#     point.padding = 0.2,
+#     segment.color = "grey20", 
+#     color = "black") +
+#   scale_color_manual(
+#     values = c("OR<1 & p-value<0.05" = "blue", 
+#                "p-value>0.05" = "grey70", 
+#                "OR>1 & p-value<0.05" = "red")) +
+#   geom_vline(xintercept = 1, linetype = "dashed") +
+#   geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+#   theme_minimal(base_size = 14) +
+#   labs(
+#     x = "OR",
+#     y = "-log10(p-value)", 
+#     color = "") +
+#   facet_wrap(vars(analysis), ncol = 3L, nrow = 1L) +
+#   theme(
+#     strip.text = element_markdown(hjust = 0, size = 12, lineheight = 1.1),
+#     strip.background = element_blank(), 
+#     panel.spacing.y = unit(1.5, "lines"))
 
+figure_S2 <- 
+  results_proteomic_ALS_occurrence$main$main_results |>
+  filter(model == "adjusted" & 
+           term == "Continuous" & 
+           analysis %in% c("sensi_1_7_female", "sensi_1_7_male")) |>
+  group_by(explanatory) |>
+  filter(any(p_value_raw < 0.05)) |>
+  ungroup() |>
+  mutate(across(c(OR_raw, lower_CI, upper_CI), as.numeric), 
+         analysis = fct_recode(analysis, 
+                               "Females" = "sensi_1_7_female",
+                               "Males" = "sensi_1_7_male")) |>
+  group_by(explanatory) |>
+  mutate(or_male = OR_raw[analysis == "Males"]) |>
+  ungroup() |>
+  mutate(explanatory = fct_reorder(explanatory, or_male)) |> 
+  ggplot(aes(x = explanatory, 
+             y = OR_raw, 
+             ymin = lower_CI,   
+             ymax = upper_CI, 
+             color = analysis)) + # On réutilise 'color' directement
+  geom_hline(yintercept = 1, linetype = "dashed", color = "gray50") +
+  geom_pointrange(
+    position = position_dodge(width = 0.5), 
+    size = 0.4) +
+  scale_color_manual(values = c("Females" = "gray70", "Males" = "black")) + # Noir vs Gris clair
+  labs(x = "Proteins", y = "Odds Ratio", color = "") +
+  theme_lucid() +
+  coord_flip()
 
 # Export ----
 table_1 <- read_docx() |> body_add_flextable(table_1) 
@@ -466,6 +589,6 @@ ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/figure_S2.tiff",
   figure_S2,
   height = 7,
-  width = 13,
+  width = 8,
   units = "in")
 

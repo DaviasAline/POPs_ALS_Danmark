@@ -4,6 +4,11 @@
 # Can we predict years to ALS with the proteins levels?
 source("~/Documents/POP_ALS_2025_02_03/1_codes/1_data_loading.R")
 
+proteomic <- c(proteomic, EVs)
+proteomic_sd <- c(proteomic_sd, EVs_sd)
+proteomic_quart <- c(proteomic_quart, EVs_quart)
+proteomic_quart_med <- c(proteomic_quart_med, EVs_quart_med)
+
 # PARTIE 1 : ASSOCIATIONS ----
 # 1. Cox analyses (among cases) ----
 bdd_danish_cases <- bdd_danish |> filter(als == 1)
@@ -209,9 +214,9 @@ main_results <-
     explanatory = gsub("_sd", "", explanatory), 
     explanatory = gsub("_quart", "", explanatory), 
     HR_raw = HR, 
-    HR = as.numeric(sprintf("%.1f", HR)),
-    lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
-    upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
+    HR = number(HR, accuracy = 0.01, decimal.mark = "."),
+    lower_CI = number(lower_CI, accuracy = 0.01, decimal.mark = "."),
+    upper_CI = number(upper_CI, accuracy = 0.01, decimal.mark = "."),
     `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
     p_value_raw = p_value, 
     p_value_shape = ifelse(p_value_raw<0.05, "p_value<0.05", "p_value≥0.05"), 
@@ -232,8 +237,9 @@ main_results <- main_results |>
          p_value_trend = ifelse(p_value_trend == "1.00", ">0.99", p_value_trend), 
          protein_group = case_when(str_detect(explanatory, 'proteomic_immun_res') ~ "Immune response", 
                                    str_detect(explanatory, 'proteomic_metabolism') ~ "Metabolism", 
-                                   str_detect(explanatory, 'proteomic_neuro_explo') ~ "Neuro-exploratory"), 
-         explanatory = str_replace(explanatory, 'proteomic_immun_res_|proteomic_metabolism_|proteomic_neuro_explo_', ""))
+                                   str_detect(explanatory, 'proteomic_neuro_explo') ~ "Neuro-exploratory", 
+                                   str_detect(explanatory, "ev_") ~ "Extracellular Vesicle"),  
+         explanatory = str_replace(explanatory, 'proteomic_immun_res_|proteomic_metabolism_|proteomic_neuro_explo_|ev_', ""))
 
 results_proteomic_ALS_occurrence_y_to_als <- list()
 results_proteomic_ALS_occurrence_y_to_als$cox_cases <- 
@@ -623,9 +629,9 @@ main_results <-
     explanatory = gsub("_sd", "", explanatory), 
     explanatory = gsub("_quart", "", explanatory), 
     HR_raw = HR, 
-    HR = as.numeric(sprintf("%.1f", HR)),
-    lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
-    upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
+    HR = number(HR, accuracy = 0.01, decimal.mark = "."),
+    lower_CI = number(lower_CI, accuracy = 0.01, decimal.mark = "."),
+    upper_CI = number(upper_CI, accuracy = 0.01, decimal.mark = "."),
     `95% CI` = paste(lower_CI, ", ", upper_CI, sep = ''),
     p_value_raw = p_value, 
     p_value_shape = ifelse(p_value_raw<0.05, "p_value<0.05", "p_value≥0.05"), 
@@ -643,11 +649,14 @@ main_results <- main_results |>
   left_join(trend_tests, by = c("explanatory", "analysis", "model")) |>
   mutate(p_value_trend = ifelse(term == "Continuous", NA, p_value_trend),
          p_value_trend = ifelse(p_value_trend < 0.01, "<0.01", number(p_value_trend, accuracy = 0.01, decimal.mark = ".")),
-         p_value_trend = ifelse(p_value_trend == "1.00", ">0.99", p_value_trend), 
-         protein_group = case_when(str_detect(explanatory, 'proteomic_immun_res') ~ "Immune response", 
+         p_value_trend = ifelse(p_value_trend == "1.00", ">0.99", p_value_trend))
+
+main_results <- main_results |>
+  mutate(protein_group = case_when(str_detect(explanatory, 'proteomic_immun_res') ~ "Immune response", 
                                    str_detect(explanatory, 'proteomic_metabolism') ~ "Metabolism", 
-                                   str_detect(explanatory, 'proteomic_neuro_explo') ~ "Neuro-exploratory"), 
-         explanatory = str_replace(explanatory, 'proteomic_immun_res_|proteomic_metabolism_|proteomic_neuro_explo_', ""))
+                                   str_detect(explanatory, 'proteomic_neuro_explo') ~ "Neuro-exploratory", 
+                                   str_detect(explanatory, "ev_") ~ "Extracellular Vesicle"),  
+         explanatory = str_replace(explanatory, 'proteomic_immun_res_|proteomic_metabolism_|proteomic_neuro_explo_|ev_', ""))
 
 
 results_proteomic_ALS_occurrence_y_to_als$cox_all <- 
@@ -888,7 +897,7 @@ model1_sd_y_10ans <- model1_sd_y_10ans |>
     model = "base", 
     analysis = "main_y_10ans") |>
   select(explanatory, model, everything())
-rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
+rm(model, formula, model_summary, var)
 
 
 #### model 1 quartiles ----
@@ -2171,9 +2180,9 @@ main_results <-
          explanatory = gsub("_sd", "", explanatory), 
          
          OR_raw = OR, 
-         OR = as.numeric(sprintf("%.1f", OR)),
-         lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
-         upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
+         OR = number(OR, accuracy = 0.01, decimal.mark = "."),
+         lower_CI = number(lower_CI, accuracy = 0.01, decimal.mark = "."),
+         upper_CI = number(upper_CI, accuracy = 0.01, decimal.mark = "."),
          p_value_raw = p_value, 
          p_value = ifelse(p_value < 0.01, "<0.01", number(p_value, accuracy = 0.01, decimal.mark = ".")), 
          "95% CI" = paste(lower_CI, ", ", upper_CI, sep = '')) |>
@@ -2294,8 +2303,9 @@ main_results <- main_results |>
     p_value_trend = ifelse(p_value_trend < 0.01, "<0.01", number(p_value_trend, accuracy = 0.01, decimal.mark = ".")), 
     protein_group = case_when(str_detect(explanatory, 'proteomic_immun_res') ~ "Immune response", 
                               str_detect(explanatory, 'proteomic_metabolism') ~ "Metabolism", 
-                              str_detect(explanatory, 'proteomic_neuro_explo') ~ "Neuro-exploratory"), 
-    explanatory = str_replace(explanatory, 'proteomic_immun_res_|proteomic_metabolism_|proteomic_neuro_explo_', ""))
+                              str_detect(explanatory, 'proteomic_neuro_explo') ~ "Neuro-exploratory", 
+                              str_detect(explanatory, "ev_") ~ "Extracellular Vesicle"),  
+    explanatory = str_replace(explanatory, 'proteomic_immun_res_|proteomic_metabolism_|proteomic_neuro_explo_|ev_', ""))
 
 results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide <-  
                 list(main_results = main_results)
@@ -2971,9 +2981,9 @@ main_results <- main_results |>
   select(-fdr_group) |> 
   mutate(
     estimate_raw = estimate, 
-    estimate = sprintf("%.2f", estimate),
-    conf.low = sprintf("%.2f", conf.low),
-    conf.high = sprintf("%.2f", conf.high),
+    estimate = number(estimate, accuracy = 0.01, decimal.mark = "."),
+    conf.low = number(conf.low, accuracy = 0.01, decimal.mark = "."),
+    conf.high = number(conf.high, accuracy = 0.01, decimal.mark = "."),
     p.value_raw = p.value, 
     "p-value" = ifelse(p.value < 0.01, "<0.01", number(p.value, accuracy = 0.01, decimal.mark = ".")), 
     "FDR-corrected p-value" = ifelse(q.value_raw < 0.01, "<0.01", number(q.value_raw, accuracy = 0.01, decimal.mark = ".")), 
@@ -2984,8 +2994,9 @@ main_results <- main_results |>
     exposure_group = case_when(
       str_detect(exposure, 'proteomic_immun_res') ~ "Immune response", 
       str_detect(exposure, 'proteomic_metabolism') ~ "Metabolism", 
-      str_detect(exposure, 'proteomic_neuro_explo') ~ "Neuro-exploratory"), 
-    exposure = str_replace(exposure, "proteomic_metabolism_|proteomic_neuro_explo_|proteomic_immun_res_", ""),
+      str_detect(exposure, 'proteomic_neuro_explo') ~ "Neuro-exploratory", 
+      str_detect(exposure, "ev_") ~ "Extracellular Vesicle"), 
+    exposure = str_replace(exposure, "proteomic_metabolism_|proteomic_neuro_explo_|proteomic_immun_res_|ev_", ""),
     exposure = str_replace(exposure, "_sd", "")) |>
   select(
     analysis, 
@@ -3229,9 +3240,9 @@ main_results <- main_results |>
   select(-fdr_group) |> 
   mutate(
     estimate_raw = estimate, 
-    estimate = sprintf("%.2f", estimate),
-    conf.low = sprintf("%.2f", conf.low),
-    conf.high = sprintf("%.2f", conf.high),
+    estimate = number(estimate, accuracy = 0.01, decimal.mark = "."), 
+    conf.low = number(conf.low, accuracy = 0.01, decimal.mark = "."), 
+    conf.high = number(conf.high, accuracy = 0.01, decimal.mark = "."), 
     p.value_raw = p.value, 
     "p-value" = ifelse(p.value < 0.01, "<0.01", number(p.value, accuracy = 0.01, decimal.mark = ".")), 
     "FDR-corrected p-value" = ifelse(q.value_raw < 0.01, "<0.01", number(q.value_raw, accuracy = 0.01, decimal.mark = ".")), 
@@ -3242,8 +3253,9 @@ main_results <- main_results |>
     exposure_group = case_when(
       str_detect(exposure, 'proteomic_immun_res') ~ "Immune response", 
       str_detect(exposure, 'proteomic_metabolism') ~ "Metabolism", 
-      str_detect(exposure, 'proteomic_neuro_explo') ~ "Neuro-exploratory"), 
-    exposure = str_replace(exposure, "proteomic_metabolism_|proteomic_neuro_explo_|proteomic_immun_res_", ""),
+      str_detect(exposure, 'proteomic_neuro_explo') ~ "Neuro-exploratory", 
+      str_detect(exposure, "ev_") ~ "Extracellular Vesicle"),  
+    exposure = str_replace(exposure, "proteomic_metabolism_|proteomic_neuro_explo_|proteomic_immun_res_|ev_", ""),
     exposure = str_replace(exposure, "_sd", "")) |>
   select(
     analysis, 
