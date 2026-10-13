@@ -88,9 +88,9 @@ figure_1 <- results_proteomic_ALS_occurrence$main$main_results |>
 
 
 
-# Figure 2 - Prediction - Pre-disease protein levels and risk of developping ALS ----
-## Figure 2 a ----
-figure_2a <- 
+# Figure 3 - Prediction - Pre-disease protein levels and risk of developping ALS ----
+## Figure 3 a ----
+figure_3a <- 
   autoplot(results_proteomic_ALS_occurrence_tidymodels$test_1$results_t1, metric = "roc_auc") +
   geom_text(aes(label = round(mean, 3)), hjust = -0.1, size = 3) +
   labs(title = "a) Algorithm predictive performance comparison", 
@@ -119,8 +119,8 @@ figure_2a <-
     legend.direction = "vertical", 
     legend.key.spacing.x = unit(0, "cm"))
 
-## Figure 2 b ----
-figure_2b <- results_proteomic_ALS_occurrence_tidymodels$test_1$roc_curve_data_t1 +  
+## Figure 3 b ----
+figure_3b <- results_proteomic_ALS_occurrence_tidymodels$test_1$roc_curve_data_t1 +  
   coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) + # plot
   labs(
     title = "b) ROC AUC - Penalized logistic regression",
@@ -132,8 +132,8 @@ figure_2b <- results_proteomic_ALS_occurrence_tidymodels$test_1$roc_curve_data_t
     plot.subtitle = element_text(color = "gray40", size = 10), 
     legend.position = "none")
 
-## Figure 2 c ----
-figure_2c <- results_proteomic_ALS_occurrence_tidymodels$test_1$glmnet_t1_result$coefs_protein |> 
+## Figure 3 c ----
+figure_3c <- results_proteomic_ALS_occurrence_tidymodels$test_1$glmnet_t1_result$coefs_protein |> 
   slice_head(n = 50) |>
   mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_metabolism_|proteomic_immun_res_"), 
          Feature = fct_reorder(Feature, abs_coef)) |>
@@ -151,16 +151,16 @@ figure_2c <- results_proteomic_ALS_occurrence_tidymodels$test_1$glmnet_t1_result
     plot.subtitle = element_text(color = "gray40", size = 10), 
     legend.position = "bottom")
 
-figure_2 <- (figure_2a / figure_2b) | figure_2c 
-figure_2 <- figure_2 + plot_layout(widths = c(4,6)) 
-rm(figure_2a, figure_2b, figure_2c)
+figure_3 <- (figure_3a / figure_3b) | figure_3c 
+figure_3 <- figure_3 + plot_layout(widths = c(4,6)) 
+rm(figure_3a, figure_3b, figure_3c)
 
-# Figure 3 - Prediction - Pre-disease protein levels with follow-up interaction hard coded in glmnet ----
+# Figure S2 - Prediction - Pre-disease protein levels with follow-up interaction hard coded in glmnet ----
 results_proteomic_ALS_occurrence_tidymodels$test_3
 
 
-## Figure 3 a ----
-figure_3a <- results_proteomic_ALS_occurrence_tidymodels$test_3$roc_curve_data_t3 +  
+## Figure S2 a ----
+figure_S2a <- results_proteomic_ALS_occurrence_tidymodels$test_3$roc_curve_data_t3 +  
   coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) + # plot
   labs(
     title = "a) ROC AUC - Penalized logistic regression",
@@ -172,8 +172,8 @@ figure_3a <- results_proteomic_ALS_occurrence_tidymodels$test_3$roc_curve_data_t
     plot.subtitle = element_text(color = "gray40", size = 10), 
     legend.position = "none")
 
-## Figure 3 b ----
-figure_3b <- results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$coefs_protein |> 
+## Figure S2 b ----
+figure_S2b <- results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result$coefs_protein |> 
   slice_head(n = 50) |>
   mutate(Feature = str_remove(Feature, "proteomic_neuro_explo_|proteomic_immun_res_|proteomic_metabolism_"), 
          Feature = str_replace(Feature, "_x_follow_up_no_na_y", " x follow-up")) |>
@@ -191,8 +191,8 @@ figure_3b <- results_proteomic_ALS_occurrence_tidymodels$test_3$glmnet_t3_result
     plot.subtitle = element_text(color = "gray40", size = 10), 
     legend.position = "bottom")
 
-figure_3 <- figure_3a + figure_3b
-rm(figure_3a, figure_3b)
+figure_S2 <- figure_S2a + figure_S2b
+rm(figure_S2a, figure_S2b)
 
 
 # Supplementary table S1 - Main results ----
@@ -560,7 +560,7 @@ ggsave(
 
 ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/figure_2.tiff",
-  figure_2,
+  figure_2$standard,
   height = 8,
   width = 10, 
   units = "in")
@@ -577,6 +577,12 @@ print(table_S1, target = "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_prot
 
 table_S2 <- read_docx() |> body_add_flextable(table_S2)
 print(table_S2, target = "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/table_S2.docx")
+
+table_S3 <- read_docx() |> body_add_flextable(table_S3$standard)
+print(table_S3, target = "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/table_S3.docx")
+
+table_S4 <- read_docx() |> body_add_flextable(table_S4)
+print(table_S4, target = "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/table_S4.docx")
 
 ggsave(
   "~/Documents/POP_ALS_2025_02_03/2_output/4.Article_proteomics_ALS_occurence/figure_S1.tiff",

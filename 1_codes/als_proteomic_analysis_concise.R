@@ -321,7 +321,7 @@ forest_sex_main    <- forest_sex()
 forest_sex_outlier <- forest_sex("_outlier")
 
 
-### Table covariates - als survival ----
+### Table covariates - als risk ----
 covar
 
 rm(res, datasets, d3)
@@ -569,6 +569,33 @@ plot_heatmap <- ggplot(heat_df, aes(x = x, y = y, fill = r)) +
 
 
 # Publication ----
+## Table 1 ----
+table_1 <- bdd_danish |>
+  mutate(
+    als = as.character(als),
+    als = fct_recode(als, "Controls" = "0", "Cases" = "1"),
+    als = fct_relevel(als, "Cases", "Controls"),
+    follow_up = follow_up/12) |>
+  select(
+    als, birth_year, baseline_age, diagnosis_age, follow_up,  
+    sex, marital_status_2cat, education_merged, alcohol, smoking_2cat, bmi) |>
+  tbl_summary(by = als, 
+              missing = 'no', 
+              digits = list(birth_year ~ 0, 
+                            baseline_age ~ 0, 
+                            diagnosis_age ~ 0, 
+                            follow_up ~ 0, 
+                            bmi ~ 1)) |>
+  bold_labels() |>
+  add_p(include = -c('diagnosis_age', 'follow_up')) |>
+  add_overall() |>
+  add_n(statistic = "{N_miss} ({p_miss}%)", 
+        col_label = "**N missing**") |>
+  as_flex_table() |>
+  flextable::font(fontname = "Calibri", part = "all") |> 
+  fontsize(size = 10, part = "all") |>
+  padding(padding.top = 0, padding.bottom = 0, part = "all")
+
 
 get_res <- function(analyses, sfx = "") {
   main_results |>
@@ -590,12 +617,12 @@ fig1_labels <- c(
   sensi_3_4 = strip_lab(sprintf("Years to ALS diagnostic between 5 and %s years", cut_years), n_analysis[["sensi_3_4"]]),
   sensi_3_5 = strip_lab(sprintf("Years to ALS diagnostic > %s years", cut_years), n_analysis[["sensi_3_5"]]))
 
-make_figure_1 <- function(sfx = "") {
-  get_res(fig1_analyses, sfx) |>
+volcano_facets <- function(data, labels) {                                      # volcano plot à facettes (labels = vecteur nommé analyse -> titre HTML)
+  data |>
     mutate(Significance = case_when(p_value_raw < 0.05 & OR_raw > 1 ~ "OR>1 & p-value<0.05",
                                     p_value_raw < 0.05 & OR_raw < 1 ~ "OR<1 & p-value<0.05",
                                     TRUE ~ "p-value>0.05"),
-           analysis = factor(analysis, levels = names(fig1_labels), labels = fig1_labels)) |>
+           analysis = factor(analysis, levels = names(labels), labels = labels)) |>
     ggplot(aes(x = OR_raw, y = -log10(p_value_raw), color = Significance)) +
     geom_point(alpha = 0.8, size = 2, show.legend = FALSE) +
     geom_text_repel(data = ~filter(.x, p_value_raw < 0.05), aes(label = explanatory),
@@ -613,7 +640,8 @@ make_figure_1 <- function(sfx = "") {
           strip.background = element_blank(),
           panel.spacing.y = unit(1.5, "lines"))
 }
-figure_1 <- map(suffixes, make_figure_1)                                        # figure_1$standard, figure_1$outlier
+make_figure_1 <- \(sfx = "") volcano_facets(get_res(fig1_analyses, sfx), fig1_labels)
+figure_1 <- map(suffixes, make_figure_1)  
 
 
 ## Figure 2 - Forest plot stratifié sur le sexe (défini dans le script de figures) ----
@@ -624,7 +652,10 @@ figure_2 <- list(standard = forest_sex_main, outlier = forest_sex_outlier)
 ## Figure 4 option 1 - ALS risk score simple à partir des resultats des regression logistique ----
 figure_4_opt1 = plot_loess / plot_roc
 
-## Tableaux supplémentaires ----
+## Figure 4 option 2 - ALS risk score complexe à partir des resultats machine learning tidymodels ----
+
+
+## Table S1 - Main results (global + stratifié sur le temps avant diagnostic) ----
 footer_paragraph <- function(footer) {                                          # notes numérotées (numéro en exposant), une par ligne
   do.call(as_paragraph,
           do.call(c, imap(footer, \(x, i) list(as_sup(as.character(i)),
@@ -691,8 +722,6 @@ make_table_S <- function(data, groups, top_notes, or_note, ci_note, footer) {
     padding(padding.top = 0, padding.bottom = 0, part = "all")
 }
 
-
-### Table S1 - Main results (global + stratifié sur le temps avant diagnostic) ----
 S1_groups <- c(
   main      = sprintf("Main analyses\nAll cases and controls (N=%d)", n_analysis[["main"]]),
   sensi_2   = sprintf("Filtered to years to ALS diagnosis < 5 years (N=%d)", n_analysis[["sensi_2"]]),
@@ -708,10 +737,41 @@ table_S1 <- map(suffixes, \(sfx)
                                            "Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.",
                                            "CI: Confidence interval.")))
 
-### Table S2 - Sensibilité time to dagnostic ----
+## Table S2 - Sensibilité : fenêtres fixes de temps avant diagnostic (la stratification par sexe est dans S3) ----
+# Les fenêtres 5-10 / 10-15 / 15-20 ans viennent de l'objet results_proteomic_ALS_occurrence_y_to_als (autre pipeline).
+# Ses colonnes n'ont pas les mêmes types que main_results (ex. lower_CI en texte) : on n'en garde que les
+# colonnes utiles à la table, converties au bon type, avant d'empiler les deux sources.
+S2_groups <- c(
+  main            = sprintf("Main analyses\nAll cases and controls (N=%d)", n_analysis[["main"]]),
+  main_y_5_10ans  = "Sensitivity analyses\nCases diagnosed within 5 to 10 years (27 cases - 468 controls)",    # N repris de l'ancien code
+  main_y_10_15ans = "Sensitivity analyses\nCases diagnosed within 10 to 15 years (54 cases - 441 controls)",
+  main_y_15_20ans = "Sensitivity analyses\nCases diagnosed within 15 to 20 years (57 cases - 438 controls)")
+
+S2_cols <- c("analysis", "protein_group", "explanatory", "OR", "95% CI", "p_value", "p_value_raw", "OR_raw")
+
+S2_data <- bind_rows(
+  get_res("main") |>
+    select(all_of(S2_cols)),
+  results_proteomic_ALS_occurrence_y_to_als$logistic_fixed_horizon$proteome_wide$main_results |>
+    filter(term == "Continuous", model == "adjusted", analysis %in% names(S2_groups)) |>
+    mutate(OR_raw      = as.numeric(OR),
+           p_value_raw = as.numeric(p_value_raw),
+           across(c(OR, `95% CI`, p_value), as.character),
+           explanatory = str_remove(explanatory, "_log10$")) |>                 # même nom que les EV de main_results
+    select(all_of(S2_cols)))
+
+table_S2 <- make_table_S(
+  S2_data, groups = S2_groups,
+  top_notes = c(main = "1", main_y_5_10ans = "2", main_y_10_15ans = "2", main_y_15_20ans = "2"),
+  or_note = "3", ci_note = "4",
+  footer = c("Models are matched on birth year and sex, and adjusted for smoking and body mass index.",
+             "Models are adjusted on birth year, sex, smoking and body mass index.",
+             "Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.",
+             "CI: Confidence interval."))
 
 
-### Table S3 - Sensibilité stratifiée sur le sexe ----
+
+## Table S3 - Sensibilité stratifiée sur le sexe ----
 S3_groups <- c(
   main           = sprintf("Main analyses\nAll cases and controls (N=%d)", n_analysis[["main"]]),
   sensi_7_male   = sprintf("Sensitivity analyses\nFiltered to males (N=%d)", n_analysis[["sensi_7_male"]]),
@@ -728,7 +788,7 @@ table_S3 <- map(suffixes, \(sfx)
                                            "CI: Confidence interval.")))
 
 
-### Tables S4 / S5 ----
+## Table S4 - Analyses de la table S1 avant / après retrait des outliers ----
 # pairs : tibble(ref, alt, label) ; ref / alt = codes d'analyses de main_results, label = groupe de lignes
 # Un (prédicteur, paire) est retenu si :
 #  - le sens de l'OR change (OR de part et d'autre de 1), seulement si p < 0.05 dans au moins l'une des 2 analyses
@@ -811,7 +871,6 @@ footer_common <- c("Estimated risk of ALS associated with a one standard deviati
 footer_change <- "Only major changes are shown: OR direction reversed (OR on the other side of 1, with p<0.05 in at least one of the two analyses) and/or change in statistical significance (p<0.05). Additional sets excluded: matched sets (cases and their controls) removed for the marker in the right-hand analysis compared with the left-hand one."
 
 
-#### Table S4 - Analyses de la table S1 avant / après retrait des outliers ----
 S4_labels <- c(main      = "All cases and controls",
                sensi_2   = "Years to diagnosis < 5",
                sensi_3_4 = sprintf("Years to diagnosis between 5 and %s", cut_years),
@@ -824,7 +883,7 @@ table_S4 <- make_table_diff(
              footer_common, footer_change))
 
 
-#### Table S5 - Analyses principales EV vs EV normalisés (tétraspanines) ----
+## Table S5 - Analyses principales EV vs EV normalisés (tétraspanines) ----
 ev_label <- map_chr(ev_norms, \(d) if (length(d) == 1) d else paste0("(", paste(d, collapse = " + "), ")"))
 S5_pairs <- function(sfx) tibble(ref = paste0("main", sfx), alt = paste0(ev_analyses, sfx),
                                  label = paste("Marker X /", unname(ev_label)))
@@ -838,6 +897,24 @@ table_S5 <- map(suffixes, \(sfx)
                 make_table_diff(S5_pairs(sfx), group_title = "Normalization", ref_title = "Main analysis",
                                 alt_title = "Normalized", footer = S5_footer(sfx)))
 all_sets_plots <- map(plots_list, "all_sets")   # garde seulement all_sets
+
+
+## Figure S1 Analyse principale + fenêtres fixes de temps avant diagnostic (mêmes données que la table S2) ----
+strip_lab_win <- function(title, n_cases, n_controls) {                         # N des fenêtres : repris de l'ancien code
+  sprintf("<b>%s</b><br><span style='font-size:9pt; color:grey40;'>Logistic regressions (%d cases - %d controls)<br>Adjusted on birth year, sex, BMI and smoking status</span>",
+          title, n_cases, n_controls)
+}
+figS1_labels <- c(
+  main            = strip_lab("All cases and controls", n_analysis[["main"]]),
+  main_y_5_10ans  = strip_lab_win("Cases diagnosed within 5 to 10 years", 27, 468),
+  main_y_10_15ans = strip_lab_win("Cases diagnosed within 10 to 15 years", 54, 441),
+  main_y_15_20ans = strip_lab_win("Cases diagnosed within 15 to 20 years", 57, 438))
+
+figure_S1 <- volcano_facets(S2_data, figS1_labels)
+
+## Figure S2 - Machine learning tidymodels ----
+
+## Figure S3 - biological network? ----
 
 # Regroupement de tous les résultats ----
 results_proteomic_ALS_occurrence <- list(
@@ -858,15 +935,20 @@ results_proteomic_ALS_occurrence <- list(
       plot_loess   = plot_loess, 
       plot_heatmap = plot_heatmap)),                                               
   publication = list(
+      table_1       = table_1, 
       figure_1      = figure_1,                                                 # $standard / $outlier
       figure_2      = figure_2,
       figure_4_opt1 = figure_4_opt1, 
       table_S1      = table_S1,
+      table_S2      = table_S2, 
       table_S3      = table_S3,
       table_S4      = table_S4,                                                 # S1 avant / après retrait des outliers
-      table_S5      = table_S5))                                                # EV principaux vs EV normalisés ($standard / $outlier)
+      table_S5      = table_S5,                                                 # EV principaux vs EV normalisés ($standard / $outlier)
+      figure_S1     = figure_S1))                                               
 
 rm(tables_std, tables_outlier, tables_sex, figs, figs_sex, forest_sex_main, forest_sex_outlier,
-   plots_list, figure_1, figure_S2, table_S1, table_S3, table_S4, table_S5)                         # tout est maintenant dans results_proteomic_ALS_occurrence
+   plots_list, plot_roc, plot_loess, plot_heatmap,
+   table_1, figure_1, figure_2, figure_4_opt1, 
+   table_S1, table_S2, table_S3, table_S4, table_S5, figure_S1)                       
 
 
