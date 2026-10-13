@@ -333,7 +333,11 @@ bdd_danish_sensi_1_7_male <-
     },
     .names = "{.col}_quart_med")) 
 
-
+## Merge des vecteurs proteomiques et EVs ----
+proteomic <- c(proteomic, EVs_log10)
+proteomic_sd <- c(proteomic_sd, EVs_log10_sd)
+proteomic_quart <- c(proteomic_quart, EVs_log10_quart)
+proteomic_quart_med <- c(proteomic_quart_med, EVs_log10_quart_med)
 
 
 # Effects of the covariates on ALS risk ----
@@ -363,12 +367,12 @@ covar <- tbl_merge(
 ## Main analyses ----
 ### model 1 sd ----
 model1_sd <- data.frame(explanatory = character(),
-                           term = integer(),
-                           OR = numeric(),
-                           lower_CI = numeric(),
-                           upper_CI = numeric(),
-                           p_value = numeric(),
-                           stringsAsFactors = FALSE)
+                        term = integer(),
+                        OR = numeric(),
+                        lower_CI = numeric(),
+                        upper_CI = numeric(),
+                        p_value = numeric(),
+                        stringsAsFactors = FALSE)
 
 for (var in proteomic_sd) {
   
@@ -449,9 +453,9 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 #### heterogeneity test 
 heterogeneity_base <- data.frame(explanatory = character(),
-                                       model = factor(),
-                                       p_value_heterogeneity = numeric(), 
-                                       stringsAsFactors = FALSE)
+                                 model = factor(),
+                                 p_value_heterogeneity = numeric(), 
+                                 stringsAsFactors = FALSE)
 
 for (var in proteomic_quart) {
   
@@ -464,10 +468,10 @@ for (var in proteomic_quart) {
   p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
   
   heterogeneity_base <- rbind(heterogeneity_base, 
-                                    data.frame(explanatory = var,
-                                               model = "base", 
-                                               analysis = "main",
-                                               p_value_heterogeneity = p_value_heterogeneity))
+                              data.frame(explanatory = var,
+                                         model = "base", 
+                                         analysis = "main",
+                                         p_value_heterogeneity = p_value_heterogeneity))
 }
 rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
 
@@ -509,12 +513,12 @@ rm(var, formula, model, model_summary)
 
 ### model 2 sd ----
 model2_sd <- data.frame(explanatory = character(),
-                           term = integer(),
-                           OR = numeric(),
-                           lower_CI = numeric(),
-                           upper_CI = numeric(),
-                           p_value = numeric(),
-                           stringsAsFactors = FALSE)
+                        term = integer(),
+                        OR = numeric(),
+                        lower_CI = numeric(),
+                        upper_CI = numeric(),
+                        p_value = numeric(),
+                        stringsAsFactors = FALSE)
 
 for (var in proteomic_sd) {
   
@@ -586,9 +590,9 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 ### heterogeneity tests
 
 heterogeneity_adjusted <- data.frame(explanatory = character(),
-                                           model = factor(), 
-                                           p_value_heterogeneity = numeric(), 
-                                           stringsAsFactors = FALSE)
+                                     model = factor(), 
+                                     p_value_heterogeneity = numeric(), 
+                                     stringsAsFactors = FALSE)
 
 for (var in proteomic_quart) {
   
@@ -601,10 +605,10 @@ for (var in proteomic_quart) {
   p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
   
   heterogeneity_adjusted <- rbind(heterogeneity_adjusted, 
-                                        data.frame(explanatory = var,
-                                                   model = "adjusted", 
-                                                   analysis = "main",
-                                                   p_value_heterogeneity = p_value_heterogeneity))
+                                  data.frame(explanatory = var,
+                                             model = "adjusted", 
+                                             analysis = "main",
+                                             p_value_heterogeneity = p_value_heterogeneity))
 }
 rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
 
@@ -1711,12 +1715,12 @@ rm(var, formula, model, model_summary)
 ## Main analysis filtering to cases and their controls with follow-up < 5 years ----
 #### model 1 sd ----
 model1_sd_sensi_2 <- data.frame(explanatory = character(),
-                                  term = integer(),
-                                  OR = numeric(),
-                                  lower_CI = numeric(),
-                                  upper_CI = numeric(),
-                                  p_value = numeric(),
-                                  stringsAsFactors = FALSE)
+                                term = integer(),
+                                OR = numeric(),
+                                lower_CI = numeric(),
+                                upper_CI = numeric(),
+                                p_value = numeric(),
+                                stringsAsFactors = FALSE)
 
 for (var in proteomic_sd) {
   
@@ -1733,11 +1737,11 @@ for (var in proteomic_sd) {
   term <- model_summary$term
   
   model1_sd_sensi_2 <- rbind(model1_sd_sensi_2, data.frame(explanatory = var,
-                                                               term = term, 
-                                                               OR = OR,
-                                                               lower_CI = lower_CI,
-                                                               upper_CI = upper_CI,
-                                                               p_value = p_value))
+                                                           term = term, 
+                                                           OR = OR,
+                                                           lower_CI = lower_CI,
+                                                           upper_CI = upper_CI,
+                                                           p_value = p_value))
 }
 
 model1_sd_sensi_2 <- model1_sd_sensi_2 |> 
@@ -1753,12 +1757,12 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 #### model 1 quartiles ----
 model1_quart_sensi_2 <- data.frame(explanatory = character(),
-                                     term = integer(),
-                                     OR = numeric(),
-                                     lower_CI = numeric(),
-                                     upper_CI = numeric(),
-                                     p_value = numeric(),
-                                     stringsAsFactors = FALSE)
+                                   term = integer(),
+                                   OR = numeric(),
+                                   lower_CI = numeric(),
+                                   upper_CI = numeric(),
+                                   p_value = numeric(),
+                                   stringsAsFactors = FALSE)
 
 for (var in proteomic_quart) {
   
@@ -1775,11 +1779,11 @@ for (var in proteomic_quart) {
   term <- model_summary$term
   
   model1_quart_sensi_2 <- rbind(model1_quart_sensi_2, data.frame(explanatory = var,
-                                                                     term = term, 
-                                                                     OR = OR,
-                                                                     lower_CI = lower_CI,
-                                                                     upper_CI = upper_CI,
-                                                                     p_value = p_value))
+                                                                 term = term, 
+                                                                 OR = OR,
+                                                                 lower_CI = lower_CI,
+                                                                 upper_CI = upper_CI,
+                                                                 p_value = p_value))
 }
 
 model1_quart_sensi_2 <- model1_quart_sensi_2 |> 
@@ -1800,9 +1804,9 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 #### heterogeneity test 
 heterogeneity_base_sensi_2 <- data.frame(explanatory = character(),
-                                           model = factor(),
-                                           p_value_heterogeneity = numeric(), 
-                                           stringsAsFactors = FALSE)
+                                         model = factor(),
+                                         p_value_heterogeneity = numeric(), 
+                                         stringsAsFactors = FALSE)
 
 for (var in proteomic_quart) {
   
@@ -1815,19 +1819,19 @@ for (var in proteomic_quart) {
   p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
   
   heterogeneity_base_sensi_2 <- rbind(heterogeneity_base_sensi_2, 
-                                        data.frame(explanatory = var,
-                                                   model = "base", 
-                                                   analysis = "sensi_2",
-                                                   p_value_heterogeneity = p_value_heterogeneity))
+                                      data.frame(explanatory = var,
+                                                 model = "base", 
+                                                 analysis = "sensi_2",
+                                                 p_value_heterogeneity = p_value_heterogeneity))
 }
 rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
 
 
 #### trend test 
 trend_base_sensi_2 <- data.frame(explanatory = character(),
-                                   model = factor(), 
-                                   p_value_trend = numeric(), 
-                                   stringsAsFactors = FALSE)
+                                 model = factor(), 
+                                 p_value_trend = numeric(), 
+                                 stringsAsFactors = FALSE)
 
 for (var in proteomic_quart_med) {
   
@@ -1838,10 +1842,10 @@ for (var in proteomic_quart_med) {
   p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
   
   trend_base_sensi_2 <- rbind(trend_base_sensi_2, 
-                                data.frame(explanatory = var,
-                                           model = "base", 
-                                           analysis = "sensi_2",
-                                           p_value_trend = p_value_trend))
+                              data.frame(explanatory = var,
+                                         model = "base", 
+                                         analysis = "sensi_2",
+                                         p_value_trend = p_value_trend))
 }
 rm(var, test, formula, p_value_trend)
 
@@ -1866,12 +1870,12 @@ rm(var, formula, model, model_summary)
 
 #### model 2 sd ----
 model2_sd_sensi_2 <- data.frame(explanatory = character(),
-                                  term = integer(),
-                                  OR = numeric(),
-                                  lower_CI = numeric(),
-                                  upper_CI = numeric(),
-                                  p_value = numeric(),
-                                  stringsAsFactors = FALSE)
+                                term = integer(),
+                                OR = numeric(),
+                                lower_CI = numeric(),
+                                upper_CI = numeric(),
+                                p_value = numeric(),
+                                stringsAsFactors = FALSE)
 
 for (var in proteomic_sd) {
   
@@ -1888,11 +1892,11 @@ for (var in proteomic_sd) {
   term <- model_summary$term
   
   model2_sd_sensi_2 <- rbind(model2_sd_sensi_2, data.frame(explanatory = var,
-                                                               term = term, 
-                                                               OR = OR,
-                                                               lower_CI = lower_CI,
-                                                               upper_CI = upper_CI,
-                                                               p_value = p_value))
+                                                           term = term, 
+                                                           OR = OR,
+                                                           lower_CI = lower_CI,
+                                                           upper_CI = upper_CI,
+                                                           p_value = p_value))
 }
 
 model2_sd_sensi_2 <- model2_sd_sensi_2 |> 
@@ -1909,12 +1913,12 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 
 #### model 2 quartiles ----
 model2_quart_sensi_2 <- data.frame(explanatory = character(),
-                                     term = integer(),
-                                     OR = numeric(),
-                                     lower_CI = numeric(),
-                                     upper_CI = numeric(),
-                                     p_value = numeric(),
-                                     stringsAsFactors = FALSE)
+                                   term = integer(),
+                                   OR = numeric(),
+                                   lower_CI = numeric(),
+                                   upper_CI = numeric(),
+                                   p_value = numeric(),
+                                   stringsAsFactors = FALSE)
 
 for (var in proteomic_quart) {
   
@@ -1927,11 +1931,11 @@ for (var in proteomic_quart) {
   p_value <- model_summary$p.value
   term <- model_summary$term
   model2_quart_sensi_2 <- rbind(model2_quart_sensi_2, data.frame(explanatory = var,
-                                                                     term = term, 
-                                                                     OR = OR,
-                                                                     lower_CI = lower_CI,
-                                                                     upper_CI = upper_CI,
-                                                                     p_value = p_value))
+                                                                 term = term, 
+                                                                 OR = OR,
+                                                                 lower_CI = lower_CI,
+                                                                 upper_CI = upper_CI,
+                                                                 p_value = p_value))
 }
 
 model2_quart_sensi_2 <- model2_quart_sensi_2 |> 
@@ -1952,9 +1956,9 @@ rm(model, lower_CI, upper_CI, term, formula, p_value, OR, model_summary, var)
 ### heterogeneity tests
 
 heterogeneity_adjusted_sensi_2 <- data.frame(explanatory = character(),
-                                               model = factor(), 
-                                               p_value_heterogeneity = numeric(), 
-                                               stringsAsFactors = FALSE)
+                                             model = factor(), 
+                                             p_value_heterogeneity = numeric(), 
+                                             stringsAsFactors = FALSE)
 
 for (var in proteomic_quart) {
   
@@ -1967,10 +1971,10 @@ for (var in proteomic_quart) {
   p_value_heterogeneity <- anova$`Pr(>|Chi|)`[2]
   
   heterogeneity_adjusted_sensi_2 <- rbind(heterogeneity_adjusted_sensi_2, 
-                                            data.frame(explanatory = var,
-                                                       model = "adjusted", 
-                                                       analysis = "sensi_2",
-                                                       p_value_heterogeneity = p_value_heterogeneity))
+                                          data.frame(explanatory = var,
+                                                     model = "adjusted", 
+                                                     analysis = "sensi_2",
+                                                     p_value_heterogeneity = p_value_heterogeneity))
 }
 rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
 
@@ -1979,9 +1983,9 @@ rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
 ### trend tests
 
 trend_adjusted_sensi_2 <- data.frame(explanatory = character(),
-                                       model = factor(), 
-                                       p_value_trend = numeric(), 
-                                       stringsAsFactors = FALSE)
+                                     model = factor(), 
+                                     p_value_trend = numeric(), 
+                                     stringsAsFactors = FALSE)
 
 for (var in proteomic_quart_med) {
   
@@ -1990,10 +1994,10 @@ for (var in proteomic_quart_med) {
   p_value_trend <- test$coefficients[var, "Pr(>|z|)"]
   
   trend_adjusted_sensi_2 <- rbind(trend_adjusted_sensi_2, 
-                                    data.frame(explanatory = var,
-                                               model = "adjusted", 
-                                               analysis = "sensi_2",
-                                               p_value_trend = p_value_trend))
+                                  data.frame(explanatory = var,
+                                             model = "adjusted", 
+                                             analysis = "sensi_2",
+                                             p_value_trend = p_value_trend))
 }
 rm(var, test, formula, p_value_trend)
 
@@ -2278,7 +2282,6 @@ rm(var, test_1, test_2, formula, anova, p_value_heterogeneity)
 
 
 ### trend tests
-
 trend_adjusted_sensi_3 <- data.frame(explanatory = character(),
                                      model = factor(), 
                                      p_value_trend = numeric(), 
@@ -2297,9 +2300,6 @@ for (var in proteomic_quart_med) {
                                              p_value_trend = p_value_trend))
 }
 rm(var, test, formula, p_value_trend)
-
-
-
 
 
 #### model 2 gams ----
@@ -3960,8 +3960,9 @@ main_results_interaction_sd <- main_results_interaction_sd |>
     "95% CI" = paste(lower_CI, ", ", upper_CI, sep = ''), 
     protein_group = case_when(str_detect(explanatory, 'proteomic_immun_res') ~ "Immune response", 
                               str_detect(explanatory, 'proteomic_metabolism') ~ "Metabolism", 
-                              str_detect(explanatory, 'proteomic_neuro_explo') ~ "Neuro-exploratory"), 
-    explanatory = str_replace(explanatory, 'proteomic_immun_res_|proteomic_metabolism_|proteomic_neuro_explo_', "")) |>
+                              str_detect(explanatory, 'proteomic_neuro_explo') ~ "Neuro-exploratory", 
+                              str_detect(explanatory, "ev_") ~ "Extracellular Vesicles"),  
+    explanatory = str_replace(explanatory, 'proteomic_immun_res_|proteomic_metabolism_|proteomic_neuro_explo_|ev_', "")) |>
   select(protein_group, explanatory, analysis, term, model, OR,   "95% CI", p_value, OR_raw, lower_CI, upper_CI, p_value_raw)
 
 
@@ -4006,7 +4007,7 @@ main_results <- bind_rows(model1_sd,                                            
                           model2_sd, 
                           model1_quart, 
                           model2_quart, 
-                         
+                          
                           model1_sd_sensi_1,                                    # sensi 1 
                           model2_sd_sensi_1, 
                           model1_quart_sensi_1, 
@@ -4036,14 +4037,14 @@ main_results <- bind_rows(model1_sd,                                            
                           model2_sd_sensi_1_3_5,
                           model1_quart_sensi_1_3_5,
                           model2_quart_sensi_1_3_5,
-
+                          
                           model1_sd_sensi_6_T1,                                 # sensi 6
                           model1_sd_sensi_6_T2,
                           model1_sd_sensi_6_T3,
                           model2_sd_sensi_6_T1,
                           model2_sd_sensi_6_T2,
                           model2_sd_sensi_6_T3,
-
+                          
                           model1_sd_sensi_1_6_T1,                               # sensi 1_6
                           model1_sd_sensi_1_6_T2,
                           model1_sd_sensi_1_6_T3,
@@ -4068,9 +4069,9 @@ main_results <- bind_rows(model1_sd,                                            
          explanatory = gsub("_sd", "", explanatory), 
          
          OR_raw = OR, 
-         OR = as.numeric(sprintf("%.1f", OR)),
-         lower_CI = as.numeric(sprintf("%.1f", lower_CI)),
-         upper_CI = as.numeric(sprintf("%.1f", upper_CI)),
+         OR = number(OR, accuracy = 0.01, decimal.mark = "."),
+         lower_CI = number(lower_CI, accuracy = 0.01, decimal.mark = "."),
+         upper_CI = number(upper_CI, accuracy = 0.01, decimal.mark = "."),
          p_value_raw = p_value, 
          p_value = ifelse(p_value < 0.01, "<0.01", number(p_value, accuracy = 0.01, decimal.mark = ".")), 
          "95% CI" = paste(lower_CI, ", ", upper_CI, sep = '')) |>
@@ -4236,8 +4237,9 @@ main_results <- main_results |>
     p_value_trend = ifelse(p_value_trend < 0.01, "<0.01", number(p_value_trend, accuracy = 0.01, decimal.mark = ".")), 
     protein_group = case_when(str_detect(explanatory, 'proteomic_immun_res') ~ "Immune response", 
                               str_detect(explanatory, 'proteomic_metabolism') ~ "Metabolism", 
-                              str_detect(explanatory, 'proteomic_neuro_explo') ~ "Neuro-exploratory"), 
-    explanatory = str_replace(explanatory, 'proteomic_immun_res_|proteomic_metabolism_|proteomic_neuro_explo_', ""))
+                              str_detect(explanatory, 'proteomic_neuro_explo') ~ "Neuro-exploratory", 
+                              str_detect(explanatory, "ev_") ~ "Extracellular Vesicles"), 
+    explanatory = str_replace(explanatory, 'proteomic_immun_res_|proteomic_metabolism_|proteomic_neuro_explo_|ev_', ""))
 
 
 rm(model1_sd, model1_quart, model2_sd, model2_quart, 
@@ -4250,7 +4252,7 @@ rm(model1_sd, model1_quart, model2_sd, model2_quart,
    model1_sd_sensi_1_3_5, model1_quart_sensi_1_3_5, model2_sd_sensi_1_3_5, model2_quart_sensi_1_3_5, 
    model1_sd_sensi_1_7_female, model1_quart_sensi_1_7_female, model2_sd_sensi_1_7_female, model2_quart_sensi_1_7_female, 
    model1_sd_sensi_1_7_male, model1_quart_sensi_1_7_male, model2_sd_sensi_1_7_male, model2_quart_sensi_1_7_male, 
-
+   
    model1_sd_sensi_6_T1, 
    model1_sd_sensi_6_T2, 
    model1_sd_sensi_6_T3, 
@@ -5219,41 +5221,6 @@ proteomic_sd_ALS_table <-                                                       
   fontsize(size = 10, part = "all") |>
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
-# proteomic_sd_ALS_table <-                                                     # select only base results
-#   main_results |>
-#   filter(model == "base" &                                                    # select only continuous results
-#            term == "Continuous" & 
-#            p_value_raw < 0.05 & 
-#            analysis == "main") |>        
-#   select(model, explanatory, protein_group, OR, "95% CI", "p_value") |>
-#   pivot_wider(names_from = "model", values_from = c("OR", "95% CI", "p_value")) |>
-#   select(protein_group, explanatory, contains("base")) |>
-#   rename("OR" = "OR_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base") |>
-#   flextable() |>
-#   add_footer_lines(
-#     "1All models are matched on birth year and sex. 
-#     2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
-#     3CI: Confidence interval.") |>
-#   add_header(
-#     "explanatory" = "Pre-disease plasma proteins", 
-#     "protein_group" = "Protein group", 
-#     "OR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models") |>
-#   theme_vanilla() |>
-#   merge_h(part = "header") |>
-#   align(align = "center", part = "all") |>
-#   merge_v(j = "explanatory") |>
-#   bold(j = "explanatory", part = "body") |>
-#   align(j = "explanatory", align = "left", part = "all") |> 
-#   merge_at(j = "explanatory", part = "header") |>
-#   merge_v(j = "protein_group") |>
-#   bold(j = "protein_group", part = "body") |>
-#   align(j = "protein_group", align = "left", part = "all") |> 
-#   merge_at(j = "protein_group", part = "header") |>
-#   flextable::font(fontname = "Calibri", part = "all") |> 
-#   fontsize(size = 10, part = "all") |>
-#   padding(padding.top = 0, padding.bottom = 0, part = "all")
-
-
 
 ### Table proteomic - als occurence - base and adjusted quart ----
 extra_rows <- 
@@ -5327,72 +5294,6 @@ proteomic_quart_ALS_table <-
   padding(padding.top = 0, padding.bottom = 0, part = "all")
 
 rm(extra_rows)
-
-# extra_rows <- 
-#   main_results |>
-#   filter(model == "base" &                                                      # select only the base results                                 
-#            term != "Continuous" &                                               # select only quartile results
-#            analysis == "main") |>            
-#   group_by(explanatory) |>                                                      # select explanatory vars with at least one quartile significant 
-#   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
-#   distinct(protein_group, explanatory) |> 
-#   mutate(
-#     quartiles = "Quartile 1",
-#     "OR_base" = '-', "95% CI_base" = '-', "p_value_base" = '', "p_value_heterogeneity_base" = '', "p_value_trend_base" = '')
-# 
-# proteomic_quart_ALS_table <- 
-#   main_results |>
-#   filter(model == "base" &                                                      # select quartile results
-#            term != "Continuous" & 
-#            analysis == "main") |>            
-#   group_by(explanatory) |>                                                      # select explanatory var s with at least one quartile significant 
-#   filter(any(p_value_raw < 0.05, na.rm = TRUE)) |>  
-#   ungroup() |>
-#   select(model, protein_group, explanatory, term, OR, "95% CI", "p_value", "p_value_heterogeneity", "p_value_trend") |>
-#   pivot_wider(names_from = "model", values_from = c("OR", "95% CI", "p_value", "p_value_heterogeneity", "p_value_trend")) |>
-#   select(protein_group, explanatory, quartiles = term, contains("base")) 
-# 
-# proteomic_quart_ALS_table <- 
-#   proteomic_quart_ALS_table |>
-#   mutate_if(is.numeric, as.character) |>
-#   bind_rows(extra_rows) |>
-#   group_by(explanatory) |>
-#   mutate(p_value_heterogeneity_base = ifelse(quartiles == 'Quartile 1', p_value_heterogeneity_base[quartiles == 'Quartile 2'], ''), 
-#          p_value_trend_base = ifelse(quartiles == 'Quartile 1', p_value_trend_base[quartiles == 'Quartile 2'], '')) |>
-#   ungroup() |>
-#   rename("OR" = "OR_base", "95% CI" = "95% CI_base", "p-value" = "p_value_base", "Heterogeneity test" = "p_value_heterogeneity_base",  "Trend test" = "p_value_trend_base") |>
-#   arrange(protein_group, explanatory, quartiles) |>
-#   flextable() |>
-#   add_footer_lines(
-#     "1All models are matched on birth year and sex. 
-#     2Estimated risk of ALS associated with a one standard deviation increase in pre-disease plasma concentration of proteins.
-#     3CI: Confidence interval.
-#     4Heterogeneity tests in outcome value across protein quartiles, matched on sex and birth year. 
-#     5Trend tests using continuous variables whose values corresponded to the quartile specific median protein levels, matched on sex and birth year.") |>
-#   add_header(
-#     "explanatory" = "Pre-disease plasma proteins", 
-#     "protein_group" = "Protein group", 
-#     "quartiles" = "Quartiles",
-#     "OR" = "Base models", "95% CI" = "Base models", "p-value" = "Base models", 
-#     "Heterogeneity test" = "Base models",  "Trend test" = "Base models") |>
-#   theme_vanilla() |>
-#   merge_h(part = "header") |>
-#   align(align = "center", part = "all") |>
-#   merge_v(j = "protein_group") |>
-#   bold(j = "protein_group", part = "body") |>
-#   align(j = "protein_group", align = "left", part = "all") |> 
-#   merge_at(j = "protein_group", part = "header") |>
-#   merge_v(j = "explanatory") |>
-#   bold(j = "explanatory", part = "body") |>
-#   align(j = "explanatory", align = "left", part = "all") |> 
-#   merge_at(j = "explanatory", part = "header") |>
-#   merge_at(j = "quartiles", part = "header") |>
-#   flextable::font(fontname = "Calibri", part = "all") |> 
-#   fontsize(size = 10, part = "all") |>
-#   padding(padding.top = 0, padding.bottom = 0, part = "all")
-# 
-# rm(extra_rows)
-
 
 
 ### Figure proteomic - als occurence - base sd ----
@@ -7371,7 +7272,7 @@ proteomic_sd_ALS_base_figure_sensi_1_7 <-
     color = "")+
   scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
   scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1))
-  facet_grid(cols = vars(analysis))
+facet_grid(cols = vars(analysis))
 
 
 
@@ -7416,6 +7317,36 @@ proteomic_sd_ALS_adjusted_figure_sensi_1_7 <-
   scale_x_continuous(limits = c(0, 4), breaks = seq(0, 4, by = 0.5)) +
   scale_y_continuous(limits = c(0, 4.6), breaks = seq(0, 4.6, by = 1)) +
   facet_grid(cols = vars(analysis))
+
+
+proteomic_sd_ALS_adjusted_figure_forestplot_sensi_1_7 <- 
+  main_results |>
+  filter(model == "adjusted" & 
+           term == "Continuous" & 
+           analysis %in% c("sensi_1_7_female", "sensi_1_7_male")) |>
+  group_by(explanatory) |>
+  filter(any(p_value_raw < 0.05)) |>
+  ungroup() |>
+  mutate(across(c(OR_raw, lower_CI, upper_CI), as.numeric), 
+         analysis = fct_recode(analysis, 
+                               "Females" = "sensi_1_7_female",
+                               "Males" = "sensi_1_7_male")) |>
+  group_by(explanatory) |>
+  mutate(or_male = OR_raw[analysis == "Males"]) |>
+  ungroup() |>
+  mutate(explanatory = fct_reorder(explanatory, or_male)) |> 
+  ggplot(aes(x = explanatory, 
+             y = OR_raw, 
+             ymin = lower_CI,   
+             ymax = upper_CI, 
+             color = analysis)) +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  geom_pointrange(
+    position = position_dodge(width = 0.5), 
+    size = 0.4) +
+  labs(x = "Proteins", y = "Odds Ratio", color = "") +
+  theme_lucid() +
+  coord_flip()
 
 
 rm(proteomic_sensi_1_7_female,
@@ -8170,13 +8101,13 @@ results_proteomic_ALS_occurrence <-
     main = list(
       covar = covar, 
       main_results= main_results, 
-    
+      
       proteomic_sd_ALS_table = proteomic_sd_ALS_table,
       proteomic_quart_ALS_table = proteomic_quart_ALS_table,
-    
+      
       proteomic_sd_ALS_base_figure = proteomic_sd_ALS_base_figure, 
       proteomic_sd_ALS_adjusted_figure = proteomic_sd_ALS_adjusted_figure, 
-    
+      
       model1_gam = model1_gam, 
       model2_gam = model2_gam),
     
@@ -8241,7 +8172,7 @@ results_proteomic_ALS_occurrence <-
       
       proteomic_sd_ALS_adjusted_figure_sensi_1_3_5 = proteomic_sd_ALS_adjusted_figure_sensi_1_3_5, 
       model2_gam_sensi_1_3_5 = model2_gam_sensi_1_3_5), 
-  
+    
     
     sensi_6 = list(
       sensi_6_table_follow_up = sensi_6_table_follow_up, 
@@ -8269,7 +8200,8 @@ results_proteomic_ALS_occurrence <-
       proteomic_sd_ALS_table_sensi_1_7 = proteomic_sd_ALS_table_sensi_1_7, 
       proteomic_quart_ALS_table_sensi_1_7 = proteomic_quart_ALS_table_sensi_1_7, 
       proteomic_sd_ALS_base_figure_sensi_1_7 = proteomic_sd_ALS_base_figure_sensi_1_7, 
-      proteomic_sd_ALS_adjusted_figure_sensi_1_7 = proteomic_sd_ALS_adjusted_figure_sensi_1_7), 
+      proteomic_sd_ALS_adjusted_figure_sensi_1_7 = proteomic_sd_ALS_adjusted_figure_sensi_1_7, 
+      proteomic_sd_ALS_adjusted_figure_forestplot_sensi_1_7 = proteomic_sd_ALS_adjusted_figure_forestplot_sensi_1_7), 
     
     logistic_models_including_time = list(
       main_results_interaction_sd = main_results_interaction_sd, 
@@ -8390,6 +8322,7 @@ rm(covar,                                   # main results
    proteomic_quart_ALS_table_sensi_1_7, 
    proteomic_sd_ALS_base_figure_sensi_1_7, 
    proteomic_sd_ALS_adjusted_figure_sensi_1_7, 
+   proteomic_sd_ALS_adjusted_figure_forestplot_sensi_1_7, 
    model1_gam_sensi_1_7_female, 
    model1_gam_sensi_1_7_male, 
    model2_gam_sensi_1_7_female, 
@@ -8436,6 +8369,6 @@ rm(covar,                                   # main results
    table_without_other_diseases          # NfL other diseases
    
 )
-  
 
-rm(m1, m2, sum1, sum2, combined, form1, form2, var, main_results_interaction_sd, proteomic_interaction_table)
+
+rm(m1, m2, sum1, sum2, combined, form1, form2, main_results_interaction_sd, proteomic_interaction_table)
